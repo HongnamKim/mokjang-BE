@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {ValidationPipe} from "@nestjs/common";
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
+import {GetHandlerGuard} from "./common/guard/get-handler.guard";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
   // class-validator, transformer 설정
   app.useGlobalPipes(
       new ValidationPipe({
@@ -23,6 +25,9 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
       }),
   );
+
+  app.useGlobalGuards(new GetHandlerGuard())
+
   // swagger 설정
   const config = new DocumentBuilder()
       .setTitle('프로젝트 제목')
