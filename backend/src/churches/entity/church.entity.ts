@@ -1,6 +1,6 @@
 import { BaseModel } from '../../common/entity/base.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { InvitationModel } from '../believers/entity/invitation.entity';
+import { InvitationModel } from '../invitation/entity/invitation.entity';
 
 @Entity()
 export class ChurchModel extends BaseModel {

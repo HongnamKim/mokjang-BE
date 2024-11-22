@@ -14,7 +14,14 @@ export class ValidateInvitationDto extends PickType(InvitationModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim().split(' ').join(''))
+  @Transform(({ value }) =>
+    value
+      .trim()
+      .split('  ')
+      .filter((char: string) => char)
+      .map((char: string) => char.trim())
+      .join(' '),
+  )
   override name: string;
 
   @ApiProperty({

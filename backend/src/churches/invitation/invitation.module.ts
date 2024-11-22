@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { BelieversService } from './believers.service';
-import { BelieversController } from './believers.controller';
+import { InvitationService } from './invitation.service';
+import { InvitationController } from './invitation.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InvitationModel } from './entity/invitation.entity';
 import { BelieverModel } from './entity/believer.entity';
@@ -11,7 +11,7 @@ import { ChurchesModule } from '../churches.module';
     TypeOrmModule.forFeature([InvitationModel, BelieverModel]),
     ChurchesModule,
   ],
-  controllers: [BelieversController],
-  providers: [BelieversService],
+  controllers: [InvitationController],
+  providers: [InvitationService],
 })
-export class BelieversModule {}
+export class InvitationModule {}
