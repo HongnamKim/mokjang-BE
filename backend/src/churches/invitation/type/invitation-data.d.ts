@@ -5,6 +5,7 @@ export type InvitationData = Omit<
   | 'id'
   | 'invitedChurchId'
   | 'inviteAttempts'
+  | 'validateAttempts'
   | 'mobilePhone'
   | 'name'
   | 'createdAt'

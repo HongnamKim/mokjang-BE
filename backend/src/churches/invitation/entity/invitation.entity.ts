@@ -17,6 +17,9 @@ export class InvitationModel extends BaseModel {
   @Column({ default: 1 })
   inviteAttempts: number;
 
+  @Column({ default: 0 })
+  validateAttempts: number;
+
   @Column({ nullable: true, type: 'timestamptz' })
   invitationExpiresAt: Date;
 
