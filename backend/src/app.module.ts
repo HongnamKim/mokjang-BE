@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -7,9 +7,10 @@ import * as dotenv from 'dotenv';
 import * as process from 'node:process';
 import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
-import { InvitationModel } from './churches/believers/entity/invitation.entity';
-import { BelieverModel } from './churches/believers/entity/believer.entity';
-import { BelieversModule } from './churches/believers/believers.module';
+import { InvitationModel } from './churches/invitation/entity/invitation.entity';
+import { BelieverModel } from './churches/invitation/entity/believer.entity';
+import { InvitationModule } from './churches/invitation/invitation.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 dotenv.config();
 
@@ -27,9 +28,15 @@ dotenv.config();
       synchronize: true,
     }),
     ChurchesModule,
-    BelieversModule,
+    InvitationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
+    },
+  ],
 })
 export class AppModule {}

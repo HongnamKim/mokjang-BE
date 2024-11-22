@@ -19,8 +19,8 @@ export class ChurchesService {
     return this.churchRepository.find();
   }
 
-  async findById(id: number) {
-    const churchRepository = this.getChurchRepository();
+  async findById(id: number, qr?: QueryRunner) {
+    const churchRepository = this.getChurchRepository(qr);
 
     const church = await churchRepository.findOne({
       where: {
@@ -59,16 +59,26 @@ export class ChurchesService {
   /**
    * 초대 횟수 초기화 메소드
    * @param church 초기화 대상 교회
+   * @param qr QueryRunner
    */
-  initInvitationAttempts(church: ChurchModel) {
-    return this.churchRepository.update(church, { dailyInvitationAttempts: 0 });
+  initInvitationAttempts(church: ChurchModel, qr: QueryRunner) {
+    const churchRepository = this.getChurchRepository(qr);
+
+    return churchRepository.update(
+      { id: church.id },
+      { dailyInvitationAttempts: 0 },
+    );
   }
 
-  increaseInvitationAttempts(church: ChurchModel) {
-    return this.churchRepository.increment(
-      church,
-      'dailyInvitationAttempts',
-      1,
+  increaseInvitationAttempts(church: ChurchModel, qr: QueryRunner) {
+    const churchRepository = this.getChurchRepository(qr);
+
+    return churchRepository.update(
+      { id: church.id },
+      {
+        lastInvitationDate: new Date(),
+        dailyInvitationAttempts: church.dailyInvitationAttempts + 1,
+      },
     );
   }
 }

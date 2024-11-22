@@ -17,6 +17,9 @@ export class InvitationModel extends BaseModel {
   @Column({ default: 1 })
   inviteAttempts: number;
 
+  @Column({ nullable: true, type: 'timestamptz' })
+  invitationExpiresAt: Date;
+
   @Column({ nullable: true })
   guideId?: number;
 
