@@ -18,6 +18,7 @@ import { ResponseValidateInvitationDto } from './dto/response/response-validate-
 import { GetInvitationDto } from './dto/get-invitation.dto';
 import { ResponsePaginationDto } from './dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from './dto/response/response-delete.dto';
+import { BelieversService } from '../believers/believers.service';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ export class InvitationService {
     @InjectRepository(InvitationModel)
     private readonly invitationRepository: Repository<InvitationModel>,
     private readonly churchesService: ChurchesService,
+    private readonly believersService: BelieversService,
   ) {}
 
   private DAILY_INVITATION_RETRY_LIMITS =
@@ -107,6 +109,16 @@ export class InvitationService {
   ) {
     // 교회 존재 여부 확인 && 교회 데이터 불러오기
     const church = await this.churchesService.findById(churchId, qr);
+
+    // 이미 초대한 유저
+    const isExist = await this.believersService.isExistBeliever(
+      churchId,
+      dto.mobilePhone,
+    );
+
+    if (isExist) {
+      throw new BadRequestException('이미 존재하는 휴대전화 번호입니다.');
+    }
 
     // 교회의 하루 초대 횟수 도달 여부
     if (await this.isInviteLimitReached(church, qr)) {
