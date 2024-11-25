@@ -13,13 +13,13 @@ import { ValidateInvitationDto } from './dto/validate-invitation.dto';
 import * as dotenv from 'dotenv';
 import * as process from 'node:process';
 import { ChurchModel } from '../entity/church.entity';
-import { InvitationData } from './type/invitation-data';
 import { ResponseValidateInvitationDto } from './dto/response/response-validate-invitation.dto';
 import { GetInvitationDto } from './dto/get-invitation.dto';
 import { ResponsePaginationDto } from './dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from './dto/response/response-delete.dto';
 import { BelieversService } from '../believers/believers.service';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { MessagesService } from './messages.service';
 
 dotenv.config();
 
@@ -30,6 +30,7 @@ export class InvitationService {
     private readonly invitationRepository: Repository<InvitationModel>,
     private readonly churchesService: ChurchesService,
     private readonly believersService: BelieversService,
+    private readonly messagesService: MessagesService,
   ) {}
 
   private DAILY_INVITATION_RETRY_LIMITS =
@@ -172,7 +173,6 @@ export class InvitationService {
       familyId: dto.familyId,
       invitedChurch: church,
       invitationExpiresAt: this.calculateExpiresDay(),
-      vehicleNumber: dto.vehicleNumber,
     });
 
     await this.churchesService.increaseInvitationAttempts(church, qr);
@@ -180,31 +180,10 @@ export class InvitationService {
     return invitationRepository.findOne({ where: { id: newInvitation.id } });
   }
 
-  private processInvitationData(invitation: InvitationModel): InvitationData {
-    const {
-      id,
-      invitedChurchId,
-      inviteAttempts,
-      validateAttempts,
-      name,
-      mobilePhone,
-      createdAt,
-      updatedAt,
-      deletedAt,
-      ...invitationData
-    } = invitation;
+  sendInviteUrlMessage(invitation: InvitationModel) {
+    const url = `${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${invitation.invitedChurchId}/invites/${invitation.id}`;
 
-    return invitationData;
-  }
-
-  generateInviteUrl(invitation: InvitationModel) {
-    const invitationData = this.processInvitationData(invitation);
-
-    const serializedData = JSON.stringify(invitationData);
-
-    const encodedData = Buffer.from(serializedData).toString('base64');
-
-    return `${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${invitation.invitedChurchId}/invites/${invitation.id}?data=${encodedData}`;
+    return this.messagesService.sendInvitation(invitation.mobilePhone, url);
   }
 
   async validateInvitation(
