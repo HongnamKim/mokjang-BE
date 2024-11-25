@@ -19,6 +19,7 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { GetInvitationDto } from './dto/get-invitation.dto';
+import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 
 @ApiTags('Churches:Invitations')
 @Controller('churches/:churchId/invitations')
@@ -68,6 +69,22 @@ export class InvitationController {
       churchId,
       invitationId,
       dto,
+    );
+  }
+
+  @Post(':invitationId/accept')
+  @UseInterceptors(TransactionInterceptor)
+  acceptInvitation(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('invitationId', ParseIntPipe) invitationId: number,
+    @Body() dto: AcceptInvitationDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.invitationService.acceptInvitation(
+      churchId,
+      invitationId,
+      dto,
+      qr,
     );
   }
 }

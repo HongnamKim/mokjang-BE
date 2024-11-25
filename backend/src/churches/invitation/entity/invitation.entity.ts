@@ -9,10 +9,15 @@ export class InvitationModel extends BaseModel {
   invitedChurchId: number;
 
   @Column()
+  @Index()
   name: string;
 
   @Column()
+  @Index()
   mobilePhone: string;
+
+  @Column({ type: 'simple-array', default: null })
+  vehicleNumber: string[];
 
   @Column({ default: 1 })
   inviteAttempts: number;
@@ -22,6 +27,9 @@ export class InvitationModel extends BaseModel {
 
   @Column({ nullable: true, type: 'timestamptz' })
   invitationExpiresAt: Date;
+
+  @Column({ default: false })
+  isValidated: boolean;
 
   @Column({ nullable: true })
   guideId?: number;
