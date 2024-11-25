@@ -11,18 +11,9 @@ import {
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../enum/gender.enum';
+import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 
 export class CreateBelieverDto {
-  /*@ApiProperty({
-    name: 'invitationId',
-    description: '초대로 만들어지는 경우 초대의 ID',
-    example: 12,
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  invitationId: number;*/
-
   @ApiProperty({
     name: 'name',
     description: '성도 이름',
@@ -131,6 +122,7 @@ export class CreateBelieverDto {
   @IsString({ each: true })
   @Length(4, 4, { each: true })
   @IsNotEmpty({ each: true })
+  @IsValidVehicleNumber()
   @IsOptional()
-  vehicleNumber: string;
+  vehicleNumber: string[];
 }
