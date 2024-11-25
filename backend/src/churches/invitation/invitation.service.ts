@@ -19,6 +19,7 @@ import { GetInvitationDto } from './dto/get-invitation.dto';
 import { ResponsePaginationDto } from './dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from './dto/response/response-delete.dto';
 import { BelieversService } from '../believers/believers.service';
+import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 
 dotenv.config();
 
@@ -114,6 +115,7 @@ export class InvitationService {
     const isExist = await this.believersService.isExistBeliever(
       churchId,
       dto.mobilePhone,
+      qr,
     );
 
     if (isExist) {
@@ -127,8 +129,10 @@ export class InvitationService {
       );
     }
 
+    const invitationRepository = this.getInvitationRepository(qr);
+
     // 이전 초대 이력 조회
-    const invitation = await this.invitationRepository.findOne({
+    const invitation = await invitationRepository.findOne({
       where: {
         invitedChurchId: churchId,
         name: dto.name,
@@ -142,8 +146,6 @@ export class InvitationService {
         `하루 초대 재시도 횟수 ${this.DAILY_INVITATION_RETRY_LIMITS}회 초과`,
       );
     }
-
-    const invitationRepository = this.getInvitationRepository(qr);
 
     // 재시도
     if (invitation) {
@@ -170,6 +172,7 @@ export class InvitationService {
       familyId: dto.familyId,
       invitedChurch: church,
       invitationExpiresAt: this.calculateExpiresDay(),
+      vehicleNumber: dto.vehicleNumber,
     });
 
     await this.churchesService.increaseInvitationAttempts(church, qr);
@@ -221,9 +224,10 @@ export class InvitationService {
     }
 
     if (validateTarget.invitationExpiresAt < new Date()) {
-      console.log(validateTarget.invitationExpiresAt);
-      console.log(new Date());
-      throw new BadRequestException('만료된 초대입니다.');
+      await this.invitationRepository.softDelete({
+        id: invitationId,
+      });
+      throw new BadRequestException('만료된 초대입니다. 초대 삭제');
     }
 
     if (validateTarget.validateAttempts === this.INVITATION_VALIDATION_LIMITS) {
@@ -249,6 +253,11 @@ export class InvitationService {
       );
       throw new UnauthorizedException('유효한 초대가 아닙니다.');
     }
+
+    await this.invitationRepository.update(
+      { id: invitationId, invitedChurchId: churchId },
+      { isValidated: true },
+    );
 
     return new ResponseValidateInvitationDto(true);
   }
@@ -276,16 +285,62 @@ export class InvitationService {
     );
   }
 
-  async deleteInvitationById(churchId: number, invitationId: number) {
-    const result = await this.invitationRepository.softDelete({
+  async deleteInvitationById(
+    churchId: number,
+    invitationId: number,
+    qr?: QueryRunner,
+  ) {
+    const invitationRepository = this.getInvitationRepository(qr);
+
+    const result = await invitationRepository.softDelete({
       id: invitationId,
       invitedChurchId: churchId,
     });
 
-    if (result.affected !== 0) {
+    if (result.affected === 0) {
       throw new NotFoundException('존재하지 않는 초대 내역입니다.');
     }
 
     return new ResponseDeleteDto(true, invitationId);
+  }
+
+  async acceptInvitation(
+    churchId: number,
+    invitationId: number,
+    dto: AcceptInvitationDto,
+    qr: QueryRunner,
+  ) {
+    const invitationRepository = this.getInvitationRepository(qr);
+
+    const invitation = await invitationRepository.findOne({
+      where: { id: invitationId, invitedChurchId: churchId },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('존재하지 않는 초대 내역입니다.');
+    }
+
+    if (
+      !invitation.isValidated ||
+      dto.name !== invitation.name ||
+      dto.mobilePhone !== invitation.mobilePhone
+    ) {
+      throw new BadRequestException('검증되지 않은 초대 내역입니다.');
+    }
+
+    const newBeliever = await this.believersService.createBelievers(
+      churchId,
+      dto,
+      qr,
+    );
+
+    await this.deleteInvitationById(churchId, invitationId, qr);
+
+    return this.believersService.getBelieversById(
+      churchId,
+      newBeliever.id,
+      {},
+      qr,
+    );
   }
 }

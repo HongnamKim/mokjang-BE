@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BelieverModel } from './entity/believer.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../churches.service';
 import { CreateBelieverDto } from './dto/create-believer.dto';
 import { UpdateBelieverDto } from './dto/update-believer.dto';
@@ -36,16 +36,20 @@ export class BelieversService {
     });
   }
 
-  async getBelieversById(churchId: number, believerId: number) {
-    const believer = await this.believersRepository.findOne({
+  async getBelieversById(
+    churchId: number,
+    believerId: number,
+    relations?: FindOptionsRelations<BelieverModel>,
+    qr?: QueryRunner,
+  ) {
+    const believersRepository = this.getBelieversRepository(qr);
+
+    const believer = await believersRepository.findOne({
       where: {
         id: believerId,
         churchId,
       },
-      relations: {
-        guidedBy: true,
-        guiding: true,
-      },
+      relations,
     });
 
     if (!believer) {
@@ -60,7 +64,7 @@ export class BelieversService {
     dto: CreateBelieverDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesService.findById(churchId);
+    const church = await this.churchesService.findById(churchId, qr);
 
     const believersRepository = this.getBelieversRepository(qr);
 

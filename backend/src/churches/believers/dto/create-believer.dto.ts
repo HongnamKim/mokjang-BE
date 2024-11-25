@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsDate,
   IsEnum,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   Length,
@@ -12,7 +13,7 @@ import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../enum/gender.enum';
 
 export class CreateBelieverDto {
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'invitationId',
     description: '초대로 만들어지는 경우 초대의 ID',
     example: 12,
@@ -20,7 +21,7 @@ export class CreateBelieverDto {
   })
   @IsNumber()
   @IsOptional()
-  invitationId: number;
+  invitationId: number;*/
 
   @ApiProperty({
     name: 'name',
@@ -121,12 +122,15 @@ export class CreateBelieverDto {
   @ApiProperty({
     name: 'vehicleNumber',
     description: '차량번호 4자리',
-    example: '1234',
+    example: ['1234', '5432'],
+    type: 'array',
     required: false,
   })
-  @IsString()
-  @Length(4)
-  @IsNotEmpty()
+  @IsArray()
+  @ArrayMaxSize(3)
+  @IsString({ each: true })
+  @Length(4, 4, { each: true })
+  @IsNotEmpty({ each: true })
   @IsOptional()
   vehicleNumber: string;
 }

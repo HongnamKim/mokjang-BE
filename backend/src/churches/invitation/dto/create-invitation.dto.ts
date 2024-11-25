@@ -1,6 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { InvitationModel } from '../entity/invitation.entity';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -50,7 +52,7 @@ export class CreateInvitationDto extends PickType(InvitationModel, [
   })
   @IsNumber()
   @IsOptional()
-  override guideId: number;
+  override guideId?: number;
 
   @ApiProperty({
     name: 'familyId',
@@ -60,5 +62,20 @@ export class CreateInvitationDto extends PickType(InvitationModel, [
   })
   @IsNumber()
   @IsOptional()
-  familyId?: number;
+  override familyId?: number;
+
+  @ApiProperty({
+    name: 'vehicleNumber',
+    description: '차량번호 4자리',
+    example: ['1234'],
+    type: 'array',
+    required: false,
+  })
+  @IsArray()
+  @ArrayMaxSize(3)
+  @IsString({ each: true })
+  @Length(4, 4, { each: true })
+  @IsNotEmpty({ each: true })
+  @IsOptional()
+  vehicleNumber?: string[];
 }
