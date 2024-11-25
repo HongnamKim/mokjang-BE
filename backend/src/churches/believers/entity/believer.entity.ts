@@ -1,16 +1,16 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
-import { IsString } from 'class-validator';
 
 @Entity()
 export class BelieverModel extends BaseModel {
   @Column()
-  @IsString()
+  @Index()
   name: string;
 
   @Column()
+  @Index()
   mobilePhone: string;
 
   @Column({ nullable: true })
@@ -36,8 +36,8 @@ export class BelieverModel extends BaseModel {
   @Column({ nullable: true })
   marriage: string;
 
-  @Column({ nullable: true })
-  vehicleNumber: string;
+  @Column({ nullable: true, type: 'simple-array', default: null })
+  vehicleNumber: string[];
 
   @Column()
   churchId: number;

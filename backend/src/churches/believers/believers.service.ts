@@ -5,10 +5,21 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BelieverModel } from './entity/believer.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  ArrayContains,
+  FindOptionsRelations,
+  FindOptionsWhere,
+  ILike,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { ChurchesService } from '../churches.service';
 import { CreateBelieverDto } from './dto/create-believer.dto';
 import { UpdateBelieverDto } from './dto/update-believer.dto';
+import { GetBelieverDto } from './dto/get-believer.dto';
+import { ResponsePaginationDto } from './dto/response/response-pagination.dto';
+import { ResponseGetDto } from './dto/response/response-get.dto';
 
 @Injectable()
 export class BelieversService {
@@ -24,16 +35,34 @@ export class BelieversService {
       : this.believersRepository;
   }
 
-  async getBelievers(churchId: number, qr?: QueryRunner) {
+  async getBelievers(churchId: number, dto: GetBelieverDto, qr?: QueryRunner) {
     const believersRepository = this.getBelieversRepository(qr);
 
-    //const church = await this.churchesService.findById(churchId, qr);
+    const findOptionsWhere: FindOptionsWhere<BelieverModel> = {
+      churchId,
+      name: dto.name ? ILike(`%${dto.name}%`) : undefined,
+      //vehicleNumber: ArrayContains()
+    };
 
-    return believersRepository.find({
-      where: {
-        churchId,
-      },
+    const totalCount = await believersRepository.count({
+      where: findOptionsWhere,
     });
+
+    const totalPage = Math.ceil(totalCount / dto.take);
+
+    const result = await believersRepository.find({
+      where: findOptionsWhere,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    return new ResponsePaginationDto<BelieverModel>(
+      result,
+      result.length,
+      dto.page,
+      totalCount,
+      totalPage,
+    );
   }
 
   async getBelieversById(
@@ -56,13 +85,13 @@ export class BelieversService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
 
-    return believer;
+    return new ResponseGetDto<BelieverModel>(believer);
   }
 
   async createBelievers(
     churchId: number,
     dto: CreateBelieverDto,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ) {
     const church = await this.churchesService.findById(churchId, qr);
 

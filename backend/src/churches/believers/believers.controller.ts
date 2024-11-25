@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { BelieversService } from './believers.service';
@@ -16,6 +17,8 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateBelieverDto } from './dto/update-believer.dto';
+import { DefaultBelieverRelationOption } from './const/default-find-options.const';
+import { GetBelieverDto } from './dto/get-believer.dto';
 
 @ApiTags('Churches:Believers')
 @Controller('churches/:churchId/believers')
@@ -23,9 +26,11 @@ export class BelieversController {
   constructor(private readonly believersService: BelieversService) {}
 
   @Get()
-  getBelievers(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.believersService.getBelievers(churchId);
-    //return 'believers';
+  getBelievers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetBelieverDto,
+  ) {
+    return this.believersService.getBelievers(churchId, dto);
   }
 
   @Post()
@@ -43,7 +48,11 @@ export class BelieversController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('believerId', ParseIntPipe) believerId: number,
   ) {
-    return this.believersService.getBelieversById(churchId, believerId);
+    return this.believersService.getBelieversById(
+      churchId,
+      believerId,
+      DefaultBelieverRelationOption,
+    );
   }
 
   @Patch(':believerId')
