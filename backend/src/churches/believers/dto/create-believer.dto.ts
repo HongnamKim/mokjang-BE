@@ -10,14 +10,14 @@ import {
   Length,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
-import { GenderEnum } from '../enum/gender.enum';
+import { GenderEnum } from '../../enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 
 export class CreateBelieverDto {
   @ApiProperty({
     name: 'name',
-    description: '성도 이름',
-    example: '성도',
+    description: '교인 이름',
+    example: '교인',
   })
   @IsString()
   @TransformName()

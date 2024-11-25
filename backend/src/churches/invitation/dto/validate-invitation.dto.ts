@@ -1,7 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { InvitationModel } from '../entity/invitation.entity';
 import { IsNotEmpty, IsString, Length } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { TransformName } from '../../decorator/transform-name';
 
 export class ValidateInvitationDto extends PickType(InvitationModel, [
   'name',
@@ -14,14 +14,7 @@ export class ValidateInvitationDto extends PickType(InvitationModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) =>
-    value
-      .trim()
-      .split('  ')
-      .filter((char: string) => char)
-      .map((char: string) => char.trim())
-      .join(' '),
-  )
+  @TransformName()
   override name: string;
 
   @ApiProperty({

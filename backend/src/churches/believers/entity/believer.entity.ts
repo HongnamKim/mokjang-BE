@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { GenderEnum } from '../enum/gender.enum';
+import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 
 @Entity()

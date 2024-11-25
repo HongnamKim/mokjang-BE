@@ -16,8 +16,11 @@ export class InvitationModel extends BaseModel {
   @Index()
   mobilePhone: string;
 
-  @Column({ type: 'simple-array', default: null })
-  vehicleNumber: string[];
+  @Column({ nullable: true })
+  guideId?: number;
+
+  @Column({ nullable: true })
+  familyId?: number;
 
   @Column({ default: 1 })
   inviteAttempts: number;
@@ -30,12 +33,6 @@ export class InvitationModel extends BaseModel {
 
   @Column({ default: false })
   isValidated: boolean;
-
-  @Column({ nullable: true })
-  guideId?: number;
-
-  @Column({ nullable: true })
-  familyId?: number;
 
   @ManyToOne(() => ChurchModel, (church) => church.invitations)
   invitedChurch: ChurchModel;

@@ -6,6 +6,7 @@ import { InvitationModel } from './entity/invitation.entity';
 import { BelieverModel } from '../believers/entity/believer.entity';
 import { ChurchesModule } from '../churches.module';
 import { BelieversModule } from '../believers/believers.module';
+import { MessagesService } from './messages.service';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { BelieversModule } from '../believers/believers.module';
     BelieversModule,
   ],
   controllers: [InvitationController],
-  providers: [InvitationService],
+  providers: [InvitationService, MessagesService],
 })
 export class InvitationModule {}

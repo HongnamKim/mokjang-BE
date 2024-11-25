@@ -47,7 +47,7 @@ export class InvitationController {
       qr,
     );
 
-    return this.invitationService.generateInviteUrl(invitation);
+    return this.invitationService.sendInviteUrlMessage(invitation);
   }
 
   @Delete(':invitationId')
