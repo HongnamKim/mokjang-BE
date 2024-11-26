@@ -7,9 +7,9 @@ import * as dotenv from 'dotenv';
 import * as process from 'node:process';
 import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
-import { InvitationModel } from './churches/invitation/entity/invitation.entity';
+import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
 import { BelieverModel } from './churches/believers/entity/believer.entity';
-import { InvitationModule } from './churches/invitation/invitation.module';
+import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { BelieversModule } from './churches/believers/believers.module';
 
@@ -25,11 +25,11 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [ChurchModel, InvitationModel, BelieverModel],
+      entities: [ChurchModel, RequestInfoModel, BelieverModel],
       synchronize: true,
     }),
     ChurchesModule,
-    InvitationModule,
+    RequestInfoModule,
     BelieversModule,
   ],
   controllers: [AppController],

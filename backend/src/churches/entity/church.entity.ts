@@ -1,6 +1,6 @@
 import { BaseModel } from '../../common/entity/base.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { InvitationModel } from '../invitation/entity/invitation.entity';
+import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { BelieverModel } from '../believers/entity/believer.entity';
 
 @Entity()
@@ -9,13 +9,16 @@ export class ChurchModel extends BaseModel {
   name: string;
 
   @Column({ default: 0 })
-  dailyInvitationAttempts: number;
+  dailyRequestAttempts: number;
 
   @Column({ nullable: true })
-  lastInvitationDate: Date;
+  lastRequestDate: Date;
 
-  @OneToMany(() => InvitationModel, (invitation) => invitation.invitedChurch)
-  invitations: InvitationModel[];
+  @OneToMany(
+    () => RequestInfoModel,
+    (requestInfo) => requestInfo.requestedChurch,
+  )
+  requestInfos: RequestInfoModel[];
 
   @OneToMany(() => BelieverModel, (believer) => believer.church)
   believers: BelieverModel[];

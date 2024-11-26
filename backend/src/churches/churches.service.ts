@@ -27,7 +27,7 @@ export class ChurchesService {
         id,
       },
       relations: {
-        invitations: true,
+        requestInfos: true,
       },
     });
 
@@ -61,23 +61,23 @@ export class ChurchesService {
    * @param church 초기화 대상 교회
    * @param qr QueryRunner
    */
-  initInvitationAttempts(church: ChurchModel, qr: QueryRunner) {
+  initRequestAttempts(church: ChurchModel, qr: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
     return churchRepository.update(
       { id: church.id },
-      { dailyInvitationAttempts: 0 },
+      { dailyRequestAttempts: 0 },
     );
   }
 
-  increaseInvitationAttempts(church: ChurchModel, qr: QueryRunner) {
+  increaseRequestAttempts(church: ChurchModel, qr: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
     return churchRepository.update(
       { id: church.id },
       {
-        lastInvitationDate: new Date(),
-        dailyInvitationAttempts: church.dailyInvitationAttempts + 1,
+        lastRequestDate: new Date(),
+        dailyRequestAttempts: church.dailyRequestAttempts + 1,
       },
     );
   }

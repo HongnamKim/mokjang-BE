@@ -42,7 +42,7 @@ export class CreateBelieverDto {
   })
   @IsDate()
   @IsOptional()
-  birth: Date;
+  birth?: Date;
 
   @ApiProperty({
     name: 'gender',
@@ -53,7 +53,7 @@ export class CreateBelieverDto {
   })
   @IsEnum(GenderEnum)
   @IsOptional()
-  gender: GenderEnum;
+  gender?: GenderEnum;
 
   @ApiProperty({
     name: 'address',
@@ -64,7 +64,7 @@ export class CreateBelieverDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  address: string;
+  address?: string;
 
   @ApiProperty({
     name: 'homePhone',
@@ -75,7 +75,7 @@ export class CreateBelieverDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  homePhone: string;
+  homePhone?: string;
 
   @ApiProperty({
     name: 'occupation',
@@ -86,7 +86,7 @@ export class CreateBelieverDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  occupation: string;
+  occupation?: string;
 
   @ApiProperty({
     name: 'school',
@@ -97,7 +97,7 @@ export class CreateBelieverDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  school: string;
+  school?: string;
 
   @ApiProperty({
     name: 'marriage',
@@ -108,7 +108,7 @@ export class CreateBelieverDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  marriage: string;
+  marriage?: string;
 
   @ApiProperty({
     name: 'vehicleNumber',
@@ -124,5 +124,5 @@ export class CreateBelieverDto {
   @IsNotEmpty({ each: true })
   @IsValidVehicleNumber()
   @IsOptional()
-  vehicleNumber: string[];
+  vehicleNumber?: string[];
 }
