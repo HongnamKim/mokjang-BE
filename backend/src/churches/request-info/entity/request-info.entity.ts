@@ -3,10 +3,14 @@ import { ChurchModel } from '../../entity/church.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 
 @Entity()
-export class InvitationModel extends BaseModel {
+export class RequestInfoModel extends BaseModel {
   @Column()
   @Index()
-  invitedChurchId: number;
+  requestedChurchId: number;
+
+  @Column()
+  @Index()
+  believerId: number;
 
   @Column()
   @Index()
@@ -23,17 +27,17 @@ export class InvitationModel extends BaseModel {
   familyId?: number;
 
   @Column({ default: 1 })
-  inviteAttempts: number;
+  requestInfoAttempts: number;
 
   @Column({ default: 0 })
   validateAttempts: number;
 
   @Column({ nullable: true, type: 'timestamptz' })
-  invitationExpiresAt: Date;
+  requestInfoExpiresAt: Date;
 
   @Column({ default: false })
   isValidated: boolean;
 
-  @ManyToOne(() => ChurchModel, (church) => church.invitations)
-  invitedChurch: ChurchModel;
+  @ManyToOne(() => ChurchModel, (church) => church.requestInfos)
+  requestedChurch: ChurchModel;
 }

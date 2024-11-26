@@ -1,9 +1,9 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { InvitationModel } from '../entity/invitation.entity';
+import { RequestInfoModel } from '../entity/request-info.entity';
 import { IsNotEmpty, IsString, Length } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
 
-export class ValidateInvitationDto extends PickType(InvitationModel, [
+export class ValidateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',
   'mobilePhone',
 ]) {

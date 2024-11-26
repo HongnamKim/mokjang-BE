@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { BelieverModel } from './entity/believer.entity';
 import {
-  ArrayContains,
   FindOptionsRelations,
   FindOptionsWhere,
   ILike,
@@ -82,10 +81,35 @@ export class BelieversService {
     });
 
     if (!believer) {
-      throw new NotFoundException('존재하지 않는 유저입니다.');
+      throw new NotFoundException('존재하지 않는 교인입니다.');
     }
 
     return new ResponseGetDto<BelieverModel>(believer);
+  }
+
+  async getBelieverByNameAndMobilePhone(
+    churchId: number,
+    name: string,
+    mobilePhone: string,
+    relations?: FindOptionsRelations<BelieverModel>,
+    qr?: QueryRunner,
+  ) {
+    const believersRepository = this.getBelieversRepository(qr);
+
+    const believer = await believersRepository.findOne({
+      where: {
+        churchId,
+        name,
+        mobilePhone,
+      },
+      relations,
+    });
+
+    if (!believer) {
+      throw new NotFoundException('존재하지 않는 교인입니다.');
+    }
+
+    return believer;
   }
 
   async createBelievers(
@@ -97,7 +121,12 @@ export class BelieversService {
 
     const believersRepository = this.getBelieversRepository(qr);
 
-    const isExist = await this.isExistBeliever(churchId, dto.mobilePhone, qr);
+    const isExist = await this.isExistBeliever(
+      churchId,
+      dto.name,
+      dto.mobilePhone,
+      qr,
+    );
 
     if (isExist) {
       throw new BadRequestException('이미 존재하는 휴대전화 번호입니다.');
@@ -112,8 +141,11 @@ export class BelieversService {
     churchId: number,
     believerId: number,
     dto: UpdateBelieverDto,
+    qr?: QueryRunner,
   ) {
-    const result = await this.believersRepository.update(
+    const believersRepository = this.getBelieversRepository(qr);
+
+    const result = await believersRepository.update(
       { id: believerId, churchId, deletedAt: IsNull() },
       { ...dto },
     );
@@ -122,7 +154,7 @@ export class BelieversService {
       throw new NotFoundException('존재하지 않는 유저입니다.');
     }
 
-    return this.believersRepository.findOne({
+    return believersRepository.findOne({
       where: { id: believerId },
       relations: { guiding: true, guidedBy: true },
     });
@@ -148,13 +180,14 @@ export class BelieversService {
 
   async isExistBeliever(
     churchId: number,
+    name: string,
     mobilePhone: string,
     qr?: QueryRunner,
   ) {
     const believerRepository = this.getBelieversRepository(qr);
 
     const believer = await believerRepository.findOne({
-      where: { churchId, mobilePhone },
+      where: { churchId, name, mobilePhone },
     });
 
     return !!believer;

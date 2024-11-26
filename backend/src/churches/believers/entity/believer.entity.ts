@@ -1,9 +1,10 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 
 @Entity()
+@Unique(['name', 'mobilePhone'])
 export class BelieverModel extends BaseModel {
   @Column()
   @Index()

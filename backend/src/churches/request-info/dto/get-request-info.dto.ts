@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional } from 'class-validator';
 
-export class GetInvitationDto {
+export class GetRequestInfoDto {
   @ApiProperty({
     name: 'take',
     description: '조회할 데이터 개수',
