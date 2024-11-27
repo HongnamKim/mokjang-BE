@@ -5,6 +5,7 @@ import {
   IsDate,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Length,
@@ -12,6 +13,7 @@ import {
 import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../../enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
+import { BaptismEnum } from '../enum/baptism.enum';
 
 export class CreateBelieverDto {
   @ApiProperty({
@@ -33,6 +35,16 @@ export class CreateBelieverDto {
   @IsNotEmpty()
   @Length(10, 11)
   mobilePhone: string;
+
+  @ApiProperty({
+    name: 'guidedById',
+    description: '인도자 ID',
+    example: 12,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  guidedById?: number;
 
   @ApiProperty({
     name: 'birth',
@@ -65,6 +77,17 @@ export class CreateBelieverDto {
   @IsNotEmpty()
   @IsOptional()
   address?: string;
+
+  @ApiProperty({
+    name: 'detailAddress',
+    description: '상세 주소',
+    example: '6층 6238호',
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  detailAddress?: string;
 
   @ApiProperty({
     name: 'homePhone',
@@ -125,4 +148,57 @@ export class CreateBelieverDto {
   @IsValidVehicleNumber()
   @IsOptional()
   vehicleNumber?: string[];
+
+  @ApiProperty({
+    name: 'baptism',
+    description: '신급',
+    enum: BaptismEnum,
+    example: BaptismEnum.세례,
+    required: false,
+  })
+  @IsEnum(BaptismEnum)
+  @IsOptional()
+  baptism?: BaptismEnum;
+
+  @ApiProperty({
+    name: 'positionId',
+    description: '직급 id',
+    example: 3,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  positionId?: number;
+
+  @ApiProperty({
+    name: 'positionStartDate',
+    description: '임직 시작일',
+    example: '2024-01-01',
+    required: false,
+  })
+  @IsDate()
+  @IsOptional()
+  positionStartDate?: Date;
+
+  @ApiProperty({
+    name: 'positionStartChurch',
+    description: '임직 시작 교회',
+    example: 'a교회',
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  positionStartChurch?: string;
+
+  @ApiProperty({
+    name: 'previousChurch',
+    description: '이전 교회',
+    example: 'a교회',
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  previousChurch?: string;
 }

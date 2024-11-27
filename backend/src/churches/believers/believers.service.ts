@@ -132,6 +132,21 @@ export class BelieversService {
       throw new BadRequestException('이미 존재하는 휴대전화 번호입니다.');
     }
 
+    if (dto.guidedById) {
+      const guide = await believersRepository.findOne({
+        where: {
+          churchId,
+          id: dto.guidedById,
+        },
+      });
+
+      if (!guide) {
+        throw new NotFoundException(
+          '같은 교회에 해당 교인이 존재하지 않습니다.',
+        );
+      }
+    }
+
     const newBeliever = await believersRepository.save({ ...dto, church });
 
     return believersRepository.findOne({ where: { id: newBeliever.id } });
@@ -144,6 +159,21 @@ export class BelieversService {
     qr?: QueryRunner,
   ) {
     const believersRepository = this.getBelieversRepository(qr);
+
+    if (dto.guidedById) {
+      const guide = await believersRepository.findOne({
+        where: {
+          churchId,
+          id: dto.guidedById,
+        },
+      });
+
+      if (!guide) {
+        throw new NotFoundException(
+          '같은 교회에 해당 교인이 존재하지 않습니다.',
+        );
+      }
+    }
 
     const result = await believersRepository.update(
       { id: believerId, churchId, deletedAt: IsNull() },
