@@ -12,6 +12,10 @@ import { BelieverModel } from './churches/believers/entity/believer.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { BelieversModule } from './churches/believers/believers.module';
+import { EducationModel } from './churches/entity/education.entity';
+import { PositionModel } from './churches/entity/position.entity';
+import { MinistryModel } from './churches/entity/ministry.entity';
+import { GroupModel } from './churches/entity/group.entity';
 
 dotenv.config();
 
@@ -25,7 +29,15 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [ChurchModel, RequestInfoModel, BelieverModel],
+      entities: [
+        ChurchModel,
+        RequestInfoModel,
+        BelieverModel,
+        EducationModel,
+        PositionModel,
+        MinistryModel,
+        GroupModel,
+      ],
       synchronize: true,
     }),
     ChurchesModule,

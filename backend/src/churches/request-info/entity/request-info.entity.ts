@@ -1,8 +1,9 @@
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, Unique } from 'typeorm';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 
 @Entity()
+@Unique(['requestedChurchId', 'name', 'mobilePhone'])
 export class RequestInfoModel extends BaseModel {
   @Column()
   @Index()
