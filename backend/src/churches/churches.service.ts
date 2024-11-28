@@ -38,6 +38,14 @@ export class ChurchesService {
     return church;
   }
 
+  async isExistChurch(id: number, qr?: QueryRunner) {
+    const churchRepository = this.getChurchRepository(qr);
+
+    const church = await churchRepository.findOne({ where: { id } });
+
+    return !!church;
+  }
+
   async createChurch(dto: CreateChurchDto, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
