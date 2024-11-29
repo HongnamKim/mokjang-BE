@@ -3,10 +3,10 @@ import { ChurchesService } from './churches.service';
 import { ChurchesController } from './churches.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './entity/church.entity';
-import { PositionModel } from './entity/position.entity';
-import { EducationModel } from './entity/education.entity';
-import { MinistryModel } from './entity/ministry.entity';
-import { GroupModel } from './entity/group.entity';
+import { PositionModel } from './settings/entity/position.entity';
+import { EducationModel } from './settings/entity/education.entity';
+import { MinistryModel } from './settings/entity/ministry.entity';
+import { GroupModel } from './settings/entity/group.entity';
 
 @Module({
   imports: [

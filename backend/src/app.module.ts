@@ -12,10 +12,11 @@ import { BelieverModel } from './churches/believers/entity/believer.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { BelieversModule } from './churches/believers/believers.module';
-import { EducationModel } from './churches/entity/education.entity';
-import { PositionModel } from './churches/entity/position.entity';
-import { MinistryModel } from './churches/entity/ministry.entity';
-import { GroupModel } from './churches/entity/group.entity';
+import { EducationModel } from './churches/settings/entity/education.entity';
+import { PositionModel } from './churches/settings/entity/position.entity';
+import { MinistryModel } from './churches/settings/entity/ministry.entity';
+import { GroupModel } from './churches/settings/entity/group.entity';
+import { SettingsModule } from './churches/settings/settings.module';
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ dotenv.config();
     ChurchesModule,
     RequestInfoModule,
     BelieversModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [
