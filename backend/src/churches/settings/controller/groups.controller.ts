@@ -4,9 +4,11 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -50,7 +52,13 @@ export class GroupsController {
   deleteGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
+    @Query('cascade', ParseBoolPipe) cascade: boolean = false,
   ) {
-    return this.groupsService.deleteGroup(churchId, groupId);
+    return this.groupsService.deleteGroup(churchId, groupId, cascade);
+  }
+
+  @Get(':groupId/childGroups')
+  getGroupsCascade(@Param('groupId', ParseIntPipe) groupId: number) {
+    return this.groupsService.getGroupsCascade(groupId);
   }
 }

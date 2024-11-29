@@ -9,7 +9,7 @@ import { QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreatePositionDto } from '../dto/position/create-position.dto';
 import { UpdatePositionDto } from '../dto/position/update-position.dto';
-import { SETTING_EXCEPTION } from '../const/exception-messages.const';
+import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
 
 @Injectable()
 export class PositionsService {
