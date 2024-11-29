@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../entity/group.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
-import { SETTING_EXCEPTION } from '../const/exception-messages.const';
+import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
 
 @Injectable()
 export class GroupsService {
@@ -52,6 +52,7 @@ export class GroupsService {
 
     return this.groupsRepository.find({
       where: { churchId },
+      order: { createdAt: 'ASC' },
     });
   }
 
@@ -201,5 +202,152 @@ export class GroupsService {
     return await groupRepository.findOne({ where: { id: groupId } });
   }
 
-  async deleteGroup(churchId: number, groupId: number) {}
+  async deleteGroup(
+    churchId: number,
+    groupId: number,
+    cascade: boolean,
+    qr?: QueryRunner,
+  ) {
+    await this.checkChurchExist(churchId);
+
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const deleteTarget = await groupsRepository.findOne({
+      where: { id: groupId },
+    });
+
+    if (!deleteTarget) {
+      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+    }
+
+    if (deleteTarget.childGroupIds.length > 0 && !cascade) {
+      throw new BadRequestException('해당 그룹에 속한 하위 그룹이 존재합니다.');
+    }
+
+    // 하위 그룹과 같이 삭제
+    if (cascade) {
+      const childGroupIds = await this.getGroupsCascade(groupId);
+
+      const result = await groupsRepository.softDelete({
+        id: In([...childGroupIds, groupId]),
+        churchId,
+      });
+
+      await this.groupsRepository.update(
+        { id: deleteTarget.parentGroupId },
+        {
+          childGroupIds: () =>
+            `array_remove("childGroupIds", ${deleteTarget.id})`,
+        },
+      );
+
+      return `${result.affected} 개의 그룹 삭제`;
+    }
+
+    /*
+
+    // 상위 그룹이 있는 경우
+    // 상위 그룹의 삭제 대상 내용 삭제
+    if (deleteTarget.parentGroupId) {
+      await groupsRepository.update(
+        { id: deleteTarget.parentGroupId },
+        {
+          childGroupIds: () =>
+            `array_remove(\"childGroupIds\", ${deleteTarget.id})`,
+        },
+      );
+    }
+
+    // 하위 그룹이 있는 경우
+    // 하위 그룹들의 삭제 대상 내용 삭제
+    if (deleteTarget.childGroupIds) {
+      await groupsRepository.update(
+        {
+          id: In(deleteTarget.childGroupIds),
+        },
+        { parentGroupId: deleteTarget.parentGroupId },
+      );
+    }
+
+    */
+
+    await this.groupsRepository.softDelete({
+      id: groupId,
+      churchId,
+    });
+
+    await this.groupsRepository.update(
+      { id: deleteTarget.parentGroupId },
+      {
+        childGroupIds: () =>
+          `array_remove("childGroupIds", ${deleteTarget.id})`,
+      },
+    );
+
+    return 'ok';
+  }
+
+  async getGroupsCascade(groupId: number, qr?: QueryRunner) {
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const groupToDelete = await groupsRepository.findOne({
+      where: { id: groupId },
+    });
+
+    const subGroupsQuery = await groupsRepository.query(
+      `
+    WITH RECURSIVE group_tree AS (
+      -- 초기 그룹의 직계 그룹들
+      SELECT id, "parentGroupId", 1 as level, name
+    FROM group_model
+    WHERE "parentGroupId" = $1 AND "deletedAt" IS NULL 
+    
+    UNION ALL 
+    
+    SELECT g.id, g."parentGroupId", gt.level + 1, g.name
+    FROM group_model g
+    INNER JOIN group_tree gt ON g."parentGroupId" = gt.id
+    WHERE g."deletedAt" IS NULL
+    )
+    SELECT id, level, name FROM group_tree
+    `,
+      [groupToDelete.id],
+    );
+
+    const allSubGroupIds = subGroupsQuery.map((row) => row.id);
+
+    return allSubGroupIds;
+  }
+
+  async incrementBelieverCount(groupId: number, qr: QueryRunner) {
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const result = await groupsRepository.increment(
+      { id: groupId },
+      'believerCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+    }
+
+    return true;
+  }
+
+  async decrementBelieverCount(groupId: number, qr: QueryRunner) {
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const result = await groupsRepository.decrement(
+      { id: groupId },
+      'believerCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+    }
+
+    return true;
+  }
 }

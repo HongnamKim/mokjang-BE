@@ -17,7 +17,7 @@ import { ChurchesService } from '../../churches.service';
 import { MinistryModel } from '../entity/ministry.entity';
 import { CreateSettingDto } from '../dto/create-setting.dto';
 import { BaseChurchSettingModel } from '../entity/base-church-setting.entity';
-import { SETTING_EXCEPTION } from '../const/exception-messages.const';
+import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
 import { UpdateSettingDto } from '../dto/update-setting.dto';
 import { EducationModel } from '../entity/education.entity';
 import { GroupModel } from '../entity/group.entity';
@@ -171,5 +171,47 @@ export class SettingsService {
     }
 
     return 'ok';
+  }
+
+  async incrementBelieverCount<T extends BaseChurchSettingModel>(
+    churchId: number,
+    settingValueId: number,
+    entity: EntityTarget<T>,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(entity, qr);
+
+    const result = await repository.increment(
+      { id: settingValueId },
+      'believerCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException();
+    }
+
+    return true;
+  }
+
+  async decrementBelieverCount<T extends BaseChurchSettingModel>(
+    churchId: number,
+    settingValueId: number,
+    entity: EntityTarget<T>,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(entity, qr);
+
+    const result = await repository.decrement(
+      { id: settingValueId },
+      'believerCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException();
+    }
+
+    return true;
   }
 }
