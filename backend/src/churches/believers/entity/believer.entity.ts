@@ -12,10 +12,11 @@ import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
-import { EducationModel } from '../../entity/education.entity';
-import { PositionModel } from '../../entity/position.entity';
-import { MinistryModel } from '../../entity/ministry.entity';
-import { GroupModel } from '../../entity/group.entity';
+import { EducationModel } from '../../settings/entity/education.entity';
+import { PositionModel } from '../../settings/entity/position.entity';
+import { MinistryModel } from '../../settings/entity/ministry.entity';
+import { GroupModel } from '../../settings/entity/group.entity';
+import { FamilyModel } from './family.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -44,6 +45,11 @@ export class BelieverModel extends BaseModel {
   homePhone: string;
 
   // 가족 관계
+  @OneToMany(() => FamilyModel, (family) => family.me)
+  family: FamilyModel[];
+
+  @OneToMany(() => FamilyModel, (family) => family.familyMember)
+  counterFamily: FamilyModel[];
 
   @Column({ nullable: true })
   occupation: string;

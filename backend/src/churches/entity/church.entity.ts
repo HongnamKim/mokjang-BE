@@ -2,10 +2,10 @@ import { BaseModel } from '../../common/entity/base.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { BelieverModel } from '../believers/entity/believer.entity';
-import { GroupModel } from './group.entity';
-import { EducationModel } from './education.entity';
-import { PositionModel } from './position.entity';
-import { MinistryModel } from './ministry.entity';
+import { GroupModel } from '../settings/entity/group.entity';
+import { EducationModel } from '../settings/entity/education.entity';
+import { PositionModel } from '../settings/entity/position.entity';
+import { MinistryModel } from '../settings/entity/ministry.entity';
 
 @Entity()
 export class ChurchModel extends BaseModel {
