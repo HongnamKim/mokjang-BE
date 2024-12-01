@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,8 +14,49 @@ export class FamilyService {
   constructor(
     @InjectRepository(FamilyModel)
     private readonly familyRepository: Repository<FamilyModel>,
-    //private readonly believersService: BelieversService,
+    private readonly believersService: BelieversService,
   ) {}
+
+  async getFamilyMember(churchId: number, believerId: number) {
+    const believer = (await this.believersService.getBelieversById(
+      churchId,
+      believerId,
+      {},
+      null,
+      true,
+    )) as BelieverModel;
+
+    return this.familyRepository.find({
+      where: { meId: believerId },
+      relations: { familyMember: true },
+    });
+  }
+
+  async postFamilyMember(
+    churchId: number,
+    believerId: number,
+    familyId: number,
+    relation: string,
+    qr?: QueryRunner,
+  ) {
+    const believer = (await this.believersService.getBelieversById(
+      churchId,
+      believerId,
+      {},
+      qr,
+      true,
+    )) as BelieverModel;
+
+    const family = (await this.believersService.getBelieversById(
+      churchId,
+      familyId,
+      {},
+      qr,
+      true,
+    )) as BelieverModel;
+
+    return this.createFamilyRelation(believer, family, relation, qr);
+  }
 
   private getFamilyRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(FamilyModel) : this.familyRepository;
@@ -29,7 +69,7 @@ export class FamilyService {
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
-    const isExist = await this.familyRepository.findOne({
+    const isExist = await familyRepository.findOne({
       where: {
         meId,
         familyMemberId,
@@ -51,7 +91,7 @@ export class FamilyService {
     ).map((relation) => relation.familyMemberId);
   }
 
-  async postFamilyRelation(
+  private async createFamilyRelation(
     me: BelieverModel,
     newFamilyMember: BelieverModel,
     relation: string,
@@ -95,12 +135,41 @@ export class FamilyService {
     }
   }
 
-  async patchFamilyRelation(
+  async updateFamilyRelation(
+    churchId: number,
+    meId: number,
+    familyMemberId: number,
+    relation: string,
+    qr?: QueryRunner,
+  ) {
+    const me = (await this.believersService.getBelieversById(
+      churchId,
+      meId,
+      {},
+      qr,
+      true,
+    )) as BelieverModel;
+
+    const familyMember = (await this.believersService.getBelieversById(
+      churchId,
+      familyMemberId,
+      {},
+      qr,
+      true,
+    )) as BelieverModel;
+
+    return this.patchFamilyRelation(me, familyMember, relation, qr);
+  }
+
+  private async patchFamilyRelation(
     me: BelieverModel,
     familyMember: BelieverModel,
     relation: string,
+    qr?: QueryRunner,
   ) {
-    const result = await this.familyRepository.update(
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const result = await familyRepository.update(
       { meId: me.id, familyMemberId: familyMember.id },
       { relation },
     );
@@ -109,7 +178,7 @@ export class FamilyService {
       throw new NotFoundException('해당 가족 관계를 찾을 수 없습니다.');
     }
 
-    return this.familyRepository.findOne({
+    return familyRepository.findOne({
       where: { meId: me.id, familyMemberId: familyMember.id },
     });
   }
