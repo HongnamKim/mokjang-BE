@@ -19,7 +19,6 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateBelieverDto } from './dto/update-believer.dto';
 import { DefaultBelieverRelationOption } from './const/default-find-options.const';
 import { GetBelieverDto } from './dto/get-believer.dto';
-import { CreateFamilyDto } from './dto/create-family.dto';
 
 @ApiTags('Churches:Believers')
 @Controller()
