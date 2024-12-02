@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BelieverModel } from './entity/believer.entity';
-import { BelieversController } from './believers.controller';
-import { BelieversService } from './believers.service';
+import { BelieversController } from './controller/believers.controller';
+import { BelieversService } from './service/believers.service';
 import { ChurchesModule } from '../churches.module';
 import { FamilyModel } from './entity/family.entity';
-import { FamilyService } from './family.service';
+import { FamilyService } from './service/family.service';
 import { RouterModule } from '@nestjs/core';
-import { BelieversFamilyController } from './believers-family.controller';
+import { BelieversFamilyController } from './controller/believers-family.controller';
 
 @Module({
   imports: [

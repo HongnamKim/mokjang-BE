@@ -9,13 +9,13 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
-import { CreateFamilyDto } from './dto/family/create-family.dto';
-import { FamilyService } from './family.service';
-import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { CreateFamilyDto } from '../dto/family/create-family.dto';
+import { FamilyService } from '../service/family.service';
+import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
-import { UpdateFamilyDto } from './dto/family/update-family.dto';
+import { UpdateFamilyDto } from '../dto/family/update-family.dto';
 
 @ApiTags('Churches:Believers:Family')
 @Controller(':believerId/family')
@@ -35,10 +35,26 @@ export class BelieversFamilyController {
   postFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('believerId', ParseIntPipe) believerId: number,
-    @Body() dto: CreateFamilyDto,
+    @Body() createFamilyDto: CreateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
     return this.familyService.postFamilyMember(
+      churchId,
+      believerId,
+      createFamilyDto,
+      qr,
+    );
+  }
+
+  @Post('fetch-family')
+  @UseInterceptors(TransactionInterceptor)
+  fetchFamilyMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('believerId', ParseIntPipe) believerId: number,
+    @Body() dto: CreateFamilyDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.familyService.fetchFamilyRelation(
       churchId,
       believerId,
       dto.familyId,
@@ -56,7 +72,7 @@ export class BelieversFamilyController {
     @Body() dto: UpdateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.familyService.updateFamilyRelation(
+    return this.familyService.patchFamilyRelation(
       churchId,
       believerId,
       familyMemberId,
@@ -66,5 +82,15 @@ export class BelieversFamilyController {
   }
 
   @Delete(':familyMemberId')
-  deleteFamilyMember() {}
+  deleteFamilyMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('believerId', ParseIntPipe) believerId: number,
+    @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
+  ) {
+    return this.familyService.deleteFamilyRelation(
+      churchId,
+      believerId,
+      familyMemberId,
+    );
+  }
 }
