@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../entity/group.entity';
-import { In, QueryRunner, Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
@@ -205,7 +205,7 @@ export class GroupsService {
   async deleteGroup(
     churchId: number,
     groupId: number,
-    cascade: boolean,
+    //cascade: boolean,
     qr?: QueryRunner,
   ) {
     await this.checkChurchExist(churchId);
@@ -220,12 +220,17 @@ export class GroupsService {
       throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
     }
 
-    if (deleteTarget.childGroupIds.length > 0 && !cascade) {
-      throw new BadRequestException('해당 그룹에 속한 하위 그룹이 존재합니다.');
+    if (
+      deleteTarget.childGroupIds.length > 0 ||
+      deleteTarget.believerCount !== 0
+    ) {
+      throw new BadRequestException(
+        '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
+      );
     }
 
     // 하위 그룹과 같이 삭제
-    if (cascade) {
+    /*if (cascade) {
       const childGroupIds = await this.getGroupsCascade(groupId);
 
       const result = await groupsRepository.softDelete({
@@ -242,7 +247,7 @@ export class GroupsService {
       );
 
       return `${result.affected} 개의 그룹 삭제`;
-    }
+    }*/
 
     /*
 
@@ -314,9 +319,7 @@ export class GroupsService {
       [groupToDelete.id],
     );
 
-    const allSubGroupIds = subGroupsQuery.map((row) => row.id);
-
-    return allSubGroupIds;
+    return subGroupsQuery.map((row: any) => row.id);
   }
 
   async incrementBelieverCount(groupId: number, qr: QueryRunner) {
