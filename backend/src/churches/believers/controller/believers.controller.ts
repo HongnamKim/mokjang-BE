@@ -10,15 +10,15 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { BelieversService } from './believers.service';
+import { BelieversService } from '../service/believers.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateBelieverDto } from './dto/create-believer.dto';
-import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { CreateBelieverDto } from '../dto/create-believer.dto';
+import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { UpdateBelieverDto } from './dto/update-believer.dto';
-import { DefaultBelieverRelationOption } from './const/default-find-options.const';
-import { GetBelieverDto } from './dto/get-believer.dto';
+import { UpdateBelieverDto } from '../dto/update-believer.dto';
+import { DefaultBelieverRelationOption } from '../const/default-find-options.const';
+import { GetBelieverDto } from '../dto/get-believer.dto';
 
 @ApiTags('Churches:Believers')
 @Controller()
