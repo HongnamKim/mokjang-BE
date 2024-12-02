@@ -17,7 +17,7 @@ import { ResponseValidateRequestInfoDto } from '../dto/response/response-validat
 import { GetRequestInfoDto } from '../dto/get-request-info.dto';
 import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
-import { BelieversService } from '../../believers/believers.service';
+import { BelieversService } from '../../believers/service/believers.service';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
 import { MessagesService } from './messages.service';
 import { UpdateBelieverDto } from '../../believers/dto/update-believer.dto';
