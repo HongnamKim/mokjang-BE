@@ -24,6 +24,7 @@ import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
+import { FamilyService } from '../../members/service/family.service';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ export class RequestInfoService {
     private readonly requestInfosRepository: Repository<RequestInfoModel>,
     private readonly churchesService: ChurchesService,
     private readonly membersService: MembersService,
+    private readonly familyService: FamilyService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessagesService,
   ) {}
@@ -146,9 +148,23 @@ export class RequestInfoService {
         )
       : await this.membersService.createMember(
           church.id,
-          { name: dto.name, mobilePhone: dto.mobilePhone },
+          {
+            name: dto.name,
+            mobilePhone: dto.mobilePhone,
+            guidedById: dto.guideId,
+          },
           qr,
         );
+
+    if (!isExistMember) {
+      await this.familyService.fetchFamilyRelation(
+        church.id,
+        member.id,
+        dto.familyId,
+        undefined,
+        qr,
+      );
+    }
 
     const repository = this.getRequestInfosRepository(qr);
     const newRequestInfo = await repository.save({

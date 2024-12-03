@@ -23,6 +23,13 @@ import { FamilyModel } from './family.entity';
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
+  churchId: number;
+
+  @ManyToOne(() => ChurchModel, (church) => church.members)
+  church: ChurchModel;
+
+  @Column()
+  @Index()
   name: string;
 
   @Column()
@@ -66,6 +73,20 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true, type: 'simple-array', default: null })
   vehicleNumber: string[];
 
+  @Column({ nullable: true })
+  guidedById: number;
+
+  // 나를 인도한 사람
+  @ManyToOne(() => MemberModel, (member) => member.guiding)
+  guidedBy: MemberModel;
+
+  // 내가 인도한 사람
+  @OneToMany(() => MemberModel, (member) => member.guidedBy)
+  guiding: MemberModel;
+
+  @Column({ nullable: true, comment: '이전교회 이름' })
+  previousChurch: string;
+
   @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
   ministries: MinistryModel[];
@@ -92,27 +113,7 @@ export class MemberModel extends BaseModel {
   @Column({ enum: BaptismEnum, nullable: true, comment: '신급' })
   baptism: BaptismEnum;
 
-  @Column({ nullable: true, comment: '이전교회 이름' })
-  previousChurch: string;
-
-  @Column()
-  churchId: number;
-
   @ManyToMany(() => EducationModel, (education) => education.members)
   @JoinTable()
   educations: EducationModel[];
-
-  @ManyToOne(() => ChurchModel, (church) => church.members)
-  church: ChurchModel;
-
-  @Column({ nullable: true })
-  guidedById: number;
-
-  // 나를 인도한 사람
-  @ManyToOne(() => MemberModel, (member) => member.guiding)
-  guidedBy: MemberModel;
-
-  // 내가 인도한 사람
-  @OneToMany(() => MemberModel, (member) => member.guidedBy)
-  guiding: MemberModel;
 }
