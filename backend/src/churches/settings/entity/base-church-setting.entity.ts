@@ -10,5 +10,5 @@ export abstract class BaseChurchSettingModel extends BaseModel {
   name: string;
 
   @Column({ default: 0 })
-  believerCount: number;
+  membersCount: number;
 }

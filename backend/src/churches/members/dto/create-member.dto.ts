@@ -16,7 +16,7 @@ import { GenderEnum } from '../../enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../enum/baptism.enum';
 
-export class CreateBelieverDto {
+export class CreateMemberDto {
   @ApiProperty({
     name: 'name',
     description: '교인 이름',

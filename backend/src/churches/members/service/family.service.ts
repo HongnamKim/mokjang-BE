@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { FamilyModel } from '../entity/family.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { BelieverModel } from '../entity/believer.entity';
-import { BelieversService } from './believers.service';
+import { MemberModel } from '../entity/member.entity';
+import { MembersService } from './members.service';
 import { CreateFamilyDto } from '../dto/family/create-family.dto';
 import { GenderEnum } from '../../enum/gender.enum';
 import { FamilyRelation } from '../const/family-relation.const';
@@ -18,17 +18,17 @@ export class FamilyService {
   constructor(
     @InjectRepository(FamilyModel)
     private readonly familyRepository: Repository<FamilyModel>,
-    private readonly believersService: BelieversService,
+    private readonly membersService: MembersService,
   ) {}
 
   private getFamilyRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(FamilyModel) : this.familyRepository;
   }
 
-  async getFamilyMember(churchId: number, believerId: number) {
-    const isExist = await this.believersService.isExistBelieverById(
+  async getFamilyMember(churchId: number, memberId: number) {
+    const isExist = await this.membersService.isExistMemberById(
       churchId,
-      believerId,
+      memberId,
     );
 
     if (!isExist) {
@@ -36,24 +36,24 @@ export class FamilyService {
     }
 
     return this.familyRepository.find({
-      where: { meId: believerId },
+      where: { meId: memberId },
       relations: { familyMember: true },
     });
   }
 
   async fetchFamilyRelation(
     churchId: number,
-    believerId: number,
+    memberId: number,
     familyId: number,
     relation: string,
     qr?: QueryRunner,
   ) {
-    const [believer, family] = await Promise.all([
-      this.believersService.getBelieverModelById(churchId, believerId, {}, qr),
-      this.believersService.getBelieverModelById(churchId, familyId, {}, qr),
+    const [member, family] = await Promise.all([
+      this.membersService.getMemberModelById(churchId, memberId, {}, qr),
+      this.membersService.getMemberModelById(churchId, familyId, {}, qr),
     ]);
 
-    return this.fetchAndCreateFamilyRelation(believer, family, relation, qr);
+    return this.fetchAndCreateFamilyRelation(member, family, relation, qr);
   }
 
   private async isExistFamilyRelation(
@@ -74,13 +74,13 @@ export class FamilyService {
     return !!isExist;
   }
 
-  private async getFamilyIds(believerId: number, qr?: QueryRunner) {
+  private async getFamilyIds(memberId: number, qr?: QueryRunner) {
     const familyRepository = this.getFamilyRepository(qr);
 
     return (
       await familyRepository.find({
         where: {
-          meId: believerId,
+          meId: memberId,
           deletedAt: IsNull(),
         },
       })
@@ -88,8 +88,8 @@ export class FamilyService {
   }
 
   private async fetchAndCreateFamilyRelation(
-    me: BelieverModel,
-    newFamilyMember: BelieverModel,
+    me: MemberModel,
+    newFamilyMember: MemberModel,
     relation: string,
     qr?: QueryRunner,
   ) {
@@ -142,21 +142,16 @@ export class FamilyService {
     qr?: QueryRunner,
   ) {
     const [me, familyMember] = await Promise.all([
-      this.believersService.getBelieverModelById(churchId, meId, {}, qr),
-      this.believersService.getBelieverModelById(
-        churchId,
-        familyMemberId,
-        {},
-        qr,
-      ),
+      this.membersService.getMemberModelById(churchId, meId, {}, qr),
+      this.membersService.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
     return this.updateFamilyRelation(me, familyMember, relation, qr);
   }
 
   private async updateFamilyRelation(
-    me: BelieverModel,
-    familyMember: BelieverModel,
+    me: MemberModel,
+    familyMember: MemberModel,
     relation: string,
     qr?: QueryRunner,
   ) {
@@ -183,21 +178,16 @@ export class FamilyService {
     qr?: QueryRunner,
   ) {
     const [me, familyMember] = await Promise.all([
-      this.believersService.getBelieverModelById(churchId, meId, {}, qr),
-      this.believersService.getBelieverModelById(
-        churchId,
-        familyMemberId,
-        {},
-        qr,
-      ),
+      this.membersService.getMemberModelById(churchId, meId, {}, qr),
+      this.membersService.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
     return this.deleteFamily(me, familyMember, qr);
   }
 
   private async deleteFamily(
-    me: BelieverModel,
-    familyMember: BelieverModel,
+    me: MemberModel,
+    familyMember: MemberModel,
     qr?: QueryRunner,
   ) {
     const familyRepository = this.getFamilyRepository(qr);
@@ -217,13 +207,13 @@ export class FamilyService {
 
   async postFamilyMember(
     churchId: number,
-    believerId: number,
+    memberId: number,
     createFamilyDto: CreateFamilyDto,
     qr: QueryRunner,
   ) {
     const [me, familyMember] = await Promise.all([
-      this.believersService.getBelieverModelById(churchId, believerId, {}, qr),
-      this.believersService.getBelieverModelById(
+      this.membersService.getMemberModelById(churchId, memberId, {}, qr),
+      this.membersService.getMemberModelById(
         churchId,
         createFamilyDto.familyId,
         {},
@@ -240,8 +230,8 @@ export class FamilyService {
   }
 
   private async createFamilyMember(
-    me: BelieverModel,
-    familyMember: BelieverModel,
+    me: MemberModel,
+    familyMember: MemberModel,
     relation: string,
     qr: QueryRunner,
   ) {
@@ -289,7 +279,7 @@ export class FamilyService {
     });
   }
 
-  private getCounterRelation(relation: string, me: BelieverModel) {
+  private getCounterRelation(relation: string, me: MemberModel) {
     switch (relation) {
       case FamilyRelation.GRANDFATHER:
       case FamilyRelation.GRANDMOTHER:

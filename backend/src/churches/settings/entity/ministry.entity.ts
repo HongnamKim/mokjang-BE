@@ -1,5 +1,5 @@
 import { Entity, ManyToOne, OneToMany } from 'typeorm';
-import { BelieverModel } from '../../believers/entity/believer.entity';
+import { MemberModel } from '../../members/entity/member.entity';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaseChurchSettingModel } from './base-church-setting.entity';
 
@@ -8,6 +8,6 @@ export class MinistryModel extends BaseChurchSettingModel {
   @ManyToOne(() => ChurchModel, (church) => church.ministries)
   church: ChurchModel;
 
-  @OneToMany(() => BelieverModel, (believer) => believer.ministries)
-  believers: BelieverModel[];
+  @OneToMany(() => MemberModel, (member) => member.ministries)
+  members: MemberModel[];
 }
