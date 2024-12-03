@@ -1,9 +1,9 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { PositionModel } from '../../entity/position.entity';
+import { OfficerModel } from '../../entity/officer.entity';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreatePositionDto extends PickType(PositionModel, [
+export class CreatePositionDto extends PickType(OfficerModel, [
   'name',
   'churchId',
 ]) {

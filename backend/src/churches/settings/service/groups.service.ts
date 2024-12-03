@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../entity/group.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
@@ -60,7 +60,7 @@ export class GroupsService {
     await this.checkChurchExist(churchId, qr);
 
     if (await this.isExistGroup(churchId, dto.name, qr)) {
-      throw new BadRequestException(SETTING_EXCEPTION.GROUP.ALREADY_EXIST);
+      throw new BadRequestException(SETTING_EXCEPTION.GroupModel.ALREADY_EXIST);
     }
 
     const groupsRepository = this.getGroupRepository(qr);
@@ -75,7 +75,9 @@ export class GroupsService {
       });
 
       if (!parentGroup) {
-        throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(true));
+        throw new NotFoundException(
+          SETTING_EXCEPTION.GroupModel.PARENT_NOT_FOUND,
+        );
       }
 
       const newGroup = await groupsRepository.save({
@@ -83,19 +85,21 @@ export class GroupsService {
         ...dto,
       });
 
+      // 상위 그룹에 새로운 그룹 추가
       await groupsRepository
-        .createQueryBuilder()
+        .createQueryBuilder(undefined, qr)
         .update()
         .set({
-          childGroupIds: () => `array_append("childGroupIds", ${newGroup.id})`,
+          childGroupIds: () => `array_append("childGroupIds", :newGroupId)`,
         })
         .where('id= :id', { id: parentGroup.id })
+        .setParameters({ newGroupId: newGroup.id })
         .execute();
 
       return newGroup;
     }
 
-    // 상위 그룹이 없는 경우
+    // 새로운 그룹 추가
     return groupsRepository.save({
       churchId: churchId,
       ...dto,
@@ -110,8 +114,9 @@ export class GroupsService {
   ) {
     await this.checkChurchExist(churchId, qr);
 
+    // 그룹 이름을 변경하는 경우 중복 확인
     if (dto.name && (await this.isExistGroup(churchId, dto.name, qr))) {
-      throw new BadRequestException(SETTING_EXCEPTION.GROUP.ALREADY_EXIST);
+      throw new BadRequestException(SETTING_EXCEPTION.GroupModel.ALREADY_EXIST);
     }
 
     const groupRepository = this.getGroupRepository(qr);
@@ -124,14 +129,10 @@ export class GroupsService {
       });
 
       if (!newParentGroup) {
-        throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(true));
+        throw new NotFoundException(
+          SETTING_EXCEPTION.GroupModel.PARENT_NOT_FOUND,
+        );
       }
-
-      /**
-       * 기존 상위 그룹에서 하위 그룹 id 제거,
-       * 새 상위 그룹에 하위 그룹 id 추가,
-       * 하위 그룹 업데이트
-       */
 
       // 변경 전 그룹
       const beforeUpdateGroup = await groupRepository.findOne({
@@ -147,56 +148,48 @@ export class GroupsService {
         );
       }
 
-      // 기존 상위 그룹 관계 해제
-      await groupRepository
-        .createQueryBuilder()
-        .update()
-        .set({
-          childGroupIds: () =>
-            `array_remove("childGroupIds", ${beforeUpdateGroup.id})`,
-        })
-        .where('id = :id', { id: beforeUpdateGroup.parentGroupId })
-        .execute();
-
-      // 새로운 상위 그룹 관계 추가
-      await groupRepository
-        .createQueryBuilder()
-        .update()
-        .set({
-          childGroupIds: () =>
-            `array_append("childGroupIds", ${beforeUpdateGroup.id})`,
-        })
-        .where('id = :id', { id: dto.parentGroupId })
-        .execute();
-
-      const result = await groupRepository.update(
-        {
-          id: groupId,
-        },
-        {
-          parentGroupId: newParentGroup.id,
-          name: dto.name,
-        },
-      );
-
-      if (result.affected === 0) {
-        throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
-      }
-
-      return await groupRepository.findOne({ where: { id: groupId } });
+      // 이전 상위 그룹, 새로운 상위 그룹의 childGroupId 수정
+      await Promise.all([
+        groupRepository
+          .createQueryBuilder(undefined, qr)
+          .update()
+          .set({
+            childGroupIds: () =>
+              `array_remove("childGroupIds", :beforeUpdateGroupId)`,
+          })
+          .where('id = :id', { id: beforeUpdateGroup.parentGroupId })
+          .setParameters({
+            beforeUpdateGroupId: beforeUpdateGroup.id,
+          })
+          .execute(),
+        groupRepository
+          .createQueryBuilder(undefined, qr)
+          .update()
+          .set({
+            childGroupIds: () =>
+              `array_append("childGroupIds", :beforeUpdateGroupId)`,
+          })
+          .where('id = :id', { id: dto.parentGroupId })
+          .setParameters({
+            beforeUpdateGroupId: beforeUpdateGroup.id,
+          })
+          .execute(),
+      ]);
     }
 
+    // 업데이트 수행
     const result = await groupRepository.update(
       {
         id: groupId,
+        deletedAt: IsNull(),
       },
       {
-        name: dto.name,
+        ...dto,
       },
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
     }
 
     return await groupRepository.findOne({ where: { id: groupId } });
@@ -217,7 +210,7 @@ export class GroupsService {
     });
 
     if (!deleteTarget) {
-      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
     }
 
     if (
@@ -250,7 +243,7 @@ export class GroupsService {
     }*/
 
     /*
-
+    대상 그룹만 삭제
     // 상위 그룹이 있는 경우
     // 상위 그룹의 삭제 대상 내용 삭제
     if (deleteTarget.parentGroupId) {
@@ -276,18 +269,27 @@ export class GroupsService {
 
     */
 
-    await this.groupsRepository.softDelete({
+    const result = await groupsRepository.softDelete({
       id: groupId,
       churchId,
+      deletedAt: IsNull(),
     });
 
-    await this.groupsRepository.update(
-      { id: deleteTarget.parentGroupId },
-      {
-        childGroupIds: () =>
-          `array_remove("childGroupIds", ${deleteTarget.id})`,
-      },
-    );
+    if (result.affected === 0) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
+
+    await this.groupsRepository
+      .createQueryBuilder(undefined, qr)
+      .update()
+      .set({
+        childGroupIds: () => `array_remove("childGroupIds", :deleteTargetId)`,
+      })
+      .where('id = :id', { id: deleteTarget.parentGroupId })
+      .setParameters({
+        deleteTargetId: deleteTarget.id,
+      })
+      .execute();
 
     return 'ok';
   }
@@ -332,7 +334,7 @@ export class GroupsService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
     }
 
     return true;
@@ -348,7 +350,7 @@ export class GroupsService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(SETTING_EXCEPTION.GROUP.NOT_FOUND(false));
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
     }
 
     return true;

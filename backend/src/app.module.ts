@@ -13,7 +13,7 @@ import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { BelieversModule } from './churches/believers/believers.module';
 import { EducationModel } from './churches/settings/entity/education.entity';
-import { PositionModel } from './churches/settings/entity/position.entity';
+import { OfficerModel } from './churches/settings/entity/officer.entity';
 import { MinistryModel } from './churches/settings/entity/ministry.entity';
 import { GroupModel } from './churches/settings/entity/group.entity';
 import { SettingsModule } from './churches/settings/settings.module';
@@ -37,7 +37,7 @@ dotenv.config();
         BelieverModel,
         FamilyModel,
         EducationModel,
-        PositionModel,
+        OfficerModel,
         MinistryModel,
         GroupModel,
       ],
