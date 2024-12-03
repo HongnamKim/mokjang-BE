@@ -29,6 +29,9 @@ export class BelieverModel extends BaseModel {
   @Index()
   mobilePhone: string;
 
+  @Column({ default: false })
+  isLunar: boolean;
+
   @Column({ nullable: true })
   birth: Date;
 

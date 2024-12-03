@@ -11,7 +11,7 @@ export class MessagesService {
 
   private readonly from: string = process.env.FROM_NUMBER;
 
-  async sendInvitation(mobilePhone: string, message: string) {
+  async sendRequestInfoMessage(mobilePhone: string, message: string) {
     return this.smsClient.sendOne({
       to: mobilePhone,
       from: this.from,
