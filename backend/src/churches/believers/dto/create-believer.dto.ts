@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsDate,
   IsEnum,
   IsNotEmpty,
@@ -45,6 +46,17 @@ export class CreateBelieverDto {
   @IsNumber()
   @IsOptional()
   guidedById?: number;
+
+  @ApiProperty({
+    name: 'isLunar',
+    description: '생년월일이 음력인지',
+    example: false,
+    default: false,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isLunar?: boolean = false;
 
   @ApiProperty({
     name: 'birth',

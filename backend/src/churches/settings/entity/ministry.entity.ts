@@ -8,6 +8,6 @@ export class MinistryModel extends BaseChurchSettingModel {
   @ManyToOne(() => ChurchModel, (church) => church.ministries)
   church: ChurchModel;
 
-  @OneToMany(() => BelieverModel, (believer) => believer.ministry)
+  @OneToMany(() => BelieverModel, (believer) => believer.ministries)
   believers: BelieverModel[];
 }

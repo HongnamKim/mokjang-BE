@@ -13,9 +13,10 @@ import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
 import { EducationModel } from '../../settings/entity/education.entity';
-import { PositionModel } from '../../settings/entity/position.entity';
+import { OfficerModel } from '../../settings/entity/officer.entity';
 import { MinistryModel } from '../../settings/entity/ministry.entity';
 import { GroupModel } from '../../settings/entity/group.entity';
+import { FamilyModel } from './family.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -27,6 +28,9 @@ export class BelieverModel extends BaseModel {
   @Column()
   @Index()
   mobilePhone: string;
+
+  @Column({ default: false })
+  isLunar: boolean;
 
   @Column({ nullable: true })
   birth: Date;
@@ -44,6 +48,11 @@ export class BelieverModel extends BaseModel {
   homePhone: string;
 
   // 가족 관계
+  @OneToMany(() => FamilyModel, (family) => family.me)
+  family: FamilyModel[];
+
+  @OneToMany(() => FamilyModel, (family) => family.familyMember)
+  counterFamily: FamilyModel[];
 
   @Column({ nullable: true })
   occupation: string;
@@ -57,12 +66,9 @@ export class BelieverModel extends BaseModel {
   @Column({ nullable: true, type: 'simple-array', default: null })
   vehicleNumber: string[];
 
-  // 사역 CRUD 완성 후 N:1 relation 추가
-  @Column({ nullable: true, comment: '사역 ID' })
-  ministryId: number;
-
-  @ManyToOne(() => MinistryModel, (ministry) => ministry.believers)
-  ministry: MinistryModel;
+  @ManyToMany(() => MinistryModel, (ministry) => ministry.believers)
+  @JoinTable()
+  ministries: MinistryModel[];
 
   // 소그룹 CRUD 완성 후 N:1 relation 추가
   @Column({ nullable: true, comment: '소그룹 ID' })
@@ -72,10 +78,10 @@ export class BelieverModel extends BaseModel {
   group: GroupModel;
 
   @Column({ nullable: true, comment: '직분 ID' })
-  positionId: number;
+  officerId: number;
 
-  @ManyToOne(() => PositionModel, (position) => position.believers)
-  position: PositionModel;
+  @ManyToOne(() => OfficerModel, (officer) => officer.believers)
+  officer: OfficerModel;
 
   @Column({ nullable: true, comment: '임직일' })
   positionStartDate: Date;
