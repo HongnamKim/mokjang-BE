@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsDate,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -15,6 +16,7 @@ import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../../enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../enum/baptism.enum';
+import { FamilyRelation } from '../const/family-relation.const';
 
 export class CreateMemberDto {
   @ApiProperty({
@@ -46,6 +48,27 @@ export class CreateMemberDto {
   @IsNumber()
   @IsOptional()
   guidedById?: number;
+
+  @ApiProperty({
+    name: 'familyMemberId',
+    description: '가족 교인 ID',
+    example: 12,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  familyMemberId?: number;
+
+  @ApiProperty({
+    name: 'relation',
+    description: '가족 관계',
+    example: '어머니',
+    default: '가족',
+  })
+  @IsString()
+  @IsIn(Object.values(FamilyRelation))
+  @IsOptional()
+  relation?: string;
 
   @ApiProperty({
     name: 'isLunar',
@@ -173,6 +196,17 @@ export class CreateMemberDto {
   baptism?: BaptismEnum;
 
   @ApiProperty({
+    name: 'previousChurch',
+    description: '이전 교회',
+    example: 'a교회',
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  previousChurch?: string;
+
+  /*@ApiProperty({
     name: 'positionId',
     description: '직급 id',
     example: 3,
@@ -201,16 +235,5 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  positionStartChurch?: string;
-
-  @ApiProperty({
-    name: 'previousChurch',
-    description: '이전 교회',
-    example: 'a교회',
-    required: false,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  previousChurch?: string;
+  positionStartChurch?: string;*/
 }
