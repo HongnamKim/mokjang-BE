@@ -104,7 +104,10 @@ export class RequestInfoService {
       },
     );
 
-    return repository.findOne({ where: { id: requestInfo.id } });
+    return repository.findOne({
+      where: { id: requestInfo.id },
+      relations: { requestedChurch: true },
+    });
   }
 
   private async handleNewRequest(
@@ -156,7 +159,10 @@ export class RequestInfoService {
       ),
     });
 
-    return repository.findOne({ where: { id: newRequestInfo.id } });
+    return repository.findOne({
+      where: { id: newRequestInfo.id },
+      relations: { requestedChurch: true },
+    });
   }
 
   async createRequestInfo(
@@ -190,9 +196,16 @@ export class RequestInfoService {
   }
 
   sendRequestInfoUrlMessage(requestInfo: RequestInfoModel) {
-    const url = `테스트 url 입니다.\n${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${requestInfo.requestedChurchId}/request/${requestInfo.id}`;
+    const churchName = requestInfo.requestedChurch.name.endsWith('교회')
+      ? requestInfo.requestedChurch.name
+      : `${requestInfo.requestedChurch.name} 교회`;
 
-    return this.messagesService.sendInvitation(requestInfo.mobilePhone, url);
+    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${requestInfo.requestedChurchId}/request/${requestInfo.id}`;
+
+    return this.messagesService.sendRequestInfoMessage(
+      requestInfo.mobilePhone,
+      url,
+    );
     //return url;
   }
 
