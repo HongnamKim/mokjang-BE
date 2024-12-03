@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PositionsController } from './controller/positions.controller';
+import { OfficersController } from './controller/officers.controller';
 import { SettingsService } from './service/settings.service';
-import { PositionsService } from './service/positions.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PositionModel } from './entity/position.entity';
+import { OfficerModel } from './entity/officer.entity';
 import { ChurchesModule } from '../churches.module';
 import { RouterModule } from '@nestjs/core';
 import { MinistriesController } from './controller/ministries.controller';
@@ -24,18 +23,18 @@ import { GroupsService } from './service/groups.service';
     ]),
     ChurchesModule,
     TypeOrmModule.forFeature([
-      PositionModel,
+      OfficerModel,
       MinistryModel,
       EducationModel,
       GroupModel,
     ]),
   ],
   controllers: [
-    PositionsController,
+    OfficersController,
     MinistriesController,
     EducationsController,
     GroupsController,
   ],
-  providers: [SettingsService, PositionsService, GroupsService],
+  providers: [SettingsService, GroupsService],
 })
 export class SettingsModule {}

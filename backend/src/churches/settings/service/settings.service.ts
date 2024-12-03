@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PositionModel } from '../entity/position.entity';
+import { OfficerModel } from '../entity/officer.entity';
 import {
   EntitySchema,
   EntityTarget,
@@ -20,28 +20,24 @@ import { BaseChurchSettingModel } from '../entity/base-church-setting.entity';
 import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
 import { UpdateSettingDto } from '../dto/update-setting.dto';
 import { EducationModel } from '../entity/education.entity';
-import { GroupModel } from '../entity/group.entity';
 
 @Injectable()
 export class SettingsService {
   private entityMap: Map<string, Repository<any>>;
 
   constructor(
-    @InjectRepository(PositionModel)
-    private readonly positionsRepository: Repository<PositionModel>,
+    @InjectRepository(OfficerModel)
+    private readonly positionsRepository: Repository<OfficerModel>,
     @InjectRepository(MinistryModel)
     private readonly ministryRepository: Repository<MinistryModel>,
     @InjectRepository(EducationModel)
     private readonly educationRepository: Repository<EducationModel>,
-    @InjectRepository(GroupModel)
-    private readonly groupRepository: Repository<GroupModel>,
     private readonly churchesService: ChurchesService,
   ) {
     this.entityMap = new Map([
-      [PositionModel.name, positionsRepository],
+      [OfficerModel.name, positionsRepository],
       [MinistryModel.name, ministryRepository],
       [EducationModel.name, educationRepository],
-      [GroupModel.name, groupRepository],
     ]);
   }
 
@@ -114,8 +110,12 @@ export class SettingsService {
   ) {
     await this.checkChurchExist(churchId);
 
+    const entityName = this.getEntityName(entity);
+
     if (await this.isExistSettingValue(churchId, dto.name, entity, qr)) {
-      throw new BadRequestException(SETTING_EXCEPTION.POSITION.ALREADY_EXIST);
+      throw new BadRequestException(
+        SETTING_EXCEPTION[entityName].ALREADY_EXIST,
+      );
     }
 
     const repository = this.getRepository(entity, qr);
@@ -132,19 +132,23 @@ export class SettingsService {
   ) {
     await this.checkChurchExist(churchId);
 
+    const entityName = this.getEntityName(entity);
+
     if (await this.isExistSettingValue(churchId, dto.name, entity, qr)) {
-      throw new BadRequestException(SETTING_EXCEPTION.POSITION.ALREADY_EXIST);
+      throw new BadRequestException(
+        SETTING_EXCEPTION[entityName].ALREADY_EXIST,
+      );
     }
 
     const repository = this.getRepository(entity, qr);
 
     const result = await repository.update(
-      { id: settingValueId },
+      { id: settingValueId, deletedAt: IsNull() },
       { name: dto.name },
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(SETTING_EXCEPTION.POSITION.NOT_FOUND);
+      throw new NotFoundException(SETTING_EXCEPTION[entityName].NOT_FOUND);
     }
 
     return repository.findOne({ where: { id: settingValueId } });
@@ -158,6 +162,8 @@ export class SettingsService {
   ) {
     await this.checkChurchExist(churchId);
 
+    const entityName = this.getEntityName(entity);
+
     const repository = this.getRepository(entity, qr);
 
     const result = await repository.softDelete({
@@ -167,7 +173,7 @@ export class SettingsService {
     });
 
     if (result.affected === 0) {
-      throw new NotFoundException(SETTING_EXCEPTION.POSITION.NOT_FOUND);
+      throw new NotFoundException(SETTING_EXCEPTION[entityName].NOT_FOUND);
     }
 
     return 'ok';
