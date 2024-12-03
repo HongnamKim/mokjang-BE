@@ -3,6 +3,9 @@ import { BelieverModel } from '../entity/believer.entity';
 
 export const DefaultBelieverRelationOption: FindOptionsRelations<BelieverModel> =
   {
-    guiding: true,
+    guiding: false,
     guidedBy: true,
+    family: {
+      familyMember: true,
+    },
   };

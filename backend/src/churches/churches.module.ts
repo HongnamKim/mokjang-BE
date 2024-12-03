@@ -3,7 +3,7 @@ import { ChurchesService } from './churches.service';
 import { ChurchesController } from './churches.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './entity/church.entity';
-import { PositionModel } from './settings/entity/position.entity';
+import { OfficerModel } from './settings/entity/officer.entity';
 import { EducationModel } from './settings/entity/education.entity';
 import { MinistryModel } from './settings/entity/ministry.entity';
 import { GroupModel } from './settings/entity/group.entity';
@@ -12,7 +12,7 @@ import { GroupModel } from './settings/entity/group.entity';
   imports: [
     TypeOrmModule.forFeature([
       ChurchModel,
-      PositionModel,
+      OfficerModel,
       EducationModel,
       MinistryModel,
       GroupModel,

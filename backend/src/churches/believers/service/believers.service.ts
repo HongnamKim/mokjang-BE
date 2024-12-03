@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BelieverModel } from './entity/believer.entity';
+import { BelieverModel } from '../entity/believer.entity';
 import {
   FindOptionsRelations,
   FindOptionsWhere,
@@ -13,12 +13,12 @@ import {
   QueryRunner,
   Repository,
 } from 'typeorm';
-import { ChurchesService } from '../churches.service';
-import { CreateBelieverDto } from './dto/create-believer.dto';
-import { UpdateBelieverDto } from './dto/update-believer.dto';
-import { GetBelieverDto } from './dto/get-believer.dto';
-import { ResponsePaginationDto } from './dto/response/response-pagination.dto';
-import { ResponseGetDto } from './dto/response/response-get.dto';
+import { ChurchesService } from '../../churches.service';
+import { CreateBelieverDto } from '../dto/create-believer.dto';
+import { UpdateBelieverDto } from '../dto/update-believer.dto';
+import { GetBelieverDto } from '../dto/get-believer.dto';
+import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
+import { ResponseGetDto } from '../dto/response/response-get.dto';
 
 @Injectable()
 export class BelieversService {
@@ -26,6 +26,7 @@ export class BelieversService {
     @InjectRepository(BelieverModel)
     private readonly believersRepository: Repository<BelieverModel>,
     private readonly churchesService: ChurchesService,
+    //private readonly familyService: FamilyService,
   ) {}
 
   private getBelieversRepository(qr?: QueryRunner) {
@@ -69,6 +70,7 @@ export class BelieversService {
     believerId: number,
     relations?: FindOptionsRelations<BelieverModel>,
     qr?: QueryRunner,
+    internal: boolean = false,
   ) {
     const believersRepository = this.getBelieversRepository(qr);
 
@@ -84,7 +86,30 @@ export class BelieversService {
       throw new NotFoundException('존재하지 않는 교인입니다.');
     }
 
-    return new ResponseGetDto<BelieverModel>(believer);
+    return internal ? believer : new ResponseGetDto<BelieverModel>(believer);
+  }
+
+  async getBelieverModelById(
+    churchId: number,
+    believerId: number,
+    relations?: FindOptionsRelations<BelieverModel>,
+    qr?: QueryRunner,
+  ) {
+    const believersRepository = this.getBelieversRepository(qr);
+
+    const believer = await believersRepository.findOne({
+      where: {
+        id: believerId,
+        churchId,
+      },
+      relations,
+    });
+
+    if (!believer) {
+      throw new NotFoundException('존재하지 않는 교인입니다.');
+    }
+
+    return believer;
   }
 
   async getBelieverByNameAndMobilePhone(
@@ -206,6 +231,20 @@ export class BelieversService {
       success: true,
       resultId: believerId,
     };
+  }
+
+  async isExistBelieverById(
+    churchId: number,
+    believerId: number,
+    qr?: QueryRunner,
+  ) {
+    const believersRepository = this.getBelieversRepository(qr);
+
+    const believer = await believersRepository.findOne({
+      where: { churchId, id: believerId },
+    });
+
+    return !!believer;
   }
 
   async isExistBeliever(

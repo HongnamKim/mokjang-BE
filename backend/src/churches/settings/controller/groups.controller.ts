@@ -38,25 +38,32 @@ export class GroupsController {
   }
 
   @Patch(':groupId')
+  @UseInterceptors(TransactionInterceptor)
   patchGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
     @Body() dto: UpdateGroupDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.groupsService.updateGroup(churchId, groupId, dto);
+    return this.groupsService.updateGroup(churchId, groupId, dto, qr);
   }
 
   @Delete(':groupId')
+  @UseInterceptors(TransactionInterceptor)
   deleteGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
+    @QueryRunner() qr: QR,
     //@Query('cascade', ParseBoolPipe) cascade: boolean = false,
   ) {
-    return this.groupsService.deleteGroup(churchId, groupId /*cascade*/);
+    return this.groupsService.deleteGroup(churchId, groupId, qr /*cascade*/);
   }
 
   @Get(':groupId/childGroups')
-  getGroupsCascade(@Param('groupId', ParseIntPipe) groupId: number) {
+  getGroupsCascade(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
     return this.groupsService.getGroupsCascade(groupId);
   }
 }

@@ -10,18 +10,18 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SettingsService } from '../service/settings.service';
-import { PositionModel } from '../entity/position.entity';
+import { OfficerModel } from '../entity/officer.entity';
 import { CreateSettingDto } from '../dto/create-setting.dto';
 import { UpdateSettingDto } from '../dto/update-setting.dto';
 
-@ApiTags('Settings:Positions')
-@Controller('positions')
-export class PositionsController {
+@ApiTags('Settings:Officers')
+@Controller('officers')
+export class OfficersController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get()
   getPosition(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.settingsService.getSettingValues(churchId, PositionModel);
+    return this.settingsService.getSettingValues(churchId, OfficerModel);
   }
 
   @Post()
@@ -29,32 +29,32 @@ export class PositionsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateSettingDto,
   ) {
-    return this.settingsService.postSettingValues(churchId, dto, PositionModel);
+    return this.settingsService.postSettingValues(churchId, dto, OfficerModel);
   }
 
-  @Patch(':positionId')
+  @Patch(':officerId')
   patchPosition(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('positionId', ParseIntPipe) positionId: number,
+    @Param('officerId', ParseIntPipe) officerId: number,
     @Body() dto: UpdateSettingDto,
   ) {
     return this.settingsService.updateSettingValue(
       churchId,
-      positionId,
+      officerId,
       dto,
-      PositionModel,
+      OfficerModel,
     );
   }
 
-  @Delete(':positionId')
+  @Delete(':officerId')
   deletePosition(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('positionId', ParseIntPipe) positionId: number,
+    @Param('officerId', ParseIntPipe) officerId: number,
   ) {
     return this.settingsService.deleteSettingValue(
       churchId,
-      positionId,
-      PositionModel,
+      officerId,
+      OfficerModel,
     );
   }
 }
