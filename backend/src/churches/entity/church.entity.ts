@@ -1,7 +1,7 @@
 import { BaseModel } from '../../common/entity/base.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
-import { BelieverModel } from '../believers/entity/believer.entity';
+import { MemberModel } from '../members/entity/member.entity';
 import { GroupModel } from '../settings/entity/group.entity';
 import { EducationModel } from '../settings/entity/education.entity';
 import { OfficerModel } from '../settings/entity/officer.entity';
@@ -30,12 +30,9 @@ export class ChurchModel extends BaseModel {
   @Column({ nullable: true })
   lastRequestDate: Date;
 
-  @OneToMany(
-    () => RequestInfoModel,
-    (requestInfo) => requestInfo.requestedChurch,
-  )
+  @OneToMany(() => RequestInfoModel, (requestInfo) => requestInfo.church)
   requestInfos: RequestInfoModel[];
 
-  @OneToMany(() => BelieverModel, (believer) => believer.church)
-  believers: BelieverModel[];
+  @OneToMany(() => MemberModel, (member) => member.church)
+  members: MemberModel[];
 }

@@ -20,7 +20,7 @@ import { FamilyModel } from './family.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
-export class BelieverModel extends BaseModel {
+export class MemberModel extends BaseModel {
   @Column()
   @Index()
   name: string;
@@ -66,7 +66,7 @@ export class BelieverModel extends BaseModel {
   @Column({ nullable: true, type: 'simple-array', default: null })
   vehicleNumber: string[];
 
-  @ManyToMany(() => MinistryModel, (ministry) => ministry.believers)
+  @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
   ministries: MinistryModel[];
 
@@ -74,13 +74,13 @@ export class BelieverModel extends BaseModel {
   @Column({ nullable: true, comment: '소그룹 ID' })
   groupId: number;
 
-  @ManyToOne(() => GroupModel, (group) => group.believers)
+  @ManyToOne(() => GroupModel, (group) => group.members)
   group: GroupModel;
 
   @Column({ nullable: true, comment: '직분 ID' })
   officerId: number;
 
-  @ManyToOne(() => OfficerModel, (officer) => officer.believers)
+  @ManyToOne(() => OfficerModel, (officer) => officer.members)
   officer: OfficerModel;
 
   @Column({ nullable: true, comment: '임직일' })
@@ -98,21 +98,21 @@ export class BelieverModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToMany(() => EducationModel, (education) => education.believers)
+  @ManyToMany(() => EducationModel, (education) => education.members)
   @JoinTable()
   educations: EducationModel[];
 
-  @ManyToOne(() => ChurchModel, (church) => church.believers)
+  @ManyToOne(() => ChurchModel, (church) => church.members)
   church: ChurchModel;
 
   @Column({ nullable: true })
   guidedById: number;
 
   // 나를 인도한 사람
-  @ManyToOne(() => BelieverModel, (believer) => believer.guiding)
-  guidedBy: BelieverModel;
+  @ManyToOne(() => MemberModel, (member) => member.guiding)
+  guidedBy: MemberModel;
 
   // 내가 인도한 사람
-  @OneToMany(() => BelieverModel, (believer) => believer.guidedBy)
-  guiding: BelieverModel;
+  @OneToMany(() => MemberModel, (member) => member.guidedBy)
+  guiding: MemberModel;
 }

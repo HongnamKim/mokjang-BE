@@ -179,7 +179,7 @@ export class SettingsService {
     return 'ok';
   }
 
-  async incrementBelieverCount<T extends BaseChurchSettingModel>(
+  async incrementMembersCount<T extends BaseChurchSettingModel>(
     churchId: number,
     settingValueId: number,
     entity: EntityTarget<T>,
@@ -189,7 +189,7 @@ export class SettingsService {
 
     const result = await repository.increment(
       { id: settingValueId },
-      'believerCount',
+      'membersCount',
       1,
     );
 
@@ -200,7 +200,7 @@ export class SettingsService {
     return true;
   }
 
-  async decrementBelieverCount<T extends BaseChurchSettingModel>(
+  async decrementMembersCount<T extends BaseChurchSettingModel>(
     churchId: number,
     settingValueId: number,
     entity: EntityTarget<T>,
@@ -210,7 +210,7 @@ export class SettingsService {
 
     const result = await repository.decrement(
       { id: settingValueId },
-      'believerCount',
+      'membersCount',
       1,
     );
 

@@ -215,7 +215,7 @@ export class GroupsService {
 
     if (
       deleteTarget.childGroupIds.length > 0 ||
-      deleteTarget.believerCount !== 0
+      deleteTarget.membersCount !== 0
     ) {
       throw new BadRequestException(
         '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
@@ -324,12 +324,12 @@ export class GroupsService {
     return subGroupsQuery.map((row: any) => row.id);
   }
 
-  async incrementBelieverCount(groupId: number, qr: QueryRunner) {
+  async incrementMembersCount(groupId: number, qr: QueryRunner) {
     const groupsRepository = this.getGroupRepository(qr);
 
     const result = await groupsRepository.increment(
       { id: groupId },
-      'believerCount',
+      'membersCount',
       1,
     );
 
@@ -340,12 +340,12 @@ export class GroupsService {
     return true;
   }
 
-  async decrementBelieverCount(groupId: number, qr: QueryRunner) {
+  async decrementMembersCount(groupId: number, qr: QueryRunner) {
     const groupsRepository = this.getGroupRepository(qr);
 
     const result = await groupsRepository.decrement(
       { id: groupId },
-      'believerCount',
+      'membersCount',
       1,
     );
 

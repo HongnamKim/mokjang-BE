@@ -38,6 +38,7 @@ export class RequestInfoController {
   @UseInterceptors(TransactionInterceptor)
   async postRequestInfo(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @Query('isTest') isTest: boolean,
     @Body() dto: CreateRequestInfoDto,
     @QueryRunner() qr: QR,
   ) {
@@ -47,7 +48,10 @@ export class RequestInfoController {
       qr,
     );
 
-    return this.requestInfoService.sendRequestInfoUrlMessage(requestInfo);
+    return this.requestInfoService.sendRequestInfoUrlMessage(
+      requestInfo,
+      isTest,
+    );
   }
 
   @Delete(':requestInfoId')

@@ -17,30 +17,30 @@ import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateFamilyDto } from '../dto/family/update-family.dto';
 
-@ApiTags('Churches:Believers:Family')
-@Controller(':believerId/family')
-export class BelieversFamilyController {
+@ApiTags('Churches:Members:Family')
+@Controller(':memberId/family')
+export class MembersFamilyController {
   constructor(private readonly familyService: FamilyService) {}
 
   @Get()
   getFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('believerId', ParseIntPipe) believerId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
   ) {
-    return this.familyService.getFamilyMember(churchId, believerId);
+    return this.familyService.getFamilyMember(churchId, memberId);
   }
 
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('believerId', ParseIntPipe) believerId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
     @Body() createFamilyDto: CreateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
     return this.familyService.postFamilyMember(
       churchId,
-      believerId,
+      memberId,
       createFamilyDto,
       qr,
     );
@@ -50,13 +50,13 @@ export class BelieversFamilyController {
   @UseInterceptors(TransactionInterceptor)
   fetchFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('believerId', ParseIntPipe) believerId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: CreateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
     return this.familyService.fetchFamilyRelation(
       churchId,
-      believerId,
+      memberId,
       dto.familyId,
       dto.relation,
       qr,
@@ -67,14 +67,14 @@ export class BelieversFamilyController {
   @UseInterceptors(TransactionInterceptor)
   patchFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('believerId', ParseIntPipe) believerId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
     @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
     @Body() dto: UpdateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
     return this.familyService.patchFamilyRelation(
       churchId,
-      believerId,
+      memberId,
       familyMemberId,
       dto.relation,
       qr,
@@ -84,12 +84,12 @@ export class BelieversFamilyController {
   @Delete(':familyMemberId')
   deleteFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('believerId', ParseIntPipe) believerId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
     @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
   ) {
     return this.familyService.deleteFamilyRelation(
       churchId,
-      believerId,
+      memberId,
       familyMemberId,
     );
   }

@@ -1,8 +1,8 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { CreateBelieverDto } from './create-believer.dto';
+import { CreateMemberDto } from './create-member.dto';
 import { IsArray, IsNumber, IsOptional } from 'class-validator';
 
-export class UpdateBelieverDto extends OmitType(CreateBelieverDto, [
+export class UpdateMemberDto extends OmitType(CreateMemberDto, [
   'name',
   'mobilePhone',
 ]) {
