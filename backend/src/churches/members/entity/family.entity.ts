@@ -1,4 +1,3 @@
-import { BaseModel } from '../../../common/entity/base.entity';
 import {
   Column,
   CreateDateColumn,
@@ -10,7 +9,7 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { BelieverModel } from './believer.entity';
+import { MemberModel } from './member.entity';
 
 @Entity()
 @Unique(['meId', 'familyMemberId'])
@@ -19,15 +18,15 @@ export class FamilyModel {
   @Index()
   meId: number;
 
-  @ManyToOne(() => BelieverModel, (believer) => believer.family)
-  me: BelieverModel;
+  @ManyToOne(() => MemberModel, (member) => member.family)
+  me: MemberModel;
 
   @PrimaryColumn()
   @Index()
   familyMemberId: number;
 
-  @ManyToOne(() => BelieverModel, (believer) => believer.counterFamily)
-  familyMember: BelieverModel;
+  @ManyToOne(() => MemberModel, (member) => member.counterFamily)
+  familyMember: MemberModel;
 
   @Column({ default: '가족' })
   relation?: string;

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../entity/request-info.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateRequestInfoDto } from '../dto/create-request-info.dto';
 import { ValidateRequestInfoDto } from '../dto/validate-request-info.dto';
@@ -17,10 +17,10 @@ import { ResponseValidateRequestInfoDto } from '../dto/response/response-validat
 import { GetRequestInfoDto } from '../dto/get-request-info.dto';
 import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
-import { BelieversService } from '../../believers/service/believers.service';
+import { MembersService } from '../../members/service/members.service';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
 import { MessagesService } from './messages.service';
-import { UpdateBelieverDto } from '../../believers/dto/update-believer.dto';
+import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
@@ -33,7 +33,7 @@ export class RequestInfoService {
     @InjectRepository(RequestInfoModel)
     private readonly requestInfosRepository: Repository<RequestInfoModel>,
     private readonly churchesService: ChurchesService,
-    private readonly believersService: BelieversService,
+    private readonly membersService: MembersService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessagesService,
   ) {}
@@ -106,7 +106,7 @@ export class RequestInfoService {
 
     return repository.findOne({
       where: { id: requestInfo.id },
-      relations: { requestedChurch: true },
+      relations: { church: true },
     });
   }
 
@@ -128,22 +128,23 @@ export class RequestInfoService {
 
     await this.churchesService.increaseRequestAttempts(church, qr);
 
-    const isExistBeliever = await this.believersService.isExistBeliever(
-      church.id,
-      dto.name,
-      dto.mobilePhone,
-      qr,
-    );
+    const isExistMember =
+      await this.membersService.isExistMemberByNameAndMobilePhone(
+        church.id,
+        dto.name,
+        dto.mobilePhone,
+        qr,
+      );
 
-    const believer = isExistBeliever
-      ? await this.believersService.getBelieverByNameAndMobilePhone(
+    const member = isExistMember
+      ? await this.membersService.getMemberByNameAndMobilePhone(
           church.id,
           dto.name,
           dto.mobilePhone,
           {},
           qr,
         )
-      : await this.believersService.createBelievers(
+      : await this.membersService.createMember(
           church.id,
           { name: dto.name, mobilePhone: dto.mobilePhone },
           qr,
@@ -152,8 +153,8 @@ export class RequestInfoService {
     const repository = this.getRequestInfosRepository(qr);
     const newRequestInfo = await repository.save({
       ...dto,
-      believerId: believer.id,
-      requestedChurch: church,
+      memberId: member.id,
+      church: church,
       requestInfoExpiresAt: DateUtils.calculateExpiryDate(
         REQUEST_CONSTANTS.EXPIRE_DAYS,
       ),
@@ -161,7 +162,7 @@ export class RequestInfoService {
 
     return repository.findOne({
       where: { id: newRequestInfo.id },
-      relations: { requestedChurch: true },
+      relations: { church: true },
     });
   }
 
@@ -181,7 +182,7 @@ export class RequestInfoService {
     const repository = this.getRequestInfosRepository(qr);
     const existingRequest = await repository.findOne({
       where: {
-        requestedChurchId: churchId,
+        churchId: churchId,
         name: dto.name,
         mobilePhone: dto.mobilePhone,
       },
@@ -195,18 +196,22 @@ export class RequestInfoService {
       : this.handleNewRequest(church, dto, qr);
   }
 
-  sendRequestInfoUrlMessage(requestInfo: RequestInfoModel) {
-    const churchName = requestInfo.requestedChurch.name.endsWith('교회')
-      ? requestInfo.requestedChurch.name
-      : `${requestInfo.requestedChurch.name} 교회`;
+  sendRequestInfoUrlMessage(
+    requestInfo: RequestInfoModel,
+    isTest: boolean = true,
+  ) {
+    const churchName = requestInfo.church.name.endsWith('교회')
+      ? requestInfo.church.name
+      : `${requestInfo.church.name} 교회`;
 
-    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${requestInfo.requestedChurchId}/request/${requestInfo.id}`;
+    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${requestInfo.churchId}/request/${requestInfo.id}`;
 
-    return this.messagesService.sendRequestInfoMessage(
-      requestInfo.mobilePhone,
-      url,
-    );
-    //return url;
+    return isTest
+      ? url
+      : this.messagesService.sendRequestInfoMessage(
+          requestInfo.mobilePhone,
+          url,
+        );
   }
 
   async validateRequestInfo(
@@ -217,7 +222,7 @@ export class RequestInfoService {
     const validateTarget = await this.requestInfosRepository.findOne({
       where: {
         id: requestInfoId,
-        requestedChurchId: churchId,
+        churchId: churchId,
       },
     });
 
@@ -242,7 +247,7 @@ export class RequestInfoService {
     ) {
       await this.requestInfosRepository.softDelete({
         id: requestInfoId,
-        requestedChurchId: churchId,
+        churchId: churchId,
       });
 
       throw new BadRequestException(
@@ -256,7 +261,7 @@ export class RequestInfoService {
       validateTarget.mobilePhone !== dto.mobilePhone
     ) {
       await this.requestInfosRepository.increment(
-        { id: requestInfoId, requestedChurchId: churchId },
+        { id: requestInfoId, churchId: churchId },
         'validateAttempts',
         1,
       );
@@ -265,7 +270,7 @@ export class RequestInfoService {
 
     // 검증 성공
     await this.requestInfosRepository.update(
-      { id: requestInfoId, requestedChurchId: churchId },
+      { id: requestInfoId, churchId: churchId },
       { isValidated: true },
     );
 
@@ -274,13 +279,13 @@ export class RequestInfoService {
 
   async findAllRequestInfos(churchId: number, dto: GetRequestInfoDto) {
     const totalCount = await this.requestInfosRepository.count({
-      where: { requestedChurchId: churchId },
+      where: { churchId: churchId },
     });
 
     const totalPage = Math.ceil(totalCount / dto.page);
 
     const result = await this.requestInfosRepository.find({
-      where: { requestedChurchId: churchId },
+      where: { churchId: churchId },
       order: { createdAt: 'desc' },
       take: dto.take,
       skip: dto.take * (dto.page - 1),
@@ -304,7 +309,8 @@ export class RequestInfoService {
 
     const result = await requestInfosRepository.softDelete({
       id: requestInfoId,
-      requestedChurchId: churchId,
+      churchId: churchId,
+      deletedAt: IsNull(),
     });
 
     if (result.affected === 0) {
@@ -323,7 +329,7 @@ export class RequestInfoService {
     const requestInfosRepository = this.getRequestInfosRepository(qr);
 
     const requestInfo = await requestInfosRepository.findOne({
-      where: { id: requestInfoId, requestedChurchId: churchId },
+      where: { id: requestInfoId, churchId: churchId },
     });
 
     if (!requestInfo) {
@@ -338,13 +344,13 @@ export class RequestInfoService {
       throw new BadRequestException('검증되지 않은 입력 요청입니다.');
     }
 
-    const updateDto: UpdateBelieverDto = {
+    const updateDto: UpdateMemberDto = {
       ...dto,
     };
 
-    const updated = await this.believersService.updateBeliever(
+    const updated = await this.membersService.updateMember(
       churchId,
-      requestInfo.believerId,
+      requestInfo.memberId,
       updateDto,
       qr,
     );

@@ -8,16 +8,16 @@ import * as process from 'node:process';
 import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
-import { BelieverModel } from './churches/believers/entity/believer.entity';
+import { MemberModel } from './churches/members/entity/member.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { BelieversModule } from './churches/believers/believers.module';
+import { MembersModule } from './churches/members/members.module';
 import { EducationModel } from './churches/settings/entity/education.entity';
 import { OfficerModel } from './churches/settings/entity/officer.entity';
 import { MinistryModel } from './churches/settings/entity/ministry.entity';
 import { GroupModel } from './churches/settings/entity/group.entity';
 import { SettingsModule } from './churches/settings/settings.module';
-import { FamilyModel } from './churches/believers/entity/family.entity';
+import { FamilyModel } from './churches/members/entity/family.entity';
 
 dotenv.config();
 
@@ -34,7 +34,7 @@ dotenv.config();
       entities: [
         ChurchModel,
         RequestInfoModel,
-        BelieverModel,
+        MemberModel,
         FamilyModel,
         EducationModel,
         OfficerModel,
@@ -45,7 +45,7 @@ dotenv.config();
     }),
     ChurchesModule,
     RequestInfoModule,
-    BelieversModule,
+    MembersModule,
     SettingsModule,
   ],
   controllers: [AppController],

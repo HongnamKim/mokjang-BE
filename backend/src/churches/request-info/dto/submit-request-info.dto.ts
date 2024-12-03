@@ -1,3 +1,3 @@
-import { CreateBelieverDto } from '../../believers/dto/create-believer.dto';
+import { CreateMemberDto } from '../../members/dto/create-member.dto';
 
-export class SubmitRequestInfoDto extends CreateBelieverDto {}
+export class SubmitRequestInfoDto extends CreateMemberDto {}

@@ -1,11 +1,9 @@
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
-import { BelieverModel } from '../entity/believer.entity';
+import { MemberModel } from '../entity/member.entity';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
 
-export class GetBelieverDto extends PartialType(
-  PickType(BelieverModel, ['name']),
-) {
+export class GetMemberDto extends PartialType(PickType(MemberModel, ['name'])) {
   @ApiProperty({
     name: 'take',
     description: '조회할 데이터 개수',
