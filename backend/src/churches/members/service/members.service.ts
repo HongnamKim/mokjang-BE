@@ -19,6 +19,7 @@ import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
 import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
+import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 
 @Injectable()
 export class MembersService {
@@ -109,7 +110,7 @@ export class MembersService {
     return member;
   }
 
-  async getMemberByNameAndMobilePhone(
+  async getMemberModelByNameAndMobilePhone(
     churchId: number,
     name: string,
     mobilePhone: string,
@@ -147,23 +148,25 @@ export class MembersService {
     );
 
     if (isExist) {
-      throw new BadRequestException('이미 존재하는 휴대전화 번호입니다.');
+      throw new BadRequestException('이미 존재하는 교인입니다.');
     }
 
+    // 인도자 처리
     if (dto.guidedById) {
-      const guide = await membersRepository.findOne({
-        where: {
-          churchId,
-          id: dto.guidedById,
-        },
-      });
+      const isExistGuide = await this.isExistMemberById(
+        churchId,
+        dto.guidedById,
+        qr,
+      );
 
-      if (!guide) {
+      if (!isExistGuide) {
         throw new NotFoundException(
           '같은 교회에 해당 교인이 존재하지 않습니다.',
         );
       }
     }
+
+    // TODO 가족 등록
 
     const newMember = await membersRepository.save({ ...dto, church });
 
@@ -179,14 +182,13 @@ export class MembersService {
     const membersRepository = this.getMembersRepository(qr);
 
     if (dto.guidedById) {
-      const guide = await membersRepository.findOne({
-        where: {
-          churchId,
-          id: dto.guidedById,
-        },
-      });
+      const isExistGuide = await this.isExistMemberById(
+        churchId,
+        dto.guidedById,
+        qr,
+      );
 
-      if (!guide) {
+      if (!isExistGuide) {
         throw new NotFoundException(
           '같은 교회에 해당 교인이 존재하지 않습니다.',
         );
@@ -199,7 +201,7 @@ export class MembersService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('존재하지 않는 유저입니다.');
+      throw new NotFoundException('존재하지 않는 교인입니다.');
     }
 
     return membersRepository.findOne({
@@ -208,7 +210,10 @@ export class MembersService {
     });
   }
 
-  async deleteMember(churchId: number, memberId: number) {
+  async deleteMember(
+    churchId: number,
+    memberId: number,
+  ): Promise<ResponseDeleteDto> {
     const result = await this.membersRepository.softDelete({
       id: memberId,
       churchId,
