@@ -17,7 +17,7 @@ import { MembersFamilyController } from './controller/members-family.controller'
     ]),
     ChurchesModule,
   ],
-  exports: [MembersService],
+  exports: [MembersService, FamilyService],
   controllers: [MembersController, MembersFamilyController],
   providers: [MembersService, FamilyService],
 })

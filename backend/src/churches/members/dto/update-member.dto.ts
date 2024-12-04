@@ -1,12 +1,13 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { OmitType } from '@nestjs/swagger';
 import { CreateMemberDto } from './create-member.dto';
-import { IsArray, IsNumber, IsOptional } from 'class-validator';
 
 export class UpdateMemberDto extends OmitType(CreateMemberDto, [
   'name',
   'mobilePhone',
+  'familyMemberId',
+  'relation',
 ]) {
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'ministryId',
     description: '사역 ID',
     example: 3,
@@ -35,5 +36,5 @@ export class UpdateMemberDto extends OmitType(CreateMemberDto, [
   @IsArray()
   @IsNumber({}, { each: true })
   @IsOptional()
-  educationId?: number[];
+  educationId?: number[];*/
 }
