@@ -18,30 +18,60 @@ import { MinistryModel } from './churches/settings/entity/ministry.entity';
 import { GroupModel } from './churches/settings/entity/group.entity';
 import { SettingsModule } from './churches/settings/settings.module';
 import { FamilyModel } from './churches/members/entity/family.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as Joi from 'joi';
 
 dotenv.config();
 
 @Module({
   imports: [
     UsersModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: +process.env.DB_PORT,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      entities: [
-        ChurchModel,
-        RequestInfoModel,
-        MemberModel,
-        FamilyModel,
-        EducationModel,
-        OfficerModel,
-        MinistryModel,
-        GroupModel,
-      ],
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        // DB
+        DB_TYPE: Joi.string().valid('postgres').required(),
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.number().required(),
+        DB_USERNAME: Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_DATABASE: Joi.string().required(),
+        // 정보 요청
+        DAILY_REQUEST_INFO_LIMITS: Joi.number().required(),
+        DAILY_REQUEST_INFO_RETRY_LIMITS: Joi.number().required(),
+        REQUEST_INFO_EXPIRE_DAYS: Joi.number().required(),
+        REQUEST_INFO_VALIDATION_LIMITS: Joi.number().required(),
+        // 네트워크
+        PROTOCOL: Joi.string().required(),
+        HOST: Joi.string().required(),
+        PORT: Joi.number().required(),
+        // 메시지 API
+        SMS_API_KEY: Joi.string().required(),
+        SMS_API_SECRET: Joi.string().required(),
+        FROM_NUMBER: Joi.string().required(),
+      }),
+    }),
+    TypeOrmModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        type: configService.get<string>('DB_TYPE') as 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+        entities: [
+          ChurchModel,
+          RequestInfoModel,
+          MemberModel,
+          FamilyModel,
+          EducationModel,
+          OfficerModel,
+          MinistryModel,
+          GroupModel,
+        ],
+        synchronize: true,
+      }),
+      inject: [ConfigService],
     }),
     ChurchesModule,
     RequestInfoModule,

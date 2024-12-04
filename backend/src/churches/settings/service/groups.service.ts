@@ -121,6 +121,15 @@ export class GroupsService {
 
     const groupRepository = this.getGroupRepository(qr);
 
+    // 변경 전 그룹
+    const beforeUpdateGroup = await groupRepository.findOne({
+      where: { id: groupId },
+    });
+
+    if (!beforeUpdateGroup) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
+
     // 상위 그룹을 변경하는 경우
     if (dto.parentGroupId) {
       // 변경하려는 상위 그룹이 있는지
@@ -133,11 +142,6 @@ export class GroupsService {
           SETTING_EXCEPTION.GroupModel.PARENT_NOT_FOUND,
         );
       }
-
-      // 변경 전 그룹
-      const beforeUpdateGroup = await groupRepository.findOne({
-        where: { id: groupId },
-      });
 
       // 변경 대상 그룹을 현재 자신의 하위 그룹과 종속 관계를 바꾸려는 경우
       // A -> B 관계를 직접 A <- B 로 바꾸려는 경우
@@ -297,9 +301,13 @@ export class GroupsService {
   async getGroupsCascade(groupId: number, qr?: QueryRunner) {
     const groupsRepository = this.getGroupRepository(qr);
 
-    const groupToDelete = await groupsRepository.findOne({
+    const group = await groupsRepository.findOne({
       where: { id: groupId },
     });
+
+    if (!group) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
 
     const subGroupsQuery = await groupsRepository.query(
       `
@@ -318,7 +326,7 @@ export class GroupsService {
     )
     SELECT id, level, name FROM group_tree
     `,
-      [groupToDelete.id],
+      [group.id],
     );
 
     return subGroupsQuery.map((row: any) => row.id);

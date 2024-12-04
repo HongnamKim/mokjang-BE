@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -170,7 +171,14 @@ export class MembersService {
 
     const newMember = await membersRepository.save({ ...dto, church });
 
-    return membersRepository.findOne({ where: { id: newMember.id } });
+    const result = await membersRepository.findOne({
+      where: { id: newMember.id },
+    });
+
+    if (!result) {
+      throw new InternalServerErrorException('교인 생성 중 에러 발생');
+    }
+    return result;
   }
 
   async updateMember(

@@ -13,7 +13,7 @@ export class GetMemberDto extends PartialType(PickType(MemberModel, ['name'])) {
   })
   @IsNumber()
   @IsOptional()
-  take?: number = 50;
+  take: number = 50;
 
   @ApiProperty({
     name: 'page',
@@ -24,7 +24,7 @@ export class GetMemberDto extends PartialType(PickType(MemberModel, ['name'])) {
   })
   @IsNumber()
   @IsOptional()
-  page?: number = 1;
+  page: number = 1;
 
   @ApiProperty({
     name: 'name',

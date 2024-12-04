@@ -8,20 +8,27 @@ import { RequestLimitValidationResult } from '../types/request-limit-validation-
 import { DateUtils } from '../utils/date-utils.util';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import { RequestInfoService } from './request-info.service';
+import { ConfigService } from '@nestjs/config';
 
 dotenv.config();
 
 @Injectable()
 export class RequestLimitValidatorService {
-  constructor() {}
-  private readonly constants = REQUEST_CONSTANTS;
+  constructor(private readonly configService: ConfigService) {}
+
+  private readonly DAILY_REQUEST_LIMITS = this.configService.getOrThrow(
+    'DAILY_REQUEST_INFO_LIMITS',
+  );
+
+  private readonly DAILY_REQUEST_INFO_RETRY_LIMITS =
+    this.configService.getOrThrow('DAILY_REQUEST_INFO_RETRY_LIMITS');
 
   async validateNewRequest(
     church: ChurchModel,
     qr: QueryRunner,
     churchService: ChurchesService,
   ): Promise<RequestLimitValidationResult> {
-    if (church.dailyRequestAttempts < this.constants.DAILY_REQUEST_LIMITS) {
+    if (church.dailyRequestAttempts < this.DAILY_REQUEST_LIMITS) {
       return { isValid: true };
     }
 
@@ -32,8 +39,8 @@ export class RequestLimitValidatorService {
 
     return {
       isValid: false,
-      error: this.constants.ERROR_MESSAGES.DAILY_LIMIT_EXCEEDED(
-        this.constants.DAILY_REQUEST_LIMITS,
+      error: REQUEST_CONSTANTS.ERROR_MESSAGES.DAILY_LIMIT_EXCEEDED(
+        this.DAILY_REQUEST_LIMITS,
       ),
     };
   }
@@ -43,7 +50,9 @@ export class RequestLimitValidatorService {
     qr: QueryRunner,
     requestService: RequestInfoService,
   ): Promise<RequestLimitValidationResult> {
-    if (requestInfo.requestInfoAttempts < this.constants.DAILY_RETRY_LIMITS) {
+    if (
+      requestInfo.requestInfoAttempts < this.DAILY_REQUEST_INFO_RETRY_LIMITS
+    ) {
       return { isValid: true };
     }
 
@@ -54,8 +63,8 @@ export class RequestLimitValidatorService {
 
     return {
       isValid: false,
-      error: this.constants.ERROR_MESSAGES.RETRY_LIMIT_EXCEEDED(
-        this.constants.DAILY_RETRY_LIMITS,
+      error: REQUEST_CONSTANTS.ERROR_MESSAGES.RETRY_LIMIT_EXCEEDED(
+        this.DAILY_REQUEST_INFO_RETRY_LIMITS,
       ),
     };
   }

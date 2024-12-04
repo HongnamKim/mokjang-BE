@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Post,
@@ -47,6 +48,10 @@ export class RequestInfoController {
       dto,
       qr,
     );
+
+    if (!requestInfo) {
+      throw new InternalServerErrorException('입력 요청 생성 중 문제 발생');
+    }
 
     return this.requestInfoService.sendRequestInfoUrlMessage(
       requestInfo,
