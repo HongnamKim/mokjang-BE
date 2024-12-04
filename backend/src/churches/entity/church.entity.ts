@@ -27,7 +27,7 @@ export class ChurchModel extends BaseModel {
   @Column({ default: 0 })
   dailyRequestAttempts: number;
 
-  @Column({ nullable: true })
+  @Column({ default: new Date('1900-01-01') })
   lastRequestDate: Date;
 
   @OneToMany(() => RequestInfoModel, (requestInfo) => requestInfo.church)
