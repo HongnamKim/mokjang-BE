@@ -7,7 +7,10 @@ export class DateUtils {
     return new Date(new Date().getTime() + days * 24 * 60 * 60 * 1000);
   }
 
-  static isNewDay(date1: Date, date2: Date) {
-    return this.getStartOfDay(date1) > this.getStartOfDay(date2);
+  static isNewDay(now: Date, lastRequest: Date) {
+    if (!lastRequest) {
+      return true;
+    }
+    return this.getStartOfDay(now) > this.getStartOfDay(lastRequest);
   }
 }
