@@ -45,9 +45,17 @@ export class SettingsService {
     entity: EntityTarget<T>,
     qr?: QueryRunner,
   ) {
-    return qr
+    const repository = qr
       ? qr.manager.getRepository(entity)
       : this.entityMap.get(this.getEntityName(entity));
+
+    if (!repository) {
+      throw new InternalServerErrorException(
+        '존재하지 않는 교회 커스텀 설정 대상입니다.',
+      );
+    }
+
+    return repository;
   }
 
   private getEntityName<T extends BaseChurchSettingModel>(

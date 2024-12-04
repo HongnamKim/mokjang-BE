@@ -29,7 +29,7 @@ export class FamilyModel {
   familyMember: MemberModel;
 
   @Column({ default: '가족' })
-  relation?: string;
+  relation: string;
 
   @CreateDateColumn()
   createdAt: Date;

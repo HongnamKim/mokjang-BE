@@ -10,8 +10,6 @@ import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateRequestInfoDto } from '../dto/create-request-info.dto';
 import { ValidateRequestInfoDto } from '../dto/validate-request-info.dto';
-import * as dotenv from 'dotenv';
-import * as process from 'node:process';
 import { ChurchModel } from '../../entity/church.entity';
 import { ResponseValidateRequestInfoDto } from '../dto/response/response-validate-request-info.dto';
 import { GetRequestInfoDto } from '../dto/get-request-info.dto';
@@ -23,10 +21,10 @@ import { MessagesService } from './messages.service';
 import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
-import { REQUEST_CONSTANTS } from '../const/request-info.const';
 import { FamilyService } from '../../members/service/family.service';
-
-dotenv.config();
+import { FamilyRelation } from '../../members/const/family-relation.const';
+import { ConfigService } from '@nestjs/config';
+import { REQUEST_CONSTANTS } from '../const/request-info.const';
 
 @Injectable()
 export class RequestInfoService {
@@ -38,7 +36,15 @@ export class RequestInfoService {
     private readonly familyService: FamilyService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessagesService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private readonly REQUEST_EXPIRE_DAYS = this.configService.getOrThrow<number>(
+    'REQUEST_INFO_EXPIRE_DAYS',
+  );
+  private readonly VALIDATION_LIMITS = this.configService.getOrThrow<number>(
+    'REQUEST_INFO_VALIDATION_LIMITS',
+  );
 
   private getRequestInfosRepository(qr?: QueryRunner) {
     return qr
@@ -101,7 +107,7 @@ export class RequestInfoService {
       {
         requestInfoAttempts: requestInfo.requestInfoAttempts + 1,
         requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-          REQUEST_CONSTANTS.EXPIRE_DAYS,
+          this.REQUEST_EXPIRE_DAYS,
         ),
       },
     );
@@ -162,7 +168,7 @@ export class RequestInfoService {
         church.id,
         member.id,
         dto.familyId,
-        undefined,
+        FamilyRelation.DEFAULT,
         qr,
       );
     }
@@ -173,7 +179,7 @@ export class RequestInfoService {
       memberId: member.id,
       church: church,
       requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-        REQUEST_CONSTANTS.EXPIRE_DAYS,
+        this.REQUEST_EXPIRE_DAYS,
       ),
     });
 
@@ -221,7 +227,11 @@ export class RequestInfoService {
       ? requestInfo.church.name
       : `${requestInfo.church.name} 교회`;
 
-    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${requestInfo.churchId}/request/${requestInfo.id}`;
+    const protocol = this.configService.getOrThrow('PROTOCOL');
+    const host = this.configService.getOrThrow('HOST');
+    const port = this.configService.getOrThrow('PORT');
+
+    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${protocol}://${host}:${port}/church/${requestInfo.churchId}/request/${requestInfo.id}`;
 
     return isTest
       ? url
@@ -245,7 +255,7 @@ export class RequestInfoService {
 
     // 존재 X
     if (!validateTarget) {
-      throw new NotFoundException('존재하지 않는 입력 요청입니다.');
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
     }
 
     // 만료 날짜 지난 경우
@@ -254,21 +264,21 @@ export class RequestInfoService {
         id: requestInfoId,
       });
       throw new BadRequestException(
-        '만료된 입력 요청입니다. 입력 요청 내역 삭제',
+        REQUEST_CONSTANTS.ERROR_MESSAGES.REQUEST_EXPIRED,
       );
     }
 
     // 검증 시도 횟수 초과
-    if (
-      validateTarget.validateAttempts === REQUEST_CONSTANTS.VALIDATION_LIMITS
-    ) {
+    if (validateTarget.validateAttempts === this.VALIDATION_LIMITS) {
       await this.requestInfosRepository.softDelete({
         id: requestInfoId,
         churchId: churchId,
       });
 
       throw new BadRequestException(
-        `검증 횟수 ${REQUEST_CONSTANTS.VALIDATION_LIMITS}회 초과, 입력 요청 내역 삭제`,
+        REQUEST_CONSTANTS.ERROR_MESSAGES.VALIDATION_LIMIT_EXCEEDED(
+          this.VALIDATION_LIMITS,
+        ),
       );
     }
 
@@ -282,7 +292,9 @@ export class RequestInfoService {
         'validateAttempts',
         1,
       );
-      throw new UnauthorizedException('유효한 입력 요청이 아닙니다.');
+      throw new UnauthorizedException(
+        REQUEST_CONSTANTS.ERROR_MESSAGES.UNAUTHORIZED,
+      );
     }
 
     // 검증 성공
@@ -331,7 +343,7 @@ export class RequestInfoService {
     });
 
     if (result.affected === 0) {
-      throw new NotFoundException('존재하지 않는 입력 요청입니다.');
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
     }
 
     return new ResponseDeleteDto(true, requestInfoId);
@@ -350,7 +362,7 @@ export class RequestInfoService {
     });
 
     if (!requestInfo) {
-      throw new NotFoundException('존재하지 않는 입력 요청입니다.');
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
     }
 
     if (
@@ -358,7 +370,9 @@ export class RequestInfoService {
       dto.name !== requestInfo.name ||
       dto.mobilePhone !== requestInfo.mobilePhone
     ) {
-      throw new BadRequestException('검증되지 않은 입력 요청입니다.');
+      throw new BadRequestException(
+        REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_VALIDATED,
+      );
     }
 
     const updateDto: UpdateMemberDto = {

@@ -16,10 +16,10 @@ export class CreateFamilyDto extends PickType(FamilyModel, ['relation']) {
     name: 'relation',
     description: '가족 관계',
     example: '어머니',
-    default: '가족',
+    default: FamilyRelation.DEFAULT,
   })
   @IsString()
   @IsIn(Object.values(FamilyRelation))
   @IsOptional()
-  relation?: string;
+  relation: string = FamilyRelation.DEFAULT;
 }

@@ -13,7 +13,7 @@ export class BasePaginationDto {
     required: false,
     default: 1,
   })
-  page?: number;
+  page: number = 1;
 
   @IsNumber({}, { message: 'less_than' })
   @IsOptional()
@@ -63,5 +63,5 @@ export class BasePaginationDto {
     maximum: 100,
   })
   //@Type(() => Number)
-  take?: number = 20;
+  take: number = 20;
 }

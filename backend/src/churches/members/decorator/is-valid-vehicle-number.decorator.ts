@@ -12,7 +12,7 @@ import { Injectable } from '@nestjs/common';
 export class IsUniqueVehicleNumberConstraint
   implements ValidatorConstraintInterface
 {
-  defaultMessage(args?: ValidationArguments): string {
+  defaultMessage(args: ValidationArguments): string {
     const context = args.constraints[0];
 
     switch (context.errorType) {
@@ -27,7 +27,7 @@ export class IsUniqueVehicleNumberConstraint
 
   validate(
     value: string[],
-    args?: ValidationArguments,
+    args: ValidationArguments,
   ): Promise<boolean> | boolean {
     if (value.some((num) => !parseInt(num))) {
       args.constraints[0] = { errorType: 'NOT_NUMBER' };
