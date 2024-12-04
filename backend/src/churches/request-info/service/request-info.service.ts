@@ -139,7 +139,7 @@ export class RequestInfoService {
       );
 
     const member = isExistMember
-      ? await this.membersService.getMemberByNameAndMobilePhone(
+      ? await this.membersService.getMemberModelByNameAndMobilePhone(
           church.id,
           dto.name,
           dto.mobilePhone,
@@ -156,7 +156,8 @@ export class RequestInfoService {
           qr,
         );
 
-    if (!isExistMember) {
+    // 새로 등록 + 가족 관계를 설정한 경우
+    if (!isExistMember && dto.familyId) {
       await this.familyService.fetchFamilyRelation(
         church.id,
         member.id,
