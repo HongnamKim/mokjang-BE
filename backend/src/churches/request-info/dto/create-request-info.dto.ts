@@ -1,6 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import {
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -8,12 +9,13 @@ import {
   Length,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
+import { FamilyRelation } from '../../members/const/family-relation.const';
 
 export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',
   'mobilePhone',
-  'guideId',
-  'familyId',
+  /*'guidedById',
+  'familyId',*/
 ]) {
   @ApiProperty({
     name: 'name',
@@ -36,22 +38,36 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   override mobilePhone: string;
 
   @ApiProperty({
-    name: 'guideId',
+    name: 'guidedById',
     description: '인도자 ID',
     example: 12,
     required: false,
   })
   @IsNumber()
   @IsOptional()
-  override guideId?: number;
+  guidedById?: number;
+  //override guidedById?: number;
 
   @ApiProperty({
-    name: 'familyId',
+    name: 'familyMemberId',
     description: '가족 ID',
     example: 21,
     required: false,
   })
   @IsNumber()
   @IsOptional()
-  override familyId?: number;
+  familyMemberId?: number;
+  //override familyId?: number;
+
+  @ApiProperty({
+    name: 'relation',
+    description: '가족 관계',
+    example: FamilyRelation.MOTHER,
+    default: FamilyRelation.DEFAULT,
+    required: false,
+  })
+  @IsString()
+  @IsIn(Object.values(FamilyRelation))
+  @IsOptional()
+  relation?: string;
 }

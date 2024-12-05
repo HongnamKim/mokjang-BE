@@ -21,6 +21,7 @@ import { GetMemberDto } from '../dto/get-member.dto';
 import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
+import { FamilyService } from './family.service';
 
 @Injectable()
 export class MembersService {
@@ -28,7 +29,7 @@ export class MembersService {
     @InjectRepository(MemberModel)
     private readonly membersRepository: Repository<MemberModel>,
     private readonly churchesService: ChurchesService,
-    //private readonly familyService: FamilyService,
+    private readonly familyService: FamilyService,
   ) {}
 
   private getMembersRepository(qr?: QueryRunner) {
@@ -136,7 +137,7 @@ export class MembersService {
     return member;
   }
 
-  async createMember(churchId: number, dto: CreateMemberDto, qr?: QueryRunner) {
+  async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
     const church = await this.churchesService.findById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
@@ -167,9 +168,18 @@ export class MembersService {
       }
     }
 
-    // TODO 가족 등록
-
     const newMember = await membersRepository.save({ ...dto, church });
+
+    // 가족 등록
+    if (dto.familyMemberId && dto.relation) {
+      await this.fetchFamilyRelation(
+        churchId,
+        newMember.id,
+        dto.familyMemberId,
+        dto.relation,
+        qr,
+      );
+    }
 
     const result = await membersRepository.findOne({
       where: { id: newMember.id },
@@ -266,5 +276,61 @@ export class MembersService {
     });
 
     return !!member;
+  }
+
+  async getFamilyRelation(
+    churchId: number,
+    memberId: number,
+    qr?: QueryRunner,
+  ) {
+    const member = await this.getMemberModelById(churchId, memberId, {}, qr);
+
+    return this.familyService.getFamilyMember(member);
+  }
+
+  async fetchFamilyRelation(
+    churchId: number,
+    memberId: number,
+    familyId: number,
+    relation: string,
+    qr: QueryRunner,
+  ) {
+    const [member, familyMember] = await Promise.all([
+      this.getMemberModelById(churchId, memberId, {}, qr),
+      this.getMemberModelById(churchId, familyId, {}, qr),
+    ]);
+
+    return this.familyService.fetchAndCreateFamilyRelation(
+      member,
+      familyMember,
+      relation,
+      qr,
+    );
+  }
+
+  async patchFamilyRelation(
+    memberId: number,
+    familyMemberId: number,
+    relation: string,
+    qr: QueryRunner,
+  ) {
+    return this.familyService.updateFamilyRelation(
+      memberId,
+      familyMemberId,
+      relation,
+      qr,
+    );
+  }
+
+  async deleteFamilyRelation(
+    memberId: number,
+    familyMemberId: number,
+    qr?: QueryRunner,
+  ) {
+    return this.familyService.deleteFamilyRelation(
+      memberId,
+      familyMemberId,
+      qr,
+    );
   }
 }

@@ -21,8 +21,6 @@ import { MessagesService } from './messages.service';
 import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
-import { FamilyService } from '../../members/service/family.service';
-import { FamilyRelation } from '../../members/const/family-relation.const';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
 
@@ -33,7 +31,6 @@ export class RequestInfoService {
     private readonly requestInfosRepository: Repository<RequestInfoModel>,
     private readonly churchesService: ChurchesService,
     private readonly membersService: MembersService,
-    private readonly familyService: FamilyService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessagesService,
     private readonly configService: ConfigService,
@@ -157,18 +154,18 @@ export class RequestInfoService {
           {
             name: dto.name,
             mobilePhone: dto.mobilePhone,
-            guidedById: dto.guideId,
+            guidedById: dto.guidedById,
           },
           qr,
         );
 
     // 새로 등록 + 가족 관계를 설정한 경우
-    if (!isExistMember && dto.familyId) {
-      await this.familyService.fetchFamilyRelation(
+    if (!isExistMember && dto.familyMemberId && dto.relation) {
+      await this.membersService.fetchFamilyRelation(
         church.id,
         member.id,
-        dto.familyId,
-        FamilyRelation.DEFAULT,
+        dto.familyMemberId,
+        dto.relation,
         qr,
       );
     }
@@ -260,7 +257,7 @@ export class RequestInfoService {
 
     // 만료 날짜 지난 경우
     if (validateTarget.requestInfoExpiresAt < new Date()) {
-      await this.requestInfosRepository.softDelete({
+      await this.requestInfosRepository.delete({
         id: requestInfoId,
       });
       throw new BadRequestException(
@@ -270,7 +267,7 @@ export class RequestInfoService {
 
     // 검증 시도 횟수 초과
     if (validateTarget.validateAttempts === this.VALIDATION_LIMITS) {
-      await this.requestInfosRepository.softDelete({
+      await this.requestInfosRepository.delete({
         id: requestInfoId,
         churchId: churchId,
       });
@@ -336,7 +333,7 @@ export class RequestInfoService {
   ) {
     const requestInfosRepository = this.getRequestInfosRepository(qr);
 
-    const result = await requestInfosRepository.softDelete({
+    const result = await requestInfosRepository.delete({
       id: requestInfoId,
       churchId: churchId,
       deletedAt: IsNull(),
@@ -386,7 +383,12 @@ export class RequestInfoService {
       qr,
     );
 
-    await this.deleteRequestInfoById(churchId, requestInfoId, qr);
+    const result = await requestInfosRepository.delete({ id: requestInfo.id });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
+    }
+    //await this.deleteRequestInfoById(churchId, requestInfoId, qr);
 
     return updated;
   }

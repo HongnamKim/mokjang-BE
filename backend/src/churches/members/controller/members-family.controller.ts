@@ -10,24 +10,25 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { CreateFamilyDto } from '../dto/family/create-family.dto';
-import { FamilyService } from '../service/family.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateFamilyDto } from '../dto/family/update-family.dto';
+import { MembersService } from '../service/members.service';
 
 @ApiTags('Churches:Members:Family')
 @Controller(':memberId/family')
 export class MembersFamilyController {
-  constructor(private readonly familyService: FamilyService) {}
+  constructor(private readonly memberService: MembersService) {}
 
   @Get()
   getFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
   ) {
-    return this.familyService.getFamilyMember(churchId, memberId);
+    return this.memberService.getFamilyRelation(churchId, memberId);
+    //return this.familyService.getFamilyMember(churchId, memberId);
   }
 
   @Post()
@@ -38,12 +39,12 @@ export class MembersFamilyController {
     @Body() createFamilyDto: CreateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.familyService.postFamilyMember(
+    /*return this.familyService.postFamilyMember(
       churchId,
       memberId,
       createFamilyDto,
       qr,
-    );
+    );*/
   }
 
   @Post('fetch-family')
@@ -54,13 +55,21 @@ export class MembersFamilyController {
     @Body() dto: CreateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.familyService.fetchFamilyRelation(
+    return this.memberService.fetchFamilyRelation(
       churchId,
       memberId,
       dto.familyId,
       dto.relation,
       qr,
     );
+
+    /*return this.familyService.fetchFamilyRelation(
+      churchId,
+      memberId,
+      dto.familyId,
+      dto.relation,
+      qr,
+    );*/
   }
 
   @Patch(':familyMemberId')
@@ -72,13 +81,20 @@ export class MembersFamilyController {
     @Body() dto: UpdateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.familyService.patchFamilyRelation(
-      churchId,
+    return this.memberService.patchFamilyRelation(
       memberId,
       familyMemberId,
       dto.relation,
       qr,
     );
+
+    /*return this.familyService.patchFamilyRelation(
+      churchId,
+      memberId,
+      familyMemberId,
+      dto.relation,
+      qr,
+    );*/
   }
 
   @Delete(':familyMemberId')
@@ -87,10 +103,12 @@ export class MembersFamilyController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
   ) {
-    return this.familyService.deleteFamilyRelation(
+    return this.memberService.deleteFamilyRelation(memberId, familyMemberId);
+
+    /*return this.familyService.deleteFamilyRelation(
       churchId,
       memberId,
       familyMemberId,
-    );
+    );*/
   }
 }
