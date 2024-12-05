@@ -21,12 +21,6 @@ export class RequestInfoModel extends BaseModel {
   @Index()
   mobilePhone: string;
 
-  @Column({ nullable: true })
-  guideId?: number;
-
-  @Column({ nullable: true })
-  familyId?: number;
-
   @Column({ default: 1 })
   requestInfoAttempts: number;
 
