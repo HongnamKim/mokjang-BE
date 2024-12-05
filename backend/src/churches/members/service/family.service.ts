@@ -7,8 +7,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FamilyModel } from '../entity/family.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../entity/member.entity';
-import { MembersService } from './members.service';
-import { CreateFamilyDto } from '../dto/family/create-family.dto';
 import { GenderEnum } from '../../enum/gender.enum';
 import { FamilyRelation } from '../const/family-relation.const';
 import { FamilyExceptionMessage } from '../exception-message/family-exception.message';
@@ -18,42 +16,22 @@ export class FamilyService {
   constructor(
     @InjectRepository(FamilyModel)
     private readonly familyRepository: Repository<FamilyModel>,
-    private readonly membersService: MembersService,
   ) {}
 
   private getFamilyRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(FamilyModel) : this.familyRepository;
   }
 
-  async getFamilyMember(churchId: number, memberId: number) {
-    const isExist = await this.membersService.isExistMemberById(
-      churchId,
-      memberId,
-    );
+  async getFamilyMember(member: MemberModel, qr?: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
 
-    if (!isExist) {
-      throw new NotFoundException('해당 교인을 찾을 수 없습니다.');
-    }
-
-    return this.familyRepository.find({
-      where: { meId: memberId },
+    return familyRepository.find({
+      where: {
+        meId: member.id,
+      },
       relations: { familyMember: true },
+      order: { familyMember: { birth: 'desc' }, familyMemberId: 'ASC' },
     });
-  }
-
-  async fetchFamilyRelation(
-    churchId: number,
-    memberId: number,
-    familyId: number,
-    relation: string,
-    qr?: QueryRunner,
-  ) {
-    const [member, family] = await Promise.all([
-      this.membersService.getMemberModelById(churchId, memberId, {}, qr),
-      this.membersService.getMemberModelById(churchId, familyId, {}, qr),
-    ]);
-
-    return this.fetchAndCreateFamilyRelation(member, family, relation, qr);
   }
 
   private async isExistFamilyRelation(
@@ -87,7 +65,7 @@ export class FamilyService {
     ).map((relation) => relation.familyMemberId);
   }
 
-  private async fetchAndCreateFamilyRelation(
+  async fetchAndCreateFamilyRelation(
     me: MemberModel,
     newFamilyMember: MemberModel,
     relation: string,
@@ -134,31 +112,16 @@ export class FamilyService {
     }
   }
 
-  async patchFamilyRelation(
-    churchId: number,
+  async updateFamilyRelation(
     meId: number,
     familyMemberId: number,
-    relation: string,
-    qr?: QueryRunner,
-  ) {
-    const [me, familyMember] = await Promise.all([
-      this.membersService.getMemberModelById(churchId, meId, {}, qr),
-      this.membersService.getMemberModelById(churchId, familyMemberId, {}, qr),
-    ]);
-
-    return this.updateFamilyRelation(me, familyMember, relation, qr);
-  }
-
-  private async updateFamilyRelation(
-    me: MemberModel,
-    familyMember: MemberModel,
     relation: string,
     qr?: QueryRunner,
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.update(
-      { meId: me.id, familyMemberId: familyMember.id, deletedAt: IsNull() },
+      { meId: meId, familyMemberId: familyMemberId, deletedAt: IsNull() },
       { relation },
     );
 
@@ -167,34 +130,20 @@ export class FamilyService {
     }
 
     return familyRepository.findOne({
-      where: { meId: me.id, familyMemberId: familyMember.id },
+      where: { meId: meId, familyMemberId: familyMemberId },
     });
   }
 
   async deleteFamilyRelation(
-    churchId: number,
     meId: number,
     familyMemberId: number,
-    qr?: QueryRunner,
-  ) {
-    const [me, familyMember] = await Promise.all([
-      this.membersService.getMemberModelById(churchId, meId, {}, qr),
-      this.membersService.getMemberModelById(churchId, familyMemberId, {}, qr),
-    ]);
-
-    return this.deleteFamily(me, familyMember, qr);
-  }
-
-  private async deleteFamily(
-    me: MemberModel,
-    familyMember: MemberModel,
     qr?: QueryRunner,
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.softDelete({
-      me,
-      familyMember,
+      meId,
+      familyMemberId,
       deletedAt: IsNull(),
     });
 
@@ -203,30 +152,6 @@ export class FamilyService {
     }
 
     return 'ok';
-  }
-
-  async postFamilyMember(
-    churchId: number,
-    memberId: number,
-    createFamilyDto: CreateFamilyDto,
-    qr: QueryRunner,
-  ) {
-    const [me, familyMember] = await Promise.all([
-      this.membersService.getMemberModelById(churchId, memberId, {}, qr),
-      this.membersService.getMemberModelById(
-        churchId,
-        createFamilyDto.familyId,
-        {},
-        qr,
-      ),
-    ]);
-
-    return this.createFamilyMember(
-      me,
-      familyMember,
-      createFamilyDto.relation,
-      qr,
-    );
   }
 
   private async createFamilyMember(
@@ -343,6 +268,7 @@ export class FamilyService {
       case FamilyRelation.BROTHER:
       case FamilyRelation.SISTER:
       case FamilyRelation.남매:
+      case FamilyRelation.DEFAULT:
         return relation;
       default:
         return '조카';
