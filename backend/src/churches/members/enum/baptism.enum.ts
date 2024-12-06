@@ -1,7 +1,8 @@
 export enum BaptismEnum {
-  세례 = 'baptized',
-  침례 = 'immersionBaptism',
-  유아세례 = 'infantBaptism',
-  입교 = 'confirmation',
-  학습 = 'catechumenate',
+  baptized = 'baptized', // 세례
+  immersionBaptism = 'immersionBaptism', // 침례
+  infantBaptism = 'infantBaptism', // 유아세례
+  confirmation = 'confirmation', // 입교
+  catechumenate = 'catechumenate', // 학습
+  default = 'none', // 없음
 }

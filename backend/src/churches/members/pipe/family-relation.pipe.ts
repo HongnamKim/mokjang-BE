@@ -10,7 +10,10 @@ import { CreateRequestInfoDto } from '../../request-info/dto/create-request-info
 
 @Injectable()
 export class FamilyRelationPipe implements PipeTransform {
-  transform(value: any, metadata: ArgumentMetadata): CreateMemberDto {
+  transform(
+    value: any,
+    metadata: ArgumentMetadata,
+  ): CreateMemberDto | CreateRequestInfoDto {
     if (
       !(value instanceof CreateMemberDto) &&
       !(value instanceof CreateRequestInfoDto)
