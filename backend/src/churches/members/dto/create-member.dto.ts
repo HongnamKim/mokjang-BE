@@ -189,12 +189,13 @@ export class CreateMemberDto {
     name: 'baptism',
     description: '신급',
     enum: BaptismEnum,
-    example: BaptismEnum.세례,
+    example: BaptismEnum.baptized,
+    default: BaptismEnum.default,
     required: false,
   })
   @IsEnum(BaptismEnum)
   @IsOptional()
-  baptism?: BaptismEnum;
+  baptism?: BaptismEnum = BaptismEnum.default;
 
   @ApiProperty({
     name: 'previousChurch',
