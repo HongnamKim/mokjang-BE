@@ -70,7 +70,7 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true })
   marriage: string;
 
-  @Column({ nullable: true, type: 'simple-array', default: null })
+  @Column('text', { array: true, default: [] })
   vehicleNumber: string[];
 
   @Column({ nullable: true })
@@ -91,7 +91,6 @@ export class MemberModel extends BaseModel {
   @JoinTable()
   ministries: MinistryModel[];
 
-  // 소그룹 CRUD 완성 후 N:1 relation 추가
   @Column({ nullable: true, comment: '소그룹 ID' })
   groupId: number;
 
@@ -110,7 +109,11 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true, comment: '임직교회' })
   positionStartChurch: string;
 
-  @Column({ enum: BaptismEnum, nullable: true, comment: '신급' })
+  @Column({
+    enum: BaptismEnum,
+    default: BaptismEnum.default,
+    comment: '신급',
+  })
   baptism: BaptismEnum;
 
   @ManyToMany(() => EducationModel, (education) => education.members)
