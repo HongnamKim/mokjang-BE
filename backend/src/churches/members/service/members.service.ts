@@ -7,10 +7,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../entity/member.entity';
 import {
+  ArrayContains,
+  Between,
+  FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsWhere,
   ILike,
   IsNull,
+  Like,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -22,6 +26,7 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
+import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 
 @Injectable()
 export class MembersService {
@@ -41,9 +46,30 @@ export class MembersService {
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> = {
       churchId,
-      name: dto.name ? ILike(`%${dto.name}%`) : undefined,
-      //vehicleNumber: ArrayContains()
+      name: dto.name && ILike(`${dto.name}%`),
+      birth: Between(dto.birthAfter, dto.birthBefore),
+      gender: dto?.gender,
+      school: dto.school && Like(`%${dto.school}%`),
+      vehicleNumber: dto.vehicleNumber && ArrayContains([dto.vehicleNumber]),
+      baptism: dto?.baptism,
+      groupId: dto?.groupId,
+      officerId: dto?.officerId,
     };
+
+    const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
+
+    if (
+      dto.order === GetMemberOrderEnum.groupId ||
+      dto.order === GetMemberOrderEnum.officerId
+    ) {
+      findOptionsOrder[dto.order as string] = {
+        name: dto.orderDirection,
+      };
+      findOptionsOrder.createdAt = 'asc';
+    } else {
+      findOptionsOrder[dto.order as string] = dto.orderDirection;
+      findOptionsOrder.createdAt = 'asc';
+    }
 
     const totalCount = await membersRepository.count({
       where: findOptionsWhere,
@@ -53,6 +79,7 @@ export class MembersService {
 
     const result = await membersRepository.find({
       where: findOptionsWhere,
+      order: findOptionsOrder,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
