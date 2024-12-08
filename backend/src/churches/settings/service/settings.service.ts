@@ -27,7 +27,7 @@ export class SettingsService {
 
   constructor(
     @InjectRepository(OfficerModel)
-    private readonly positionsRepository: Repository<OfficerModel>,
+    private readonly officersRepository: Repository<OfficerModel>,
     @InjectRepository(MinistryModel)
     private readonly ministryRepository: Repository<MinistryModel>,
     @InjectRepository(EducationModel)
@@ -35,7 +35,7 @@ export class SettingsService {
     private readonly churchesService: ChurchesService,
   ) {
     this.entityMap = new Map([
-      [OfficerModel.name, positionsRepository],
+      [OfficerModel.name, officersRepository],
       [MinistryModel.name, ministryRepository],
       [EducationModel.name, educationRepository],
     ]);
@@ -108,6 +108,29 @@ export class SettingsService {
     const repository = this.getRepository(entity, qr);
 
     return repository.find({ where: { churchId: churchId } });
+  }
+
+  async getSettingValueById<T extends BaseChurchSettingModel>(
+    churchId: number,
+    id: number,
+    entity: EntityTarget<T>,
+    qr?: QueryRunner,
+  ) {
+    await this.checkChurchExist(churchId);
+
+    const repository = this.getRepository(entity, qr);
+
+    const entityName = this.getEntityName(entity);
+
+    const value: T | null = await repository.findOne({
+      where: { churchId, id },
+    });
+
+    if (!value) {
+      throw new NotFoundException(SETTING_EXCEPTION[entityName].NOT_FOUND);
+    }
+
+    return value;
   }
 
   async postSettingValues<T extends BaseChurchSettingModel>(

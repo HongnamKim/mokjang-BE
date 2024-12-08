@@ -207,35 +207,4 @@ export class CreateMemberDto {
   @IsNotEmpty()
   @IsOptional()
   previousChurch?: string;
-
-  /*@ApiProperty({
-    name: 'positionId',
-    description: '직급 id',
-    example: 3,
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  positionId?: number;
-
-  @ApiProperty({
-    name: 'positionStartDate',
-    description: '임직 시작일',
-    example: '2024-01-01',
-    required: false,
-  })
-  @IsDate()
-  @IsOptional()
-  positionStartDate?: Date;
-
-  @ApiProperty({
-    name: 'positionStartChurch',
-    description: '임직 시작 교회',
-    example: 'a교회',
-    required: false,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  positionStartChurch?: string;*/
 }

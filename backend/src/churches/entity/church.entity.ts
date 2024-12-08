@@ -18,8 +18,8 @@ export class ChurchModel extends BaseModel {
   @OneToMany(() => EducationModel, (education) => education.church)
   educations: EducationModel[];
 
-  @OneToMany(() => OfficerModel, (position) => position.church)
-  positions: OfficerModel[];
+  @OneToMany(() => OfficerModel, (officer) => officer.church)
+  officers: OfficerModel[];
 
   @OneToMany(() => MinistryModel, (ministry) => ministry.church)
   ministries: MinistryModel[];
