@@ -7,6 +7,6 @@ export enum GetMemberOrderEnum {
   previousChurch = 'previousChurch',
   groupId = 'groupId',
   officerId = 'officerId',
-  positionStartDate = 'positionStartDate',
+  officerStartDate = 'officerStartDate',
   baptism = 'baptism',
 }

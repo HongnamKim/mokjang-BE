@@ -7,4 +7,5 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   family: {
     familyMember: true,
   },
+  officer: true,
 };

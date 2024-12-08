@@ -12,6 +12,7 @@ import { EducationModel } from './entity/education.entity';
 import { GroupModel } from './entity/group.entity';
 import { GroupsController } from './controller/groups.controller';
 import { GroupsService } from './service/groups.service';
+import { MembersModule } from '../members/members.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GroupsService } from './service/groups.service';
       },
     ]),
     ChurchesModule,
+    MembersModule,
     TypeOrmModule.forFeature([
       OfficerModel,
       MinistryModel,
@@ -36,5 +38,6 @@ import { GroupsService } from './service/groups.service';
     GroupsController,
   ],
   providers: [SettingsService, GroupsService],
+  exports: [SettingsService, GroupsService],
 })
 export class SettingsModule {}

@@ -27,6 +27,7 @@ import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
 import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
+import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
 
 @Injectable()
 export class MembersService {
@@ -358,6 +359,23 @@ export class MembersService {
       memberId,
       familyMemberId,
       qr,
+    );
+  }
+
+  async updateMemberOfficer(
+    member: MemberModel,
+    dto: UpdateMemberOfficerDto,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const officerId = dto.isDeleteOfficer ? null : dto.officerId;
+    const officerStartDate = dto.officerStartDate;
+    const officerStartChurch = dto.officerStartChurch;
+
+    return membersRepository.update(
+      { id: member.id },
+      { officerId, officerStartDate, officerStartChurch },
     );
   }
 }
