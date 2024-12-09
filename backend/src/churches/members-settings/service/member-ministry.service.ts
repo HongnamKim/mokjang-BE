@@ -31,6 +31,10 @@ export class MemberMinistryService {
       throw new BadRequestException('이미 부여된 사역입니다.');
     }
 
+    if (dto.isDeleteMinistry && !ministryIds.includes(dto.ministryId)) {
+      throw new BadRequestException('부여되지 않은 사역을 삭제할 수 없습니다.');
+    }
+
     const ministry = await this.settingsService.getSettingValueById(
       churchId,
       dto.ministryId,

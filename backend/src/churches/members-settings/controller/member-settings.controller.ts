@@ -45,7 +45,9 @@ export class MemberSettingsController {
     summary: '교인의 사역 수정/삭제',
     description:
       '<p>isDeleteMinistry 가 true 일 경우 사역 삭제</p>' +
-      '<p>isDeleteMinistry, ministryId 모두 필수값</p>',
+      '<p>isDeleteMinistry, ministryId 모두 필수값</p>' +
+      '<p>이미 부여된 사역 등록 시 BadRequestException("이미 부여된 사역입니다.")</p>' +
+      '<p>부여되지 않은 사역 삭제 시 BadRequestException("부여되지 않은 사역을 삭제할 수 없습니다.")</p>',
   })
   @Patch('ministries')
   @UseInterceptors(TransactionInterceptor)
