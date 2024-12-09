@@ -15,6 +15,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateMemberOfficerPipe } from '../pipe/update-member-officer.pipe';
 import { MemberMinistryService } from '../service/member-ministry.service';
 import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
+import { UpdateMemberEducationDto } from '../dto/update-member-education.dto';
+import { MemberEducationService } from '../service/member-education.service';
 
 @ApiTags('Churches:Members:Settings')
 @Controller()
@@ -22,6 +24,7 @@ export class MemberSettingsController {
   constructor(
     private readonly memberOfficerService: MemberOfficerService,
     private readonly memberMinistryService: MemberMinistryService,
+    private readonly memberEducationService: MemberEducationService,
   ) {}
 
   @ApiOperation({
@@ -65,11 +68,31 @@ export class MemberSettingsController {
     );
   }
 
+  @ApiOperation({
+    summary: '교인의 교육이수 수정/삭제',
+    description:
+      '<p>isDeleteEducation 가 true 일 경우 사역 삭제</p>' +
+      '<p>isDeleteEducation, educationId 모두 필수값</p>' +
+      '<p>이미 부여된 교육 등록 시 BadRequestException("이미 등록된 교육입니다.")</p>' +
+      '<p>부여되지 않은 교육 삭제 시 BadRequestException("등록되지 않은 교육을 삭제할 수 없습니다.")</p>',
+  })
+  @Patch('educations')
+  @UseInterceptors(TransactionInterceptor)
+  patchMemberEducation(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Body() dto: UpdateMemberEducationDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.memberEducationService.updateMemberEducation(
+      churchId,
+      memberId,
+      dto,
+      qr,
+    );
+  }
+
   @Patch('groups')
   @UseInterceptors(TransactionInterceptor)
   patchMemberGroup() {}
-
-  @Patch('educations')
-  @UseInterceptors(TransactionInterceptor)
-  patchMemberEducation() {}
 }
