@@ -31,6 +31,8 @@ import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member
 import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
 import { MinistryModel } from '../../settings/entity/ministry.entity';
 import { DefaultMemberSelectOption } from '../const/default-find-options.const';
+import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
+import { EducationModel } from '../../settings/entity/education.entity';
 
 @Injectable()
 export class MembersService {
@@ -396,6 +398,25 @@ export class MembersService {
     member.ministries = dto.isDeleteMinistry
       ? member.ministries.filter((ministry) => ministry.id !== dto.ministryId)
       : [...oldMinistries, ministry];
+
+    return memberRepository.save(member);
+  }
+
+  async updateMemberEducation(
+    member: MemberModel,
+    dto: UpdateMemberEducationDto,
+    education: EducationModel,
+    qr: QueryRunner,
+  ) {
+    const memberRepository = this.getMembersRepository(qr);
+
+    const oldEducations = member.educations;
+
+    member.educations = dto.isDeleteEducation
+      ? member.educations.filter(
+          (education) => education.id !== dto.educationId,
+        )
+      : [...oldEducations, education];
 
     return memberRepository.save(member);
   }

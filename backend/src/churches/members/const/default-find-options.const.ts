@@ -9,6 +9,7 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   officer: true,
   ministries: true,
+  educations: true,
 };
 
 export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
@@ -28,6 +29,10 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     name: true,
   },
   ministries: {
+    id: true,
+    name: true,
+  },
+  educations: {
     id: true,
     name: true,
   },

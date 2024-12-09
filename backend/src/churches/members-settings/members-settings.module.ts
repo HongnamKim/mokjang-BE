@@ -6,6 +6,7 @@ import { MemberOfficerService } from './service/member-officer.service';
 import { MemberSettingsController } from './controller/member-settings.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
+import { MemberEducationService } from './service/member-education.service';
 
 @Module({
   imports: [
@@ -20,7 +21,11 @@ import { MemberMinistryService } from './service/member-ministry.service';
     SettingsModule,
   ],
   exports: [],
-  providers: [MemberOfficerService, MemberMinistryService],
+  providers: [
+    MemberOfficerService,
+    MemberMinistryService,
+    MemberEducationService,
+  ],
   controllers: [MemberSettingsController],
 })
 export class MembersSettingsModule {}
