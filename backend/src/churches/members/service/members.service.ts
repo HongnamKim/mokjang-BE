@@ -28,6 +28,9 @@ import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
 import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
+import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
+import { MinistryModel } from '../../settings/entity/ministry.entity';
+import { DefaultMemberSelectOption } from '../const/default-find-options.const';
 
 @Injectable()
 export class MembersService {
@@ -108,6 +111,7 @@ export class MembersService {
         churchId,
       },
       relations,
+      select: DefaultMemberSelectOption,
     });
 
     if (!member) {
@@ -377,5 +381,22 @@ export class MembersService {
       { id: member.id },
       { officerId, officerStartDate, officerStartChurch },
     );
+  }
+
+  async updateMemberMinistry(
+    member: MemberModel,
+    dto: UpdateMemberMinistryDto,
+    ministry: MinistryModel,
+    qr: QueryRunner,
+  ) {
+    const memberRepository = this.getMembersRepository(qr);
+
+    const oldMinistries = member.ministries;
+
+    member.ministries = dto.isDeleteMinistry
+      ? member.ministries.filter((ministry) => ministry.id !== dto.ministryId)
+      : [...oldMinistries, ministry];
+
+    return memberRepository.save(member);
   }
 }
