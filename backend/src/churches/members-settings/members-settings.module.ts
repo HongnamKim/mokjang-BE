@@ -3,8 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MembersModule } from '../members/members.module';
 import { SettingsModule } from '../settings/settings.module';
 import { MemberOfficerService } from './service/member-officer.service';
-import { MemberOfficerController } from './controller/member-officer.controller';
+import { MemberSettingsController } from './controller/member-settings.controller';
 import { RouterModule } from '@nestjs/core';
+import { MemberMinistryService } from './service/member-ministry.service';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { RouterModule } from '@nestjs/core';
     SettingsModule,
   ],
   exports: [],
-  providers: [MemberOfficerService],
-  controllers: [MemberOfficerController],
+  providers: [MemberOfficerService, MemberMinistryService],
+  controllers: [MemberSettingsController],
 })
 export class MembersSettingsModule {}

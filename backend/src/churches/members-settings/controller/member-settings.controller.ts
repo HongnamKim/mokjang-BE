@@ -13,11 +13,16 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateMemberOfficerDto } from '../dto/update-member-officer.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateMemberOfficerPipe } from '../pipe/update-member-officer.pipe';
+import { MemberMinistryService } from '../service/member-ministry.service';
+import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
 
 @ApiTags('Churches:Members:Settings')
 @Controller()
-export class MemberOfficerController {
-  constructor(private readonly memberOfficerService: MemberOfficerService) {}
+export class MemberSettingsController {
+  constructor(
+    private readonly memberOfficerService: MemberOfficerService,
+    private readonly memberMinistryService: MemberMinistryService,
+  ) {}
 
   @ApiOperation({
     summary: '교인의 직분 수정/삭제',
@@ -36,9 +41,27 @@ export class MemberOfficerController {
     return this.memberOfficerService.updateOfficer(churchId, memberId, dto, qr);
   }
 
+  @ApiOperation({
+    summary: '교인의 사역 수정/삭제',
+    description:
+      '<p>isDeleteMinistry 가 true 일 경우 사역 삭제</p>' +
+      '<p>isDeleteMinistry, ministryId 모두 필수값</p>',
+  })
   @Patch('ministries')
   @UseInterceptors(TransactionInterceptor)
-  patchMemberMinistry() {}
+  patchMemberMinistry(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Body() dto: UpdateMemberMinistryDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.memberMinistryService.updateMemberMinistry(
+      churchId,
+      memberId,
+      dto,
+      qr,
+    );
+  }
 
   @Patch('groups')
   @UseInterceptors(TransactionInterceptor)
