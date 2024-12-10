@@ -33,6 +33,7 @@ import { MinistryModel } from '../../settings/entity/ministry.entity';
 import { DefaultMemberSelectOption } from '../const/default-find-options.const';
 import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
 import { EducationModel } from '../../settings/entity/education.entity';
+import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
 
 @Injectable()
 export class MembersService {
@@ -419,5 +420,24 @@ export class MembersService {
       : [...oldEducations, education];
 
     return memberRepository.save(member);
+  }
+
+  async updateMemberGroup(
+    member: MemberModel,
+    dto: UpdateMemberGroupDto,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const groupId = dto.isDeleteGroup ? null : dto.groupId;
+
+    return membersRepository.update(
+      {
+        id: member.id,
+      },
+      {
+        groupId,
+      },
+    );
   }
 }
