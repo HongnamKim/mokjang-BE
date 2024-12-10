@@ -56,6 +56,22 @@ export class GroupsService {
     });
   }
 
+  async getGroupById(churchId: number, groupId: number, qr: QueryRunner) {
+    await this.checkChurchExist(churchId, qr);
+
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const group = await groupsRepository.findOne({
+      where: { churchId, id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
+
+    return group;
+  }
+
   async postGroup(churchId: number, dto: CreateGroupDto, qr?: QueryRunner) {
     await this.checkChurchExist(churchId, qr);
 

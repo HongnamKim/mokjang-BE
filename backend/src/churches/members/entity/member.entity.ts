@@ -92,22 +92,22 @@ export class MemberModel extends BaseModel {
   ministries: MinistryModel[];
 
   @Column({ nullable: true, comment: '소그룹 ID' })
-  groupId: number;
+  groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.members)
   group: GroupModel;
 
   @Column({ nullable: true, comment: '직분 ID' })
-  officerId: number;
+  officerId: number | null;
 
   @ManyToOne(() => OfficerModel, (officer) => officer.members)
   officer: OfficerModel;
 
   @Column({ nullable: true, comment: '임직일' })
-  positionStartDate: Date;
+  officerStartDate: Date;
 
   @Column({ nullable: true, comment: '임직교회' })
-  positionStartChurch: string;
+  officerStartChurch: string;
 
   @Column({
     enum: BaptismEnum,

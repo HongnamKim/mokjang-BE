@@ -3,8 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as dotenv from 'dotenv';
-import * as process from 'node:process';
+
 import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
@@ -12,6 +11,7 @@ import { MemberModel } from './churches/members/entity/member.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersModule } from './churches/members/members.module';
+import { MembersSettingsModule } from './churches/members-settings/members-settings.module';
 import { EducationModel } from './churches/settings/entity/education.entity';
 import { OfficerModel } from './churches/settings/entity/officer.entity';
 import { MinistryModel } from './churches/settings/entity/ministry.entity';
@@ -20,8 +20,6 @@ import { SettingsModule } from './churches/settings/settings.module';
 import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-
-dotenv.config();
 
 @Module({
   imports: [
@@ -76,6 +74,7 @@ dotenv.config();
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
+    MembersSettingsModule,
     SettingsModule,
   ],
   controllers: [AppController],
