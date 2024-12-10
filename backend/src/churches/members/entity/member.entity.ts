@@ -92,7 +92,7 @@ export class MemberModel extends BaseModel {
   ministries: MinistryModel[];
 
   @Column({ nullable: true, comment: '소그룹 ID' })
-  groupId: number;
+  groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.members)
   group: GroupModel;

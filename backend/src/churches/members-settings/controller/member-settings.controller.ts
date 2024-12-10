@@ -17,6 +17,9 @@ import { MemberMinistryService } from '../service/member-ministry.service';
 import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
 import { UpdateMemberEducationDto } from '../dto/update-member-education.dto';
 import { MemberEducationService } from '../service/member-education.service';
+import { UpdateMemberGroupDto } from '../dto/update-member-group.dto';
+import { MemberGroupService } from '../service/member-group.service';
+import { UpdateMemberGroupPipe } from '../pipe/update-member-group.pipe';
 
 @ApiTags('Churches:Members:Settings')
 @Controller()
@@ -25,6 +28,7 @@ export class MemberSettingsController {
     private readonly memberOfficerService: MemberOfficerService,
     private readonly memberMinistryService: MemberMinistryService,
     private readonly memberEducationService: MemberEducationService,
+    private readonly memberGroupService: MemberGroupService,
   ) {}
 
   @ApiOperation({
@@ -92,7 +96,27 @@ export class MemberSettingsController {
     );
   }
 
+  @ApiOperation({
+    summary: '교인의 소그룹 수정/삭제',
+    description:
+      '<p>isDeleteEducation 가 true 일 경우 소그룹 삭제</p>' +
+      '<p>isDeleteEducation 필수, groupId 그룹 등록 시 필수, 그룹 삭제 시 생략 가능</p>' +
+      '<p>이미 소속된 소그룹 등록 시 BadRequestException("이미 등록된 소그룹입니다.")</p>' +
+      '<p>부여되지 않은 소그룹 삭제 시 BadRequestException("등록되지 않은 소그룹을 삭제할 수 없습니다.")</p>',
+  })
   @Patch('groups')
   @UseInterceptors(TransactionInterceptor)
-  patchMemberGroup() {}
+  patchMemberGroup(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Body(UpdateMemberGroupPipe) dto: UpdateMemberGroupDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.memberGroupService.updateMemberGroup(
+      churchId,
+      memberId,
+      dto,
+      qr,
+    );
+  }
 }
