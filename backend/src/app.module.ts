@@ -1,6 +1,7 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ChurchesModule } from './churches/churches.module';
@@ -18,13 +19,11 @@ import { GroupModel } from './churches/settings/entity/group.entity';
 import { SettingsModule } from './churches/settings/settings.module';
 import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
-import { TempUserModel } from './auth/entity/temp-user.entity';
-import { UserModel } from './auth/entity/user.entity';
 
 @Module({
   imports: [
+    UsersModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -59,8 +58,6 @@ import { UserModel } from './auth/entity/user.entity';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [
-          TempUserModel,
-          UserModel,
           ChurchModel,
           RequestInfoModel,
           MemberModel,
@@ -74,7 +71,6 @@ import { UserModel } from './auth/entity/user.entity';
       }),
       inject: [ConfigService],
     }),
-    AuthModule,
     ChurchesModule,
     RequestInfoModule,
     MembersModule,

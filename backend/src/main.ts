@@ -33,7 +33,7 @@ async function bootstrap() {
     .setTitle('프로젝트 제목')
     .setDescription('프로젝트 설명')
     .setVersion('0.1')
-    .addBearerAuth /*
+    .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
@@ -42,8 +42,8 @@ async function bootstrap() {
         description: 'Enter JWT Token',
         in: 'header',
       },
-      'token',*/
-    ()
+      'token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
