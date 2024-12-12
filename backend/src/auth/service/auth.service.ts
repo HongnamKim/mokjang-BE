@@ -14,6 +14,8 @@ import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto
 import { ConfigService } from '@nestjs/config';
 import { MessagesService } from './messages.service';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
+import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
+import { RegisterUserDto } from '../dto/register-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -54,8 +56,8 @@ export class AuthService {
   }
 
   private handleRegisteredUser(user: UserModel) {
-    const accessToken = this.tokenService.signToken(user, AuthType.ACCESS);
-    const refreshToken = this.tokenService.signToken(user, AuthType.REFRESH);
+    const accessToken = this.tokenService.signToken(user.id, AuthType.ACCESS);
+    const refreshToken = this.tokenService.signToken(user.id, AuthType.REFRESH);
 
     return {
       accessToken,
@@ -80,7 +82,7 @@ export class AuthService {
       });
     }
 
-    const token = this.tokenService.signToken(tempUser, AuthType.TEMP);
+    const token = this.tokenService.signToken(tempUser.id, AuthType.TEMP);
 
     return {
       temporal: token,
@@ -129,6 +131,20 @@ export class AuthService {
     );
 
     if (tempUser.requestAttempts >= requestLimits) {
+      if (!DateUtils.isNewDay(new Date(), tempUser.requestedAt)) {
+        throw new BadRequestException(
+          '하루 번호 인증 요청 횟수를 초과했습니다.',
+        );
+      }
+
+      await tempUserRepository.update(
+        {
+          id: tempUser.id,
+        },
+        {
+          requestAttempts: 0,
+        },
+      );
     }
 
     const digit = this.configService.getOrThrow<number>('VERIFY_CODE_LENGTH');
@@ -147,6 +163,7 @@ export class AuthService {
         isVerified: false,
         verificationAttempts: 0,
         requestAttempts: () => `"requestAttempts" + 1`,
+        requestedAt: new Date(),
       },
     );
 
@@ -178,13 +195,11 @@ export class AuthService {
     const tempUserRepository = this.getTempUserRepository(qr);
 
     if (tempUser.verificationCode !== dto.code) {
-      const result = await this.tempUserRepository.increment(
+      await this.tempUserRepository.increment(
         { id: tempUser.id },
         'verificationAttempts',
         1,
       );
-
-      console.log(result.affected);
 
       throw new BadRequestException(
         '인증번호가 일치하지 않습니다. 다시 확인해주세요.',
@@ -201,7 +216,10 @@ export class AuthService {
       },
     );
 
-    return true;
+    return {
+      timestamp: new Date(),
+      verified: true,
+    };
   }
 
   private async validateVerificationAttempts(tempUser: TempUserModel) {
@@ -223,5 +241,29 @@ export class AuthService {
         '인증번호가 만료되었습니다. 새로운 인증번호를 요청해주세요.',
       );
     }
+  }
+
+  async signIn(tempUser: TempUserModel, dto: RegisterUserDto, qr: QueryRunner) {
+    if (!dto.privacyPolicyAgreed) {
+      throw new BadRequestException('개인정보 이용 동의가 필요합니다.');
+    }
+
+    const userRepository = this.getUserRepository(qr);
+    const tempUserRepository = this.getTempUserRepository(qr);
+
+    const user = userRepository.create({
+      provider: tempUser.provider,
+      providerId: tempUser.providerId,
+      name: tempUser.name,
+      mobilePhone: tempUser.mobilePhone,
+      mobilePhoneVerified: tempUser.isVerified,
+      privacyPolicyAgreed: dto.privacyPolicyAgreed,
+    });
+
+    const newUser = await userRepository.save(user);
+
+    await tempUserRepository.delete(tempUser.id);
+
+    return userRepository.findOne({ where: { id: newUser.id } });
   }
 }

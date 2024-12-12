@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TokenService } from './service/token.service';
 import { MessagesService } from './service/messages.service';
 import { CoolSMSProvider } from './provider/coolsms.provider';
+import { NaverStrategy } from './strategy/naver.strategy';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CoolSMSProvider } from './provider/coolsms.provider';
     MessagesService,
     CoolSMSProvider,
     GoogleStrategy,
+    NaverStrategy,
   ],
 })
 export class AuthModule {}

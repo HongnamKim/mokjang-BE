@@ -1,11 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
-import { TempUserModel } from '../entity/temp-user.entity';
-import { UserModel } from '../entity/user.entity';
 import { AuthType } from '../enum/auth-type.enum';
-import { JwtPayload } from '../type/jwt';
+import { JwtPayload, JwtRefreshPayload } from '../type/jwt';
 import { JwtExpiresConst } from '../const/jwt-expires.const';
 import { ConfigService } from '@nestjs/config';
+import ms from 'ms';
 
 @Injectable()
 export class TokenService {
@@ -14,15 +13,15 @@ export class TokenService {
     private readonly configService: ConfigService,
   ) {}
 
-  signToken(user: TempUserModel | UserModel, authType: AuthType) {
+  signToken(userId: number, authType: AuthType) {
     const payload: JwtPayload = {
-      id: user.id,
+      id: userId,
       type: authType,
     };
 
-    const expiresIn = this.configService.getOrThrow<number>(
-      JwtExpiresConst[authType],
-    );
+    const expiresIn =
+      ms(this.configService.getOrThrow<string>(JwtExpiresConst[authType])) /
+      1000;
 
     return this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
@@ -61,5 +60,13 @@ export class TokenService {
         throw new UnauthorizedException('유효하지 않은 토큰입니다.');
       }
     }
+  }
+
+  rotateToken(token: JwtRefreshPayload) {
+    const jwt = this.signToken(token.id, AuthType.ACCESS);
+
+    return {
+      accessToken: jwt,
+    };
   }
 }
