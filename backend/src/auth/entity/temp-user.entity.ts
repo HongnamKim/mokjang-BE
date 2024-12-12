@@ -18,6 +18,9 @@ export class TempUserModel extends BaseModel {
   @Column({ default: 0 })
   requestAttempts: number;
 
+  @Column({ nullable: true, type: 'timestamptz' })
+  requestedAt: Date;
+
   @Column({ nullable: true })
   verificationCode: string;
 

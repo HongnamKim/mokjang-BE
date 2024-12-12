@@ -15,3 +15,15 @@ export const JwtDecorator = createParamDecorator(
     return req.user;
   },
 );
+
+export const RefreshToken = createParamDecorator(
+  (data, context: ExecutionContext) => {
+    const req = context.switchToHttp().getRequest();
+
+    if (!req.user) {
+      throw new InternalServerErrorException();
+    }
+
+    return req.user;
+  },
+);
