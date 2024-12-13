@@ -14,7 +14,7 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     });
   }
 
-  async validate(profile: Profile): Promise<any> {
+  validate(profile: Profile): OauthDto {
     return new OauthDto(profile.provider, profile.id);
   }
 }

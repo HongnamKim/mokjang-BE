@@ -9,10 +9,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './service/auth.service';
-import { ApiBearerAuth, ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OauthDto } from './dto/oauth.dto';
-import { OAuthUser } from './decorator/oauth-user.decorator';
 import { TransactionInterceptor } from '../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
@@ -24,6 +22,11 @@ import { VerifyCodeDto } from './dto/verify-code.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { JwtRefreshPayload } from './type/jwt';
 import { TokenService } from './service/token.service';
+import {
+  OAuthLogin,
+  OAuthRedirect,
+  OAuthUser,
+} from './decorator/auth.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -43,31 +46,33 @@ export class AuthController {
     return this.authService.loginUser(new OauthDto(provider, providerId), qr);
   }
 
-  @Get('login/google')
-  @UseGuards(AuthGuard('google'))
+  @OAuthLogin('google')
   loginGoogle() {
     return { msg: 'google login' };
   }
 
-  @Get('login/google/redirect')
-  @ApiExcludeEndpoint()
-  @UseGuards(AuthGuard('google'))
-  @UseInterceptors(TransactionInterceptor)
+  @OAuthRedirect('google')
   redirectGoogle(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
     return this.authService.loginUser(oauthDto, qr);
   }
 
-  @Get('login/naver')
-  @UseGuards(AuthGuard('naver'))
+  @OAuthLogin('naver')
   loginNaver() {
     return { msg: 'naver login' };
   }
 
-  @Get('login/naver/redirect')
-  @ApiExcludeEndpoint()
-  @UseGuards(AuthGuard('naver'))
-  @UseInterceptors(TransactionInterceptor)
+  @OAuthRedirect('naver')
   redirectNaver(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
+    return this.authService.loginUser(oauthDto, qr);
+  }
+
+  @OAuthLogin('kakao')
+  loginKakao() {
+    return { msg: 'kakao login' };
+  }
+
+  @OAuthRedirect('kakao')
+  redirectKakao(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
     return this.authService.loginUser(oauthDto, qr);
   }
 
