@@ -9,7 +9,6 @@ import { AuthType } from '../enum/auth-type.enum';
 import { TokenService } from '../service/token.service';
 import { AuthException } from '../exception/exception.message';
 
-//@Injectable()
 export class JwtGuard implements CanActivate {
   constructor(protected readonly tokenService: TokenService) {}
 
