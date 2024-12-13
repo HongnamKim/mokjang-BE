@@ -244,6 +244,10 @@ export class AuthService {
   }
 
   async signIn(tempUser: TempUserModel, dto: RegisterUserDto, qr: QueryRunner) {
+    if (!tempUser.isVerified) {
+      throw new BadRequestException('휴대전화 번호 인증이 필요합니다.');
+    }
+
     if (!dto.privacyPolicyAgreed) {
       throw new BadRequestException('개인정보 이용 동의가 필요합니다.');
     }

@@ -10,6 +10,7 @@ import { TokenService } from './service/token.service';
 import { MessagesService } from './service/messages.service';
 import { CoolSMSProvider } from './provider/coolsms.provider';
 import { NaverStrategy } from './strategy/naver.strategy';
+import { KakaoStrategy } from './strategy/kakao.strategy';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NaverStrategy } from './strategy/naver.strategy';
     CoolSMSProvider,
     GoogleStrategy,
     NaverStrategy,
+    KakaoStrategy,
   ],
 })
 export class AuthModule {}

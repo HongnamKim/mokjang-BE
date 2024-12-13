@@ -15,7 +15,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  async validate(profile: Profile): Promise<any> {
+  validate(profile: Profile): OauthDto {
     return new OauthDto(profile.provider, profile.id);
   }
 }
