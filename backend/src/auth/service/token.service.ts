@@ -5,6 +5,7 @@ import { JwtPayload, JwtRefreshPayload } from '../type/jwt';
 import { JwtExpiresConst } from '../const/jwt-expires.const';
 import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
+import { AuthException } from '../exception/exception.message';
 
 @Injectable()
 export class TokenService {
@@ -38,7 +39,7 @@ export class TokenService {
     const split = rawToken.split(' ');
 
     if (split.length !== 2) {
-      throw new UnauthorizedException('잘못된 형식의 토큰입니다.');
+      throw new UnauthorizedException(AuthException.TOKEN_INVALID);
     }
 
     return split[1];
@@ -55,9 +56,9 @@ export class TokenService {
       });
     } catch (error) {
       if (error instanceof TokenExpiredError) {
-        throw new UnauthorizedException('만료된 토큰입니다.');
+        throw new UnauthorizedException(AuthException.TOKEN_EXPIRED);
       } else if (error instanceof JsonWebTokenError) {
-        throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+        throw new UnauthorizedException(AuthException.TOKEN_INVALID);
       }
     }
   }

@@ -10,6 +10,7 @@ import { AuthType } from '../enum/auth-type.enum';
 import { TokenService } from '../service/token.service';
 import { Observable } from 'rxjs';
 import { TOKEN_HEADER } from '../const/token-header.const';
+import { AuthException } from '../exception/exception.message';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -23,7 +24,7 @@ export class JwtGuard implements CanActivate {
     const rawToken = req.headers['authorization'];
 
     if (!rawToken) {
-      throw new UnauthorizedException('인증 토큰 필요');
+      throw new UnauthorizedException(AuthException.TOKEN_REQUIRED);
     }
 
     const token = this.tokenService.extractToken(rawToken);
@@ -51,7 +52,7 @@ export class RefreshTokenGuard implements CanActivate {
     const rawToken = req.headers[TOKEN_HEADER];
 
     if (!rawToken) {
-      throw new UnauthorizedException('인증 토큰 필요');
+      throw new UnauthorizedException(AuthException.TOKEN_REQUIRED);
     }
 
     const token = this.tokenService.extractToken(rawToken);
@@ -59,9 +60,7 @@ export class RefreshTokenGuard implements CanActivate {
     const payload: JwtRefreshPayload = this.tokenService.verifyToken(token);
 
     if (payload.type !== AuthType.REFRESH) {
-      throw new UnauthorizedException(
-        '잘못된 토큰 타입입니다. Refresh 토큰이 필요합니다.',
-      );
+      throw new UnauthorizedException(AuthException.TOKEN_TYPE_ERROR);
     }
 
     req.user = payload;

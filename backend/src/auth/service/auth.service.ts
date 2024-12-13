@@ -16,6 +16,13 @@ import { MessagesService } from './messages.service';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
 import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
 import { RegisterUserDto } from '../dto/register-user.dto';
+import {
+  AuthException,
+  SignInException,
+  VerifyException,
+} from '../exception/exception.message';
+import { VERIFICATION } from '../const/env.const';
+import { VerificationMessage } from '../const/verification-message.const';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +48,6 @@ export class AuthService {
 
   async loginUser(oauthDto: OauthDto, qr: QueryRunner) {
     const userRepository = this.getUserRepository(qr);
-    //const tempUserRepository = this.getTempUserRepository(qr);
 
     const user = await userRepository.findOne({
       where: {
@@ -97,7 +103,7 @@ export class AuthService {
     });
 
     if (!tempUser) {
-      throw new NotFoundException('존재하지 않는 임시유저입니다.');
+      throw new NotFoundException(AuthException.TEMP_USER_NOT_FOUND);
     }
 
     return tempUser;
@@ -111,7 +117,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('존재하지 않는 유저입니다.');
+      throw new NotFoundException(AuthException.USER_NOT_FOUND);
     }
 
     return user;
@@ -125,15 +131,15 @@ export class AuthService {
   ) {
     const tempUserRepository = this.getTempUserRepository(qr);
 
-    // TODO 하루 요청 횟수 제한 검증
+    // 하루 요청 횟수 제한 검증
     const requestLimits = this.configService.getOrThrow<number>(
-      'DAILY_VERIFY_REQUEST_LIMITS',
+      VERIFICATION.DAILY_VERIFY_REQUEST_LIMITS,
     );
 
     if (tempUser.requestAttempts >= requestLimits) {
       if (!DateUtils.isNewDay(new Date(), tempUser.requestedAt)) {
         throw new BadRequestException(
-          '하루 번호 인증 요청 횟수를 초과했습니다.',
+          VerifyException.DAILY_LIMIT_EXCEEDED(requestLimits),
         );
       }
 
@@ -147,7 +153,9 @@ export class AuthService {
       );
     }
 
-    const digit = this.configService.getOrThrow<number>('VERIFY_CODE_LENGTH');
+    const digit = this.configService.getOrThrow<number>(
+      VERIFICATION.VERIFY_CODE_LENGTH,
+    );
 
     const code = Math.floor(Math.random() * 10 ** digit)
       .toString()
@@ -167,7 +175,7 @@ export class AuthService {
       },
     );
 
-    const message = `목장 인증번호: ${code}`;
+    const message = VerificationMessage(code);
 
     return isTest
       ? message
@@ -176,7 +184,7 @@ export class AuthService {
 
   private getCodeExpiresAt() {
     const expiresMinutes = this.configService.getOrThrow<number>(
-      'VERIFY_EXPIRES_MINUTES',
+      VERIFICATION.VERIFY_EXPIRES_MINUTES,
     );
 
     const now = new Date();
@@ -201,9 +209,7 @@ export class AuthService {
         1,
       );
 
-      throw new BadRequestException(
-        '인증번호가 일치하지 않습니다. 다시 확인해주세요.',
-      );
+      throw new BadRequestException(VerifyException.CODE_NOT_MATCH);
     }
 
     // 인증 성공 로직
@@ -223,33 +229,32 @@ export class AuthService {
   }
 
   private async validateVerificationAttempts(tempUser: TempUserModel) {
-    const verificationLimits =
-      this.configService.getOrThrow<number>('VERIFY_LIMITS');
+    const verificationLimits = this.configService.getOrThrow<number>(
+      VERIFICATION.VERIFY_LIMITS,
+    );
 
     if (tempUser.isVerified) {
-      throw new BadRequestException('이미 검증이 완료된 인증번호입니다.');
+      throw new BadRequestException(VerifyException.ALREADY_VERIFIED);
     }
 
     if (tempUser.verificationAttempts >= verificationLimits) {
-      throw new BadRequestException(
-        '검증 시도 횟수를 초과했습니다. 새로운 인증번호를 요청해주세요.',
-      );
+      throw new BadRequestException(VerifyException.EXCEED_VERIFY_LIMITS);
     }
 
     if (tempUser.codeExpiresAt < new Date()) {
-      throw new BadRequestException(
-        '인증번호가 만료되었습니다. 새로운 인증번호를 요청해주세요.',
-      );
+      throw new BadRequestException(VerifyException.CODE_EXPIRED);
     }
   }
 
   async signIn(tempUser: TempUserModel, dto: RegisterUserDto, qr: QueryRunner) {
     if (!tempUser.isVerified) {
-      throw new BadRequestException('휴대전화 번호 인증이 필요합니다.');
+      throw new BadRequestException(
+        SignInException.PHONE_VERIFICATION_REQUIRED,
+      );
     }
 
     if (!dto.privacyPolicyAgreed) {
-      throw new BadRequestException('개인정보 이용 동의가 필요합니다.');
+      throw new BadRequestException(SignInException.PRIVACY_POLICY_REQUIRED);
     }
 
     const userRepository = this.getUserRepository(qr);
