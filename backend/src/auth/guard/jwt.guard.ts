@@ -4,22 +4,16 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthService } from '../service/auth.service';
-import { JwtPayload, JwtRefreshPayload } from '../type/jwt';
+import { JwtRefreshPayload } from '../type/jwt';
 import { AuthType } from '../enum/auth-type.enum';
 import { TokenService } from '../service/token.service';
-import { Observable } from 'rxjs';
-import { TOKEN_HEADER } from '../const/token-header.const';
 import { AuthException } from '../exception/exception.message';
 
-@Injectable()
+//@Injectable()
 export class JwtGuard implements CanActivate {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly tokenService: TokenService,
-  ) {}
+  constructor(protected readonly tokenService: TokenService) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
     const rawToken = req.headers['authorization'];
 
@@ -29,41 +23,48 @@ export class JwtGuard implements CanActivate {
 
     const token = this.tokenService.extractToken(rawToken);
 
-    const payload: JwtPayload & { iat: number; exp: number } =
-      this.tokenService.verifyToken(token);
-
-    req.user =
-      payload.type === AuthType.TEMP
-        ? await this.authService.getTempUserById(payload.id)
-        : await this.authService.getUserById(payload.id);
+    req.tokenPayload = this.tokenService.verifyToken(token);
 
     return true;
   }
 }
 
 @Injectable()
-export class RefreshTokenGuard implements CanActivate {
-  constructor(private readonly tokenService: TokenService) {}
+export class TemporalTokenGuard extends JwtGuard {
+  constructor(protected readonly tokenService: TokenService) {
+    super(tokenService);
+  }
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(context: ExecutionContext) {
+    super.canActivate(context);
+
     const req = context.switchToHttp().getRequest();
-    const rawToken = req.headers[TOKEN_HEADER];
+    const payload = req.tokenPayload;
 
-    if (!rawToken) {
-      throw new UnauthorizedException(AuthException.TOKEN_REQUIRED);
+    if (payload.type !== AuthType.TEMP) {
+      throw new UnauthorizedException(AuthException.TOKEN_TYPE_ERROR);
     }
 
-    const token = this.tokenService.extractToken(rawToken);
+    return true;
+  }
+}
 
-    const payload: JwtRefreshPayload = this.tokenService.verifyToken(token);
+@Injectable()
+export class RefreshTokenGuard extends JwtGuard {
+  constructor(protected readonly tokenService: TokenService) {
+    super(tokenService);
+  }
+
+  canActivate(context: ExecutionContext): boolean {
+    super.canActivate(context);
+
+    const req = context.switchToHttp().getRequest();
+
+    const payload: JwtRefreshPayload = req.tokenPayload;
 
     if (payload.type !== AuthType.REFRESH) {
       throw new UnauthorizedException(AuthException.TOKEN_TYPE_ERROR);
     }
-
-    req.user = payload;
 
     return true;
   }

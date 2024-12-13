@@ -23,6 +23,7 @@ import {
 } from '../exception/exception.message';
 import { VERIFICATION } from '../const/env.const';
 import { VerificationMessage } from '../const/verification-message.const';
+import { JwtTemporalPayload } from '../type/jwt';
 
 @Injectable()
 export class AuthService {
@@ -95,8 +96,10 @@ export class AuthService {
     };
   }
 
-  async getTempUserById(id: number) {
-    const tempUser = await this.tempUserRepository.findOne({
+  async getTempUserById(id: number, qr?: QueryRunner) {
+    const tempUserRepository = this.getTempUserRepository(qr);
+
+    const tempUser = await tempUserRepository.findOne({
       where: {
         id,
       },
@@ -109,8 +112,10 @@ export class AuthService {
     return tempUser;
   }
 
-  async getUserById(id: number) {
-    const user = await this.userRepository.findOne({
+  async getUserById(id: number, qr?: QueryRunner) {
+    const userRepository = this.getUserRepository(qr);
+
+    const user = await userRepository.findOne({
       where: {
         id,
       },
@@ -124,12 +129,14 @@ export class AuthService {
   }
 
   async requestVerificationCode(
-    tempUser: TempUserModel,
+    temporalToken: JwtTemporalPayload,
     dto: RequestVerificationCodeDto,
     isTest: boolean,
     qr?: QueryRunner,
   ) {
     const tempUserRepository = this.getTempUserRepository(qr);
+
+    const tempUser = await this.getTempUserById(temporalToken.id, qr);
 
     // 하루 요청 횟수 제한 검증
     const requestLimits = this.configService.getOrThrow<number>(
@@ -193,10 +200,12 @@ export class AuthService {
   }
 
   async verifyCode(
-    tempUser: TempUserModel,
+    temporalToken: JwtTemporalPayload,
     dto: VerifyCodeDto,
     qr?: QueryRunner,
   ) {
+    const tempUser = await this.getTempUserById(temporalToken.id);
+
     // 검증 전처리
     await this.validateVerificationAttempts(tempUser);
 
@@ -246,7 +255,16 @@ export class AuthService {
     }
   }
 
-  async signIn(tempUser: TempUserModel, dto: RegisterUserDto, qr: QueryRunner) {
+  async signIn(
+    temporalToken: JwtTemporalPayload,
+    dto: RegisterUserDto,
+    qr: QueryRunner,
+  ) {
+    const userRepository = this.getUserRepository(qr);
+    const tempUserRepository = this.getTempUserRepository(qr);
+
+    const tempUser = await this.getTempUserById(temporalToken.id, qr);
+
     if (!tempUser.isVerified) {
       throw new BadRequestException(
         SignInException.PHONE_VERIFICATION_REQUIRED,
@@ -256,9 +274,6 @@ export class AuthService {
     if (!dto.privacyPolicyAgreed) {
       throw new BadRequestException(SignInException.PRIVACY_POLICY_REQUIRED);
     }
-
-    const userRepository = this.getUserRepository(qr);
-    const tempUserRepository = this.getTempUserRepository(qr);
 
     const user = userRepository.create({
       provider: tempUser.provider,
