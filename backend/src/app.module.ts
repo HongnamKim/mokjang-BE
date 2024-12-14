@@ -48,6 +48,28 @@ import { UserModel } from './auth/entity/user.entity';
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
         FROM_NUMBER: Joi.string().required(),
+        //JWT
+        JWT_SECRET: Joi.string().required(),
+        JWT_EXPIRES_TEMP: Joi.string().required(),
+        JWT_EXPIRES_ACCESS: Joi.string().required(),
+        JWT_EXPIRES_REFRESH: Joi.string().required(),
+        // 회원가입 문자 인증
+        VERIFY_CODE_LENGTH: Joi.number().required(),
+        DAILY_VERIFY_REQUEST_LIMITS: Joi.number().required(),
+        VERIFY_LIMITS: Joi.number().required(),
+        VERIFY_EXPIRES_MINUTES: Joi.number().required(),
+        // 구글 로그인
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        GOOGLE_CALLBACK_URL: Joi.string().required(),
+        // 네이버 로그인
+        NAVER_CLIENT_ID: Joi.string().required(),
+        NAVER_CLIENT_SECRET: Joi.string().required(),
+        NAVER_CALLBACK_URL: Joi.string().required(),
+        // 카카오 로그인
+        KAKAO_CLIENT_ID: Joi.string().required(),
+        KAKAO_CLIENT_SECRET: Joi.string().required(),
+        KAKAO_CALLBACK_URL: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
