@@ -326,13 +326,13 @@ export class MembersService {
   async fetchFamilyRelation(
     churchId: number,
     memberId: number,
-    familyId: number,
+    familyMemberId: number,
     relation: string,
     qr: QueryRunner,
   ) {
     const [member, familyMember] = await Promise.all([
       this.getMemberModelById(churchId, memberId, {}, qr),
-      this.getMemberModelById(churchId, familyId, {}, qr),
+      this.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
     return this.familyService.fetchAndCreateFamilyRelation(
