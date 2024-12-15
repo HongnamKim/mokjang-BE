@@ -3,14 +3,17 @@ import { FamilyModel } from '../../entity/family.entity';
 import { IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 import { FamilyRelation } from '../../const/family-relation.const';
 
-export class CreateFamilyDto extends PickType(FamilyModel, ['relation']) {
+export class CreateFamilyDto extends PickType(FamilyModel, [
+  'familyMemberId',
+  'relation',
+]) {
   @ApiProperty({
-    name: 'familyId',
+    name: 'familyMemberId',
     description: '가족 교인의 ID',
     example: 12,
   })
   @IsNumber()
-  familyId: number;
+  familyMemberId: number;
 
   @ApiProperty({
     name: 'relation',
