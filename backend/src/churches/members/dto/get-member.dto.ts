@@ -74,23 +74,23 @@ export class GetMemberDto extends PartialType(PickType(MemberModel, ['name'])) {
     name: 'birthAfter',
     description: '생년월일 ~부터',
     example: '1990-01-01',
-    default: '1800-01-01',
+    //default: '1800-01-01',
     required: false,
   })
   @IsDate()
   @IsOptional()
-  birthAfter: Date = new Date('1800-01-01');
+  birthAfter?: Date; // = new Date('1800-01-01');
 
   @ApiProperty({
     name: 'birthBefore',
     description: '생년월일 ~까지',
     example: '2010-01-01',
-    default: new Date(),
+    //default: new Date(),
     required: false,
   })
   @IsDate()
   @IsOptional()
-  birthBefore: Date = new Date();
+  birthBefore?: Date; // = new Date();
 
   @ApiProperty({
     name: 'gender',
