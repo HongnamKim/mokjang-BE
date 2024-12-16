@@ -52,7 +52,7 @@ export class FamilyService {
     return !!isExist;
   }
 
-  private async getFamilyIds(memberId: number, qr?: QueryRunner) {
+  private async getFamilyMemberIds(memberId: number, qr?: QueryRunner) {
     const familyRepository = this.getFamilyRepository(qr);
 
     return (
@@ -79,30 +79,31 @@ export class FamilyService {
       throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
     }
 
-    const [newFamilyExistingFamilyIds, myFamilyIds] = await Promise.all([
-      this.getFamilyIds(newFamilyMember.id, qr),
-      this.getFamilyIds(me.id, qr),
-    ]);
-    newFamilyExistingFamilyIds.push(newFamilyMember.id);
-    myFamilyIds.push(me.id);
+    const [newFamilyExistingFamilyMemberIds, myFamilyMemberIds] =
+      await Promise.all([
+        this.getFamilyMemberIds(newFamilyMember.id, qr),
+        this.getFamilyMemberIds(me.id, qr),
+      ]);
+    newFamilyExistingFamilyMemberIds.push(newFamilyMember.id);
+    myFamilyMemberIds.push(me.id);
 
     //const myFamilyIds = await this.getFamilyIds(me.id, qr);
 
-    for (const newFamilyExistingFamilyId of newFamilyExistingFamilyIds) {
-      for (const myFamilyId of myFamilyIds) {
+    for (const newFamilyExistingFamilyMemberId of newFamilyExistingFamilyMemberIds) {
+      for (const myFamilyMemberId of myFamilyMemberIds) {
         const isRelationFixed =
-          myFamilyId === me.id &&
-          newFamilyExistingFamilyId === newFamilyMember.id;
+          myFamilyMemberId === me.id &&
+          newFamilyExistingFamilyMemberId === newFamilyMember.id;
 
         await Promise.all([
           familyRepository.save({
-            meId: myFamilyId,
-            familyMemberId: newFamilyExistingFamilyId,
+            meId: myFamilyMemberId,
+            familyMemberId: newFamilyExistingFamilyMemberId,
             relation: isRelationFixed ? relation : FamilyRelation.DEFAULT,
           }),
           familyRepository.save({
-            meId: newFamilyExistingFamilyId,
-            familyMemberId: myFamilyId,
+            meId: newFamilyExistingFamilyMemberId,
+            familyMemberId: myFamilyMemberId,
             relation: isRelationFixed
               ? this.getCounterRelation(relation, me)
               : FamilyRelation.DEFAULT,
@@ -245,33 +246,42 @@ export class FamilyService {
 
   private getCounterRelation(relation: string, me: MemberModel) {
     switch (relation) {
-      case FamilyRelation.GRANDFATHER:
-      case FamilyRelation.GRANDMOTHER:
+      // 조부모 - 손자/손녀
+      case FamilyRelation.GRAND_PARENTS:
         return me.gender === GenderEnum.male
-          ? FamilyRelation.GRANDSON
-          : FamilyRelation.GRANDDAUGHTER;
-      case FamilyRelation.GRANDSON:
-      case FamilyRelation.GRANDDAUGHTER:
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.GRANDFATHER
-          : FamilyRelation.GRANDMOTHER;
+          ? FamilyRelation.GRAND_SON
+          : FamilyRelation.GRAND_DAUGHTER;
+      case FamilyRelation.GRAND_SON:
+      case FamilyRelation.GRAND_DAUGHTER:
+        return FamilyRelation.GRAND_PARENTS;
+      // 부모 - 자녀
       case FamilyRelation.MOTHER:
       case FamilyRelation.FATHER:
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.SON
-          : FamilyRelation.DAUGHTER;
-      case FamilyRelation.SON:
-      case FamilyRelation.DAUGHTER:
+        return FamilyRelation.CHILD;
+      case FamilyRelation.CHILD:
         return me.gender === GenderEnum.male
           ? FamilyRelation.FATHER
           : FamilyRelation.MOTHER;
+      // 형제, 친인척, 가족
       case FamilyRelation.BROTHER:
-      case FamilyRelation.SISTER:
-      case FamilyRelation.남매:
+      case FamilyRelation.COUSIN:
       case FamilyRelation.DEFAULT:
         return relation;
-      default:
-        return '조카';
+      // 장인/장모 시부모 - 사위/며느리
+      case FamilyRelation.SON_IN_LAW: // 사위 추가
+        return me.gender === GenderEnum.male
+          ? FamilyRelation.FATHER_IN_LAW_M
+          : FamilyRelation.MOTHER_IN_LAW_M;
+      case FamilyRelation.DAUGHTER_IN_LAW: // 며느리 추가
+        return me.gender === GenderEnum.male
+          ? FamilyRelation.FATHER_IN_LAW_W
+          : FamilyRelation.MOTHER_IN_LAW_W;
+      case FamilyRelation.FATHER_IN_LAW_W: // 시부모 추가
+      case FamilyRelation.MOTHER_IN_LAW_W:
+        return FamilyRelation.DAUGHTER_IN_LAW;
+      case FamilyRelation.FATHER_IN_LAW_M: // 장인 장모 추가
+      case FamilyRelation.MOTHER_IN_LAW_M:
+        return FamilyRelation.SON_IN_LAW;
     }
   }
 }

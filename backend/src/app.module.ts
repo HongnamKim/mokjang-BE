@@ -1,7 +1,6 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ChurchesModule } from './churches/churches.module';
@@ -19,11 +18,13 @@ import { GroupModel } from './churches/settings/entity/group.entity';
 import { SettingsModule } from './churches/settings/settings.module';
 import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
+import { TempUserModel } from './auth/entity/temp-user.entity';
+import { UserModel } from './auth/entity/user.entity';
 
 @Module({
   imports: [
-    UsersModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -47,6 +48,28 @@ import * as Joi from 'joi';
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
         FROM_NUMBER: Joi.string().required(),
+        //JWT
+        JWT_SECRET: Joi.string().required(),
+        JWT_EXPIRES_TEMP: Joi.string().required(),
+        JWT_EXPIRES_ACCESS: Joi.string().required(),
+        JWT_EXPIRES_REFRESH: Joi.string().required(),
+        // 회원가입 문자 인증
+        VERIFY_CODE_LENGTH: Joi.number().required(),
+        DAILY_VERIFY_REQUEST_LIMITS: Joi.number().required(),
+        VERIFY_LIMITS: Joi.number().required(),
+        VERIFY_EXPIRES_MINUTES: Joi.number().required(),
+        // 구글 로그인
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        GOOGLE_CALLBACK_URL: Joi.string().required(),
+        // 네이버 로그인
+        NAVER_CLIENT_ID: Joi.string().required(),
+        NAVER_CLIENT_SECRET: Joi.string().required(),
+        NAVER_CALLBACK_URL: Joi.string().required(),
+        // 카카오 로그인
+        KAKAO_CLIENT_ID: Joi.string().required(),
+        KAKAO_CLIENT_SECRET: Joi.string().required(),
+        KAKAO_CALLBACK_URL: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -58,6 +81,8 @@ import * as Joi from 'joi';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [
+          TempUserModel,
+          UserModel,
           ChurchModel,
           RequestInfoModel,
           MemberModel,
@@ -71,6 +96,7 @@ import * as Joi from 'joi';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
