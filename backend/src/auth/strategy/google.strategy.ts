@@ -20,7 +20,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  validate(profile: Profile): OauthDto {
+  validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+  ): OauthDto {
     return new OauthDto(profile.provider, profile.id);
   }
 }

@@ -1,5 +1,6 @@
 export const AuthException = {
   LOGIN_ERROR: '로그인 실패',
+  MISSING_OAUTH_DATA: '소셜 로그인 정보가 올바르지 않습니다.',
   TOKEN_REQUIRED: '인증이 필요한 요청입니다.',
   TOKEN_INVALID: '유효하지 않은 인증 토큰입니다.',
   TOKEN_EXPIRED: '만료된 토큰입니다.',
