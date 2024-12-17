@@ -1,8 +1,16 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { ChurchModel } from '../entity/church.entity';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { MemberSize } from '../const/member-size.enum';
 
-export class CreateChurchDto extends PickType(ChurchModel, ['name']) {
+export class CreateChurchDto extends PickType(ChurchModel, [
+  'name',
+  'identifyNumber',
+  'phone',
+  'address',
+  'detailAddress',
+  'memberSize',
+]) {
   @ApiProperty({
     name: 'name',
     description: '교회 이름',
@@ -11,4 +19,39 @@ export class CreateChurchDto extends PickType(ChurchModel, ['name']) {
   @IsString()
   @IsNotEmpty()
   override name: string;
+
+  @ApiProperty({
+    description: '고유번호',
+  })
+  @IsString()
+  @IsNotEmpty()
+  override identifyNumber: string;
+
+  @ApiProperty({
+    description: '교회 전화번호',
+  })
+  @IsString()
+  @IsNotEmpty()
+  override phone: string;
+
+  @ApiProperty({
+    description: '교회 주소',
+  })
+  @IsString()
+  @IsNotEmpty()
+  override address: string;
+
+  @ApiProperty({
+    description: '교회 상세 주소',
+  })
+  @IsString()
+  @IsNotEmpty()
+  override detailAddress: string;
+
+  @ApiProperty({
+    description: '교회 규모',
+    enum: MemberSize,
+  })
+  @IsEnum(MemberSize)
+  override memberSize: MemberSize;
 }
