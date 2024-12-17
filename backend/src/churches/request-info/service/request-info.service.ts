@@ -6,26 +6,23 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../entity/request-info.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateRequestInfoDto } from '../dto/create-request-info.dto';
 import { ValidateRequestInfoDto } from '../dto/validate-request-info.dto';
-import * as dotenv from 'dotenv';
-import * as process from 'node:process';
 import { ChurchModel } from '../../entity/church.entity';
 import { ResponseValidateRequestInfoDto } from '../dto/response/response-validate-request-info.dto';
 import { GetRequestInfoDto } from '../dto/get-request-info.dto';
 import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
-import { BelieversService } from '../../believers/service/believers.service';
+import { MembersService } from '../../members/service/members.service';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
 import { MessagesService } from './messages.service';
-import { UpdateBelieverDto } from '../../believers/dto/update-believer.dto';
+import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
+import { ConfigService } from '@nestjs/config';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
-
-dotenv.config();
 
 @Injectable()
 export class RequestInfoService {
@@ -33,10 +30,18 @@ export class RequestInfoService {
     @InjectRepository(RequestInfoModel)
     private readonly requestInfosRepository: Repository<RequestInfoModel>,
     private readonly churchesService: ChurchesService,
-    private readonly believersService: BelieversService,
+    private readonly membersService: MembersService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessagesService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private readonly REQUEST_EXPIRE_DAYS = this.configService.getOrThrow<number>(
+    'REQUEST_INFO_EXPIRE_DAYS',
+  );
+  private readonly VALIDATION_LIMITS = this.configService.getOrThrow<number>(
+    'REQUEST_INFO_VALIDATION_LIMITS',
+  );
 
   private getRequestInfosRepository(qr?: QueryRunner) {
     return qr
@@ -99,14 +104,14 @@ export class RequestInfoService {
       {
         requestInfoAttempts: requestInfo.requestInfoAttempts + 1,
         requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-          REQUEST_CONSTANTS.EXPIRE_DAYS,
+          this.REQUEST_EXPIRE_DAYS,
         ),
       },
     );
 
     return repository.findOne({
       where: { id: requestInfo.id },
-      relations: { requestedChurch: true },
+      relations: { church: true },
     });
   }
 
@@ -128,40 +133,56 @@ export class RequestInfoService {
 
     await this.churchesService.increaseRequestAttempts(church, qr);
 
-    const isExistBeliever = await this.believersService.isExistBeliever(
-      church.id,
-      dto.name,
-      dto.mobilePhone,
-      qr,
-    );
+    const isExistMember =
+      await this.membersService.isExistMemberByNameAndMobilePhone(
+        church.id,
+        dto.name,
+        dto.mobilePhone,
+        qr,
+      );
 
-    const believer = isExistBeliever
-      ? await this.believersService.getBelieverByNameAndMobilePhone(
+    const member = isExistMember
+      ? await this.membersService.getMemberModelByNameAndMobilePhone(
           church.id,
           dto.name,
           dto.mobilePhone,
           {},
           qr,
         )
-      : await this.believersService.createBelievers(
+      : await this.membersService.createMember(
           church.id,
-          { name: dto.name, mobilePhone: dto.mobilePhone },
+          {
+            name: dto.name,
+            mobilePhone: dto.mobilePhone,
+            guidedById: dto.guidedById,
+          },
           qr,
         );
+
+    // 새로 등록 + 가족 관계를 설정한 경우
+    if (!isExistMember && dto.familyMemberId && dto.relation) {
+      await this.membersService.fetchFamilyRelation(
+        church.id,
+        member.id,
+        dto.familyMemberId,
+        dto.relation,
+        qr,
+      );
+    }
 
     const repository = this.getRequestInfosRepository(qr);
     const newRequestInfo = await repository.save({
       ...dto,
-      believerId: believer.id,
-      requestedChurch: church,
+      memberId: member.id,
+      church: church,
       requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-        REQUEST_CONSTANTS.EXPIRE_DAYS,
+        this.REQUEST_EXPIRE_DAYS,
       ),
     });
 
     return repository.findOne({
       where: { id: newRequestInfo.id },
-      relations: { requestedChurch: true },
+      relations: { church: true },
     });
   }
 
@@ -181,7 +202,7 @@ export class RequestInfoService {
     const repository = this.getRequestInfosRepository(qr);
     const existingRequest = await repository.findOne({
       where: {
-        requestedChurchId: churchId,
+        churchId: churchId,
         name: dto.name,
         mobilePhone: dto.mobilePhone,
       },
@@ -195,18 +216,26 @@ export class RequestInfoService {
       : this.handleNewRequest(church, dto, qr);
   }
 
-  sendRequestInfoUrlMessage(requestInfo: RequestInfoModel) {
-    const churchName = requestInfo.requestedChurch.name.endsWith('교회')
-      ? requestInfo.requestedChurch.name
-      : `${requestInfo.requestedChurch.name} 교회`;
+  sendRequestInfoUrlMessage(
+    requestInfo: RequestInfoModel,
+    isTest: boolean = true,
+  ) {
+    const churchName = requestInfo.church.name.endsWith('교회')
+      ? requestInfo.church.name
+      : `${requestInfo.church.name} 교회`;
 
-    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${process.env.PROTOCOL}://${process.env.HOST}:${process.env.PORT}/church/${requestInfo.requestedChurchId}/request/${requestInfo.id}`;
+    const protocol = this.configService.getOrThrow('PROTOCOL');
+    const host = this.configService.getOrThrow('HOST');
+    const port = this.configService.getOrThrow('PORT');
 
-    return this.messagesService.sendRequestInfoMessage(
-      requestInfo.mobilePhone,
-      url,
-    );
-    //return url;
+    const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${protocol}://${host}:${port}/church/${requestInfo.churchId}/request/${requestInfo.id}`;
+
+    return isTest
+      ? url
+      : this.messagesService.sendRequestInfoMessage(
+          requestInfo.mobilePhone,
+          url,
+        );
   }
 
   async validateRequestInfo(
@@ -217,36 +246,36 @@ export class RequestInfoService {
     const validateTarget = await this.requestInfosRepository.findOne({
       where: {
         id: requestInfoId,
-        requestedChurchId: churchId,
+        churchId: churchId,
       },
     });
 
     // 존재 X
     if (!validateTarget) {
-      throw new NotFoundException('존재하지 않는 입력 요청입니다.');
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
     }
 
     // 만료 날짜 지난 경우
     if (validateTarget.requestInfoExpiresAt < new Date()) {
-      await this.requestInfosRepository.softDelete({
+      await this.requestInfosRepository.delete({
         id: requestInfoId,
       });
       throw new BadRequestException(
-        '만료된 입력 요청입니다. 입력 요청 내역 삭제',
+        REQUEST_CONSTANTS.ERROR_MESSAGES.REQUEST_EXPIRED,
       );
     }
 
     // 검증 시도 횟수 초과
-    if (
-      validateTarget.validateAttempts === REQUEST_CONSTANTS.VALIDATION_LIMITS
-    ) {
-      await this.requestInfosRepository.softDelete({
+    if (validateTarget.validateAttempts === this.VALIDATION_LIMITS) {
+      await this.requestInfosRepository.delete({
         id: requestInfoId,
-        requestedChurchId: churchId,
+        churchId: churchId,
       });
 
       throw new BadRequestException(
-        `검증 횟수 ${REQUEST_CONSTANTS.VALIDATION_LIMITS}회 초과, 입력 요청 내역 삭제`,
+        REQUEST_CONSTANTS.ERROR_MESSAGES.VALIDATION_LIMIT_EXCEEDED(
+          this.VALIDATION_LIMITS,
+        ),
       );
     }
 
@@ -256,16 +285,18 @@ export class RequestInfoService {
       validateTarget.mobilePhone !== dto.mobilePhone
     ) {
       await this.requestInfosRepository.increment(
-        { id: requestInfoId, requestedChurchId: churchId },
+        { id: requestInfoId, churchId: churchId },
         'validateAttempts',
         1,
       );
-      throw new UnauthorizedException('유효한 입력 요청이 아닙니다.');
+      throw new UnauthorizedException(
+        REQUEST_CONSTANTS.ERROR_MESSAGES.UNAUTHORIZED,
+      );
     }
 
     // 검증 성공
     await this.requestInfosRepository.update(
-      { id: requestInfoId, requestedChurchId: churchId },
+      { id: requestInfoId, churchId: churchId },
       { isValidated: true },
     );
 
@@ -274,13 +305,13 @@ export class RequestInfoService {
 
   async findAllRequestInfos(churchId: number, dto: GetRequestInfoDto) {
     const totalCount = await this.requestInfosRepository.count({
-      where: { requestedChurchId: churchId },
+      where: { churchId: churchId },
     });
 
     const totalPage = Math.ceil(totalCount / dto.page);
 
     const result = await this.requestInfosRepository.find({
-      where: { requestedChurchId: churchId },
+      where: { churchId: churchId },
       order: { createdAt: 'desc' },
       take: dto.take,
       skip: dto.take * (dto.page - 1),
@@ -302,13 +333,14 @@ export class RequestInfoService {
   ) {
     const requestInfosRepository = this.getRequestInfosRepository(qr);
 
-    const result = await requestInfosRepository.softDelete({
+    const result = await requestInfosRepository.delete({
       id: requestInfoId,
-      requestedChurchId: churchId,
+      churchId: churchId,
+      deletedAt: IsNull(),
     });
 
     if (result.affected === 0) {
-      throw new NotFoundException('존재하지 않는 입력 요청입니다.');
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
     }
 
     return new ResponseDeleteDto(true, requestInfoId);
@@ -323,11 +355,11 @@ export class RequestInfoService {
     const requestInfosRepository = this.getRequestInfosRepository(qr);
 
     const requestInfo = await requestInfosRepository.findOne({
-      where: { id: requestInfoId, requestedChurchId: churchId },
+      where: { id: requestInfoId, churchId: churchId },
     });
 
     if (!requestInfo) {
-      throw new NotFoundException('존재하지 않는 입력 요청입니다.');
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
     }
 
     if (
@@ -335,21 +367,28 @@ export class RequestInfoService {
       dto.name !== requestInfo.name ||
       dto.mobilePhone !== requestInfo.mobilePhone
     ) {
-      throw new BadRequestException('검증되지 않은 입력 요청입니다.');
+      throw new BadRequestException(
+        REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_VALIDATED,
+      );
     }
 
-    const updateDto: UpdateBelieverDto = {
+    const updateDto: UpdateMemberDto = {
       ...dto,
     };
 
-    const updated = await this.believersService.updateBeliever(
+    const updated = await this.membersService.updateMember(
       churchId,
-      requestInfo.believerId,
+      requestInfo.memberId,
       updateDto,
       qr,
     );
 
-    await this.deleteRequestInfoById(churchId, requestInfoId, qr);
+    const result = await requestInfosRepository.delete({ id: requestInfo.id });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
+    }
+    //await this.deleteRequestInfoById(churchId, requestInfoId, qr);
 
     return updated;
   }

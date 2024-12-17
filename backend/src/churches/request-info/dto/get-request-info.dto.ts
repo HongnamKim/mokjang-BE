@@ -11,7 +11,7 @@ export class GetRequestInfoDto {
   })
   @IsNumber()
   @IsOptional()
-  take?: number = 50;
+  take: number = 50;
 
   @ApiProperty({
     name: 'page',
@@ -22,5 +22,5 @@ export class GetRequestInfoDto {
   })
   @IsNumber()
   @IsOptional()
-  page?: number = 1;
+  page: number = 1;
 }

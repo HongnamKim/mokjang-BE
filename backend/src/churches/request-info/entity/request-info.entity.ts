@@ -3,15 +3,15 @@ import { ChurchModel } from '../../entity/church.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 
 @Entity()
-@Unique(['requestedChurchId', 'name', 'mobilePhone'])
+@Unique(['churchId', 'name', 'mobilePhone'])
 export class RequestInfoModel extends BaseModel {
   @Column()
   @Index()
-  requestedChurchId: number;
+  churchId: number;
 
   @Column()
   @Index()
-  believerId: number;
+  memberId: number;
 
   @Column()
   @Index()
@@ -20,12 +20,6 @@ export class RequestInfoModel extends BaseModel {
   @Column()
   @Index()
   mobilePhone: string;
-
-  @Column({ nullable: true })
-  guideId?: number;
-
-  @Column({ nullable: true })
-  familyId?: number;
 
   @Column({ default: 1 })
   requestInfoAttempts: number;
@@ -40,5 +34,5 @@ export class RequestInfoModel extends BaseModel {
   isValidated: boolean;
 
   @ManyToOne(() => ChurchModel, (church) => church.requestInfos)
-  requestedChurch: ChurchModel;
+  church: ChurchModel;
 }

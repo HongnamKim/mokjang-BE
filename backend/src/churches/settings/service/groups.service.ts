@@ -56,6 +56,22 @@ export class GroupsService {
     });
   }
 
+  async getGroupById(churchId: number, groupId: number, qr: QueryRunner) {
+    await this.checkChurchExist(churchId, qr);
+
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const group = await groupsRepository.findOne({
+      where: { churchId, id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
+
+    return group;
+  }
+
   async postGroup(churchId: number, dto: CreateGroupDto, qr?: QueryRunner) {
     await this.checkChurchExist(churchId, qr);
 
@@ -121,6 +137,15 @@ export class GroupsService {
 
     const groupRepository = this.getGroupRepository(qr);
 
+    // 변경 전 그룹
+    const beforeUpdateGroup = await groupRepository.findOne({
+      where: { id: groupId },
+    });
+
+    if (!beforeUpdateGroup) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
+
     // 상위 그룹을 변경하는 경우
     if (dto.parentGroupId) {
       // 변경하려는 상위 그룹이 있는지
@@ -133,11 +158,6 @@ export class GroupsService {
           SETTING_EXCEPTION.GroupModel.PARENT_NOT_FOUND,
         );
       }
-
-      // 변경 전 그룹
-      const beforeUpdateGroup = await groupRepository.findOne({
-        where: { id: groupId },
-      });
 
       // 변경 대상 그룹을 현재 자신의 하위 그룹과 종속 관계를 바꾸려는 경우
       // A -> B 관계를 직접 A <- B 로 바꾸려는 경우
@@ -215,7 +235,7 @@ export class GroupsService {
 
     if (
       deleteTarget.childGroupIds.length > 0 ||
-      deleteTarget.believerCount !== 0
+      deleteTarget.membersCount !== 0
     ) {
       throw new BadRequestException(
         '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
@@ -297,9 +317,13 @@ export class GroupsService {
   async getGroupsCascade(groupId: number, qr?: QueryRunner) {
     const groupsRepository = this.getGroupRepository(qr);
 
-    const groupToDelete = await groupsRepository.findOne({
+    const group = await groupsRepository.findOne({
       where: { id: groupId },
     });
+
+    if (!group) {
+      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+    }
 
     const subGroupsQuery = await groupsRepository.query(
       `
@@ -318,18 +342,18 @@ export class GroupsService {
     )
     SELECT id, level, name FROM group_tree
     `,
-      [groupToDelete.id],
+      [group.id],
     );
 
     return subGroupsQuery.map((row: any) => row.id);
   }
 
-  async incrementBelieverCount(groupId: number, qr: QueryRunner) {
+  async incrementMembersCount(groupId: number, qr: QueryRunner) {
     const groupsRepository = this.getGroupRepository(qr);
 
     const result = await groupsRepository.increment(
       { id: groupId },
-      'believerCount',
+      'membersCount',
       1,
     );
 
@@ -340,12 +364,12 @@ export class GroupsService {
     return true;
   }
 
-  async decrementBelieverCount(groupId: number, qr: QueryRunner) {
+  async decrementMembersCount(groupId: number, qr: QueryRunner) {
     const groupsRepository = this.getGroupRepository(qr);
 
     const result = await groupsRepository.decrement(
       { id: groupId },
-      'believerCount',
+      'membersCount',
       1,
     );
 

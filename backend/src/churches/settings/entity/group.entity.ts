@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import { BelieverModel } from '../../believers/entity/believer.entity';
+import { MemberModel } from '../../members/entity/member.entity';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaseChurchSettingModel } from './base-church-setting.entity';
 
@@ -20,6 +20,6 @@ export class GroupModel extends BaseChurchSettingModel {
   @ManyToOne(() => ChurchModel, (church) => church.groups)
   church: ChurchModel;
 
-  @OneToMany(() => BelieverModel, (believer) => believer.group)
-  believers: BelieverModel[];
+  @OneToMany(() => MemberModel, (member) => member.group)
+  members: MemberModel[];
 }

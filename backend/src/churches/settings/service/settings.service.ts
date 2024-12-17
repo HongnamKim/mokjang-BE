@@ -27,7 +27,7 @@ export class SettingsService {
 
   constructor(
     @InjectRepository(OfficerModel)
-    private readonly positionsRepository: Repository<OfficerModel>,
+    private readonly officersRepository: Repository<OfficerModel>,
     @InjectRepository(MinistryModel)
     private readonly ministryRepository: Repository<MinistryModel>,
     @InjectRepository(EducationModel)
@@ -35,7 +35,7 @@ export class SettingsService {
     private readonly churchesService: ChurchesService,
   ) {
     this.entityMap = new Map([
-      [OfficerModel.name, positionsRepository],
+      [OfficerModel.name, officersRepository],
       [MinistryModel.name, ministryRepository],
       [EducationModel.name, educationRepository],
     ]);
@@ -45,9 +45,17 @@ export class SettingsService {
     entity: EntityTarget<T>,
     qr?: QueryRunner,
   ) {
-    return qr
+    const repository = qr
       ? qr.manager.getRepository(entity)
       : this.entityMap.get(this.getEntityName(entity));
+
+    if (!repository) {
+      throw new InternalServerErrorException(
+        '존재하지 않는 교회 커스텀 설정 대상입니다.',
+      );
+    }
+
+    return repository;
   }
 
   private getEntityName<T extends BaseChurchSettingModel>(
@@ -100,6 +108,29 @@ export class SettingsService {
     const repository = this.getRepository(entity, qr);
 
     return repository.find({ where: { churchId: churchId } });
+  }
+
+  async getSettingValueById<T extends BaseChurchSettingModel>(
+    churchId: number,
+    id: number,
+    entity: EntityTarget<T>,
+    qr?: QueryRunner,
+  ) {
+    await this.checkChurchExist(churchId);
+
+    const repository = this.getRepository(entity, qr);
+
+    const entityName = this.getEntityName(entity);
+
+    const value: T | null = await repository.findOne({
+      where: { churchId, id },
+    });
+
+    if (!value) {
+      throw new NotFoundException(SETTING_EXCEPTION[entityName].NOT_FOUND);
+    }
+
+    return value;
   }
 
   async postSettingValues<T extends BaseChurchSettingModel>(
@@ -179,7 +210,7 @@ export class SettingsService {
     return 'ok';
   }
 
-  async incrementBelieverCount<T extends BaseChurchSettingModel>(
+  async incrementMembersCount<T extends BaseChurchSettingModel>(
     churchId: number,
     settingValueId: number,
     entity: EntityTarget<T>,
@@ -189,7 +220,7 @@ export class SettingsService {
 
     const result = await repository.increment(
       { id: settingValueId },
-      'believerCount',
+      'membersCount',
       1,
     );
 
@@ -200,7 +231,7 @@ export class SettingsService {
     return true;
   }
 
-  async decrementBelieverCount<T extends BaseChurchSettingModel>(
+  async decrementMembersCount<T extends BaseChurchSettingModel>(
     churchId: number,
     settingValueId: number,
     entity: EntityTarget<T>,
@@ -210,7 +241,7 @@ export class SettingsService {
 
     const result = await repository.decrement(
       { id: settingValueId },
-      'believerCount',
+      'membersCount',
       1,
     );
 

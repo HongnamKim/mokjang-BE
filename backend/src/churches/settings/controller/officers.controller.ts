@@ -20,12 +20,12 @@ export class OfficersController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get()
-  getPosition(@Param('churchId', ParseIntPipe) churchId: number) {
+  getOfficers(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.settingsService.getSettingValues(churchId, OfficerModel);
   }
 
   @Post()
-  postPosition(
+  postOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateSettingDto,
   ) {
@@ -33,7 +33,7 @@ export class OfficersController {
   }
 
   @Patch(':officerId')
-  patchPosition(
+  patchOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
     @Body() dto: UpdateSettingDto,
@@ -47,7 +47,7 @@ export class OfficersController {
   }
 
   @Delete(':officerId')
-  deletePosition(
+  deleteOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
   ) {

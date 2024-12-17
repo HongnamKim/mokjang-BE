@@ -28,7 +28,7 @@ export class CommonService {
     dto: BasePaginationDto,
     repository: Repository<T>,
     overrideFindOptions: FindManyOptions<T>,
-    path: string,
+    path?: string,
   ) {
     const findOptions: FindManyOptions<T> = this.composeFindOptions<T>(dto);
 
@@ -127,7 +127,7 @@ export class CommonService {
       where,
       order,
       take: dto.take,
-      skip: dto.page ? dto.take * (dto.page - 1) : null,
+      skip: dto.page ? dto.take * (dto.page - 1) : undefined,
     };
 
     return findOptions;

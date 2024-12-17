@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Post,
@@ -20,6 +21,7 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { GetRequestInfoDto } from './dto/get-request-info.dto';
 import { SubmitRequestInfoDto } from './dto/submit-request-info.dto';
+import { FamilyRelationPipe } from '../members/pipe/family-relation.pipe';
 
 @ApiTags('Churches:Request-Info')
 @Controller('churches/:churchId/request')
@@ -38,7 +40,8 @@ export class RequestInfoController {
   @UseInterceptors(TransactionInterceptor)
   async postRequestInfo(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Body() dto: CreateRequestInfoDto,
+    @Query('isTest') isTest: boolean,
+    @Body(FamilyRelationPipe) dto: CreateRequestInfoDto,
     @QueryRunner() qr: QR,
   ) {
     const requestInfo = await this.requestInfoService.createRequestInfo(
@@ -47,7 +50,14 @@ export class RequestInfoController {
       qr,
     );
 
-    return this.requestInfoService.sendRequestInfoUrlMessage(requestInfo);
+    if (!requestInfo) {
+      throw new InternalServerErrorException('입력 요청 생성 중 문제 발생');
+    }
+
+    return this.requestInfoService.sendRequestInfoUrlMessage(
+      requestInfo,
+      isTest,
+    );
   }
 
   @Delete(':requestInfoId')

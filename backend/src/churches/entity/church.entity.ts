@@ -1,16 +1,53 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  Unique,
+} from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
-import { BelieverModel } from '../believers/entity/believer.entity';
+import { MemberModel } from '../members/entity/member.entity';
 import { GroupModel } from '../settings/entity/group.entity';
 import { EducationModel } from '../settings/entity/education.entity';
 import { OfficerModel } from '../settings/entity/officer.entity';
 import { MinistryModel } from '../settings/entity/ministry.entity';
+import { UserModel } from '../../auth/entity/user.entity';
+import { MemberSize } from '../const/member-size.enum';
 
 @Entity()
+@Unique(['name', 'identifyNumber'])
 export class ChurchModel extends BaseModel {
   @Column()
   name: string;
+
+  @Column({ nullable: true })
+  identifyNumber: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  detailAddress: string;
+
+  @Column({ enum: MemberSize, nullable: true })
+  memberSize: MemberSize;
+
+  @Index()
+  @Column({ nullable: true })
+  mainAdminId: number;
+
+  @JoinColumn()
+  @OneToOne(() => UserModel, (user) => user.adminChurch)
+  mainAdmin: UserModel;
+
+  @OneToMany(() => UserModel, (user) => user.managingChurch)
+  subAdmins: UserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];
@@ -18,8 +55,8 @@ export class ChurchModel extends BaseModel {
   @OneToMany(() => EducationModel, (education) => education.church)
   educations: EducationModel[];
 
-  @OneToMany(() => OfficerModel, (position) => position.church)
-  positions: OfficerModel[];
+  @OneToMany(() => OfficerModel, (officer) => officer.church)
+  officers: OfficerModel[];
 
   @OneToMany(() => MinistryModel, (ministry) => ministry.church)
   ministries: MinistryModel[];
@@ -27,15 +64,12 @@ export class ChurchModel extends BaseModel {
   @Column({ default: 0 })
   dailyRequestAttempts: number;
 
-  @Column({ nullable: true })
+  @Column({ default: new Date('1900-01-01'), type: 'timestamptz' })
   lastRequestDate: Date;
 
-  @OneToMany(
-    () => RequestInfoModel,
-    (requestInfo) => requestInfo.requestedChurch,
-  )
+  @OneToMany(() => RequestInfoModel, (requestInfo) => requestInfo.church)
   requestInfos: RequestInfoModel[];
 
-  @OneToMany(() => BelieverModel, (believer) => believer.church)
-  believers: BelieverModel[];
+  @OneToMany(() => MemberModel, (member) => member.church)
+  members: MemberModel[];
 }
