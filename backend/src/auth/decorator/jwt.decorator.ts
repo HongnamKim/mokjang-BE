@@ -35,6 +35,22 @@ export const TemporalToken = createParamDecorator(
   },
 );
 
+export const AccessToken = createParamDecorator(
+  (data, context: ExecutionContext) => {
+    const req = context.switchToHttp().getRequest();
+
+    if (!req.tokenPayload) {
+      throw new InternalServerErrorException('토큰 처리 에러');
+    }
+
+    if (req.tokenPayload.type !== AuthType.ACCESS) {
+      throw new UnauthorizedException(AuthException.TOKEN_TYPE_ERROR);
+    }
+
+    return req.tokenPayload;
+  },
+);
+
 export const RefreshToken = createParamDecorator(
   (data, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();

@@ -1,5 +1,6 @@
-import { Column, Entity, Unique } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne, Unique } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Entity()
 @Unique(['provider', 'providerId'])
@@ -21,4 +22,10 @@ export class UserModel extends BaseModel {
 
   @Column({ default: false })
   privacyPolicyAgreed: boolean;
+
+  @OneToOne(() => ChurchModel, (church) => church.mainAdmin)
+  adminChurch: ChurchModel;
+
+  @ManyToOne(() => ChurchModel, (church) => church.subAdmins)
+  managingChurch: ChurchModel;
 }

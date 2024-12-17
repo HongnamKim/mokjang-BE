@@ -7,6 +7,7 @@ import { OfficerModel } from './settings/entity/officer.entity';
 import { EducationModel } from './settings/entity/education.entity';
 import { MinistryModel } from './settings/entity/ministry.entity';
 import { GroupModel } from './settings/entity/group.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { GroupModel } from './settings/entity/group.entity';
       MinistryModel,
       GroupModel,
     ]),
+    AuthModule,
   ],
   controllers: [ChurchesController],
   providers: [ChurchesService],

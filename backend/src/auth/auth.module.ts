@@ -27,5 +27,6 @@ import { KakaoStrategy } from './strategy/kakao.strategy';
     NaverStrategy,
     KakaoStrategy,
   ],
+  exports: [TokenService],
 })
 export class AuthModule {}
