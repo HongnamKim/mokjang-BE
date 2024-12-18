@@ -7,6 +7,7 @@ export class CreateChurchDto extends PickType(ChurchModel, [
   'name',
   'identifyNumber',
   'phone',
+  'denomination',
   'address',
   'detailAddress',
   'memberSize',
@@ -33,6 +34,13 @@ export class CreateChurchDto extends PickType(ChurchModel, [
   @IsString()
   @IsNotEmpty()
   override phone: string;
+
+  @ApiProperty({
+    description: '교단',
+  })
+  @IsString()
+  @IsNotEmpty()
+  override denomination: string;
 
   @ApiProperty({
     description: '교회 주소',

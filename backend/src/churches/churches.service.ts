@@ -21,12 +21,12 @@ export class ChurchesService {
     return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
   }
 
-  findAll() {
+  findAllChurches() {
     return this.churchRepository.find();
   }
 
   async isChurchAdmin(churchId: number, memberId: number, qr?: QueryRunner) {
-    const church = await this.findById(churchId, qr);
+    const church = await this.findChurchById(churchId, qr);
 
     const subAdminIds = church.subAdmins.map((subAdmin) => subAdmin.id);
 
@@ -40,12 +40,12 @@ export class ChurchesService {
     memberId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.findById(churchId, qr);
+    const church = await this.findChurchById(churchId, qr);
 
     return church.mainAdmin.id === memberId;
   }
 
-  async findById(id: number, qr?: QueryRunner) {
+  async findChurchById(id: number, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
     const church = await churchRepository.findOne({

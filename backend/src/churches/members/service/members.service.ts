@@ -196,7 +196,7 @@ export class MembersService {
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.findById(churchId, qr);
+    const church = await this.churchesService.findChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
