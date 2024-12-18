@@ -30,6 +30,9 @@ export class ChurchModel extends BaseModel {
   phone: string;
 
   @Column({ nullable: true })
+  denomination: string;
+
+  @Column({ nullable: true })
   address: string;
 
   @Column({ nullable: true })

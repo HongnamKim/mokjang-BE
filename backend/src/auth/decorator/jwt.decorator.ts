@@ -24,7 +24,7 @@ export const TemporalToken = createParamDecorator(
     const req = context.switchToHttp().getRequest();
 
     if (!req.tokenPayload) {
-      throw new InternalServerErrorException('토큰 처리 에러');
+      throw new InternalServerErrorException(AuthException.TOKEN_PROCESS_ERROR);
     }
 
     if (req.tokenPayload.type !== AuthType.TEMP) {
@@ -40,7 +40,7 @@ export const AccessToken = createParamDecorator(
     const req = context.switchToHttp().getRequest();
 
     if (!req.tokenPayload) {
-      throw new InternalServerErrorException('토큰 처리 에러');
+      throw new InternalServerErrorException(AuthException.TOKEN_PROCESS_ERROR);
     }
 
     if (req.tokenPayload.type !== AuthType.ACCESS) {
@@ -56,7 +56,7 @@ export const RefreshToken = createParamDecorator(
     const req = context.switchToHttp().getRequest();
 
     if (!req.tokenPayload) {
-      throw new InternalServerErrorException('토큰 처리 에러');
+      throw new InternalServerErrorException(AuthException.TOKEN_PROCESS_ERROR);
     }
 
     if (req.tokenPayload.type !== AuthType.REFRESH) {

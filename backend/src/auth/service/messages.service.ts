@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { COOLSMS_CLIENT } from '../provider/coolsms.provider';
 import { ICoolSMS } from '../provider/coolsms.interface';
+import { MESSAGE_SERVICE } from '../const/env.const';
 
 @Injectable()
 export class MessagesService {
@@ -11,7 +12,9 @@ export class MessagesService {
     private readonly smsClient: ICoolSMS,
   ) {}
 
-  private readonly from = this.configService.getOrThrow<string>('FROM_NUMBER');
+  private readonly from = this.configService.getOrThrow<string>(
+    MESSAGE_SERVICE.FROM_NUMBER,
+  );
 
   async sendVerificationCode(mobilePhone: string, code: string) {
     return this.smsClient.sendOne({

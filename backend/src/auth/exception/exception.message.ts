@@ -1,11 +1,13 @@
 export const AuthException = {
   LOGIN_ERROR: '로그인 실패',
+  MISSING_OAUTH_DATA: '소셜 로그인 정보가 올바르지 않습니다.',
   TOKEN_REQUIRED: '인증이 필요한 요청입니다.',
   TOKEN_INVALID: '유효하지 않은 인증 토큰입니다.',
   TOKEN_EXPIRED: '만료된 토큰입니다.',
   USER_NOT_FOUND: '존재하지 않는 사용자입니다.',
   TEMP_USER_NOT_FOUND: '존재하지 않는 소셜로그인 정보입니다.',
   TOKEN_TYPE_ERROR: '잘못된 토큰 타입입니다.',
+  TOKEN_PROCESS_ERROR: '토큰 처리 에러',
 } as const;
 
 export const VerifyException = {
