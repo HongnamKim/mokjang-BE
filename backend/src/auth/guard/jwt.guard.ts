@@ -8,13 +8,14 @@ import { JwtAccessPayload, JwtRefreshPayload } from '../type/jwt';
 import { AuthType } from '../enum/auth-type.enum';
 import { TokenService } from '../service/token.service';
 import { AuthException } from '../exception/exception.message';
+import { TOKEN_HEADER } from '../const/token-header.const';
 
 export class JwtGuard implements CanActivate {
   constructor(protected readonly tokenService: TokenService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
-    const rawToken = req.headers['authorization'];
+    const rawToken = req.headers[TOKEN_HEADER];
 
     if (!rawToken) {
       throw new UnauthorizedException(AuthException.TOKEN_REQUIRED);

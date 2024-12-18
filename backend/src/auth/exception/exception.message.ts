@@ -7,6 +7,7 @@ export const AuthException = {
   USER_NOT_FOUND: '존재하지 않는 사용자입니다.',
   TEMP_USER_NOT_FOUND: '존재하지 않는 소셜로그인 정보입니다.',
   TOKEN_TYPE_ERROR: '잘못된 토큰 타입입니다.',
+  TOKEN_PROCESS_ERROR: '토큰 처리 에러',
 } as const;
 
 export const VerifyException = {
