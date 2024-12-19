@@ -2,19 +2,12 @@ services:
   postgres:
     image: postgres:16
     restart: always
+    build: .
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
-#      - ./init-ko-collation.sql:/docker-entrypoint-initdb.d/init-ko-collation.sql  # 초기화 스크립트 추가
     ports:
       - '${DB_PORT}:5432'
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
-      LANG: ko_KR.utf8
-      LC_ALL: ko_KR.utf8
-#    command: >
-#      bash -c "apt-get update &&
-#      apt-get install -y locales &&
-#      localedef -i ko_KR -c -f UTF-8 -A /usr/share/locale/locale.alias ko_KR.utf8 &&
-#      docker-entrypoint.sh postgres"

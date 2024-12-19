@@ -14,7 +14,9 @@ import {
   FindOptionsWhere,
   ILike,
   IsNull,
+  LessThanOrEqual,
   Like,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -30,7 +32,11 @@ import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
 import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
 import { MinistryModel } from '../../settings/entity/ministry.entity';
-import { DefaultMemberSelectOption } from '../const/default-find-options.const';
+import {
+  DefaultMemberSelectOption,
+  DefaultMembersRelationOption,
+  DefaultMembersSelectOption,
+} from '../const/default-find-options.const';
 import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
 import { EducationModel } from '../../settings/entity/education.entity';
 import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
@@ -51,10 +57,25 @@ export class MembersService {
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
+    const birthOption = (dto: GetMemberDto) => {
+      // 생년월일 앞뒤
+      if (dto.birthAfter && dto.birthBefore)
+        return Between(dto.birthAfter, dto.birthBefore);
+      // 생년월일 앞
+      if (dto.birthAfter && !dto.birthBefore)
+        return MoreThanOrEqual(dto.birthAfter);
+      // 생년월일 뒤
+      if (!dto.birthAfter && dto.birthBefore)
+        return LessThanOrEqual(dto.birthBefore);
+      // 생년월일 설정 없는 경우
+      return undefined;
+    };
+
     const findOptionsWhere: FindOptionsWhere<MemberModel> = {
       churchId,
       name: dto.name && ILike(`${dto.name}%`),
-      birth: Between(dto.birthAfter, dto.birthBefore),
+      //birth: Between(dto.birthAfter, dto.birthBefore),
+      birth: birthOption(dto),
       gender: dto?.gender,
       school: dto.school && Like(`%${dto.school}%`),
       vehicleNumber: dto.vehicleNumber && ArrayContains([dto.vehicleNumber]),
@@ -87,6 +108,8 @@ export class MembersService {
     const result = await membersRepository.find({
       where: findOptionsWhere,
       order: findOptionsOrder,
+      relations: DefaultMembersRelationOption,
+      select: DefaultMembersSelectOption,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
@@ -173,7 +196,7 @@ export class MembersService {
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.findById(churchId, qr);
+    const church = await this.churchesService.findChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
@@ -326,13 +349,13 @@ export class MembersService {
   async fetchFamilyRelation(
     churchId: number,
     memberId: number,
-    familyId: number,
+    familyMemberId: number,
     relation: string,
     qr: QueryRunner,
   ) {
     const [member, familyMember] = await Promise.all([
       this.getMemberModelById(churchId, memberId, {}, qr),
-      this.getMemberModelById(churchId, familyId, {}, qr),
+      this.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
     return this.familyService.fetchAndCreateFamilyRelation(
