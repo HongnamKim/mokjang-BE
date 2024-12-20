@@ -13,6 +13,7 @@ import {
   FindOptionsRelations,
   FindOptionsWhere,
   ILike,
+  In,
   IsNull,
   LessThanOrEqual,
   Like,
@@ -71,17 +72,38 @@ export class MembersService {
       return undefined;
     };
 
+    const createOption = (dto: GetMemberDto) => {
+      // 생년월일 앞뒤
+      if (dto.createAfter && dto.createBefore)
+        return Between(dto.createAfter, dto.createBefore);
+      // 생년월일 앞
+      if (dto.createAfter && !dto.createBefore)
+        return MoreThanOrEqual(dto.createAfter);
+      // 생년월일 뒤
+      if (!dto.createAfter && dto.createBefore)
+        return LessThanOrEqual(dto.createBefore);
+      // 생년월일 설정 없는 경우
+      return undefined;
+    };
+
     const findOptionsWhere: FindOptionsWhere<MemberModel> = {
       churchId,
       name: dto.name && ILike(`${dto.name}%`),
-      //birth: Between(dto.birthAfter, dto.birthBefore),
+      mobilePhone: dto?.mobilePhone,
+      homePhone: dto?.homePhone,
+      address: dto?.address,
       birth: birthOption(dto),
+      createdAt: createOption(dto),
       gender: dto?.gender,
+      marriage: dto?.marriage,
       school: dto.school && Like(`%${dto.school}%`),
-      vehicleNumber: dto.vehicleNumber && ArrayContains([dto.vehicleNumber]),
+      occupation: dto.occupation && Like(`%${dto.occupation}%`),
+      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
       baptism: dto?.baptism,
-      groupId: dto?.groupId,
-      officerId: dto?.officerId,
+      groupId: dto.groupId && In(dto.groupId),
+      officerId: dto.officerId && In(dto.officerId),
+      ministries: dto.ministryId && { id: In(dto.ministryId) },
+      educations: dto.educationId && { id: In(dto.educationId) },
     };
 
     const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
@@ -110,9 +132,34 @@ export class MembersService {
       order: findOptionsOrder,
       relations: DefaultMembersRelationOption,
       select: DefaultMembersSelectOption,
+      /*select: {
+        id: true,
+        createdAt: true,
+        name: true,
+        group: {
+          id: true,
+          name: true,
+        },
+        ministries: {
+          id: true,
+          name: true,
+        },
+        educations: {
+          id: true,
+          name: true,
+        },
+        officer: {
+          id: true,
+          name: true,
+        },
+      },*/
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
+
+    /*result.forEach((v: MemberModel) => {
+      console.log(v.id);
+    });*/
 
     return new ResponsePaginationDto<MemberModel>(
       result,

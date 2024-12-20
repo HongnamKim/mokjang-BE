@@ -52,10 +52,10 @@ export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
 };
 
 export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
-  guidedBy: {
+  /*guidedBy: {
     id: true,
     name: true,
-  },
+  },*/
   group: {
     id: true,
     name: true,

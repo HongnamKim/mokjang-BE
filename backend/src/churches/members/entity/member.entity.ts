@@ -17,6 +17,7 @@ import { OfficerModel } from '../../settings/entity/officer.entity';
 import { MinistryModel } from '../../settings/entity/ministry.entity';
 import { GroupModel } from '../../settings/entity/group.entity';
 import { FamilyModel } from './family.entity';
+import { MarriageOptions } from '../const/marriage-options.const';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -67,8 +68,11 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true })
   school: string;
 
+  @Column({ enum: MarriageOptions, nullable: true })
+  marriage: MarriageOptions;
+
   @Column({ nullable: true })
-  marriage: string;
+  marriageDetail: string;
 
   @Column('text', { array: true, default: [] })
   vehicleNumber: string[];
