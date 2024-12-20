@@ -17,6 +17,7 @@ import { GenderEnum } from '../../enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../enum/baptism.enum';
 import { FamilyRelation } from '../const/family-relation.const';
+import { MarriageOptions } from '../const/marriage-options.const';
 
 export class CreateMemberDto {
   @ApiProperty({
@@ -162,12 +163,13 @@ export class CreateMemberDto {
     name: 'marriage',
     description: '결혼',
     example: '미혼',
+    enum: MarriageOptions,
     required: false,
   })
-  @IsString()
+  @IsEnum(MarriageOptions)
   @IsNotEmpty()
   @IsOptional()
-  marriage?: string;
+  marriage?: MarriageOptions;
 
   @ApiProperty({
     name: 'vehicleNumber',
