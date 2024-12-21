@@ -56,6 +56,13 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },*/
+  id: true,
+  name: true,
+  createdAt: true,
+  mobilePhone: true,
+  birth: true,
+  isLunar: true,
+  gender: true,
   group: {
     id: true,
     name: true,
