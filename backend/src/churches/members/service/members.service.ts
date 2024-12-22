@@ -131,7 +131,7 @@ export class MembersService {
       where: findOptionsWhere,
       order: findOptionsOrder,
       relations: DefaultMembersRelationOption,
-      select: DefaultMembersSelectOption,
+      select: { ...DefaultMembersSelectOption, [dto.order]: true },
       /*select: {
         id: true,
         createdAt: true,
