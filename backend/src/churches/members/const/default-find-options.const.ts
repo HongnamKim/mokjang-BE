@@ -44,7 +44,7 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
 };
 
 export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
-  guidedBy: true,
+  //guidedBy: true,
   group: true,
   ministries: true,
   educations: true,
@@ -52,10 +52,6 @@ export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
 };
 
 export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
-  /*guidedBy: {
-    id: true,
-    name: true,
-  },*/
   id: true,
   name: true,
   createdAt: true,

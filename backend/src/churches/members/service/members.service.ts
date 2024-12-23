@@ -11,6 +11,7 @@ import {
   Between,
   FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsSelect,
   FindOptionsWhere,
   ILike,
   In,
@@ -55,8 +56,90 @@ export class MembersService {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
   }
 
+  parseRelationOption(dto: GetMemberDto) {
+    const relationOptions: FindOptionsRelations<MemberModel> = {};
+
+    const churchSettingValues = [
+      'group',
+      'ministries',
+      'educations',
+      'officer',
+    ];
+
+    Object.entries(dto).forEach(([key, value]) => {
+      if (!key.startsWith('select__')) {
+        return;
+      }
+      const split = key.split('__');
+
+      if (split.length !== 2) {
+        throw new BadRequestException(
+          '컬럼 선택을 위한 쿼리 파라미터가 잘못 되었습니다.',
+        );
+      }
+
+      const column = split[1];
+
+      if (churchSettingValues.includes(column)) {
+        relationOptions[column] = value;
+      }
+    });
+
+    return Object.keys(relationOptions).length === 0
+      ? undefined
+      : relationOptions;
+  }
+
+  parseSelectOption(dto: GetMemberDto) {
+    const selectOptions: FindOptionsSelect<MemberModel> = {};
+
+    const churchSettingValues = [
+      'group',
+      'ministries',
+      'educations',
+      'officer',
+    ];
+
+    Object.entries(dto).forEach(([key, value]) => {
+      if (!key.startsWith('select__')) {
+        return;
+      }
+
+      const split = key.split('__');
+
+      if (split.length !== 2) {
+        throw new BadRequestException(
+          '컬럼 선택을 위한 쿼리 파라미터가 잘못 되었습니다.',
+        );
+      }
+
+      const column = split[1];
+
+      if (churchSettingValues.includes(column)) {
+        selectOptions[column] = {
+          id: value,
+          name: value,
+        };
+      } else if (column === 'address') {
+        selectOptions[column] = value;
+        selectOptions['detailAddress'] = value;
+      } else if (column === 'birth') {
+        selectOptions[column] = value;
+        selectOptions['isLunar'] = value;
+      } else {
+        selectOptions[column] = value;
+      }
+    });
+
+    return Object.keys(selectOptions).length === 0 ? undefined : selectOptions;
+  }
+
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
+
+    const selectOptions = this.parseSelectOption(dto);
+
+    const relationOptions = this.parseRelationOption(dto);
 
     const birthOption = (dto: GetMemberDto) => {
       // 생년월일 앞뒤
@@ -130,29 +213,10 @@ export class MembersService {
     const result = await membersRepository.find({
       where: findOptionsWhere,
       order: findOptionsOrder,
-      relations: DefaultMembersRelationOption,
-      select: { ...DefaultMembersSelectOption, [dto.order]: true },
-      /*select: {
-        id: true,
-        createdAt: true,
-        name: true,
-        group: {
-          id: true,
-          name: true,
-        },
-        ministries: {
-          id: true,
-          name: true,
-        },
-        educations: {
-          id: true,
-          name: true,
-        },
-        officer: {
-          id: true,
-          name: true,
-        },
-      },*/
+      relations: selectOptions ? relationOptions : DefaultMembersRelationOption,
+      select: selectOptions
+        ? { ...selectOptions, id: true, name: true, [dto.order]: true }
+        : { ...DefaultMembersSelectOption, [dto.order]: true },
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });

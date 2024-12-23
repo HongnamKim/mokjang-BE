@@ -3,8 +3,8 @@ export enum GetMemberOrderEnum {
   name = 'name',
   birth = 'birth',
   gender = 'gender',
-  school = 'school',
-  previousChurch = 'previousChurch',
+  /*school = 'school',
+  previousChurch = 'previousChurch',*/
   groupId = 'groupId',
   officerId = 'officerId',
   officerStartDate = 'officerStartDate',
