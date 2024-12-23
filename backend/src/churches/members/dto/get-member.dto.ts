@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsEnum,
   IsIn,
@@ -19,6 +20,7 @@ import {
   TransformStringArray,
 } from '../decorator/transform-array';
 import { MarriageOptions } from '../const/marriage-options.const';
+import { QueryBoolean } from '../decorator/query-boolean.decorator';
 
 export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))*/ {
   @ApiProperty({
@@ -63,6 +65,98 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsIn(['asc', 'desc', 'ASC', 'DESC'])
   @IsOptional()
   orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC';
+
+  @ApiProperty({
+    required: false,
+  })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__mobilePhone?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__group?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__birth?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__gender?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__officer?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__ministries?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__educations?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__marriage?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__createdAt?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__address?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__homePhone?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__occupation?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__school?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__vehicleNumber?: boolean;
 
   @ApiProperty({
     name: 'createAfter',
@@ -185,7 +279,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @ApiProperty({
     name: 'vehicleNumber',
     description: '차량번호 4자리',
-    example: '1234',
     type: String,
     isArray: true,
     required: false,
