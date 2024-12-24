@@ -85,6 +85,10 @@ export class MembersService {
       }
     });
 
+    if (dto.order && churchSettingValues.includes(dto.order)) {
+      relationOptions[dto.order as string] = true;
+    }
+
     return Object.keys(relationOptions).length === 0
       ? undefined
       : relationOptions;
@@ -192,8 +196,8 @@ export class MembersService {
     const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
 
     if (
-      dto.order === GetMemberOrderEnum.groupId ||
-      dto.order === GetMemberOrderEnum.officerId
+      dto.order === GetMemberOrderEnum.group ||
+      dto.order === GetMemberOrderEnum.officer
     ) {
       findOptionsOrder[dto.order as string] = {
         name: dto.orderDirection,
@@ -210,13 +214,28 @@ export class MembersService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
+    const churchSettingValues = [
+      'group',
+      'ministries',
+      'educations',
+      'officer',
+    ];
+
     const result = await membersRepository.find({
       where: findOptionsWhere,
       order: findOptionsOrder,
       relations: selectOptions ? relationOptions : DefaultMembersRelationOption,
-      select: selectOptions
-        ? { ...selectOptions, id: true, name: true, [dto.order]: true }
-        : { ...DefaultMembersSelectOption, [dto.order]: true },
+      select: {
+        id: true,
+        createdAt: true,
+        name: true,
+        [dto.order]: churchSettingValues.includes(dto.order)
+          ? { id: true, name: true }
+          : true,
+        ...(selectOptions
+          ? { ...selectOptions }
+          : { ...DefaultMembersSelectOption }),
+      },
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });

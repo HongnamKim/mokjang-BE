@@ -21,6 +21,15 @@ import { MarriageOptions } from '../const/marriage-options.const';
 
 export class CreateMemberDto {
   @ApiProperty({
+    name: 'registeredAt',
+    description: '교회 등록일자',
+    default: new Date(),
+  })
+  @IsDate()
+  @IsOptional()
+  registeredAt?: Date = new Date();
+
+  @ApiProperty({
     name: 'name',
     description: '교인 이름',
     example: '교인',

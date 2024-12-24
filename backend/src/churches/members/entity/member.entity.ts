@@ -29,6 +29,9 @@ export class MemberModel extends BaseModel {
   @ManyToOne(() => ChurchModel, (church) => church.members)
   church: ChurchModel;
 
+  @Column({ default: new Date() })
+  registeredAt: Date;
+
   @Column()
   @Index()
   name: string;

@@ -126,7 +126,7 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @QueryBoolean()
   @IsBoolean()
   @IsOptional()
-  select__createdAt?: boolean;
+  select__registeredAt?: boolean;
 
   @ApiProperty({ required: false })
   @QueryBoolean()
