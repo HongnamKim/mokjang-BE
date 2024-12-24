@@ -19,7 +19,11 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     });
   }
 
-  validate(profile: Profile): OauthDto {
+  validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+  ): OauthDto {
     return new OauthDto(profile.provider, profile.id);
   }
 }

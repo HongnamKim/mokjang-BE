@@ -1,16 +1,56 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  Unique,
+} from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { GroupModel } from '../settings/entity/group.entity';
 import { EducationModel } from '../settings/entity/education.entity';
 import { OfficerModel } from '../settings/entity/officer.entity';
 import { MinistryModel } from '../settings/entity/ministry.entity';
+import { UserModel } from '../../auth/entity/user.entity';
+import { MemberSize } from '../const/member-size.enum';
 
 @Entity()
+@Unique(['name', 'identifyNumber'])
 export class ChurchModel extends BaseModel {
   @Column()
   name: string;
+
+  @Column({ nullable: true })
+  identifyNumber: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  denomination: string;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  detailAddress: string;
+
+  @Column({ enum: MemberSize, nullable: true })
+  memberSize: MemberSize;
+
+  @Index()
+  @Column({ nullable: true })
+  mainAdminId: number;
+
+  @JoinColumn()
+  @OneToOne(() => UserModel, (user) => user.adminChurch)
+  mainAdmin: UserModel;
+
+  @OneToMany(() => UserModel, (user) => user.managingChurch)
+  subAdmins: UserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];

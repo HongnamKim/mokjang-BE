@@ -31,7 +31,6 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMemberDto,
   ) {
-    //return dto;
     return this.membersService.getMembers(churchId, dto);
   }
 

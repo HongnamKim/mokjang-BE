@@ -50,6 +50,10 @@ export class AuthService {
   async loginUser(oauthDto: OauthDto, qr: QueryRunner) {
     const userRepository = this.getUserRepository(qr);
 
+    if (!oauthDto.provider || !oauthDto.providerId) {
+      throw new BadRequestException(AuthException.MISSING_OAUTH_DATA);
+    }
+
     const user = await userRepository.findOne({
       where: {
         provider: oauthDto.provider,
