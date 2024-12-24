@@ -17,8 +17,18 @@ import { GenderEnum } from '../../enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../enum/baptism.enum';
 import { FamilyRelation } from '../const/family-relation.const';
+import { MarriageOptions } from '../const/marriage-options.const';
 
 export class CreateMemberDto {
+  @ApiProperty({
+    name: 'registeredAt',
+    description: '교회 등록일자',
+    default: new Date(),
+  })
+  @IsDate()
+  @IsOptional()
+  registeredAt?: Date = new Date();
+
   @ApiProperty({
     name: 'name',
     description: '교인 이름',
@@ -162,12 +172,13 @@ export class CreateMemberDto {
     name: 'marriage',
     description: '결혼',
     example: '미혼',
+    enum: MarriageOptions,
     required: false,
   })
-  @IsString()
+  @IsEnum(MarriageOptions)
   @IsNotEmpty()
   @IsOptional()
-  marriage?: string;
+  marriage?: MarriageOptions;
 
   @ApiProperty({
     name: 'vehicleNumber',
