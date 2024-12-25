@@ -52,6 +52,15 @@ export class MembersService {
     private readonly familyService: FamilyService,
   ) {}
 
+  private CHURCH_SETTING_COLUMNS = [
+    'group',
+    'ministries',
+    'educations',
+    'officer',
+  ];
+
+  private SELECT_PREFIX = 'select__';
+
   private getMembersRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
   }
@@ -59,33 +68,18 @@ export class MembersService {
   parseRelationOption(dto: GetMemberDto) {
     const relationOptions: FindOptionsRelations<MemberModel> = {};
 
-    const churchSettingValues = [
-      'group',
-      'ministries',
-      'educations',
-      'officer',
-    ];
-
     Object.entries(dto).forEach(([key, value]) => {
-      if (!key.startsWith('select__')) {
-        return;
-      }
-      const split = key.split('__');
+      if (!key.startsWith(this.SELECT_PREFIX)) return;
 
-      if (split.length !== 2) {
-        throw new BadRequestException(
-          '컬럼 선택을 위한 쿼리 파라미터가 잘못 되었습니다.',
-        );
-      }
+      const [, column] = key.split('__');
 
-      const column = split[1];
-
-      if (churchSettingValues.includes(column)) {
+      if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
         relationOptions[column] = value;
       }
     });
 
-    if (dto.order && churchSettingValues.includes(dto.order)) {
+    // 정렬 기준이 join 이 필요한 컬럼인 경우
+    if (dto.order && this.CHURCH_SETTING_COLUMNS.includes(dto.order)) {
       relationOptions[dto.order as string] = true;
     }
 
@@ -94,32 +88,34 @@ export class MembersService {
       : relationOptions;
   }
 
+  parseOrderOption(dto: GetMemberDto) {
+    const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
+
+    if (
+      dto.order === GetMemberOrderEnum.group ||
+      dto.order === GetMemberOrderEnum.officer
+    ) {
+      findOptionsOrder[dto.order as string] = {
+        name: dto.orderDirection,
+      };
+      findOptionsOrder.createdAt = 'asc';
+    } else {
+      findOptionsOrder[dto.order as string] = dto.orderDirection;
+      findOptionsOrder.createdAt = 'asc';
+    }
+
+    return findOptionsOrder;
+  }
+
   parseSelectOption(dto: GetMemberDto) {
     const selectOptions: FindOptionsSelect<MemberModel> = {};
 
-    const churchSettingValues = [
-      'group',
-      'ministries',
-      'educations',
-      'officer',
-    ];
-
     Object.entries(dto).forEach(([key, value]) => {
-      if (!key.startsWith('select__')) {
-        return;
-      }
+      if (!key.startsWith(this.SELECT_PREFIX)) return;
 
-      const split = key.split('__');
+      const [, column] = key.split('__');
 
-      if (split.length !== 2) {
-        throw new BadRequestException(
-          '컬럼 선택을 위한 쿼리 파라미터가 잘못 되었습니다.',
-        );
-      }
-
-      const column = split[1];
-
-      if (churchSettingValues.includes(column)) {
+      if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
         selectOptions[column] = {
           id: value,
           name: value,
@@ -138,14 +134,8 @@ export class MembersService {
     return Object.keys(selectOptions).length === 0 ? undefined : selectOptions;
   }
 
-  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const selectOptions = this.parseSelectOption(dto);
-
-    const relationOptions = this.parseRelationOption(dto);
-
-    const birthOption = (dto: GetMemberDto) => {
+  parseWhereOption(churchId: number, dto: GetMemberDto) {
+    /*const birthOption = (dto: GetMemberDto) => {
       // 생년월일 앞뒤
       if (dto.birthAfter && dto.birthBefore)
         return Between(dto.birthAfter, dto.birthBefore);
@@ -171,9 +161,78 @@ export class MembersService {
         return LessThanOrEqual(dto.createBefore);
       // 생년월일 설정 없는 경우
       return undefined;
-    };
+    };*/
+
+    const createDateFilter = (start?: Date, end?: Date) =>
+      start && end
+        ? Between(start, end)
+        : start
+          ? MoreThanOrEqual(start)
+          : end
+            ? LessThanOrEqual(end)
+            : undefined;
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> = {
+      churchId,
+      name: dto.name && ILike(`${dto.name}%`),
+      mobilePhone: dto?.mobilePhone,
+      homePhone: dto?.homePhone,
+      address: dto?.address,
+      birth: createDateFilter(dto.birthAfter, dto.birthBefore), //birthOption(dto),
+      createdAt: createDateFilter(dto.createAfter, dto.createBefore), //createOption(dto),
+      gender: dto?.gender,
+      marriage: dto?.marriage,
+      school: dto.school && Like(`%${dto.school}%`),
+      occupation: dto.occupation && Like(`%${dto.occupation}%`),
+      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
+      baptism: dto?.baptism,
+      groupId: dto.groupId && In(dto.groupId),
+      officerId: dto.officerId && In(dto.officerId),
+      ministries: dto.ministryId && { id: In(dto.ministryId) },
+      educations: dto.educationId && { id: In(dto.educationId) },
+    };
+
+    return findOptionsWhere;
+  }
+
+  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const selectOptions = this.parseSelectOption(dto);
+
+    const relationOptions = this.parseRelationOption(dto);
+
+    /*const birthOption = (dto: GetMemberDto) => {
+      // 생년월일 앞뒤
+      if (dto.birthAfter && dto.birthBefore)
+        return Between(dto.birthAfter, dto.birthBefore);
+      // 생년월일 앞
+      if (dto.birthAfter && !dto.birthBefore)
+        return MoreThanOrEqual(dto.birthAfter);
+      // 생년월일 뒤
+      if (!dto.birthAfter && dto.birthBefore)
+        return LessThanOrEqual(dto.birthBefore);
+      // 생년월일 설정 없는 경우
+      return undefined;
+    };
+
+    const createOption = (dto: GetMemberDto) => {
+      // 생년월일 앞뒤
+      if (dto.createAfter && dto.createBefore)
+        return Between(dto.createAfter, dto.createBefore);
+      // 생년월일 앞
+      if (dto.createAfter && !dto.createBefore)
+        return MoreThanOrEqual(dto.createAfter);
+      // 생년월일 뒤
+      if (!dto.createAfter && dto.createBefore)
+        return LessThanOrEqual(dto.createBefore);
+      // 생년월일 설정 없는 경우
+      return undefined;
+    };*/
+
+    const findOptionsWhere: FindOptionsWhere<MemberModel> =
+      this.parseWhereOption(churchId, dto);
+    /*{
       churchId,
       name: dto.name && ILike(`${dto.name}%`),
       mobilePhone: dto?.mobilePhone,
@@ -191,10 +250,11 @@ export class MembersService {
       officerId: dto.officerId && In(dto.officerId),
       ministries: dto.ministryId && { id: In(dto.ministryId) },
       educations: dto.educationId && { id: In(dto.educationId) },
-    };
+    };*/
 
-    const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
-
+    const findOptionsOrder: FindOptionsOrder<MemberModel> =
+      this.parseOrderOption(dto); //{};
+    /*
     if (
       dto.order === GetMemberOrderEnum.group ||
       dto.order === GetMemberOrderEnum.officer
@@ -206,20 +266,13 @@ export class MembersService {
     } else {
       findOptionsOrder[dto.order as string] = dto.orderDirection;
       findOptionsOrder.createdAt = 'asc';
-    }
+    }*/
 
     const totalCount = await membersRepository.count({
       where: findOptionsWhere,
     });
 
     const totalPage = Math.ceil(totalCount / dto.take);
-
-    const churchSettingValues = [
-      'group',
-      'ministries',
-      'educations',
-      'officer',
-    ];
 
     const result = await membersRepository.find({
       where: findOptionsWhere,
@@ -229,7 +282,7 @@ export class MembersService {
         id: true,
         createdAt: true,
         name: true,
-        [dto.order]: churchSettingValues.includes(dto.order)
+        [dto.order]: this.CHURCH_SETTING_COLUMNS.includes(dto.order)
           ? { id: true, name: true }
           : true,
         ...(selectOptions
@@ -239,10 +292,6 @@ export class MembersService {
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
-
-    /*result.forEach((v: MemberModel) => {
-      console.log(v.id);
-    });*/
 
     return new ResponsePaginationDto<MemberModel>(
       result,
