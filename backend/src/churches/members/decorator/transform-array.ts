@@ -5,7 +5,7 @@ export function TransformNumberArray() {
     if (!Array.isArray(value)) {
       return [Number(value)];
     }
-    return value.map(Number);
+    return [...new Set(value)].map(Number);
   });
 }
 
@@ -14,6 +14,7 @@ export function TransformStringArray() {
     if (!Array.isArray(value)) {
       return [value];
     }
-    return value;
+    return [...new Set(value)];
+    //return value;
   });
 }
