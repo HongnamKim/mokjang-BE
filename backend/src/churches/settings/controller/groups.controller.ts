@@ -16,6 +16,7 @@ import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
 
 @ApiTags('Settings:Groups')
 @Controller('groups')
@@ -65,5 +66,27 @@ export class GroupsController {
     @Param('groupId', ParseIntPipe) groupId: number,
   ) {
     return this.groupsService.getGroupsCascade(groupId);
+  }
+
+  @Get(':groupId/role')
+  getGroupRoles(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.groupsService.getGroupRoles(churchId, groupId);
+  }
+
+  @Post(':groupId/role')
+  postGroupRole(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Body() dto: CreateGroupRoleDto,
+  ) {
+    return this.groupsService.createGroupRole(churchId, groupId, dto);
+  }
+
+  @Delete(':groupId/role/:roleId')
+  deleteGroupRole(@Param('roleId', ParseIntPipe) roleId: number) {
+    return this.groupsService.deleteGroupRole(roleId);
   }
 }

@@ -10,17 +10,27 @@ import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
+import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
+import { GroupRoleModel } from '../entity/group-role.entity';
 
 @Injectable()
 export class GroupsService {
   constructor(
     @InjectRepository(GroupModel)
     private readonly groupsRepository: Repository<GroupModel>,
+    @InjectRepository(GroupRoleModel)
+    private readonly groupRolesRepository: Repository<GroupRoleModel>,
     private readonly churchesService: ChurchesService,
   ) {}
 
   private getGroupRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(GroupModel) : this.groupsRepository;
+  }
+
+  private getGroupRolesRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository(GroupRoleModel)
+      : this.groupRolesRepository;
   }
 
   private async checkChurchExist(churchId: number, qr?: QueryRunner) {
@@ -52,17 +62,19 @@ export class GroupsService {
 
     return this.groupsRepository.find({
       where: { churchId },
+      relations: { roles: true },
       order: { createdAt: 'ASC' },
     });
   }
 
-  async getGroupById(churchId: number, groupId: number, qr: QueryRunner) {
+  async getGroupById(churchId: number, groupId: number, qr?: QueryRunner) {
     await this.checkChurchExist(churchId, qr);
 
     const groupsRepository = this.getGroupRepository(qr);
 
     const group = await groupsRepository.findOne({
       where: { churchId, id: groupId },
+      relations: { roles: true },
     });
 
     if (!group) {
@@ -242,53 +254,6 @@ export class GroupsService {
       );
     }
 
-    // 하위 그룹과 같이 삭제
-    /*if (cascade) {
-      const childGroupIds = await this.getGroupsCascade(groupId);
-
-      const result = await groupsRepository.softDelete({
-        id: In([...childGroupIds, groupId]),
-        churchId,
-      });
-
-      await this.groupsRepository.update(
-        { id: deleteTarget.parentGroupId },
-        {
-          childGroupIds: () =>
-            `array_remove("childGroupIds", ${deleteTarget.id})`,
-        },
-      );
-
-      return `${result.affected} 개의 그룹 삭제`;
-    }*/
-
-    /*
-    대상 그룹만 삭제
-    // 상위 그룹이 있는 경우
-    // 상위 그룹의 삭제 대상 내용 삭제
-    if (deleteTarget.parentGroupId) {
-      await groupsRepository.update(
-        { id: deleteTarget.parentGroupId },
-        {
-          childGroupIds: () =>
-            `array_remove(\"childGroupIds\", ${deleteTarget.id})`,
-        },
-      );
-    }
-
-    // 하위 그룹이 있는 경우
-    // 하위 그룹들의 삭제 대상 내용 삭제
-    if (deleteTarget.childGroupIds) {
-      await groupsRepository.update(
-        {
-          id: In(deleteTarget.childGroupIds),
-        },
-        { parentGroupId: deleteTarget.parentGroupId },
-      );
-    }
-
-    */
-
     const result = await groupsRepository.softDelete({
       id: groupId,
       churchId,
@@ -378,5 +343,41 @@ export class GroupsService {
     }
 
     return true;
+  }
+
+  async getGroupRoles(churchId: number, groupId: number) {
+    const group = await this.getGroupById(churchId, groupId);
+
+    return group.roles;
+  }
+
+  async createGroupRole(
+    churchId: number,
+    groupId: number,
+    dto: CreateGroupRoleDto,
+    //qr: QueryRunner,
+  ) {
+    const group = await this.getGroupById(churchId, groupId);
+
+    const groupRolesRepository = this.getGroupRolesRepository();
+
+    const role = await groupRolesRepository.save({
+      role: dto.role,
+      group,
+    });
+
+    return role;
+  }
+
+  async deleteGroupRole(roleId: number) {
+    const groupRolesRepository = this.getGroupRolesRepository();
+
+    const result = await groupRolesRepository.softDelete({ id: roleId });
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');
+    }
+
+    return 'ok';
   }
 }

@@ -13,6 +13,7 @@ import { GroupModel } from './entity/group.entity';
 import { GroupsController } from './controller/groups.controller';
 import { GroupsService } from './service/groups.service';
 import { MembersModule } from '../members/members.module';
+import { GroupRoleModel } from './entity/group-role.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MembersModule } from '../members/members.module';
       MinistryModel,
       EducationModel,
       GroupModel,
+      GroupRoleModel,
     ]),
   ],
   controllers: [
