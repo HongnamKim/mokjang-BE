@@ -5,13 +5,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../entity/group.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
 import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
 import { GroupRoleModel } from '../entity/group-role.entity';
+import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 
 @Injectable()
 export class GroupsService {
@@ -67,14 +68,19 @@ export class GroupsService {
     });
   }
 
-  async getGroupById(churchId: number, groupId: number, qr?: QueryRunner) {
+  async getGroupById(
+    churchId: number,
+    groupId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<GroupModel>,
+  ) {
     await this.checkChurchExist(churchId, qr);
 
     const groupsRepository = this.getGroupRepository(qr);
 
     const group = await groupsRepository.findOne({
       where: { churchId, id: groupId },
-      relations: { roles: true },
+      relations: { roles: true, ...relationOptions },
     });
 
     if (!group) {
@@ -369,10 +375,42 @@ export class GroupsService {
     return role;
   }
 
-  async deleteGroupRole(roleId: number) {
+  async updateGroupRole(
+    groupId: number,
+    roleId: number,
+    dto: UpdateGroupRoleDto,
+  ) {
     const groupRolesRepository = this.getGroupRolesRepository();
 
-    const result = await groupRolesRepository.softDelete({ id: roleId });
+    const result = await groupRolesRepository.update(
+      {
+        id: roleId,
+        groupId,
+      },
+      {
+        role: dto.role,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');
+    }
+
+    return groupRolesRepository.findOne({
+      where: {
+        id: roleId,
+        groupId: groupId,
+      },
+    });
+  }
+
+  async deleteGroupRole(groupId: number, roleId: number) {
+    const groupRolesRepository = this.getGroupRolesRepository();
+
+    const result = await groupRolesRepository.softDelete({
+      id: roleId,
+      groupId,
+    });
 
     if (result.affected === 0) {
       throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');

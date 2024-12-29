@@ -7,6 +7,9 @@ export class GroupRoleModel extends BaseModel {
   @Column()
   role: string;
 
+  @Column()
+  groupId: number;
+
   @ManyToOne(() => GroupModel, (group) => group.roles)
   group: GroupModel;
 }
