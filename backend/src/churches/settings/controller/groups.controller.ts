@@ -16,8 +16,8 @@ import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
-import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
+// import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
+// import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 
 @ApiTags('Settings:Groups')
 @Controller('groups')
@@ -79,7 +79,7 @@ export class GroupsController {
     return this.groupsService.getGroupsCascade(groupId);
   }
 
-  @Get(':groupId/role')
+  /*@Get(':groupId/role')
   getGroupRoles(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
@@ -111,5 +111,5 @@ export class GroupsController {
     @Param('roleId', ParseIntPipe) roleId: number,
   ) {
     return this.groupsService.deleteGroupRole(groupId, roleId);
-  }
+  }*/
 }
