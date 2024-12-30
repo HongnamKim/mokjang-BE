@@ -14,6 +14,8 @@ import { GroupsController } from './controller/groups.controller';
 import { GroupsService } from './service/groups.service';
 import { MembersModule } from '../members/members.module';
 import { GroupRoleModel } from './entity/group-role.entity';
+import { GroupsRolesController } from './controller/groups-roles.controller';
+import { GroupsRolesService } from './service/groups-roles.service';
 
 @Module({
   imports: [
@@ -38,8 +40,9 @@ import { GroupRoleModel } from './entity/group-role.entity';
     MinistriesController,
     EducationsController,
     GroupsController,
+    GroupsRolesController,
   ],
-  providers: [SettingsService, GroupsService],
+  providers: [SettingsService, GroupsService, GroupsRolesService],
   exports: [SettingsService, GroupsService],
 })
 export class SettingsModule {}

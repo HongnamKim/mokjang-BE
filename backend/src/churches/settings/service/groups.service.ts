@@ -10,28 +10,18 @@ import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
-import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
-import { GroupRoleModel } from '../entity/group-role.entity';
-import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 
 @Injectable()
 export class GroupsService {
   constructor(
     @InjectRepository(GroupModel)
     private readonly groupsRepository: Repository<GroupModel>,
-    @InjectRepository(GroupRoleModel)
-    private readonly groupRolesRepository: Repository<GroupRoleModel>,
+
     private readonly churchesService: ChurchesService,
   ) {}
 
   private getGroupRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(GroupModel) : this.groupsRepository;
-  }
-
-  private getGroupRolesRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(GroupRoleModel)
-      : this.groupRolesRepository;
   }
 
   private async checkChurchExist(churchId: number, qr?: QueryRunner) {
@@ -349,93 +339,5 @@ export class GroupsService {
     }
 
     return true;
-  }
-
-  async getGroupRoles(churchId: number, groupId: number) {
-    const group = await this.getGroupById(churchId, groupId);
-
-    return group.roles;
-  }
-
-  async createGroupRole(
-    churchId: number,
-    groupId: number,
-    dto: CreateGroupRoleDto,
-    //qr: QueryRunner,
-  ) {
-    const group = await this.getGroupById(churchId, groupId);
-
-    const groupRolesRepository = this.getGroupRolesRepository();
-
-    const isExist = !!(await groupRolesRepository.findOne({
-      where: {
-        groupId,
-        role: dto.role,
-      },
-    }));
-
-    if (isExist) {
-      throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
-    }
-
-    return groupRolesRepository.save({
-      role: dto.role,
-      group,
-    });
-  }
-
-  async updateGroupRole(
-    groupId: number,
-    roleId: number,
-    dto: UpdateGroupRoleDto,
-  ) {
-    const groupRolesRepository = this.getGroupRolesRepository();
-
-    const isExist = !!(await groupRolesRepository.findOne({
-      where: {
-        groupId,
-        role: dto.role,
-      },
-    }));
-
-    if (isExist) {
-      throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
-    }
-
-    const result = await groupRolesRepository.update(
-      {
-        id: roleId,
-        groupId,
-      },
-      {
-        role: dto.role,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');
-    }
-
-    return groupRolesRepository.findOne({
-      where: {
-        id: roleId,
-        groupId: groupId,
-      },
-    });
-  }
-
-  async deleteGroupRole(groupId: number, roleId: number) {
-    const groupRolesRepository = this.getGroupRolesRepository();
-
-    const result = await groupRolesRepository.softDelete({
-      id: roleId,
-      groupId,
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');
-    }
-
-    return 'ok';
   }
 }

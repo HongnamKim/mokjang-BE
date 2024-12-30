@@ -16,6 +16,7 @@ import { OfficerModel } from '../settings/entity/officer.entity';
 import { MinistryModel } from '../settings/entity/ministry.entity';
 import { UserModel } from '../../auth/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
+import { GroupRoleModel } from '../settings/entity/group-role.entity';
 
 @Entity()
 @Unique(['name', 'identifyNumber'])
@@ -54,6 +55,9 @@ export class ChurchModel extends BaseModel {
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];
+
+  @OneToMany(() => GroupRoleModel, (groupRole) => groupRole.church)
+  groupRoles: GroupRoleModel[];
 
   @OneToMany(() => EducationModel, (education) => education.church)
   educations: EducationModel[];
