@@ -367,12 +367,21 @@ export class GroupsService {
 
     const groupRolesRepository = this.getGroupRolesRepository();
 
-    const role = await groupRolesRepository.save({
+    const isExist = !!(await groupRolesRepository.findOne({
+      where: {
+        groupId,
+        role: dto.role,
+      },
+    }));
+
+    if (isExist) {
+      throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
+    }
+
+    return groupRolesRepository.save({
       role: dto.role,
       group,
     });
-
-    return role;
   }
 
   async updateGroupRole(
@@ -381,6 +390,17 @@ export class GroupsService {
     dto: UpdateGroupRoleDto,
   ) {
     const groupRolesRepository = this.getGroupRolesRepository();
+
+    const isExist = !!(await groupRolesRepository.findOne({
+      where: {
+        groupId,
+        role: dto.role,
+      },
+    }));
+
+    if (isExist) {
+      throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
+    }
 
     const result = await groupRolesRepository.update(
       {
