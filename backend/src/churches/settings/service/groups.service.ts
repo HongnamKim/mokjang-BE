@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../entity/group.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
@@ -16,6 +16,7 @@ export class GroupsService {
   constructor(
     @InjectRepository(GroupModel)
     private readonly groupsRepository: Repository<GroupModel>,
+
     private readonly churchesService: ChurchesService,
   ) {}
 
@@ -52,17 +53,24 @@ export class GroupsService {
 
     return this.groupsRepository.find({
       where: { churchId },
+      relations: { roles: true },
       order: { createdAt: 'ASC' },
     });
   }
 
-  async getGroupById(churchId: number, groupId: number, qr: QueryRunner) {
+  async getGroupById(
+    churchId: number,
+    groupId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<GroupModel>,
+  ) {
     await this.checkChurchExist(churchId, qr);
 
     const groupsRepository = this.getGroupRepository(qr);
 
     const group = await groupsRepository.findOne({
       where: { churchId, id: groupId },
+      relations: { roles: true, ...relationOptions },
     });
 
     if (!group) {
@@ -241,53 +249,6 @@ export class GroupsService {
         '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
       );
     }
-
-    // 하위 그룹과 같이 삭제
-    /*if (cascade) {
-      const childGroupIds = await this.getGroupsCascade(groupId);
-
-      const result = await groupsRepository.softDelete({
-        id: In([...childGroupIds, groupId]),
-        churchId,
-      });
-
-      await this.groupsRepository.update(
-        { id: deleteTarget.parentGroupId },
-        {
-          childGroupIds: () =>
-            `array_remove("childGroupIds", ${deleteTarget.id})`,
-        },
-      );
-
-      return `${result.affected} 개의 그룹 삭제`;
-    }*/
-
-    /*
-    대상 그룹만 삭제
-    // 상위 그룹이 있는 경우
-    // 상위 그룹의 삭제 대상 내용 삭제
-    if (deleteTarget.parentGroupId) {
-      await groupsRepository.update(
-        { id: deleteTarget.parentGroupId },
-        {
-          childGroupIds: () =>
-            `array_remove(\"childGroupIds\", ${deleteTarget.id})`,
-        },
-      );
-    }
-
-    // 하위 그룹이 있는 경우
-    // 하위 그룹들의 삭제 대상 내용 삭제
-    if (deleteTarget.childGroupIds) {
-      await groupsRepository.update(
-        {
-          id: In(deleteTarget.childGroupIds),
-        },
-        { parentGroupId: deleteTarget.parentGroupId },
-      );
-    }
-
-    */
 
     const result = await groupsRepository.softDelete({
       id: groupId,
