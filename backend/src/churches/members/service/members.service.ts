@@ -212,10 +212,10 @@ export class MembersService {
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> = {
       churchId,
-      name: dto.name && ILike(`${dto.name}%`),
-      mobilePhone: dto?.mobilePhone,
-      homePhone: dto?.homePhone,
-      address: dto?.address,
+      name: dto.name && ILike(`%${dto.name}%`),
+      mobilePhone: dto.mobilePhone && Like(`%${dto.mobilePhone}%`),
+      homePhone: dto.homePhone && Like(`%${dto.homePhone}%`),
+      address: dto.address && Like(`%${dto.address}%`),
       birth: createDateFilter(dto.birthAfter, dto.birthBefore),
       registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
       gender: dto.gender && In(dto.gender), //dto?.gender,

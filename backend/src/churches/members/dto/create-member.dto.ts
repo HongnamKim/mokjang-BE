@@ -73,7 +73,6 @@ export class CreateMemberDto {
     name: 'relation',
     description: '가족 관계',
     example: '어머니',
-    default: FamilyRelation.DEFAULT,
     required: false,
   })
   @IsString()
