@@ -49,12 +49,12 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
     name: 'order',
     description: '정렬 기준',
     enum: GetMemberOrderEnum,
-    default: GetMemberOrderEnum.createdAt,
+    default: GetMemberOrderEnum.registeredAt,
     required: false,
   })
   @IsEnum(GetMemberOrderEnum)
   @IsOptional()
-  order: GetMemberOrderEnum = GetMemberOrderEnum.createdAt;
+  order: GetMemberOrderEnum = GetMemberOrderEnum.registeredAt;
 
   @ApiProperty({
     name: 'orderDirection',
@@ -159,6 +159,22 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   select__vehicleNumber?: boolean;
 
   @ApiProperty({
+    description: '등록일자 ~부터',
+    required: false,
+  })
+  @IsDate()
+  @IsOptional()
+  registerAfter?: Date;
+
+  @ApiProperty({
+    description: '등록일자 ~까지',
+    required: false,
+  })
+  @IsDate()
+  @IsOptional()
+  registerBefore?: Date;
+
+  /*@ApiProperty({
     name: 'createAfter',
     description: '생성일자 ~부터',
     //default: '1800-01-01',
@@ -176,7 +192,7 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   })
   @IsDate()
   @IsOptional()
-  createBefore?: Date; // = new Date();
+  createBefore?: Date; // = new Date();*/
 
   @ApiProperty({
     name: 'name',
@@ -198,7 +214,7 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsOptional()
   mobilePhone?: string;
 
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'marriage',
     description: '결혼 여부',
     enum: MarriageOptions,
@@ -206,7 +222,18 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   })
   @IsEnum(MarriageOptions)
   @IsOptional()
-  marriage?: MarriageOptions;
+  marriage?: MarriageOptions;*/
+
+  @ApiProperty({
+    description: '결혼 여부',
+    enum: MarriageOptions,
+    isArray: true,
+    required: false,
+  })
+  @TransformStringArray()
+  @IsEnum(MarriageOptions, { each: true })
+  @IsOptional()
+  marriage?: MarriageOptions[];
 
   @ApiProperty({
     name: 'birthAfter',
@@ -226,7 +253,7 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsOptional()
   birthBefore?: Date;
 
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'gender',
     description: '성별',
     enum: GenderEnum,
@@ -234,7 +261,18 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   })
   @IsEnum(GenderEnum)
   @IsOptional()
-  gender?: GenderEnum;
+  gender?: GenderEnum;*/
+
+  @ApiProperty({
+    description: '성별',
+    enum: GenderEnum,
+    isArray: true,
+    required: false,
+  })
+  @TransformStringArray()
+  @IsEnum(GenderEnum, { each: true })
+  @IsOptional()
+  gender?: GenderEnum[];
 
   @ApiProperty({
     name: 'school',
@@ -292,7 +330,7 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   vehicleNumber?: string[];
 
   @ApiProperty({
-    name: 'groupId',
+    name: 'group',
     description: '소그룹 ID',
     type: Number,
     isArray: true,
@@ -301,10 +339,10 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @TransformNumberArray()
   @IsNumber({}, { each: true })
   @IsOptional()
-  groupId?: number[];
+  group?: number[];
 
   @ApiProperty({
-    name: 'officerId',
+    name: 'officer',
     description: '직분 ID',
     type: Number,
     isArray: true,
@@ -313,10 +351,10 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @TransformNumberArray()
   @IsNumber({}, { each: true })
   @IsOptional()
-  officerId?: number[];
+  officer?: number[];
 
   @ApiProperty({
-    name: 'ministryId',
+    name: 'ministries',
     description: '사역 ID',
     type: Number,
     isArray: true,
@@ -325,10 +363,10 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @TransformNumberArray()
   @IsNumber({}, { each: true })
   @IsOptional()
-  ministryId?: number[];
+  ministries: number[];
 
   @ApiProperty({
-    name: 'educationId',
+    name: 'educations',
     description: '교육 ID',
     type: Number,
     isArray: true,
@@ -337,9 +375,9 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @TransformNumberArray()
   @IsNumber({}, { each: true })
   @IsOptional()
-  educationId?: number[];
+  educations?: number[];
 
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'baptism',
     description: '신급',
     enum: BaptismEnum,
@@ -347,5 +385,17 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   })
   @IsEnum(BaptismEnum)
   @IsOptional()
-  baptism?: BaptismEnum;
+  baptism?: BaptismEnum;*/
+
+  @ApiProperty({
+    name: 'baptism',
+    description: '신급',
+    enum: BaptismEnum,
+    isArray: true,
+    required: false,
+  })
+  @TransformStringArray()
+  @IsEnum(BaptismEnum, { each: true })
+  @IsOptional()
+  baptism?: BaptismEnum[];
 }

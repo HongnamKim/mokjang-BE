@@ -99,14 +99,14 @@ export class FamilyService {
           familyRepository.save({
             meId: myFamilyMemberId,
             familyMemberId: newFamilyExistingFamilyMemberId,
-            relation: isRelationFixed ? relation : FamilyRelation.DEFAULT,
+            relation: isRelationFixed ? relation : FamilyRelation.FAMILY,
           }),
           familyRepository.save({
             meId: newFamilyExistingFamilyMemberId,
             familyMemberId: myFamilyMemberId,
             relation: isRelationFixed
               ? this.getCounterRelation(relation, me)
-              : FamilyRelation.DEFAULT,
+              : FamilyRelation.FAMILY,
           }),
         ]);
       }
@@ -247,40 +247,49 @@ export class FamilyService {
   private getCounterRelation(relation: string, me: MemberModel) {
     switch (relation) {
       // 조부모 - 손자/손녀
-      case FamilyRelation.GRAND_PARENTS:
+      case FamilyRelation.GRANDFATHER:
+      case FamilyRelation.GRANDMOTHER:
         return me.gender === GenderEnum.male
-          ? FamilyRelation.GRAND_SON
-          : FamilyRelation.GRAND_DAUGHTER;
-      case FamilyRelation.GRAND_SON:
-      case FamilyRelation.GRAND_DAUGHTER:
-        return FamilyRelation.GRAND_PARENTS;
+          ? FamilyRelation.GRANDSON
+          : FamilyRelation.GRANDDAUGHTER;
+      case FamilyRelation.GRANDSON:
+      case FamilyRelation.GRANDDAUGHTER:
+        return me.gender === GenderEnum.male
+          ? FamilyRelation.GRANDFATHER
+          : FamilyRelation.GRANDMOTHER;
       // 부모 - 자녀
       case FamilyRelation.MOTHER:
       case FamilyRelation.FATHER:
-        return FamilyRelation.CHILD;
-      case FamilyRelation.CHILD:
+        return me.gender === GenderEnum.male
+          ? FamilyRelation.SON
+          : FamilyRelation.DAUGHTER;
+
+      case FamilyRelation.SON:
+      case FamilyRelation.DAUGHTER:
         return me.gender === GenderEnum.male
           ? FamilyRelation.FATHER
           : FamilyRelation.MOTHER;
-      // 형제, 친인척, 가족
+      // 형제, 자매, 남매, 친인척, 가족
       case FamilyRelation.BROTHER:
-      case FamilyRelation.COUSIN:
-      case FamilyRelation.DEFAULT:
+      case FamilyRelation.SISTER:
+      case FamilyRelation.SIBLING:
+      case FamilyRelation.RELATIVE:
+      case FamilyRelation.FAMILY:
         return relation;
       // 장인/장모 시부모 - 사위/며느리
       case FamilyRelation.SON_IN_LAW: // 사위 추가
         return me.gender === GenderEnum.male
-          ? FamilyRelation.FATHER_IN_LAW_M
-          : FamilyRelation.MOTHER_IN_LAW_M;
+          ? FamilyRelation.WIFE_FATHER_IN_LAW
+          : FamilyRelation.WIFE_MOTHER_IN_LAW;
       case FamilyRelation.DAUGHTER_IN_LAW: // 며느리 추가
         return me.gender === GenderEnum.male
-          ? FamilyRelation.FATHER_IN_LAW_W
-          : FamilyRelation.MOTHER_IN_LAW_W;
-      case FamilyRelation.FATHER_IN_LAW_W: // 시부모 추가
-      case FamilyRelation.MOTHER_IN_LAW_W:
+          ? FamilyRelation.HUSBAND_FATHER_IN_LAW
+          : FamilyRelation.HUSBAND_MOTHER_IN_LAW;
+      case FamilyRelation.HUSBAND_FATHER_IN_LAW: // 시부모 추가
+      case FamilyRelation.HUSBAND_MOTHER_IN_LAW:
         return FamilyRelation.DAUGHTER_IN_LAW;
-      case FamilyRelation.FATHER_IN_LAW_M: // 장인 장모 추가
-      case FamilyRelation.MOTHER_IN_LAW_M:
+      case FamilyRelation.WIFE_FATHER_IN_LAW: // 장인 장모 추가
+      case FamilyRelation.WIFE_MOTHER_IN_LAW:
         return FamilyRelation.SON_IN_LAW;
     }
   }

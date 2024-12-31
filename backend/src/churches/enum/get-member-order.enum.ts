@@ -1,5 +1,5 @@
 export enum GetMemberOrderEnum {
-  createdAt = 'createdAt',
+  //createdAt = 'createdAt',
   updatedAt = 'updatedAt',
   registeredAt = 'registeredAt',
   name = 'name',

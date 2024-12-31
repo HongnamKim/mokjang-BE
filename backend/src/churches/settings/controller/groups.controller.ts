@@ -16,6 +16,8 @@ import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+// import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
+// import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 
 @ApiTags('Settings:Groups')
 @Controller('groups')
@@ -35,6 +37,16 @@ export class GroupsController {
     @QueryRunner() qr: QR,
   ) {
     return this.groupsService.postGroup(churchId, dto, qr);
+  }
+
+  @Get(':groupId')
+  getGroupById(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.groupsService.getGroupById(churchId, groupId, undefined, {
+      members: true,
+    });
   }
 
   @Patch(':groupId')
@@ -66,4 +78,38 @@ export class GroupsController {
   ) {
     return this.groupsService.getGroupsCascade(groupId);
   }
+
+  /*@Get(':groupId/role')
+  getGroupRoles(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.groupsService.getGroupRoles(churchId, groupId);
+  }
+
+  @Post(':groupId/role')
+  postGroupRole(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Body() dto: CreateGroupRoleDto,
+  ) {
+    return this.groupsService.createGroupRole(churchId, groupId, dto);
+  }
+
+  @Patch(':groupId/role/:roleId')
+  patchGroupRole(
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Param('roleId', ParseIntPipe) roleId: number,
+    @Body() dto: UpdateGroupRoleDto,
+  ) {
+    return this.groupsService.updateGroupRole(groupId, roleId, dto);
+  }
+
+  @Delete(':groupId/role/:roleId')
+  deleteGroupRole(
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Param('roleId', ParseIntPipe) roleId: number,
+  ) {
+    return this.groupsService.deleteGroupRole(groupId, roleId);
+  }*/
 }
