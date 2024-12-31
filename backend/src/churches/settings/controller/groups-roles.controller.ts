@@ -14,9 +14,18 @@ import { ApiTags } from '@nestjs/swagger';
 import { GroupsRolesService } from '../service/groups-roles.service';
 
 @ApiTags('Groups:Settings:Roles')
+// churches/{churchId}/settings
 @Controller('groups')
 export class GroupsRolesController {
   constructor(private readonly groupsRolesService: GroupsRolesService) {}
+
+  @Post('roles')
+  createRoleForAllGroups(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Body() dto: CreateGroupRoleDto,
+  ) {
+    return this.groupsRolesService.createRoleForAllGroups(churchId, dto);
+  }
 
   @Get(':groupId/role')
   getGroupRoles(
