@@ -1,23 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsDate,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-} from 'class-validator';
-import { EducationStatus } from '../const/education-status.enum';
+import { IsDate, IsEnum, IsNumber, IsOptional } from 'class-validator';
+import { EducationStatus } from '../../const/education-status.enum';
 
-export class UpdateMemberEducationDto {
-  @ApiProperty({
-    name: 'isDeleteEducation',
-    description: '교인의 교육 이수 삭제 시 true',
-    default: false,
-    required: true,
-  })
-  @IsBoolean()
-  isDeleteEducation: boolean = false;
-
+export class CreateEducationHistoryDto {
   @ApiProperty({
     name: 'educationId',
     description: '교육이수 ID',

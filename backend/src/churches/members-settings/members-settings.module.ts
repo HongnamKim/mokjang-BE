@@ -8,16 +8,18 @@ import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
 import { MemberEducationService } from './service/member-education.service';
 import { MemberGroupService } from './service/member-group.service';
+import { EducationHistoryModel } from './entity/education-history.entity';
+import { MemberEducationController } from './controller/member-education.controller';
 
 @Module({
   imports: [
     RouterModule.register([
       {
-        path: 'churches/:churchId/members/:memberId/settings', // 공통 prefix
+        path: 'churches/:churchId/members/:memberId', // 공통 prefix
         module: MembersSettingsModule,
       },
     ]),
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([EducationHistoryModel]),
     MembersModule,
     SettingsModule,
   ],
@@ -28,6 +30,6 @@ import { MemberGroupService } from './service/member-group.service';
     MemberEducationService,
     MemberGroupService,
   ],
-  controllers: [MemberSettingsController],
+  controllers: [MemberSettingsController, MemberEducationController],
 })
 export class MembersSettingsModule {}

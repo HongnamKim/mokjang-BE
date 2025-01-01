@@ -15,7 +15,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateMemberOfficerPipe } from '../pipe/update-member-officer.pipe';
 import { MemberMinistryService } from '../service/member-ministry.service';
 import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
-import { UpdateMemberEducationDto } from '../dto/update-member-education.dto';
 import { MemberEducationService } from '../service/member-education.service';
 import { UpdateMemberGroupDto } from '../dto/update-member-group.dto';
 import { MemberGroupService } from '../service/member-group.service';
@@ -72,7 +71,7 @@ export class MemberSettingsController {
     );
   }
 
-  @ApiOperation({
+  /*@ApiOperation({
     summary: '교인의 교육이수 수정/삭제',
     description:
       '<p>isDeleteEducation 가 true 일 경우 사역 삭제</p>' +
@@ -95,6 +94,17 @@ export class MemberSettingsController {
       qr,
     );
   }
+
+  @Get('educations')
+  getMemberEducationHistory(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+  ) {
+    return this.memberEducationService.getMemberEducationHistory(
+      churchId,
+      memberId,
+    );
+  }*/
 
   @ApiOperation({
     summary: '교인의 소그룹 수정/삭제',
