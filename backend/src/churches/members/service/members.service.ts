@@ -11,10 +11,14 @@ import {
   Between,
   FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsSelect,
   FindOptionsWhere,
   ILike,
+  In,
   IsNull,
+  LessThanOrEqual,
   Like,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -30,7 +34,11 @@ import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
 import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
 import { MinistryModel } from '../../settings/entity/ministry.entity';
-import { DefaultMemberSelectOption } from '../const/default-find-options.const';
+import {
+  DefaultMemberSelectOption,
+  DefaultMembersRelationOption,
+  DefaultMembersSelectOption,
+} from '../const/default-find-options.const';
 import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
 import { EducationModel } from '../../settings/entity/education.entity';
 import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
@@ -44,39 +52,199 @@ export class MembersService {
     private readonly familyService: FamilyService,
   ) {}
 
+  private CHURCH_SETTING_COLUMNS = [
+    'group',
+    'ministries',
+    'educations',
+    'officer',
+  ];
+
+  private SELECT_PREFIX = 'select__';
+
+  private PAGING_OPTIONS = ['take', 'page', 'order', 'orderDirection'];
+
   private getMembersRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
+  }
+
+  parseRelationOption(dto: GetMemberDto) {
+    const relationOptions: FindOptionsRelations<MemberModel> = {};
+
+    let needDefaultRelationOptions = true;
+
+    Object.entries(dto).forEach(([key, value]) => {
+      if (key.startsWith(this.SELECT_PREFIX)) {
+        const [, column] = key.split('__');
+
+        needDefaultRelationOptions = false;
+
+        if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+          relationOptions[column] = value;
+        }
+
+        return;
+      }
+
+      if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
+        relationOptions[key] = true;
+
+        return;
+      }
+    });
+
+    if (needDefaultRelationOptions) {
+      Object.keys(DefaultMembersRelationOption).forEach((key) => {
+        relationOptions[key] = true;
+      });
+    }
+
+    // 정렬 기준이 join 이 필요한 컬럼인 경우
+    if (this.CHURCH_SETTING_COLUMNS.includes(dto.order)) {
+      relationOptions[dto.order as string] = true;
+    }
+
+    return relationOptions;
+  }
+
+  parseOrderOption(dto: GetMemberDto) {
+    const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
+
+    if (
+      dto.order === GetMemberOrderEnum.group ||
+      dto.order === GetMemberOrderEnum.officer
+    ) {
+      findOptionsOrder[dto.order as string] = {
+        name: dto.orderDirection,
+      };
+      findOptionsOrder.registeredAt = 'asc';
+    } else {
+      findOptionsOrder[dto.order as string] = dto.orderDirection;
+      findOptionsOrder.registeredAt = 'asc';
+    }
+
+    return findOptionsOrder;
+  }
+
+  parseSelectOption(dto: GetMemberDto) {
+    const selectOptions: FindOptionsSelect<MemberModel> = {};
+
+    let needDefaultSelectOptions = true;
+
+    // 컬럼 사용자화
+    Object.entries(dto).forEach(([key, value]) => {
+      if (this.PAGING_OPTIONS.includes(key)) return;
+
+      if (key.startsWith(this.SELECT_PREFIX)) {
+        const [, column] = key.split('__');
+
+        if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+          selectOptions[column] = {
+            id: value,
+            name: value,
+          };
+        } else if (column === 'address') {
+          selectOptions[column] = value;
+          selectOptions['detailAddress'] = value;
+        } else if (column === 'birth') {
+          selectOptions[column] = value;
+          selectOptions['isLunar'] = value;
+        } else {
+          selectOptions[column] = value;
+        }
+
+        needDefaultSelectOptions = false;
+      }
+    });
+
+    // 항상 들어가야할 컬럼
+    const result: FindOptionsSelect<MemberModel> = {
+      id: true,
+      registeredAt: true,
+      name: true,
+      [dto.order]: this.CHURCH_SETTING_COLUMNS.includes(dto.order)
+        ? { id: true, name: true }
+        : true,
+    };
+
+    // 필터링 선택한 컬럼
+    Object.keys(dto).forEach((key) => {
+      if (
+        this.PAGING_OPTIONS.includes(key) ||
+        key.startsWith(this.SELECT_PREFIX)
+      )
+        return;
+
+      if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
+        result[key] = {
+          id: true,
+          name: true,
+        };
+        return;
+      }
+
+      if (key === 'registerAfter' || key === 'registerBefore') {
+        result['registeredAt'] = true;
+        return;
+      }
+
+      if (key === 'birthAfter' || key === 'birthBefore') {
+        result['birthAt'] = true;
+        return;
+      }
+
+      result[key] = true;
+    });
+
+    return needDefaultSelectOptions
+      ? { ...result, ...DefaultMembersSelectOption }
+      : { ...result, ...selectOptions };
+  }
+
+  parseWhereOption(churchId: number, dto: GetMemberDto) {
+    const createDateFilter = (start?: Date, end?: Date) =>
+      start && end
+        ? Between(start, end)
+        : start
+          ? MoreThanOrEqual(start)
+          : end
+            ? LessThanOrEqual(end)
+            : undefined;
+
+    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
+      churchId,
+      name: dto.name && ILike(`%${dto.name}%`),
+      mobilePhone: dto.mobilePhone && Like(`%${dto.mobilePhone}%`),
+      homePhone: dto.homePhone && Like(`%${dto.homePhone}%`),
+      address: dto.address && Like(`%${dto.address}%`),
+      birth: createDateFilter(dto.birthAfter, dto.birthBefore),
+      registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
+      gender: dto.gender && In(dto.gender), //dto?.gender,
+      marriage: dto.marriage && In(dto.marriage), //dto?.marriage,
+      school: dto.school && Like(`%${dto.school}%`),
+      occupation: dto.occupation && Like(`%${dto.occupation}%`),
+      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
+      baptism: dto.baptism && In(dto.baptism),
+      groupId: dto.group && In(dto.group),
+      officerId: dto.officer && In(dto.officer),
+      ministries: dto.ministries && { id: In(dto.ministries) },
+      educations: dto.educations && { id: In(dto.educations) },
+    };
+
+    return findOptionsWhere;
   }
 
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
-      churchId,
-      name: dto.name && ILike(`${dto.name}%`),
-      birth: Between(dto.birthAfter, dto.birthBefore),
-      gender: dto?.gender,
-      school: dto.school && Like(`%${dto.school}%`),
-      vehicleNumber: dto.vehicleNumber && ArrayContains([dto.vehicleNumber]),
-      baptism: dto?.baptism,
-      groupId: dto?.groupId,
-      officerId: dto?.officerId,
-    };
+    const selectOptions = this.parseSelectOption(dto);
 
-    const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
+    const relationOptions = this.parseRelationOption(dto);
 
-    if (
-      dto.order === GetMemberOrderEnum.groupId ||
-      dto.order === GetMemberOrderEnum.officerId
-    ) {
-      findOptionsOrder[dto.order as string] = {
-        name: dto.orderDirection,
-      };
-      findOptionsOrder.createdAt = 'asc';
-    } else {
-      findOptionsOrder[dto.order as string] = dto.orderDirection;
-      findOptionsOrder.createdAt = 'asc';
-    }
+    const findOptionsWhere: FindOptionsWhere<MemberModel> =
+      this.parseWhereOption(churchId, dto);
+
+    const findOptionsOrder: FindOptionsOrder<MemberModel> =
+      this.parseOrderOption(dto);
 
     const totalCount = await membersRepository.count({
       where: findOptionsWhere,
@@ -87,6 +255,8 @@ export class MembersService {
     const result = await membersRepository.find({
       where: findOptionsWhere,
       order: findOptionsOrder,
+      relations: relationOptions,
+      select: selectOptions,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
@@ -173,7 +343,7 @@ export class MembersService {
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.findById(churchId, qr);
+    const church = await this.churchesService.findChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
@@ -326,13 +496,13 @@ export class MembersService {
   async fetchFamilyRelation(
     churchId: number,
     memberId: number,
-    familyId: number,
+    familyMemberId: number,
     relation: string,
     qr: QueryRunner,
   ) {
     const [member, familyMember] = await Promise.all([
       this.getMemberModelById(churchId, memberId, {}, qr),
-      this.getMemberModelById(churchId, familyId, {}, qr),
+      this.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
     return this.familyService.fetchAndCreateFamilyRelation(

@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber } from 'class-validator';
+import {
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
+import { EducationStatus } from '../const/education-status.enum';
 
 export class UpdateMemberEducationDto {
   @ApiProperty({
@@ -18,4 +25,31 @@ export class UpdateMemberEducationDto {
   })
   @IsNumber()
   educationId: number;
+
+  @ApiProperty({
+    name: 'startDate',
+    description: '교육 시작일',
+    required: true,
+  })
+  @IsDate()
+  startDate: Date;
+
+  @ApiProperty({
+    name: 'endDate',
+    description: '교육 종료일',
+    required: false,
+  })
+  @IsDate()
+  @IsOptional()
+  endDate: Date;
+
+  @ApiProperty({
+    name: 'status',
+    description: '교육 상태',
+    enum: EducationStatus,
+    required: false,
+  })
+  @IsEnum(EducationStatus)
+  @IsOptional()
+  status: EducationStatus;
 }

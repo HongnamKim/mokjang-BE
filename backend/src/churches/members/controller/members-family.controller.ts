@@ -58,18 +58,10 @@ export class MembersFamilyController {
     return this.memberService.fetchFamilyRelation(
       churchId,
       memberId,
-      dto.familyId,
+      dto.familyMemberId,
       dto.relation,
       qr,
     );
-
-    /*return this.familyService.fetchFamilyRelation(
-      churchId,
-      memberId,
-      dto.familyId,
-      dto.relation,
-      qr,
-    );*/
   }
 
   @Patch(':familyMemberId')

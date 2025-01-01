@@ -1,8 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChurchModel } from './entity/church.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreateChurchDto } from './dto/create-church.dto';
+import { JwtAccessPayload } from '../auth/type/jwt';
+import { UpdateChurchDto } from './dto/update-church.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -15,11 +21,31 @@ export class ChurchesService {
     return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
   }
 
-  findAll() {
+  findAllChurches() {
     return this.churchRepository.find();
   }
 
-  async findById(id: number, qr?: QueryRunner) {
+  async isChurchAdmin(churchId: number, memberId: number, qr?: QueryRunner) {
+    const church = await this.findChurchById(churchId, qr);
+
+    const subAdminIds = church.subAdmins.map((subAdmin) => subAdmin.id);
+
+    const allAdminIds = [church.mainAdmin.id, ...subAdminIds];
+
+    return allAdminIds.includes(memberId);
+  }
+
+  async isChurchMainAdmin(
+    churchId: number,
+    memberId: number,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.findChurchById(churchId, qr);
+
+    return church.mainAdmin.id === memberId;
+  }
+
+  async findChurchById(id: number, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
     const church = await churchRepository.findOne({
@@ -28,6 +54,8 @@ export class ChurchesService {
       },
       relations: {
         requestInfos: true,
+        mainAdmin: true,
+        subAdmins: true,
       },
     });
 
@@ -46,10 +74,59 @@ export class ChurchesService {
     return !!church;
   }
 
-  async createChurch(dto: CreateChurchDto, qr?: QueryRunner) {
+  async createChurch(
+    accessToken: JwtAccessPayload,
+    dto: CreateChurchDto,
+    qr?: QueryRunner,
+  ) {
     const churchRepository = this.getChurchRepository(qr);
 
-    return churchRepository.save({ ...dto });
+    const isMainAdmin = await churchRepository.findOne({
+      where: {
+        mainAdmin: {
+          id: accessToken.id,
+        },
+      },
+    });
+
+    if (isMainAdmin) {
+      throw new BadRequestException('이미 생성한 교회가 있습니다.');
+    }
+
+    const isDuplicated = await churchRepository.findOne({
+      where: {
+        name: dto.name,
+        identifyNumber: dto.identifyNumber,
+      },
+    });
+
+    if (isDuplicated) {
+      throw new BadRequestException('이미 존재하는 교회입니다.');
+    }
+
+    return churchRepository.save({
+      ...dto,
+      mainAdmin: {
+        id: accessToken.id,
+      },
+    });
+  }
+
+  async updateChurch(churchId: number, dto: UpdateChurchDto) {
+    const churchRepository = this.getChurchRepository();
+
+    const result = await churchRepository.update(
+      {
+        id: churchId,
+      },
+      {
+        ...dto,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('');
+    }
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {

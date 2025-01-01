@@ -63,7 +63,6 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
     name: 'relation',
     description: '가족 관계',
     example: FamilyRelation.MOTHER,
-    default: FamilyRelation.DEFAULT,
     required: false,
   })
   @IsString()
