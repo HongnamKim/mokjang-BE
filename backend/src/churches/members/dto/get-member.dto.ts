@@ -174,6 +174,22 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsOptional()
   registerBefore?: Date;
 
+  @ApiProperty({
+    description: '수정일자 ~부터',
+    required: false,
+  })
+  @IsDate()
+  @IsOptional()
+  updateAfter?: Date;
+
+  @ApiProperty({
+    description: '수정일자 ~까지',
+    required: false,
+  })
+  @IsDate()
+  @IsOptional()
+  updateBefore?: Date;
+
   /*@ApiProperty({
     name: 'createAfter',
     description: '생성일자 ~부터',
