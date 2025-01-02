@@ -12,6 +12,15 @@ export class CreateEducationHistoryDto {
   educationId: number;
 
   @ApiProperty({
+    name: 'status',
+    description: '교육 상태',
+    enum: EducationStatus,
+    required: false,
+  })
+  @IsEnum(EducationStatus)
+  status: EducationStatus;
+
+  @ApiProperty({
     name: 'startDate',
     description: '교육 시작일',
     required: true,
@@ -27,14 +36,4 @@ export class CreateEducationHistoryDto {
   @IsDate()
   @IsOptional()
   endDate: Date;
-
-  @ApiProperty({
-    name: 'status',
-    description: '교육 상태',
-    enum: EducationStatus,
-    required: false,
-  })
-  @IsEnum(EducationStatus)
-  @IsOptional()
-  status: EducationStatus;
 }
