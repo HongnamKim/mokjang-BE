@@ -16,6 +16,7 @@ import { MembersModule } from '../members/members.module';
 import { GroupRoleModel } from './entity/group-role.entity';
 import { GroupsRolesController } from './controller/groups-roles.controller';
 import { GroupsRolesService } from './service/groups-roles.service';
+import { EducationsService } from './service/educations.service';
 
 @Module({
   imports: [
@@ -42,7 +43,12 @@ import { GroupsRolesService } from './service/groups-roles.service';
     GroupsController,
     GroupsRolesController,
   ],
-  providers: [SettingsService, GroupsService, GroupsRolesService],
-  exports: [SettingsService, GroupsService],
+  providers: [
+    SettingsService,
+    GroupsService,
+    GroupsRolesService,
+    EducationsService,
+  ],
+  exports: [SettingsService, GroupsService, EducationsService],
 })
 export class SettingsModule {}

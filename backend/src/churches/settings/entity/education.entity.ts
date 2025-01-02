@@ -1,5 +1,5 @@
 import { MemberModel } from '../../members/entity/member.entity';
-import { Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaseChurchSettingModel } from './base-church-setting.entity';
 import { EducationHistoryModel } from '../../members-settings/entity/education-history.entity';
@@ -26,4 +26,13 @@ export class EducationModel extends BaseChurchSettingModel {
 
   @OneToMany(() => EducationHistoryModel, (history) => history.education)
   history: EducationHistoryModel[];
+
+  @Column({ default: 0 })
+  inProgressCount: number;
+
+  @Column({ default: 0 })
+  completedCount: number;
+
+  @Column({ default: 0 })
+  incompleteCount: number;
 }
