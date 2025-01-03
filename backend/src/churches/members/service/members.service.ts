@@ -119,7 +119,9 @@ export class MembersService {
       findOptionsOrder.registeredAt = 'asc';
     } else {
       findOptionsOrder[dto.order as string] = dto.orderDirection;
-      findOptionsOrder.registeredAt = 'asc';
+      if (dto.order !== GetMemberOrderEnum.registeredAt) {
+        findOptionsOrder.registeredAt = 'asc';
+      }
     }
 
     return findOptionsOrder;
@@ -188,7 +190,12 @@ export class MembersService {
       }
 
       if (key === 'birthAfter' || key === 'birthBefore') {
-        result['birthAt'] = true;
+        result['birth'] = true;
+        return;
+      }
+
+      if (key === 'updateAfter' || key === 'updateBefore') {
+        result['updatedAt'] = true;
         return;
       }
 
@@ -218,6 +225,7 @@ export class MembersService {
       address: dto.address && Like(`%${dto.address}%`),
       birth: createDateFilter(dto.birthAfter, dto.birthBefore),
       registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
+      updatedAt: createDateFilter(dto.updateAfter, dto.updateBefore),
       gender: dto.gender && In(dto.gender), //dto?.gender,
       marriage: dto.marriage && In(dto.marriage), //dto?.marriage,
       school: dto.school && Like(`%${dto.school}%`),
