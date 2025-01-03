@@ -15,7 +15,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateMemberOfficerPipe } from '../pipe/update-member-officer.pipe';
 import { MemberMinistryService } from '../service/member-ministry.service';
 import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
-import { MemberEducationService } from '../service/member-education.service';
+import { EducationHistoryService } from '../service/education-history.service';
 import { UpdateMemberGroupDto } from '../dto/update-member-group.dto';
 import { MemberGroupService } from '../service/member-group.service';
 import { UpdateMemberGroupPipe } from '../pipe/update-member-group.pipe';
@@ -26,7 +26,7 @@ export class MemberSettingsController {
   constructor(
     private readonly memberOfficerService: MemberOfficerService,
     private readonly memberMinistryService: MemberMinistryService,
-    private readonly memberEducationService: MemberEducationService,
+    private readonly memberEducationService: EducationHistoryService,
     private readonly memberGroupService: MemberGroupService,
   ) {}
 

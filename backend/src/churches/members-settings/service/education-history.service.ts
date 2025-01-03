@@ -13,9 +13,10 @@ import { CreateEducationHistoryDto } from '../dto/education/create-education-his
 import { UpdateEducationHistoryDto } from '../dto/education/update-education-history.dto';
 import { EducationsService } from '../../settings/service/educations.service';
 import { EducationStatus } from '../const/education-status.enum';
+import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 
 @Injectable()
-export class MemberEducationService {
+export class EducationHistoryService {
   constructor(
     private readonly membersService: MembersService,
     private readonly settingsService: SettingsService,
@@ -30,18 +31,20 @@ export class MemberEducationService {
       : this.educationHistoryRepository;
   }
 
-  getMemberEducationHistory(memberId: number) {
+  getEducationHistory(memberId: number, dto: GetEducationHistoryDto) {
     return this.educationHistoryRepository.find({
       where: {
         memberId,
       },
       order: {
-        endDate: 'desc',
+        endDate: dto.orderDirection,
+        startDate: dto.orderDirection,
+        createdAt: dto.orderDirection,
       },
     });
   }
 
-  async getMemberEducationHistoryById(
+  async getEducationHistoryById(
     id: number,
     memberId: number,
     qr?: QueryRunner,
@@ -59,7 +62,7 @@ export class MemberEducationService {
     return history;
   }
 
-  async createMemberEducationHistory(
+  async createEducationHistory(
     churchId: number,
     memberId: number,
     dto: CreateEducationHistoryDto,
@@ -113,7 +116,7 @@ export class MemberEducationService {
     // 상태 변경 --> 이전 상태 인원수 감소, 새 상태 인원수 증가
     const educationHistoryRepository = this.getEducationHistoryRepository(qr);
 
-    const educationHistory = await this.getMemberEducationHistoryById(
+    const educationHistory = await this.getEducationHistoryById(
       educationHistoryId,
       memberId,
       qr,

@@ -8,9 +8,10 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { MemberEducationService } from '../service/member-education.service';
+import { EducationHistoryService } from '../service/education-history.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -18,12 +19,13 @@ import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { CreateEducationHistoryDto } from '../dto/education/create-education-history.dto';
 import { UpdateEducationHistoryDto } from '../dto/education/update-education-history.dto';
 import { UpdateEducationHistoryPipe } from '../pipe/update-education-history-pipe.service';
+import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 
 @ApiTags('Churches:Members:Educations')
 @Controller('educations')
-export class MemberEducationController {
+export class EducationHistoryController {
   constructor(
-    private readonly memberEducationService: MemberEducationService,
+    private readonly educationHistoryService: EducationHistoryService,
   ) {}
 
   @ApiOperation({
@@ -34,8 +36,9 @@ export class MemberEducationController {
   getMemberEducationHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @Query() dto: GetEducationHistoryDto,
   ) {
-    return this.memberEducationService.getMemberEducationHistory(memberId);
+    return this.educationHistoryService.getEducationHistory(memberId, dto);
   }
 
   @ApiOperation({
@@ -52,7 +55,7 @@ export class MemberEducationController {
     @Body() dto: CreateEducationHistoryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberEducationService.createMemberEducationHistory(
+    return this.educationHistoryService.createEducationHistory(
       churchId,
       memberId,
       dto,
@@ -94,7 +97,7 @@ export class MemberEducationController {
     @Body(UpdateEducationHistoryPipe) dto: UpdateEducationHistoryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberEducationService.updateEducationHistory(
+    return this.educationHistoryService.updateEducationHistory(
       churchId,
       memberId,
       educationHistoryId,
@@ -117,7 +120,7 @@ export class MemberEducationController {
     @Param('educationHistoryId', ParseIntPipe) educationHistoryId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberEducationService.deleteEducationHistory(
+    return this.educationHistoryService.deleteEducationHistory(
       memberId,
       educationHistoryId,
       qr,
