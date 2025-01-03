@@ -13,10 +13,10 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([
       ChurchModel,
-      OfficerModel,
-      EducationModel,
-      MinistryModel,
-      GroupModel,
+      //OfficerModel,
+      //EducationModel,
+      //MinistryModel,
+      //GroupModel,
     ]),
     AuthModule,
   ],

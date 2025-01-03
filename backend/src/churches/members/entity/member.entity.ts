@@ -18,6 +18,7 @@ import { MinistryModel } from '../../settings/entity/ministry.entity';
 import { GroupModel } from '../../settings/entity/group.entity';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
+import { EducationHistoryModel } from '../../members-settings/entity/education-history.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -126,4 +127,10 @@ export class MemberModel extends BaseModel {
   @ManyToMany(() => EducationModel, (education) => education.members)
   @JoinTable()
   educations: EducationModel[];
+
+  @OneToMany(
+    () => EducationHistoryModel,
+    (educationHistory) => educationHistory.member,
+  )
+  educationHistory: EducationHistoryModel[];
 }

@@ -13,6 +13,10 @@ import { GroupModel } from './entity/group.entity';
 import { GroupsController } from './controller/groups.controller';
 import { GroupsService } from './service/groups.service';
 import { MembersModule } from '../members/members.module';
+import { GroupRoleModel } from './entity/group-role.entity';
+import { GroupsRolesController } from './controller/groups-roles.controller';
+import { GroupsRolesService } from './service/groups-roles.service';
+import { EducationsService } from './service/educations.service';
 
 @Module({
   imports: [
@@ -29,6 +33,7 @@ import { MembersModule } from '../members/members.module';
       MinistryModel,
       EducationModel,
       GroupModel,
+      GroupRoleModel,
     ]),
   ],
   controllers: [
@@ -36,8 +41,14 @@ import { MembersModule } from '../members/members.module';
     MinistriesController,
     EducationsController,
     GroupsController,
+    GroupsRolesController,
   ],
-  providers: [SettingsService, GroupsService],
-  exports: [SettingsService, GroupsService],
+  providers: [
+    SettingsService,
+    GroupsService,
+    GroupsRolesService,
+    EducationsService,
+  ],
+  exports: [SettingsService, GroupsService, EducationsService],
 })
 export class SettingsModule {}

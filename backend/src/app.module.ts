@@ -22,6 +22,8 @@ import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './auth/entity/user.entity';
+import { GroupRoleModel } from './churches/settings/entity/group-role.entity';
+import { EducationHistoryModel } from './churches/members-settings/entity/education-history.entity';
 
 @Module({
   imports: [
@@ -88,9 +90,11 @@ import { UserModel } from './auth/entity/user.entity';
           MemberModel,
           FamilyModel,
           EducationModel,
+          EducationHistoryModel,
           OfficerModel,
           MinistryModel,
           GroupModel,
+          GroupRoleModel,
         ],
         synchronize: true,
       }),
