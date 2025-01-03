@@ -39,8 +39,6 @@ import {
   DefaultMembersRelationOption,
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
-import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
-import { EducationModel } from '../../settings/entity/education.entity';
 import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
 
 @Injectable()
@@ -581,7 +579,7 @@ export class MembersService {
     return memberRepository.save(member);
   }
 
-  async updateMemberEducation(
+  /*async updateMemberEducation(
     member: MemberModel,
     dto: UpdateMemberEducationDto,
     education: EducationModel,
@@ -598,7 +596,7 @@ export class MembersService {
       : [...oldEducations, education];
 
     return memberRepository.save(member);
-  }
+  }*/
 
   async updateMemberGroup(
     member: MemberModel,
