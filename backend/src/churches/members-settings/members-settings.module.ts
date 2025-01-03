@@ -6,10 +6,10 @@ import { MemberOfficerService } from './service/member-officer.service';
 import { MemberSettingsController } from './controller/member-settings.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
-import { MemberEducationService } from './service/member-education.service';
+import { EducationHistoryService } from './service/education-history.service';
 import { MemberGroupService } from './service/member-group.service';
 import { EducationHistoryModel } from './entity/education-history.entity';
-import { MemberEducationController } from './controller/member-education.controller';
+import { EducationHistoryController } from './controller/education-history.controller';
 
 @Module({
   imports: [
@@ -27,9 +27,9 @@ import { MemberEducationController } from './controller/member-education.control
   providers: [
     MemberOfficerService,
     MemberMinistryService,
-    MemberEducationService,
+    EducationHistoryService,
     MemberGroupService,
   ],
-  controllers: [MemberSettingsController, MemberEducationController],
+  controllers: [MemberSettingsController, EducationHistoryController],
 })
 export class MembersSettingsModule {}
