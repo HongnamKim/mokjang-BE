@@ -83,6 +83,11 @@ export class MembersService {
         return;
       }
 
+      if (key === 'educationStatus' || key === 'educationHistory') {
+        relationOptions['educationHistory'] = true;
+        return;
+      }
+
       if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
         relationOptions[key] = true;
 
@@ -117,7 +122,9 @@ export class MembersService {
       findOptionsOrder.registeredAt = 'asc';
     } else {
       findOptionsOrder[dto.order as string] = dto.orderDirection;
-      findOptionsOrder.registeredAt = 'asc';
+      if (dto.order !== GetMemberOrderEnum.registeredAt) {
+        findOptionsOrder.registeredAt = 'asc';
+      }
     }
 
     return findOptionsOrder;
@@ -141,9 +148,11 @@ export class MembersService {
             name: value,
           };
         } else if (column === 'address') {
+          // 도로명 주소 선택 시 상제 주소 추가
           selectOptions[column] = value;
           selectOptions['detailAddress'] = value;
         } else if (column === 'birth') {
+          // 생년월일 추가 시 음력여부 추가
           selectOptions[column] = value;
           selectOptions['isLunar'] = value;
         } else {
@@ -172,6 +181,30 @@ export class MembersService {
       )
         return;
 
+      if (key === 'educationHistory') {
+        result[key] = {
+          id: true,
+          educationName: true,
+          educationId: true,
+        };
+        return;
+      }
+
+      if (key === 'educationStatus') {
+        console.log(key);
+        return;
+      }
+
+      if (key === 'educations') {
+        result['educationHistory'] = {
+          id: true,
+          educationName: true,
+          status: true,
+          educationId: true,
+        };
+        return;
+      }
+
       if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
         result[key] = {
           id: true,
@@ -186,7 +219,12 @@ export class MembersService {
       }
 
       if (key === 'birthAfter' || key === 'birthBefore') {
-        result['birthAt'] = true;
+        result['birth'] = true;
+        return;
+      }
+
+      if (key === 'updateAfter' || key === 'updateBefore') {
+        result['updatedAt'] = true;
         return;
       }
 
@@ -198,7 +236,7 @@ export class MembersService {
       : { ...result, ...selectOptions };
   }
 
-  parseWhereOption(churchId: number, dto: GetMemberDto) {
+  async parseWhereOption(churchId: number, dto: GetMemberDto) {
     const createDateFilter = (start?: Date, end?: Date) =>
       start && end
         ? Between(start, end)
@@ -216,6 +254,7 @@ export class MembersService {
       address: dto.address && Like(`%${dto.address}%`),
       birth: createDateFilter(dto.birthAfter, dto.birthBefore),
       registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
+      updatedAt: createDateFilter(dto.updateAfter, dto.updateBefore),
       gender: dto.gender && In(dto.gender), //dto?.gender,
       marriage: dto.marriage && In(dto.marriage), //dto?.marriage,
       school: dto.school && Like(`%${dto.school}%`),
@@ -224,9 +263,30 @@ export class MembersService {
       baptism: dto.baptism && In(dto.baptism),
       groupId: dto.group && In(dto.group),
       officerId: dto.officer && In(dto.officer),
-      ministries: dto.ministries && { id: In(dto.ministries) },
-      educations: dto.educations && { id: In(dto.educations) },
+      //ministries: dto.ministries && { id: In(dto.ministries) },
+      //educations: dto.educations && { id: In(dto.educations) },
+      /*educationHistory: dto.educations && {
+        educationId: In(dto.educations),
+        status: dto.educationStatus && In(dto.educationStatus),
+      },*/
     };
+
+    // 1 : N 관게 요소 필터링할 경우 필터링 외의 요소들도 조회하기 위함.
+    if (dto.educations || dto.ministries) {
+      const memberIds = (
+        await this.membersRepository.find({
+          where: {
+            educationHistory: {
+              educationId: dto.educations && In(dto.educations),
+              status: dto.educationStatus && In(dto.educationStatus),
+            },
+            ministries: dto.ministries && { id: In(dto.ministries) },
+          },
+        })
+      ).map((model) => model.id);
+
+      findOptionsWhere.id = In(memberIds);
+    }
 
     return findOptionsWhere;
   }
@@ -239,7 +299,7 @@ export class MembersService {
     const relationOptions = this.parseRelationOption(dto);
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> =
-      this.parseWhereOption(churchId, dto);
+      await this.parseWhereOption(churchId, dto);
 
     const findOptionsOrder: FindOptionsOrder<MemberModel> =
       this.parseOrderOption(dto);
