@@ -47,7 +47,8 @@ export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
   //guidedBy: true,
   group: true,
   ministries: true,
-  educations: true,
+  //educations: true,
+  educationHistory: true,
   officer: true,
 };
 
@@ -69,9 +70,15 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educations: {
+  /*educations: {
     id: true,
     name: true,
+  },*/
+  educationHistory: {
+    id: true,
+    educationId: true,
+    educationName: true,
+    status: true,
   },
   officer: {
     id: true,
