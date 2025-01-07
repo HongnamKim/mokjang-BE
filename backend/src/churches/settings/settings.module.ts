@@ -49,6 +49,11 @@ import { EducationsService } from './service/educations.service';
     GroupsRolesService,
     EducationsService,
   ],
-  exports: [SettingsService, GroupsService, EducationsService],
+  exports: [
+    SettingsService,
+    GroupsService,
+    EducationsService,
+    GroupsRolesService,
+  ],
 })
 export class SettingsModule {}
