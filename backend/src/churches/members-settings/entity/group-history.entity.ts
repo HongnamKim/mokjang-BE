@@ -25,7 +25,7 @@ export class GroupHistoryModel extends BaseModel {
   @Column()
   memberId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.groupHistory)
+  @ManyToOne(() => MemberModel, (member) => member.group)
   member: MemberModel;
 
   @Column({ type: 'timestamptz' })

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -10,7 +11,6 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { MemberGroupService } from '../service/member-group.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { UpdateMemberGroupPipe } from '../pipe/update-member-group.pipe';
@@ -25,10 +25,7 @@ import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
 @ApiTags('Churches:Members:Groups')
 @Controller('groups')
 export class GroupHistoryController {
-  constructor(
-    private readonly memberGroupService: MemberGroupService,
-    private readonly groupHistoryService: GroupHistoryService,
-  ) {}
+  constructor(private readonly groupHistoryService: GroupHistoryService) {}
 
   @ApiOperation({
     summary: '교인의 그룹 이력 조회',
@@ -49,7 +46,7 @@ export class GroupHistoryController {
   }
 
   @ApiOperation({
-    summary: '교인의 그룹 이력 생성',
+    summary: '교인의 그룹 이력 생성 (그룹 부여)',
     description:
       '<p>교인의 그룹 이력을 생성합니다.</p>' +
       '<p>필수값: 그룹 ID(groupId), 시작 날짜(startDate)</p>' +
@@ -77,6 +74,11 @@ export class GroupHistoryController {
 
   @ApiOperation({
     summary: '교인의 그룹 이력 수정',
+    description:
+      '<p>교인의 그룹 이력을 수정합니다.</p>' +
+      '<p>그룹을 변경할 수 없습니다. 시작일, 종료일만 수정 가능합니다.</p>' +
+      '<p>시작일, 종료일은 현재 날짜를 앞설 수 없습니다. --> BadRequestException</p>' +
+      '<p>종료일은 시작일을 앞설 수 없습니다. --> BadRequestException</p>',
   })
   @Patch(':groupHistoryId')
   @UseInterceptors(TransactionInterceptor)
@@ -98,6 +100,10 @@ export class GroupHistoryController {
 
   @ApiOperation({
     summary: '교인의 그룹 이력 삭제',
+    description:
+      '<p>교인의 그룹 이력을 삭제합니다.</p>' +
+      '<p>삭제 시 교인은 해당 그룹에 속했던 이력이 사라집니다. (종료와 다릅니다.)</p>' +
+      '<p>종료일이 없는 이력을 삭제할 경우 해당 그룹의 인원수가 감소합니다.</p>',
   })
   @Delete(':groupHistoryId')
   @UseInterceptors(TransactionInterceptor)
@@ -131,11 +137,12 @@ export class GroupHistoryController {
     @Body(UpdateMemberGroupPipe) dto: UpdateMemberGroupDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberGroupService.updateMemberGroup(
+    throw new GoneException('더이상 사용되지 않는 엔드포인트입니다.');
+    /*return this.memberGroupService.updateMemberGroup(
       churchId,
       memberId,
       dto,
       qr,
-    );
+    );*/
   }
 }
