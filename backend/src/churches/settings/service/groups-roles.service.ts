@@ -94,6 +94,29 @@ export class GroupsRolesService {
     });
   }
 
+  async getGroupRoleById(
+    churchId: number,
+    groupId: number,
+    groupRoleId: number,
+    qr?: QueryRunner,
+  ) {
+    const groupRolesRepository = this.getGroupRolesRepository(qr);
+
+    const role = await groupRolesRepository.findOne({
+      where: {
+        churchId,
+        groupId,
+        id: groupRoleId,
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundException('해당 그룹에 존재하지 않는 역할입니다.');
+    }
+
+    return role;
+  }
+
   async createGroupRole(
     churchId: number,
     groupId: number,

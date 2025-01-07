@@ -19,6 +19,7 @@ import { GroupModel } from '../../settings/entity/group.entity';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { EducationHistoryModel } from '../../members-settings/entity/education-history.entity';
+import { GroupHistoryModel } from '../../members-settings/entity/group-history.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -99,12 +100,6 @@ export class MemberModel extends BaseModel {
   @JoinTable()
   ministries: MinistryModel[];
 
-  @Column({ nullable: true, comment: '소그룹 ID' })
-  groupId: number | null;
-
-  @ManyToOne(() => GroupModel, (group) => group.members)
-  group: GroupModel;
-
   @Column({ nullable: true, comment: '직분 ID' })
   officerId: number | null;
 
@@ -133,4 +128,13 @@ export class MemberModel extends BaseModel {
     (educationHistory) => educationHistory.member,
   )
   educationHistory: EducationHistoryModel[];
+
+  @Column({ nullable: true, comment: '소그룹 ID' })
+  groupId: number | null;
+
+  @ManyToOne(() => GroupModel, (group) => group.members)
+  group: GroupModel;
+
+  @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
+  groupHistory: GroupHistoryModel[];
 }
