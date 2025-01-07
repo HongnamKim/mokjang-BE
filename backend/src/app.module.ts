@@ -24,6 +24,7 @@ import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './auth/entity/user.entity';
 import { GroupRoleModel } from './churches/settings/entity/group-role.entity';
 import { EducationHistoryModel } from './churches/members-settings/entity/education-history.entity';
+import { GroupHistoryModel } from './churches/members-settings/entity/group-history.entity';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { EducationHistoryModel } from './churches/members-settings/entity/educat
           MinistryModel,
           GroupModel,
           GroupRoleModel,
+          GroupHistoryModel,
         ],
         synchronize: true,
       }),

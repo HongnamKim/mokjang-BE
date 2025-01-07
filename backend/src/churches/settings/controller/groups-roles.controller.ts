@@ -13,7 +13,7 @@ import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { GroupsRolesService } from '../service/groups-roles.service';
 
-@ApiTags('Groups:Settings:Roles')
+@ApiTags('Settings:Groups:Roles')
 // churches/{churchId}/settings
 @Controller('groups')
 export class GroupsRolesController {
