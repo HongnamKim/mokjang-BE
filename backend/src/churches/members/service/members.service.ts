@@ -39,9 +39,6 @@ import {
   DefaultMembersRelationOption,
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
-import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
-import { EducationModel } from '../../settings/entity/education.entity';
-import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
 
 @Injectable()
 export class MembersService {
@@ -79,13 +76,25 @@ export class MembersService {
         needDefaultRelationOptions = false;
 
         if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+          if (column === 'educations') {
+            relationOptions['educationHistory'] = value;
+          }
           relationOptions[column] = value;
         }
 
         return;
       }
 
+      /*if (key === 'educationStatus' || key === 'educationHistory') {
+        relationOptions['educationHistory'] = true;
+        return;
+      }*/
+
+      // 컬럼 사용자화 없이 필터링을 걸었을 경우
       if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
+        if (key === 'educations') {
+          relationOptions['educationHistory'] = value;
+        }
         relationOptions[key] = true;
 
         return;
@@ -140,14 +149,33 @@ export class MembersService {
         const [, column] = key.split('__');
 
         if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+          if (column === 'educations') {
+            selectOptions['educationHistory'] = {
+              id: true,
+              educationId: true,
+              educationName: true,
+              status: true,
+            };
+          } else if (column === 'group') {
+            selectOptions[column] = {
+              id: true,
+              groupId: true,
+              groupName: true,
+              startDate: true,
+              endDate: true,
+            };
+          }
+
           selectOptions[column] = {
             id: value,
             name: value,
           };
         } else if (column === 'address') {
+          // 도로명 주소 선택 시 상제 주소 추가
           selectOptions[column] = value;
           selectOptions['detailAddress'] = value;
         } else if (column === 'birth') {
+          // 생년월일 추가 시 음력여부 추가
           selectOptions[column] = value;
           selectOptions['isLunar'] = value;
         } else {
@@ -172,15 +200,33 @@ export class MembersService {
     Object.keys(dto).forEach((key) => {
       if (
         this.PAGING_OPTIONS.includes(key) ||
-        key.startsWith(this.SELECT_PREFIX)
+        key.startsWith(this.SELECT_PREFIX) ||
+        key === 'educationStatus'
       )
         return;
 
       if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
-        result[key] = {
-          id: true,
-          name: true,
-        };
+        if (key === 'educations') {
+          result['educationHistory'] = {
+            id: true,
+            educationName: true,
+            status: true,
+            educationId: true,
+          };
+        } else if (key === 'group') {
+          result[key] = {
+            id: true,
+            groupId: true,
+            groupName: true,
+            startDate: true,
+            endDate: true,
+          };
+        } else {
+          result[key] = {
+            id: true,
+            name: true,
+          };
+        }
         return;
       }
 
@@ -207,7 +253,7 @@ export class MembersService {
       : { ...result, ...selectOptions };
   }
 
-  parseWhereOption(churchId: number, dto: GetMemberDto) {
+  async parseWhereOption(churchId: number, dto: GetMemberDto) {
     const createDateFilter = (start?: Date, end?: Date) =>
       start && end
         ? Between(start, end)
@@ -232,11 +278,36 @@ export class MembersService {
       occupation: dto.occupation && Like(`%${dto.occupation}%`),
       vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
       baptism: dto.baptism && In(dto.baptism),
-      groupId: dto.group && In(dto.group),
+      //groupId: dto.group && In(dto.group),
+      group: dto.group && {
+        groupId: In(dto.group),
+        endDate: IsNull(),
+      },
       officerId: dto.officer && In(dto.officer),
-      ministries: dto.ministries && { id: In(dto.ministries) },
-      educations: dto.educations && { id: In(dto.educations) },
+      //ministries: dto.ministries && { id: In(dto.ministries) },
+      //educations: dto.educations && { id: In(dto.educations) },
+      /*educationHistory: dto.educations && {
+        educationId: In(dto.educations),
+        status: dto.educationStatus && In(dto.educationStatus),
+      },*/
     };
+
+    // 1 : N 관게 요소 필터링할 경우 필터링 외의 요소들도 조회하기 위함.
+    if (dto.educations || dto.ministries) {
+      const memberIds = (
+        await this.membersRepository.find({
+          where: {
+            educationHistory: {
+              educationId: dto.educations && In(dto.educations),
+              status: dto.educationStatus && In(dto.educationStatus),
+            },
+            ministries: dto.ministries && { id: In(dto.ministries) },
+          },
+        })
+      ).map((model) => model.id);
+
+      findOptionsWhere.id = In(memberIds);
+    }
 
     return findOptionsWhere;
   }
@@ -249,7 +320,7 @@ export class MembersService {
     const relationOptions = this.parseRelationOption(dto);
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> =
-      this.parseWhereOption(churchId, dto);
+      await this.parseWhereOption(churchId, dto);
 
     const findOptionsOrder: FindOptionsOrder<MemberModel> =
       this.parseOrderOption(dto);
@@ -267,6 +338,11 @@ export class MembersService {
       select: selectOptions,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
+    });
+
+    // 현재 그룹만 필터링
+    result.forEach((member) => {
+      member.group = member.group.filter((group) => group.endDate === null);
     });
 
     return new ResponsePaginationDto<MemberModel>(
@@ -581,7 +657,7 @@ export class MembersService {
     return memberRepository.save(member);
   }
 
-  async updateMemberEducation(
+  /*async updateMemberEducation(
     member: MemberModel,
     dto: UpdateMemberEducationDto,
     education: EducationModel,
@@ -598,9 +674,9 @@ export class MembersService {
       : [...oldEducations, education];
 
     return memberRepository.save(member);
-  }
+  }*/
 
-  async updateMemberGroup(
+  /*async updateMemberGroup(
     member: MemberModel,
     dto: UpdateMemberGroupDto,
     qr: QueryRunner,
@@ -617,5 +693,5 @@ export class MembersService {
         groupId,
       },
     );
-  }
+  }*/
 }

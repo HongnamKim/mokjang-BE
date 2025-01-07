@@ -45,7 +45,7 @@ export class GroupsController {
     @Param('groupId', ParseIntPipe) groupId: number,
   ) {
     return this.groupsService.getGroupById(churchId, groupId, undefined, {
-      members: true,
+      //members: true,
     });
   }
 

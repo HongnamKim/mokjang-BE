@@ -21,6 +21,7 @@ import {
 } from '../decorator/transform-array';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { QueryBoolean } from '../decorator/query-boolean.decorator';
+import { EducationStatus } from '../../members-settings/const/education-status.enum';
 
 export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))*/ {
   @ApiProperty({
@@ -392,6 +393,17 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsNumber({}, { each: true })
   @IsOptional()
   educations?: number[];
+
+  @ApiProperty({
+    description: '교육이수 상태',
+    enum: EducationStatus,
+    required: false,
+    isArray: true,
+  })
+  @TransformStringArray()
+  @IsEnum(EducationStatus, { each: true })
+  @IsOptional()
+  educationStatus?: EducationStatus[];
 
   /*@ApiProperty({
     name: 'baptism',
