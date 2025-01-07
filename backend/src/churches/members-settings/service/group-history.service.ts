@@ -126,7 +126,9 @@ export class GroupHistoryService {
       endDate: dto.endDate,
     });
 
-    await this.groupsService.incrementMembersCount(dto.groupId, qr);
+    // 종료일이 없는 경우에만 인원수 증가
+    if (!dto.endDate)
+      await this.groupsService.incrementMembersCount(dto.groupId, qr);
 
     return groupHistoryRepository.findOne({ where: { id: groupHistory.id } });
   }
@@ -153,7 +155,8 @@ export class GroupHistoryService {
       qr,
     );
 
-    const newGroup = dto.groupId
+    // 그룹 및 역할 변경 로직
+    /*const newGroup = dto.groupId
       ? await this.groupsService.getGroupById(churchId, dto.groupId, qr)
       : undefined;
 
@@ -182,11 +185,11 @@ export class GroupHistoryService {
             dto.groupRoleId,
             qr,
           )
-      : undefined;
+      : undefined;*/
 
     this.validateDate(dto, groupHistory);
 
-    // 현재 그룹을 종료하는 경우
+    // 현재 그룹을 종료하는 경우 --> 인원수 감소
     if (dto.endDate) {
       await this.groupsService.decrementMembersCount(groupHistory.groupId, qr);
     }
@@ -196,10 +199,10 @@ export class GroupHistoryService {
         id: groupHistoryId,
       },
       {
-        group: newGroup,
-        groupName: newGroup && newGroup.name,
-        groupRoleId: deleteRole ? null : groupRole && groupRole.id,
-        groupRoleName: deleteRole ? null : groupRole && groupRole.role,
+        //group: newGroup,
+        //groupName: newGroup && newGroup.name,
+        //groupRoleId: deleteRole ? null : groupRole && groupRole.id,
+        //groupRoleName: deleteRole ? null : groupRole && groupRole.role,
         startDate: dto.startDate,
         endDate: dto.endDate,
       },
@@ -271,7 +274,10 @@ export class GroupHistoryService {
       deletedAt: IsNull(),
     });
 
-    await this.groupsService.decrementMembersCount(groupHistory.groupId, qr);
+    // 종료일이 없는 상태에서 삭제하는 경우 인원수 감소
+    // 종료일이 있는 경우 --> 종료일 입력 시점에서 인원수가 이미 감소되었음.
+    if (groupHistory.endDate === null)
+      await this.groupsService.decrementMembersCount(groupHistory.groupId, qr);
 
     return 'ok';
   }
