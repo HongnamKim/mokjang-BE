@@ -10,6 +10,9 @@ import { EducationHistoryService } from './service/education-history.service';
 import { MemberGroupService } from './service/member-group.service';
 import { EducationHistoryModel } from './entity/education-history.entity';
 import { EducationHistoryController } from './controller/education-history.controller';
+import { GroupHistoryController } from './controller/group-history.controller';
+import { GroupHistoryModel } from './entity/group-history.entity';
+import { GroupHistoryService } from './service/group-history.service';
 
 @Module({
   imports: [
@@ -19,7 +22,7 @@ import { EducationHistoryController } from './controller/education-history.contr
         module: MembersSettingsModule,
       },
     ]),
-    TypeOrmModule.forFeature([EducationHistoryModel]),
+    TypeOrmModule.forFeature([EducationHistoryModel, GroupHistoryModel]),
     MembersModule,
     SettingsModule,
   ],
@@ -29,7 +32,12 @@ import { EducationHistoryController } from './controller/education-history.contr
     MemberMinistryService,
     EducationHistoryService,
     MemberGroupService,
+    GroupHistoryService,
   ],
-  controllers: [MemberSettingsController, EducationHistoryController],
+  controllers: [
+    MemberSettingsController,
+    EducationHistoryController,
+    GroupHistoryController,
+  ],
 })
 export class MembersSettingsModule {}
