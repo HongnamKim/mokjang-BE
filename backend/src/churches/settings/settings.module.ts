@@ -8,7 +8,7 @@ import { RouterModule } from '@nestjs/core';
 import { MinistriesController } from './controller/ministries.controller';
 import { MinistryModel } from './entity/ministry.entity';
 import { EducationsController } from './controller/educations.controller';
-import { EducationModel } from './entity/education.entity';
+//import { EducationModel } from './entity/education.entity';
 import { GroupModel } from './entity/group.entity';
 import { GroupsController } from './controller/groups.controller';
 import { GroupsService } from './service/groups.service';
@@ -17,6 +17,11 @@ import { GroupRoleModel } from './entity/group-role.entity';
 import { GroupsRolesController } from './controller/groups-roles.controller';
 import { GroupsRolesService } from './service/groups-roles.service';
 import { EducationsService } from './service/educations.service';
+import { EducationModel } from './entity/education/education.entity';
+import { EducationEnrollmentModel } from './entity/education/education-enrollment.entity';
+import { EducationSessionModel } from './entity/education/education-session.entity';
+import { EducationTermModel } from './entity/education/education-term.entity';
+import { SessionAttendanceModel } from './entity/education/session-attendance.entity';
 
 @Module({
   imports: [
@@ -31,7 +36,13 @@ import { EducationsService } from './service/educations.service';
     TypeOrmModule.forFeature([
       OfficerModel,
       MinistryModel,
-      EducationModel,
+      // 교육 관련 엔티티
+      EducationModel, // 교육
+      EducationTermModel, // 교육 기수
+      EducationEnrollmentModel, // 교육 등록 교인
+      EducationSessionModel, // 교육 회차
+      SessionAttendanceModel, // 교육 출석
+      // 그룹 관련 엔티티
       GroupModel,
       GroupRoleModel,
     ]),
