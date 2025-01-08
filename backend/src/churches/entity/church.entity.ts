@@ -11,12 +11,13 @@ import {
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { GroupModel } from '../settings/entity/group.entity';
-import { EducationModel } from '../settings/entity/education.entity';
+//import { EducationModel } from '../settings/entity/education.entity';
 import { OfficerModel } from '../settings/entity/officer.entity';
 import { MinistryModel } from '../settings/entity/ministry.entity';
 import { UserModel } from '../../auth/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupRoleModel } from '../settings/entity/group-role.entity';
+import { EducationModel } from '../settings/entity/education/education.entity';
 
 @Entity()
 @Unique(['name', 'identifyNumber'])

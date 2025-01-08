@@ -11,7 +11,6 @@ import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersModule } from './churches/members/members.module';
 import { MembersSettingsModule } from './churches/members-settings/members-settings.module';
-import { EducationModel } from './churches/settings/entity/education.entity';
 import { OfficerModel } from './churches/settings/entity/officer.entity';
 import { MinistryModel } from './churches/settings/entity/ministry.entity';
 import { GroupModel } from './churches/settings/entity/group.entity';
@@ -23,6 +22,13 @@ import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './auth/entity/user.entity';
 import { GroupRoleModel } from './churches/settings/entity/group-role.entity';
+import { EducationHistoryModel } from './churches/members-settings/entity/education-history.entity';
+import { GroupHistoryModel } from './churches/members-settings/entity/group-history.entity';
+import { EducationModel } from './churches/settings/entity/education/education.entity';
+import { EducationTermModel } from './churches/settings/entity/education/education-term.entity';
+import { EducationSessionModel } from './churches/settings/entity/education/education-session.entity';
+import { SessionAttendanceModel } from './churches/settings/entity/education/session-attendance.entity';
+import { EducationEnrollmentModel } from './churches/settings/entity/education/education-enrollment.entity';
 
 @Module({
   imports: [
@@ -89,10 +95,16 @@ import { GroupRoleModel } from './churches/settings/entity/group-role.entity';
           MemberModel,
           FamilyModel,
           EducationModel,
+          EducationTermModel,
+          EducationSessionModel,
+          SessionAttendanceModel,
+          EducationEnrollmentModel,
+          EducationHistoryModel,
           OfficerModel,
           MinistryModel,
           GroupModel,
           GroupRoleModel,
+          GroupHistoryModel,
         ],
         synchronize: true,
       }),

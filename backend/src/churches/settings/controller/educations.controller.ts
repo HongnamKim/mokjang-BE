@@ -7,58 +7,72 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
+  UseInterceptors,
 } from '@nestjs/common';
-import { SettingsService } from '../service/settings.service';
-import { EducationModel } from '../entity/education.entity';
-import { CreateSettingDto } from '../dto/create-setting.dto';
-import { UpdateSettingDto } from '../dto/update-setting.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { EducationsService } from '../service/educations.service';
+import { GetEducationDto } from '../dto/education/get-education.dto';
+import {
+  ApiDeleteEducation,
+  ApiGetEducation,
+  ApiPatchEducation,
+  ApiPostEducation,
+} from '../const/swagger/education/controller.swagger';
+import { CreateEducationDto } from '../dto/education/create-education.dto';
+import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
+import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
+import { UpdateEducationDto } from '../dto/education/update-education.dto';
 
 @ApiTags('Settings:Educations')
 @Controller('educations')
 export class EducationsController {
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(private readonly educationsService: EducationsService) {}
 
+  @ApiGetEducation()
   @Get()
-  getEducations(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.settingsService.getSettingValues(churchId, EducationModel);
+  getEducations(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetEducationDto,
+  ) {
+    return this.educationsService.getEducations(churchId, dto);
   }
 
+  @ApiPostEducation()
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   postEducation(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Body() dto: CreateSettingDto,
+    @Body() dto: CreateEducationDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.settingsService.postSettingValues(
-      churchId,
-      dto,
-      EducationModel,
-    );
+    return this.educationsService.createEducation(churchId, dto, qr);
   }
 
+  @ApiPatchEducation()
   @Patch(':educationId')
+  @UseInterceptors(TransactionInterceptor)
   patchEducation(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
-    @Body() dto: UpdateSettingDto,
+    @Body() dto: UpdateEducationDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.settingsService.updateSettingValue(
+    return this.educationsService.updateEducation(
       churchId,
       educationId,
       dto,
-      EducationModel,
+      qr,
     );
   }
 
+  @ApiDeleteEducation()
   @Delete(':educationId')
   deleteEducation(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
   ) {
-    return this.settingsService.deleteSettingValue(
-      churchId,
-      educationId,
-      EducationModel,
-    );
+    return this.educationsService.deleteEducation(churchId, educationId);
   }
 }

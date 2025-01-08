@@ -1,4 +1,4 @@
 export enum MarriageOptions {
-  marriage = '기혼',
-  unMarriage = '미혼',
+  marriage = 'married',
+  unMarriage = 'single',
 }

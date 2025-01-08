@@ -39,9 +39,6 @@ import {
   DefaultMembersRelationOption,
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
-import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
-import { EducationModel } from '../../settings/entity/education.entity';
-import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
 
 @Injectable()
 export class MembersService {
@@ -52,6 +49,17 @@ export class MembersService {
     private readonly familyService: FamilyService,
   ) {}
 
+  private CHURCH_SETTING_COLUMNS = [
+    'group',
+    'ministries',
+    'educations',
+    'officer',
+  ];
+
+  private SELECT_PREFIX = 'select__';
+
+  private PAGING_OPTIONS = ['take', 'page', 'order', 'orderDirection'];
+
   private getMembersRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
   }
@@ -59,140 +67,55 @@ export class MembersService {
   parseRelationOption(dto: GetMemberDto) {
     const relationOptions: FindOptionsRelations<MemberModel> = {};
 
-    const churchSettingValues = [
-      'group',
-      'ministries',
-      'educations',
-      'officer',
-    ];
+    let needDefaultRelationOptions = true;
 
     Object.entries(dto).forEach(([key, value]) => {
-      if (!key.startsWith('select__')) {
+      if (key.startsWith(this.SELECT_PREFIX)) {
+        const [, column] = key.split('__');
+
+        needDefaultRelationOptions = false;
+
+        if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+          if (column === 'educations') {
+            relationOptions['educationHistory'] = value;
+          }
+          relationOptions[column] = value;
+        }
+
         return;
       }
-      const split = key.split('__');
 
-      if (split.length !== 2) {
-        throw new BadRequestException(
-          '컬럼 선택을 위한 쿼리 파라미터가 잘못 되었습니다.',
-        );
-      }
+      /*if (key === 'educationStatus' || key === 'educationHistory') {
+        relationOptions['educationHistory'] = true;
+        return;
+      }*/
 
-      const column = split[1];
+      // 컬럼 사용자화 없이 필터링을 걸었을 경우
+      if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
+        if (key === 'educations') {
+          relationOptions['educationHistory'] = value;
+        }
+        relationOptions[key] = true;
 
-      if (churchSettingValues.includes(column)) {
-        relationOptions[column] = value;
+        return;
       }
     });
 
-    if (dto.order && churchSettingValues.includes(dto.order)) {
+    if (needDefaultRelationOptions) {
+      Object.keys(DefaultMembersRelationOption).forEach((key) => {
+        relationOptions[key] = true;
+      });
+    }
+
+    // 정렬 기준이 join 이 필요한 컬럼인 경우
+    if (this.CHURCH_SETTING_COLUMNS.includes(dto.order)) {
       relationOptions[dto.order as string] = true;
     }
 
-    return Object.keys(relationOptions).length === 0
-      ? undefined
-      : relationOptions;
+    return relationOptions;
   }
 
-  parseSelectOption(dto: GetMemberDto) {
-    const selectOptions: FindOptionsSelect<MemberModel> = {};
-
-    const churchSettingValues = [
-      'group',
-      'ministries',
-      'educations',
-      'officer',
-    ];
-
-    Object.entries(dto).forEach(([key, value]) => {
-      if (!key.startsWith('select__')) {
-        return;
-      }
-
-      const split = key.split('__');
-
-      if (split.length !== 2) {
-        throw new BadRequestException(
-          '컬럼 선택을 위한 쿼리 파라미터가 잘못 되었습니다.',
-        );
-      }
-
-      const column = split[1];
-
-      if (churchSettingValues.includes(column)) {
-        selectOptions[column] = {
-          id: value,
-          name: value,
-        };
-      } else if (column === 'address') {
-        selectOptions[column] = value;
-        selectOptions['detailAddress'] = value;
-      } else if (column === 'birth') {
-        selectOptions[column] = value;
-        selectOptions['isLunar'] = value;
-      } else {
-        selectOptions[column] = value;
-      }
-    });
-
-    return Object.keys(selectOptions).length === 0 ? undefined : selectOptions;
-  }
-
-  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const selectOptions = this.parseSelectOption(dto);
-
-    const relationOptions = this.parseRelationOption(dto);
-
-    const birthOption = (dto: GetMemberDto) => {
-      // 생년월일 앞뒤
-      if (dto.birthAfter && dto.birthBefore)
-        return Between(dto.birthAfter, dto.birthBefore);
-      // 생년월일 앞
-      if (dto.birthAfter && !dto.birthBefore)
-        return MoreThanOrEqual(dto.birthAfter);
-      // 생년월일 뒤
-      if (!dto.birthAfter && dto.birthBefore)
-        return LessThanOrEqual(dto.birthBefore);
-      // 생년월일 설정 없는 경우
-      return undefined;
-    };
-
-    const createOption = (dto: GetMemberDto) => {
-      // 생년월일 앞뒤
-      if (dto.createAfter && dto.createBefore)
-        return Between(dto.createAfter, dto.createBefore);
-      // 생년월일 앞
-      if (dto.createAfter && !dto.createBefore)
-        return MoreThanOrEqual(dto.createAfter);
-      // 생년월일 뒤
-      if (!dto.createAfter && dto.createBefore)
-        return LessThanOrEqual(dto.createBefore);
-      // 생년월일 설정 없는 경우
-      return undefined;
-    };
-
-    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
-      churchId,
-      name: dto.name && ILike(`${dto.name}%`),
-      mobilePhone: dto?.mobilePhone,
-      homePhone: dto?.homePhone,
-      address: dto?.address,
-      birth: birthOption(dto),
-      createdAt: createOption(dto),
-      gender: dto?.gender,
-      marriage: dto?.marriage,
-      school: dto.school && Like(`%${dto.school}%`),
-      occupation: dto.occupation && Like(`%${dto.occupation}%`),
-      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
-      baptism: dto?.baptism,
-      groupId: dto.groupId && In(dto.groupId),
-      officerId: dto.officerId && In(dto.officerId),
-      ministries: dto.ministryId && { id: In(dto.ministryId) },
-      educations: dto.educationId && { id: In(dto.educationId) },
-    };
-
+  parseOrderOption(dto: GetMemberDto) {
     const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
 
     if (
@@ -202,11 +125,205 @@ export class MembersService {
       findOptionsOrder[dto.order as string] = {
         name: dto.orderDirection,
       };
-      findOptionsOrder.createdAt = 'asc';
+      findOptionsOrder.registeredAt = 'asc';
     } else {
       findOptionsOrder[dto.order as string] = dto.orderDirection;
-      findOptionsOrder.createdAt = 'asc';
+      if (dto.order !== GetMemberOrderEnum.registeredAt) {
+        findOptionsOrder.registeredAt = 'asc';
+      }
     }
+
+    return findOptionsOrder;
+  }
+
+  parseSelectOption(dto: GetMemberDto) {
+    const selectOptions: FindOptionsSelect<MemberModel> = {};
+
+    let needDefaultSelectOptions = true;
+
+    // 컬럼 사용자화
+    Object.entries(dto).forEach(([key, value]) => {
+      if (this.PAGING_OPTIONS.includes(key)) return;
+
+      if (key.startsWith(this.SELECT_PREFIX)) {
+        const [, column] = key.split('__');
+
+        if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+          if (column === 'educations') {
+            selectOptions['educationHistory'] = {
+              id: true,
+              educationId: true,
+              educationName: true,
+              status: true,
+            };
+          } else if (column === 'group') {
+            selectOptions[column] = {
+              id: true,
+              groupId: true,
+              groupName: true,
+              startDate: true,
+              endDate: true,
+            };
+          }
+
+          selectOptions[column] = {
+            id: value,
+            name: value,
+          };
+        } else if (column === 'address') {
+          // 도로명 주소 선택 시 상제 주소 추가
+          selectOptions[column] = value;
+          selectOptions['detailAddress'] = value;
+        } else if (column === 'birth') {
+          // 생년월일 추가 시 음력여부 추가
+          selectOptions[column] = value;
+          selectOptions['isLunar'] = value;
+        } else {
+          selectOptions[column] = value;
+        }
+
+        needDefaultSelectOptions = false;
+      }
+    });
+
+    // 항상 들어가야할 컬럼
+    const result: FindOptionsSelect<MemberModel> = {
+      id: true,
+      registeredAt: true,
+      name: true,
+      [dto.order]: this.CHURCH_SETTING_COLUMNS.includes(dto.order)
+        ? { id: true, name: true }
+        : true,
+    };
+
+    // 필터링 선택한 컬럼
+    Object.keys(dto).forEach((key) => {
+      if (
+        this.PAGING_OPTIONS.includes(key) ||
+        key.startsWith(this.SELECT_PREFIX) ||
+        key === 'educationStatus'
+      )
+        return;
+
+      if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
+        if (key === 'educations') {
+          result['educationHistory'] = {
+            id: true,
+            educationName: true,
+            status: true,
+            educationId: true,
+          };
+        } else if (key === 'group') {
+          result[key] = {
+            id: true,
+            groupId: true,
+            groupName: true,
+            startDate: true,
+            endDate: true,
+          };
+        } else {
+          result[key] = {
+            id: true,
+            name: true,
+          };
+        }
+        return;
+      }
+
+      if (key === 'registerAfter' || key === 'registerBefore') {
+        result['registeredAt'] = true;
+        return;
+      }
+
+      if (key === 'birthAfter' || key === 'birthBefore') {
+        result['birth'] = true;
+        return;
+      }
+
+      if (key === 'updateAfter' || key === 'updateBefore') {
+        result['updatedAt'] = true;
+        return;
+      }
+
+      result[key] = true;
+    });
+
+    return needDefaultSelectOptions
+      ? { ...result, ...DefaultMembersSelectOption }
+      : { ...result, ...selectOptions };
+  }
+
+  async parseWhereOption(churchId: number, dto: GetMemberDto) {
+    const createDateFilter = (start?: Date, end?: Date) =>
+      start && end
+        ? Between(start, end)
+        : start
+          ? MoreThanOrEqual(start)
+          : end
+            ? LessThanOrEqual(end)
+            : undefined;
+
+    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
+      churchId,
+      name: dto.name && ILike(`%${dto.name}%`),
+      mobilePhone: dto.mobilePhone && Like(`%${dto.mobilePhone}%`),
+      homePhone: dto.homePhone && Like(`%${dto.homePhone}%`),
+      address: dto.address && Like(`%${dto.address}%`),
+      birth: createDateFilter(dto.birthAfter, dto.birthBefore),
+      registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
+      updatedAt: createDateFilter(dto.updateAfter, dto.updateBefore),
+      gender: dto.gender && In(dto.gender), //dto?.gender,
+      marriage: dto.marriage && In(dto.marriage), //dto?.marriage,
+      school: dto.school && Like(`%${dto.school}%`),
+      occupation: dto.occupation && Like(`%${dto.occupation}%`),
+      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
+      baptism: dto.baptism && In(dto.baptism),
+      //groupId: dto.group && In(dto.group),
+      group: dto.group && {
+        groupId: In(dto.group),
+        endDate: IsNull(),
+      },
+      officerId: dto.officer && In(dto.officer),
+      //ministries: dto.ministries && { id: In(dto.ministries) },
+      //educations: dto.educations && { id: In(dto.educations) },
+      /*educationHistory: dto.educations && {
+        educationId: In(dto.educations),
+        status: dto.educationStatus && In(dto.educationStatus),
+      },*/
+    };
+
+    // 1 : N 관게 요소 필터링할 경우 필터링 외의 요소들도 조회하기 위함.
+    if (dto.educations || dto.ministries) {
+      const memberIds = (
+        await this.membersRepository.find({
+          where: {
+            educationHistory: {
+              educationId: dto.educations && In(dto.educations),
+              status: dto.educationStatus && In(dto.educationStatus),
+            },
+            ministries: dto.ministries && { id: In(dto.ministries) },
+          },
+        })
+      ).map((model) => model.id);
+
+      findOptionsWhere.id = In(memberIds);
+    }
+
+    return findOptionsWhere;
+  }
+
+  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const selectOptions = this.parseSelectOption(dto);
+
+    const relationOptions = this.parseRelationOption(dto);
+
+    const findOptionsWhere: FindOptionsWhere<MemberModel> =
+      await this.parseWhereOption(churchId, dto);
+
+    const findOptionsOrder: FindOptionsOrder<MemberModel> =
+      this.parseOrderOption(dto);
 
     const totalCount = await membersRepository.count({
       where: findOptionsWhere,
@@ -214,35 +331,19 @@ export class MembersService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    const churchSettingValues = [
-      'group',
-      'ministries',
-      'educations',
-      'officer',
-    ];
-
     const result = await membersRepository.find({
       where: findOptionsWhere,
       order: findOptionsOrder,
-      relations: selectOptions ? relationOptions : DefaultMembersRelationOption,
-      select: {
-        id: true,
-        createdAt: true,
-        name: true,
-        [dto.order]: churchSettingValues.includes(dto.order)
-          ? { id: true, name: true }
-          : true,
-        ...(selectOptions
-          ? { ...selectOptions }
-          : { ...DefaultMembersSelectOption }),
-      },
+      relations: relationOptions,
+      select: selectOptions,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
 
-    /*result.forEach((v: MemberModel) => {
-      console.log(v.id);
-    });*/
+    // 현재 그룹만 필터링
+    result.forEach((member) => {
+      member.group = member.group.filter((group) => group.endDate === null);
+    });
 
     return new ResponsePaginationDto<MemberModel>(
       result,
@@ -556,7 +657,7 @@ export class MembersService {
     return memberRepository.save(member);
   }
 
-  async updateMemberEducation(
+  /*async updateMemberEducation(
     member: MemberModel,
     dto: UpdateMemberEducationDto,
     education: EducationModel,
@@ -573,9 +674,9 @@ export class MembersService {
       : [...oldEducations, education];
 
     return memberRepository.save(member);
-  }
+  }*/
 
-  async updateMemberGroup(
+  /*async updateMemberGroup(
     member: MemberModel,
     dto: UpdateMemberGroupDto,
     qr: QueryRunner,
@@ -592,5 +693,5 @@ export class MembersService {
         groupId,
       },
     );
-  }
+  }*/
 }
