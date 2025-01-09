@@ -11,21 +11,21 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { EducationsService } from '../service/educations.service';
-import { GetEducationDto } from '../dto/education/get-education.dto';
+import { EducationsService } from '../../service/educations.service';
+import { GetEducationDto } from '../../dto/education/education/get-education.dto';
 import {
   ApiDeleteEducation,
   ApiGetEducation,
   ApiPatchEducation,
   ApiPostEducation,
-} from '../const/swagger/education/controller.swagger';
-import { CreateEducationDto } from '../dto/education/create-education.dto';
-import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+} from '../../const/swagger/education/controller.swagger';
+import { CreateEducationDto } from '../../dto/education/education/create-education.dto';
+import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { UpdateEducationDto } from '../dto/education/update-education.dto';
+import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';
+import { UpdateEducationDto } from '../../dto/education/education/update-education.dto';
 
-@ApiTags('Settings:Educations')
+@ApiTags('Management:Educations')
 @Controller('educations')
 export class EducationsController {
   constructor(private readonly educationsService: EducationsService) {}
