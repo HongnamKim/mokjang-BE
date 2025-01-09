@@ -7,7 +7,7 @@ import { ChurchesModule } from '../churches.module';
 import { RouterModule } from '@nestjs/core';
 import { MinistriesController } from './controller/ministries.controller';
 import { MinistryModel } from './entity/ministry.entity';
-import { EducationsController } from './controller/educations.controller';
+import { EducationsController } from './controller/education/educations.controller';
 //import { EducationModel } from './entity/education.entity';
 import { GroupModel } from './entity/group.entity';
 import { GroupsController } from './controller/groups.controller';
@@ -22,12 +22,13 @@ import { EducationEnrollmentModel } from './entity/education/education-enrollmen
 import { EducationSessionModel } from './entity/education/education-session.entity';
 import { EducationTermModel } from './entity/education/education-term.entity';
 import { SessionAttendanceModel } from './entity/education/session-attendance.entity';
+import { EducationTermsController } from './controller/education/education-terms.controller';
 
 @Module({
   imports: [
     RouterModule.register([
       {
-        path: 'churches/:churchId/settings', // 공통 prefix
+        path: 'churches/:churchId/management', // 공통 prefix
         module: SettingsModule,
       },
     ]),
@@ -51,6 +52,7 @@ import { SessionAttendanceModel } from './entity/education/session-attendance.en
     OfficersController,
     MinistriesController,
     EducationsController,
+    EducationTermsController,
     GroupsController,
     GroupsRolesController,
   ],
