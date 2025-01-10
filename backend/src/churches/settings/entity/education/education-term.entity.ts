@@ -42,6 +42,9 @@ export class EducationTermModel extends BaseModel {
   @OneToMany(() => EducationSessionModel, (session) => session.educationTerm)
   educationSessions: EducationSessionModel[];
 
+  @Column({ default: 0, comment: '수강 대상 교인 수' })
+  enrollmentCount: number;
+
   @Column({ default: 0, comment: '수료중인 교인 수' })
   inProgressCount: number;
 

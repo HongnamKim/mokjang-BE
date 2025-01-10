@@ -23,8 +23,8 @@ export class SessionAttendanceModel extends BaseModel {
   )
   educationEnrollment: EducationEnrollmentModel;
 
-  @Column({ comment: '출석 여부' })
-  isPresent: boolean;
+  @Column({ type: 'boolean', comment: '출석 여부', nullable: true })
+  isPresent: boolean | null;
 
   @Column({ type: 'varchar', length: 120, nullable: true, comment: '비고' })
   note: string | null;

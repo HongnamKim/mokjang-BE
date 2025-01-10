@@ -10,6 +10,9 @@ export class EducationEnrollmentModel extends BaseModel {
   @Column({ comment: '교육 대상자 ID' })
   memberId: number;
 
+  @Column({ comment: '교육 대상자 이름' })
+  memberName: string;
+
   @ManyToOne(() => MemberModel, (member) => member.educationEnrollments)
   member: MemberModel;
 
@@ -19,8 +22,18 @@ export class EducationEnrollmentModel extends BaseModel {
   @ManyToOne(() => EducationTermModel, (term) => term.educationEnrollments)
   educationTerm: EducationTermModel;
 
-  @Column({ enum: EducationStatus, comment: '교육 상태 (수료중/수료/미수료)' })
+  @Column({
+    enum: EducationStatus,
+    comment: '교육 상태 (수료중/수료/미수료)',
+    default: EducationStatus.IN_PROGRESS,
+  })
   status: EducationStatus;
+
+  @Column({ default: 0, comment: '출석 횟수' })
+  attendanceCount: number;
+
+  @Column({ type: 'varchar', length: 120, nullable: true, comment: '비고' })
+  note: string | null;
 
   @OneToMany(
     () => SessionAttendanceModel,
