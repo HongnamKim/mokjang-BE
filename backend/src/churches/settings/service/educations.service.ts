@@ -19,6 +19,7 @@ import {
 } from '../const/education/order.enum';
 import { CreateEducationTermDto } from '../dto/education/terms/create-education-term.dto';
 import { UpdateEducationTermDto } from '../dto/education/terms/update-education-term.dto';
+import { MembersService } from '../../members/service/members.service';
 
 @Injectable()
 export class EducationsService {
@@ -27,6 +28,7 @@ export class EducationsService {
     private readonly educationsRepository: Repository<EducationModel>,
     @InjectRepository(EducationTermModel)
     private readonly educationTermsRepository: Repository<EducationTermModel>,
+    private readonly membersService: MembersService,
   ) {}
 
   private CountColumnMap = {
@@ -65,7 +67,18 @@ export class EducationsService {
 
     const education = await educationsRepository.findOne({
       where: {
+        churchId,
         id: educationId,
+      },
+      relations: {
+        educationTerms: {
+          instructor: true,
+        },
+      },
+      order: {
+        educationTerms: {
+          term: 'asc',
+        },
       },
     });
 
@@ -199,6 +212,9 @@ export class EducationsService {
         createdAt:
           dto.order === EducationTermOrderEnum.createdAt ? undefined : 'desc',
       },
+      relations: {
+        instructor: true,
+      },
     });
   }
 
@@ -214,6 +230,9 @@ export class EducationsService {
       where: {
         id: educationTermId,
         educationId,
+      },
+      relations: {
+        instructor: true,
       },
     });
 
@@ -233,7 +252,14 @@ export class EducationsService {
     //const educationsRepository = this.getEducationsRepository(qr);
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
-    //const education = await this.getEducationById(churchId, educationId, qr);
+    const education = await this.getEducationById(churchId, educationId, qr);
+
+    const instructor = await this.membersService.getMemberModelById(
+      churchId,
+      dto.instructorId,
+      {},
+      qr,
+    );
 
     const lastTerm = await educationTermsRepository.findOne({
       where: {
@@ -248,12 +274,13 @@ export class EducationsService {
 
     const educationTerm = await educationTermsRepository.save({
       educationId,
+      educationName: education.name,
       term: newTerm,
       numberOfSessions: dto.numberOfSessions,
       completionCriteria: dto.completionCriteria,
       startDate: dto.startDate,
       endDate: dto.endDate,
-      instructorId: dto.instructorId,
+      instructor,
     });
 
     return educationTermsRepository.findOne({
@@ -261,9 +288,11 @@ export class EducationsService {
     });
   }
 
-  private validateUpdateEducationTerm(
+  private async validateUpdateEducationTerm(
+    churchId: number,
     dto: UpdateEducationTermDto,
     educationTerm: EducationTermModel,
+    qr?: QueryRunner,
   ) {
     if (dto.numberOfSessions && !dto.completionCriteria) {
       if (
@@ -303,6 +332,14 @@ export class EducationsService {
     /*
     교육 진행자 검증
      */
+    if (dto.instructorId) {
+      return this.membersService.getMemberModelById(
+        churchId,
+        dto.instructorId,
+        {},
+        qr,
+      );
+    }
   }
 
   async updateEducationTerm(
@@ -349,7 +386,12 @@ export class EducationsService {
       7-2. 진행자가 해당 교회에 소속X --> 해당 교인을 찾을 수 없음. NotFoundException
      */
 
-    this.validateUpdateEducationTerm(dto, educationTerm);
+    const instructor = await this.validateUpdateEducationTerm(
+      churchId,
+      dto,
+      educationTerm,
+      qr,
+    );
 
     await educationTermsRepository.update(
       {
@@ -357,6 +399,7 @@ export class EducationsService {
       },
       {
         ...dto,
+        instructor: instructor,
       },
     );
 

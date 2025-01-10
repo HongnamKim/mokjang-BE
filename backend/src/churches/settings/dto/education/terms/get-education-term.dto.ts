@@ -4,7 +4,7 @@ import { IsEnum, IsIn } from 'class-validator';
 
 export class GetEducationTermDto {
   @ApiProperty({
-    description: '정렬 기준 (기본값: 회차)',
+    description: '정렬 기준 (기본값: 기수)',
     enum: EducationTermOrderEnum,
     default: EducationTermOrderEnum.term,
     required: false,

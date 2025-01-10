@@ -49,6 +49,22 @@ export class EducationTermsController {
   }
 
   @ApiOperation({
+    summary: '특정 기수 조회',
+  })
+  @Get(':educationTermId')
+  getEducationTermById(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+  ) {
+    return this.educationService.getEducationTermById(
+      churchId,
+      educationId,
+      educationTermId,
+    );
+  }
+
+  @ApiOperation({
     summary: '교육 기수 수정',
   })
   @Patch(':educationTermId')

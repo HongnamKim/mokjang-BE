@@ -16,6 +16,7 @@ import { GetEducationDto } from '../../dto/education/education/get-education.dto
 import {
   ApiDeleteEducation,
   ApiGetEducation,
+  ApiGetEducationById,
   ApiPatchEducation,
   ApiPostEducation,
 } from '../../const/swagger/education/controller.swagger';
@@ -48,6 +49,15 @@ export class EducationsController {
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.createEducation(churchId, dto, qr);
+  }
+
+  @ApiGetEducationById()
+  @Get(':educationId')
+  getEducationById(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+  ) {
+    return this.educationsService.getEducationById(churchId, educationId);
   }
 
   @ApiPatchEducation()
