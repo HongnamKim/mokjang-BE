@@ -23,6 +23,7 @@ import { EducationSessionModel } from './entity/education/education-session.enti
 import { EducationTermModel } from './entity/education/education-term.entity';
 import { SessionAttendanceModel } from './entity/education/session-attendance.entity';
 import { EducationTermsController } from './controller/education/education-terms.controller';
+import { EducationEnrollmentsController } from './controller/education/education-enrollments.controller';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { EducationTermsController } from './controller/education/education-terms
     MinistriesController,
     EducationsController,
     EducationTermsController,
+    EducationEnrollmentsController,
     GroupsController,
     GroupsRolesController,
   ],
