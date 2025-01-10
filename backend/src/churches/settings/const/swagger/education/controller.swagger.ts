@@ -16,6 +16,13 @@ export const ApiGetEducation = () =>
     }),
   );
 
+export const ApiGetEducationById = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교회의 특정 교육 조회',
+    }),
+  );
+
 export const ApiPostEducation = () =>
   applyDecorators(
     ApiOperation({

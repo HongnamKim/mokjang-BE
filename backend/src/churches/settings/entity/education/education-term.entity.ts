@@ -11,6 +11,9 @@ export class EducationTermModel extends BaseModel {
   @Index()
   educationId: number;
 
+  @Column({ comment: '교육 이름', nullable: true })
+  educationName: string;
+
   @ManyToOne(() => EducationModel, (education) => education.educationTerms)
   education!: EducationModel;
 
