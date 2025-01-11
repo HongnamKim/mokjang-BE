@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { EducationModel } from '../../entity/education/education.entity';
+import { EducationModel } from '../../../entity/education/education.entity';
 import {
   IsNotEmpty,
   IsOptional,
@@ -7,7 +7,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { TransformName } from '../../../decorator/transform-name';
+import { TransformName } from '../../../../decorator/transform-name';
 import { Transform } from 'class-transformer';
 
 export class CreateEducationDto extends PickType(EducationModel, [
