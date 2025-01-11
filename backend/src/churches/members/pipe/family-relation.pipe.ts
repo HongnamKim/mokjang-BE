@@ -8,6 +8,9 @@ import { CreateMemberDto } from '../dto/create-member.dto';
 import { FamilyRelation } from '../const/family-relation.const';
 import { CreateRequestInfoDto } from '../../request-info/dto/create-request-info.dto';
 
+/**
+ * 가족을 추가하지만 관계가 입력되지 않은 경우 기본값으로 관계를 지정
+ */
 @Injectable()
 export class FamilyRelationPipe implements PipeTransform {
   transform(
@@ -24,7 +27,7 @@ export class FamilyRelationPipe implements PipeTransform {
     }
 
     if (value.familyMemberId && !value.relation) {
-      value.relation = FamilyRelation.DEFAULT;
+      value.relation = FamilyRelation.FAMILY;
     }
 
     return value;
