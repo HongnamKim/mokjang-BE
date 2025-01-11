@@ -251,6 +251,23 @@ export class EducationsService {
     return educationTerm;
   }
 
+  async isExistEducationTerm(
+    educationId: number,
+    term: number,
+    qr?: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const educationTerm = await educationTermsRepository.findOne({
+      where: {
+        educationId,
+        term,
+      },
+    });
+
+    return !!educationTerm;
+  }
+
   async createEducationTerm(
     churchId: number,
     educationId: number,
@@ -269,7 +286,17 @@ export class EducationsService {
       qr,
     );
 
-    const lastTerm = await educationTermsRepository.findOne({
+    const isExistEducationTerm = await this.isExistEducationTerm(
+      educationId,
+      dto.term,
+      qr,
+    );
+
+    if (isExistEducationTerm) {
+      throw new BadRequestException('이미 존재하는 교육 기수입니다.');
+    }
+
+    /*const lastTerm = await educationTermsRepository.findOne({
       where: {
         educationId,
       },
@@ -278,12 +305,12 @@ export class EducationsService {
       },
     });
 
-    const newTerm = lastTerm ? lastTerm.term + 1 : 1;
+    const newTerm = lastTerm ? lastTerm.term + 1 : 1;*/
 
     const educationTerm = await educationTermsRepository.save({
       educationId,
       educationName: education.name,
-      term: newTerm,
+      term: dto.term, //newTerm,
       numberOfSessions: dto.numberOfSessions,
       completionCriteria: dto.completionCriteria,
       startDate: dto.startDate,
@@ -400,6 +427,18 @@ export class EducationsService {
       educationTerm,
       qr,
     );
+
+    if (dto.term) {
+      const isExistEducationTerm = await this.isExistEducationTerm(
+        educationId,
+        dto.term,
+        qr,
+      );
+
+      if (isExistEducationTerm) {
+        throw new BadRequestException('이미 존재하는 교육 기수입니다.');
+      }
+    }
 
     await educationTermsRepository.update(
       {
