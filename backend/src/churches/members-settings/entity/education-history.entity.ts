@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { EducationModel } from '../../settings/entity/education.entity';
+//import { EducationModel } from '../../settings/entity/education.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { EducationStatus } from '../const/education-status.enum';
 
@@ -13,8 +13,8 @@ export class EducationHistoryModel extends BaseModel {
   @Column()
   educationName: string;
 
-  @ManyToOne(() => EducationModel, (education) => education.history)
-  education: EducationModel;
+  /*@ManyToOne(() => EducationModel, (education) => education.history)
+  education: EducationModel;*/
 
   @Index()
   @Column()

@@ -12,14 +12,15 @@ import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
-import { EducationModel } from '../../settings/entity/education.entity';
+//import { EducationModel } from '../../settings/entity/education.entity';
 import { OfficerModel } from '../../settings/entity/officer.entity';
 import { MinistryModel } from '../../settings/entity/ministry.entity';
-import { GroupModel } from '../../settings/entity/group.entity';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { EducationHistoryModel } from '../../members-settings/entity/education-history.entity';
 import { GroupHistoryModel } from '../../members-settings/entity/group-history.entity';
+import { EducationTermModel } from '../../settings/entity/education/education-term.entity';
+import { EducationEnrollmentModel } from '../../settings/entity/education/education-enrollment.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -119,9 +120,11 @@ export class MemberModel extends BaseModel {
   })
   baptism: BaptismEnum;
 
-  @ManyToMany(() => EducationModel, (education) => education.members)
-  @JoinTable()
-  educations: EducationModel[];
+  @OneToMany(
+    () => EducationEnrollmentModel,
+    (educationEnrollment) => educationEnrollment.member,
+  )
+  educationEnrollments: EducationEnrollmentModel[];
 
   @OneToMany(
     () => EducationHistoryModel,
@@ -129,12 +132,15 @@ export class MemberModel extends BaseModel {
   )
   educationHistory: EducationHistoryModel[];
 
-  @Column({ nullable: true, comment: '소그룹 ID' })
-  groupId: number | null;
+  @OneToMany(() => EducationTermModel, (term) => term.instructor)
+  instructingEducation: EducationTermModel[];
 
-  @ManyToOne(() => GroupModel, (group) => group.members)
-  group: GroupModel;
+  /*@Column({ nullable: true, comment: '소그룹 ID' })
+  groupId: number | null;*/
+
+  /*@ManyToOne(() => GroupModel, (group) => group.members)
+  group: GroupModel;*/
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
-  groupHistory: GroupHistoryModel[];
+  group: GroupHistoryModel[];
 }

@@ -9,7 +9,9 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   officer: true,
   ministries: true,
-  educations: true,
+  //educations: true,
+  educationHistory: true,
+  //group: true,
   group: true,
 };
 
@@ -33,21 +35,32 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educations: {
+  educationHistory: {
+    id: true,
+    educationId: true,
+    educationName: true,
+    status: true,
+  },
+  /*group: {
     id: true,
     name: true,
-  },
+  },*/
   group: {
     id: true,
-    name: true,
+    groupId: true,
+    groupName: true,
+    startDate: true,
+    endDate: true,
   },
 };
 
 export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
   //guidedBy: true,
+  //group: true,
   group: true,
   ministries: true,
-  educations: true,
+  //educations: true,
+  educationHistory: true,
   officer: true,
 };
 
@@ -61,17 +74,30 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
   birth: true,
   isLunar: true,
   gender: true,
-  group: {
+  /*group: {
     id: true,
     name: true,
+  },*/
+  group: {
+    id: true,
+    groupId: true,
+    groupName: true,
+    startDate: true,
+    endDate: true,
   },
   ministries: {
     id: true,
     name: true,
   },
-  educations: {
+  /*educations: {
     id: true,
     name: true,
+  },*/
+  educationHistory: {
+    id: true,
+    educationId: true,
+    educationName: true,
+    status: true,
   },
   officer: {
     id: true,

@@ -3,5 +3,5 @@ import { CreateGroupHistoryDto } from './create-group-history.dto';
 
 export class UpdateGroupHistoryDto extends OmitType(
   PartialType(CreateGroupHistoryDto),
-  ['autoEndDate'],
+  ['autoEndDate', 'groupId', 'groupRoleId'],
 ) {}
