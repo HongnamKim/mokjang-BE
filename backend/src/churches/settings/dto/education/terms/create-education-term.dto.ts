@@ -5,12 +5,21 @@ import { IsAfterDate } from '../../../decorator/is-valid-end-date.decorator';
 import { IsLessOrEqualThan } from '../../../decorator/is-less-or-equal-than.decorator';
 
 export class CreateEducationTermDto extends PickType(EducationTermModel, [
+  'term',
   'numberOfSessions',
   'completionCriteria',
   'startDate',
   'endDate',
   'instructorId',
 ]) {
+  @ApiProperty({
+    description: '기수',
+    minimum: 1,
+  })
+  @IsNumber()
+  @Min(1)
+  term: number;
+
   @ApiProperty({
     description: '총 몇 회의 교육으로 이루어졌는지 (최소값: 1)',
     minimum: 1,
