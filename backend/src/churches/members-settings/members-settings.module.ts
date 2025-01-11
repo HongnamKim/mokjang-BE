@@ -6,7 +6,7 @@ import { MemberOfficerService } from './service/member-officer.service';
 import { MemberSettingsController } from './controller/member-settings.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
-import { EducationHistoryService } from './service/education-history.service';
+//import { EducationHistoryService } from './service/education-history.service';
 import { EducationHistoryModel } from './entity/education-history.entity';
 import { EducationHistoryController } from './controller/education-history.controller';
 import { GroupHistoryController } from './controller/group-history.controller';
@@ -29,7 +29,7 @@ import { GroupHistoryService } from './service/group-history.service';
   providers: [
     MemberOfficerService,
     MemberMinistryService,
-    EducationHistoryService,
+    //EducationHistoryService,
     //MemberGroupService,
     GroupHistoryService,
   ],

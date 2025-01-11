@@ -6,7 +6,7 @@ import {
 import { MembersService } from '../../members/service/members.service';
 import { SettingsService } from '../../settings/service/settings.service';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { EducationModel } from '../../settings/entity/education.entity';
+//import { EducationModel } from '../../settings/entity/education.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationHistoryModel } from '../entity/education-history.entity';
 import { CreateEducationHistoryDto } from '../dto/education/create-education-history.dto';
@@ -15,7 +15,7 @@ import { EducationsService } from '../../settings/service/educations.service';
 import { EducationStatus } from '../const/education-status.enum';
 import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 
-@Injectable()
+/*@Injectable()
 export class EducationHistoryService {
   constructor(
     private readonly membersService: MembersService,
@@ -240,9 +240,9 @@ export class EducationHistoryService {
       deletedAt: IsNull(),
     });
 
-    /*if (result.affected === 0) {
+    /!*if (result.affected === 0) {
       throw new NotFoundException('해당 교육이수 이력이 존재하지 않습니다.');
-    }*/
+    }*!/
 
     await this.educationsService.decrementMemberCount(
       educationHistory.educationId,
@@ -253,7 +253,7 @@ export class EducationHistoryService {
     return 'ok';
   }
 
-  /*async updateMemberEducation(
+  /!*async updateMemberEducation(
     churchId: number,
     memberId: number,
     dto: UpdateMemberEducationDto,
@@ -307,5 +307,5 @@ export class EducationHistoryService {
       { educations: true },
       qr,
     );
-  }*/
-}
+  }*!/
+}*/

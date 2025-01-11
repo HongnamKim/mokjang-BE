@@ -19,7 +19,7 @@ import { CreateSettingDto } from '../dto/create-setting.dto';
 import { BaseChurchSettingModel } from '../entity/base-church-setting.entity';
 import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
 import { UpdateSettingDto } from '../dto/update-setting.dto';
-import { EducationModel } from '../entity/education.entity';
+//import { EducationModel } from '../entity/education.entity';
 
 @Injectable()
 export class SettingsService {
@@ -30,14 +30,14 @@ export class SettingsService {
     private readonly officersRepository: Repository<OfficerModel>,
     @InjectRepository(MinistryModel)
     private readonly ministryRepository: Repository<MinistryModel>,
-    @InjectRepository(EducationModel)
-    private readonly educationRepository: Repository<EducationModel>,
+    /*@InjectRepository(EducationModel)
+    private readonly educationRepository: Repository<EducationModel>,*/
     private readonly churchesService: ChurchesService,
   ) {
     this.entityMap = new Map([
       [OfficerModel.name, officersRepository],
       [MinistryModel.name, ministryRepository],
-      [EducationModel.name, educationRepository],
+      //[EducationModel.name, educationRepository],
     ]);
   }
 
