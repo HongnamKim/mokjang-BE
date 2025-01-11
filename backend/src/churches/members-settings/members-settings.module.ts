@@ -6,12 +6,14 @@ import { MemberOfficerService } from './service/member-officer.service';
 import { MemberSettingsController } from './controller/member-settings.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
-import { EducationHistoryService } from './service/education-history.service';
+//import { EducationHistoryService } from './service/education-history.service';
 import { EducationHistoryModel } from './entity/education-history.entity';
 import { EducationHistoryController } from './controller/education-history.controller';
 import { GroupHistoryController } from './controller/group-history.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
 import { GroupHistoryService } from './service/group-history.service';
+import { EducationEnrollmentModel } from '../settings/entity/education/education-enrollment.entity';
+import { EducationHistoryService } from './service/education-history.service';
 
 @Module({
   imports: [
@@ -21,7 +23,11 @@ import { GroupHistoryService } from './service/group-history.service';
         module: MembersSettingsModule,
       },
     ]),
-    TypeOrmModule.forFeature([EducationHistoryModel, GroupHistoryModel]),
+    TypeOrmModule.forFeature([
+      EducationHistoryModel,
+      GroupHistoryModel,
+      EducationEnrollmentModel,
+    ]),
     MembersModule,
     SettingsModule,
   ],
