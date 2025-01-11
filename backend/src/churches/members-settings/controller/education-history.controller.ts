@@ -11,7 +11,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { EducationHistoryService } from '../service/education-history.service';
+//import { EducationHistoryService } from '../service/education-history.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -24,9 +24,7 @@ import { GetEducationHistoryDto } from '../dto/education/get-education-history.d
 @ApiTags('Churches:Members:Educations')
 @Controller('educations')
 export class EducationHistoryController {
-  constructor(
-    private readonly educationHistoryService: EducationHistoryService,
-  ) {}
+  constructor() {} //private readonly educationHistoryService: EducationHistoryService,
 
   @ApiOperation({
     summary: '교인의 교육이수 이력 조회',
@@ -38,7 +36,7 @@ export class EducationHistoryController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Query() dto: GetEducationHistoryDto,
   ) {
-    return this.educationHistoryService.getEducationHistory(memberId, dto);
+    //return this.educationHistoryService.getEducationHistory(memberId, dto);
   }
 
   @ApiOperation({
@@ -55,12 +53,12 @@ export class EducationHistoryController {
     @Body() dto: CreateEducationHistoryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationHistoryService.createEducationHistory(
+    /*return this.educationHistoryService.createEducationHistory(
       churchId,
       memberId,
       dto,
       qr,
-    );
+    );*/
   }
 
   @ApiOperation({
@@ -97,13 +95,13 @@ export class EducationHistoryController {
     @Body(UpdateEducationHistoryPipe) dto: UpdateEducationHistoryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationHistoryService.updateEducationHistory(
+    /*return this.educationHistoryService.updateEducationHistory(
       churchId,
       memberId,
       educationHistoryId,
       dto,
       qr,
-    );
+    );*/
   }
 
   @ApiOperation({
@@ -120,10 +118,10 @@ export class EducationHistoryController {
     @Param('educationHistoryId', ParseIntPipe) educationHistoryId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationHistoryService.deleteEducationHistory(
+    /*return this.educationHistoryService.deleteEducationHistory(
       memberId,
       educationHistoryId,
       qr,
-    );
+    );*/
   }
 }
