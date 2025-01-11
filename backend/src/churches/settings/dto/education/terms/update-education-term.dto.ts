@@ -5,6 +5,16 @@ import { IsAfterDate } from '../../../decorator/is-valid-end-date.decorator';
 
 export class UpdateEducationTermDto {
   @ApiProperty({
+    description: '기수',
+    minimum: 1,
+    required: false,
+  })
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  term: number;
+
+  @ApiProperty({
     description: '총 몇 회의 교육으로 이루어졌는지 (최소값: 1)',
     minimum: 1,
     default: 1,
