@@ -12,6 +12,8 @@ import { EducationHistoryController } from './controller/education-history.contr
 import { GroupHistoryController } from './controller/group-history.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
 import { GroupHistoryService } from './service/group-history.service';
+import { EducationEnrollmentModel } from '../settings/entity/education/education-enrollment.entity';
+import { EducationHistoryService } from './service/education-history.service';
 
 @Module({
   imports: [
@@ -21,7 +23,11 @@ import { GroupHistoryService } from './service/group-history.service';
         module: MembersSettingsModule,
       },
     ]),
-    TypeOrmModule.forFeature([EducationHistoryModel, GroupHistoryModel]),
+    TypeOrmModule.forFeature([
+      EducationHistoryModel,
+      GroupHistoryModel,
+      EducationEnrollmentModel,
+    ]),
     MembersModule,
     SettingsModule,
   ],
@@ -29,7 +35,7 @@ import { GroupHistoryService } from './service/group-history.service';
   providers: [
     MemberOfficerService,
     MemberMinistryService,
-    //EducationHistoryService,
+    EducationHistoryService,
     //MemberGroupService,
     GroupHistoryService,
   ],
