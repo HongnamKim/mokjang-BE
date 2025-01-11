@@ -341,9 +341,11 @@ export class MembersService {
     });
 
     // 현재 그룹만 필터링
-    result.forEach((member) => {
-      member.group = member.group.filter((group) => group.endDate === null);
-    });
+    if (result.length > 0 && result[0].group) {
+      result.forEach((member) => {
+        member.group = member.group.filter((group) => group.endDate === null);
+      });
+    }
 
     return new ResponsePaginationDto<MemberModel>(
       result,
