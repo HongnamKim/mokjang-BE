@@ -25,6 +25,7 @@ import { EducationEnrollmentModel } from '../entity/education/education-enrollme
 import { CreateEducationEnrollmentDto } from '../dto/education/enrollments/create-education-enrollment.dto';
 import { GetEducationEnrollmentDto } from '../dto/education/enrollments/get-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../dto/education/enrollments/update-education-enrollment.dto';
+import { EducationSessionModel } from '../entity/education/education-session.entity';
 
 @Injectable()
 export class EducationsService {
@@ -35,6 +36,8 @@ export class EducationsService {
     private readonly educationTermsRepository: Repository<EducationTermModel>,
     @InjectRepository(EducationEnrollmentModel)
     private readonly educationEnrollmentsRepository: Repository<EducationEnrollmentModel>,
+    @InjectRepository(EducationSessionModel)
+    private readonly educationSessionsRepository: Repository<EducationSessionModel>,
     private readonly membersService: MembersService,
   ) {}
 
@@ -241,6 +244,7 @@ export class EducationsService {
       },
       relations: {
         instructor: true,
+        educationSessions: true,
       },
     });
 
@@ -317,6 +321,8 @@ export class EducationsService {
       endDate: dto.endDate,
       instructor,
     });
+
+    // 회차에 맞게 EducationSession 생성
 
     return educationTermsRepository.findOne({
       where: { id: educationTerm.id },
@@ -470,6 +476,56 @@ export class EducationsService {
     }
 
     return `educationTermId: ${educationTermId} deleted`;
+  }
+
+  private getEducationSessionsRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository(EducationSessionModel)
+      : this.educationSessionsRepository;
+  }
+
+  async createEducationSessions(
+    educationTermId: number,
+    numberOfSessions: number,
+    qr: QueryRunner,
+  ) {
+    const educationSessionsRepository = this.getEducationSessionsRepository(qr);
+
+    await educationSessionsRepository.save(
+      Array.from({ length: numberOfSessions }, (_, i) => ({
+        session: i + 1,
+        educationTermId: educationTermId,
+      })),
+    );
+  }
+
+  async completeEducationSession(
+    educationTermId: number,
+    educationSessionId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationSessionsRepository = this.getEducationSessionsRepository(qr);
+
+    const result = await educationSessionsRepository.update(
+      {
+        id: educationSessionId,
+        educationTermId,
+      },
+      {
+        isCompleted: true,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 회차를 찾을 수 없습니다.');
+    }
+
+    return educationSessionsRepository.findOne({
+      where: { id: educationSessionId },
+      relations: {
+        sessionAttendances: true,
+      },
+    });
   }
 
   private getEducationEnrollmentsRepository(qr?: QueryRunner) {
