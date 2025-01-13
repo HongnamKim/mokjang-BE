@@ -14,9 +14,6 @@ export class EducationSessionModel extends BaseModel {
   @Column({ comment: '교육 회차' })
   session: number; // 회차
 
-  @Column({ comment: '해당 교육 회차 진행 여부', default: false })
-  isCompleted: boolean;
-
   @Column({
     type: 'varchar',
     length: 500,
