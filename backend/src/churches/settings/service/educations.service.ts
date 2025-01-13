@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryRunner, Repository } from 'typeorm';
+import { MoreThan, QueryRunner, Repository } from 'typeorm';
 import { EducationStatus } from '../../members-settings/const/education-status.enum';
 import { EducationModel } from '../entity/education/education.entity';
 import { GetEducationDto } from '../dto/education/education/get-education.dto';
@@ -26,6 +26,7 @@ import { CreateEducationEnrollmentDto } from '../dto/education/enrollments/creat
 import { GetEducationEnrollmentDto } from '../dto/education/enrollments/get-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../dto/education/enrollments/update-education-enrollment.dto';
 import { EducationSessionModel } from '../entity/education/education-session.entity';
+import { UpdateEducationSessionDto } from '../dto/education/sessions/update-education-session.dto';
 
 @Injectable()
 export class EducationsService {
@@ -276,7 +277,7 @@ export class EducationsService {
     churchId: number,
     educationId: number,
     dto: CreateEducationTermDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     //const educationsRepository = this.getEducationsRepository(qr);
     const educationTermsRepository = this.getEducationTermsRepository(qr);
@@ -300,17 +301,6 @@ export class EducationsService {
       throw new BadRequestException('이미 존재하는 교육 기수입니다.');
     }
 
-    /*const lastTerm = await educationTermsRepository.findOne({
-      where: {
-        educationId,
-      },
-      order: {
-        term: 'desc',
-      },
-    });
-
-    const newTerm = lastTerm ? lastTerm.term + 1 : 1;*/
-
     const educationTerm = await educationTermsRepository.save({
       educationId,
       educationName: education.name,
@@ -323,9 +313,15 @@ export class EducationsService {
     });
 
     // 회차에 맞게 EducationSession 생성
+    await this.createEducationSessions(
+      educationTerm.id,
+      educationTerm.numberOfSessions,
+      qr,
+    );
 
     return educationTermsRepository.findOne({
       where: { id: educationTerm.id },
+      relations: { educationSessions: true },
     });
   }
 
@@ -446,6 +442,28 @@ export class EducationsService {
       }
     }
 
+    // 회차 수정 시
+    if (dto.numberOfSessions) {
+      // 회차 감소 --> 회차 삭제 X, 수동 삭제
+      // 회차 증가 --> 회차 생성
+      if (dto.numberOfSessions > educationTerm.educationSessions.length) {
+        const educationSessionsRepository =
+          this.getEducationSessionsRepository(qr);
+
+        // dto: 8, term: 5 --> session 6, 7, 8 생성
+        for (
+          let i = educationTerm.educationSessions.length + 1;
+          i <= dto.numberOfSessions;
+          i++
+        ) {
+          await educationSessionsRepository.save({
+            educationTermId,
+            session: i,
+          });
+        }
+      }
+    }
+
     await educationTermsRepository.update(
       {
         id: educationTermId,
@@ -484,6 +502,36 @@ export class EducationsService {
       : this.educationSessionsRepository;
   }
 
+  async getEducationSessions(educationTermId: number) {
+    const educationSessionsRepository = this.getEducationSessionsRepository();
+
+    return educationSessionsRepository.find({
+      where: {
+        educationTermId,
+      },
+      order: {
+        session: 'asc',
+      },
+    });
+  }
+
+  async getEducationSessionsById(
+    educationTermId: number,
+    educationSessionId: number,
+  ) {
+    const educationSessionsRepository = this.getEducationSessionsRepository();
+
+    return educationSessionsRepository.findOne({
+      where: {
+        id: educationSessionId,
+        educationTermId,
+      },
+      relations: {
+        sessionAttendances: true,
+      },
+    });
+  }
+
   async createEducationSessions(
     educationTermId: number,
     numberOfSessions: number,
@@ -499,9 +547,57 @@ export class EducationsService {
     );
   }
 
-  async completeEducationSession(
+  async createSingleEducationSession(
+    educationId: number,
+    educationTermId: number,
+    qr: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    const educationSessionsRepository = this.getEducationSessionsRepository(qr);
+
+    const educationTerm = await educationTermsRepository.findOne({
+      where: {
+        id: educationTermId,
+        educationId,
+      },
+    });
+
+    if (!educationTerm) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    const lastSession = await educationSessionsRepository.findOne({
+      where: {
+        educationTermId: educationTermId,
+      },
+      order: {
+        session: 'desc',
+      },
+    });
+
+    const newSessionNumber = lastSession ? lastSession.session + 1 : 1;
+
+    // 교육 세션 생성
+    const newSession = await educationSessionsRepository.save({
+      session: newSessionNumber,
+      educationTermId,
+    });
+
+    // 교육 세션 개수 업데이트
+    await educationTermsRepository.update(
+      { id: educationTermId },
+      {
+        numberOfSessions: () => '"numberOfSessions" + 1',
+      },
+    );
+
+    return this.getEducationSessionsById(educationTermId, newSession.id);
+  }
+
+  async updateEducationSession(
     educationTermId: number,
     educationSessionId: number,
+    dto: UpdateEducationSessionDto,
     qr?: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
@@ -512,7 +608,7 @@ export class EducationsService {
         educationTermId,
       },
       {
-        isCompleted: true,
+        content: dto.deleteContent ? null : dto.content,
       },
     );
 
@@ -522,10 +618,54 @@ export class EducationsService {
 
     return educationSessionsRepository.findOne({
       where: { id: educationSessionId },
-      relations: {
-        sessionAttendances: true,
-      },
     });
+  }
+
+  async deleteEducationSessions(
+    educationTermId: number,
+    educationSessionId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationSessionsRepository = this.getEducationSessionsRepository(qr);
+
+    const targetSession = await educationSessionsRepository.findOne({
+      where: { id: educationSessionId },
+    });
+
+    if (!targetSession) {
+      throw new NotFoundException('해당 교육 회차를 찾을 수 없습니다.');
+    }
+
+    // 삭제
+    await educationSessionsRepository.softDelete({
+      id: educationSessionId,
+      educationTermId,
+    });
+
+    // 다른 회차들 session 번호 수정
+    await educationSessionsRepository.update(
+      {
+        educationTermId,
+        session: MoreThan(targetSession.session),
+      },
+      {
+        session: () => '"session" - 1',
+      },
+    );
+
+    const newNumberOfSessions = await educationSessionsRepository.count({
+      where: { educationTermId },
+    });
+
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    await educationTermsRepository.update(
+      { id: educationTermId },
+      {
+        numberOfSessions: newNumberOfSessions,
+      },
+    );
+
+    return `educationSessionId: ${educationSessionId} deleted`;
   }
 
   private getEducationEnrollmentsRepository(qr?: QueryRunner) {
