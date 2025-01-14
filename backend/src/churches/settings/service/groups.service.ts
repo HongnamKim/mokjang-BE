@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GroupModel } from '../entity/group.entity';
+import { GroupModel } from '../entity/group/group.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';

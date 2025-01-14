@@ -647,7 +647,7 @@ export class EducationsService {
       },
     );
 
-    return this.getEducationSessionById(educationTermId, newSession.id);
+    return this.getEducationSessionById(educationTermId, newSession.id, qr);
   }
 
   async updateEducationSession(

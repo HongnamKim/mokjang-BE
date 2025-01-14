@@ -10,14 +10,15 @@ import {
 } from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
-import { GroupModel } from '../settings/entity/group.entity';
+import { GroupModel } from '../settings/entity/group/group.entity';
 //import { EducationModel } from '../settings/entity/education.entity';
-import { OfficerModel } from '../settings/entity/officer.entity';
-import { MinistryModel } from '../settings/entity/ministry.entity';
+import { OfficerModel } from '../settings/entity/officer/officer.entity';
+import { MinistryModel } from '../settings/entity/ministry/ministry.entity';
 import { UserModel } from '../../auth/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
-import { GroupRoleModel } from '../settings/entity/group-role.entity';
+import { GroupRoleModel } from '../settings/entity/group/group-role.entity';
 import { EducationModel } from '../settings/entity/education/education.entity';
+import { MinistryGroupModel } from '../settings/entity/ministry/ministry-group.entity';
 
 @Entity()
 @Unique(['name', 'identifyNumber'])
@@ -65,6 +66,9 @@ export class ChurchModel extends BaseModel {
 
   @OneToMany(() => OfficerModel, (officer) => officer.church)
   officers: OfficerModel[];
+
+  @OneToMany(() => MinistryGroupModel, (ministryGroup) => ministryGroup.church)
+  ministryGroups: MinistryGroupModel[];
 
   @OneToMany(() => MinistryModel, (ministry) => ministry.church)
   ministries: MinistryModel[];
