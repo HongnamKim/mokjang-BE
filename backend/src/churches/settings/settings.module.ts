@@ -24,6 +24,8 @@ import { EducationTermModel } from './entity/education/education-term.entity';
 import { SessionAttendanceModel } from './entity/education/session-attendance.entity';
 import { EducationTermsController } from './controller/education/education-terms.controller';
 import { EducationEnrollmentsController } from './controller/education/education-enrollments.controller';
+import { EducationSessionsController } from './controller/education/education-sessions.controller';
+import { SessionAttendanceController } from './controller/education/session-attendance.controller';
 
 @Module({
   imports: [
@@ -55,6 +57,8 @@ import { EducationEnrollmentsController } from './controller/education/education
     EducationsController,
     EducationTermsController,
     EducationEnrollmentsController,
+    EducationSessionsController,
+    SessionAttendanceController,
     GroupsController,
     GroupsRolesController,
   ],
