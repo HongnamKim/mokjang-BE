@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, QueryRunner, Repository } from 'typeorm';
+import { In, MoreThan, QueryRunner, Repository } from 'typeorm';
 import { EducationStatus } from '../../members-settings/const/education-status.enum';
 import { EducationModel } from '../entity/education/education.entity';
 import { GetEducationDto } from '../dto/education/education/get-education.dto';
@@ -27,6 +27,8 @@ import { GetEducationEnrollmentDto } from '../dto/education/enrollments/get-educ
 import { UpdateEducationEnrollmentDto } from '../dto/education/enrollments/update-education-enrollment.dto';
 import { EducationSessionModel } from '../entity/education/education-session.entity';
 import { UpdateEducationSessionDto } from '../dto/education/sessions/update-education-session.dto';
+import { SessionAttendanceModel } from '../entity/education/session-attendance.entity';
+import { UpdateAttendanceDto } from '../dto/education/attendance/update-attendance.dto';
 
 @Injectable()
 export class EducationsService {
@@ -39,6 +41,8 @@ export class EducationsService {
     private readonly educationEnrollmentsRepository: Repository<EducationEnrollmentModel>,
     @InjectRepository(EducationSessionModel)
     private readonly educationSessionsRepository: Repository<EducationSessionModel>,
+    @InjectRepository(SessionAttendanceModel)
+    private readonly sessionAttendanceRepository: Repository<SessionAttendanceModel>,
     private readonly membersService: MembersService,
   ) {}
 
@@ -244,7 +248,52 @@ export class EducationsService {
         educationId,
       },
       relations: {
-        instructor: true,
+        instructor: {
+          group: true,
+          officer: true,
+        },
+        educationEnrollments: {
+          member: {
+            group: true,
+            officer: true,
+          },
+        },
+        educationSessions: true,
+      },
+    });
+
+    if (!educationTerm) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    educationTerm.instructor.group = educationTerm.instructor.group.filter(
+      (group) => group.endDate === null,
+    );
+
+    educationTerm.educationEnrollments.forEach((enrollment) => {
+      enrollment.member.group = enrollment.member.group.filter(
+        (group) => group.endDate === null,
+      );
+    });
+
+    return educationTerm;
+  }
+
+  async getEducationTermModelById(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const educationTerm = await educationTermsRepository.findOne({
+      where: {
+        id: educationTermId,
+        educationId,
+      },
+      relations: {
+        //instructor: true,
         educationSessions: true,
       },
     });
@@ -388,7 +437,7 @@ export class EducationsService {
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
-    const educationTerm = await this.getEducationTermById(
+    const educationTerm = await this.getEducationTermModelById(
       churchId,
       educationId,
       educationTermId,
@@ -515,21 +564,28 @@ export class EducationsService {
     });
   }
 
-  async getEducationSessionsById(
+  async getEducationSessionById(
     educationTermId: number,
     educationSessionId: number,
+    qr?: QueryRunner,
   ) {
-    const educationSessionsRepository = this.getEducationSessionsRepository();
+    const educationSessionsRepository = this.getEducationSessionsRepository(qr);
 
-    return educationSessionsRepository.findOne({
+    const session = await educationSessionsRepository.findOne({
       where: {
         id: educationSessionId,
         educationTermId,
       },
-      relations: {
+      /*relations: {
         sessionAttendances: true,
-      },
+      },*/
     });
+
+    if (!session) {
+      throw new NotFoundException('해당 교육 세션을 찾을 수 없습니다.');
+    }
+
+    return session;
   }
 
   async createEducationSessions(
@@ -591,7 +647,7 @@ export class EducationsService {
       },
     );
 
-    return this.getEducationSessionsById(educationTermId, newSession.id);
+    return this.getEducationSessionById(educationTermId, newSession.id);
   }
 
   async updateEducationSession(
@@ -624,23 +680,24 @@ export class EducationsService {
   async deleteEducationSessions(
     educationTermId: number,
     educationSessionId: number,
-    qr?: QueryRunner,
+    qr: QueryRunner,
+    cascade?: boolean,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
 
-    const targetSession = await educationSessionsRepository.findOne({
-      where: { id: educationSessionId },
-    });
+    const targetSession = await this.getEducationSessionById(
+      educationTermId,
+      educationSessionId,
+      qr,
+    );
 
-    if (!targetSession) {
-      throw new NotFoundException('해당 교육 회차를 찾을 수 없습니다.');
-    }
-
-    // 삭제
+    // 세션 삭제
     await educationSessionsRepository.softDelete({
       id: educationSessionId,
       educationTermId,
     });
+
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     // 다른 회차들 session 번호 수정
     await educationSessionsRepository.update(
@@ -653,17 +710,61 @@ export class EducationsService {
       },
     );
 
+    // 해당 기수의 세션 개수 업데이트
     const newNumberOfSessions = await educationSessionsRepository.count({
       where: { educationTermId },
     });
 
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
     await educationTermsRepository.update(
       { id: educationTermId },
       {
         numberOfSessions: newNumberOfSessions,
       },
     );
+
+    // 해당 세션 하위의 출석 정보 삭제
+    if (cascade) {
+      // 해당 세션의 출석 정보 삭제
+      const sessionAttendanceRepository =
+        this.getSessionAttendanceRepository(qr);
+
+      await sessionAttendanceRepository.softDelete({
+        educationSessionId: educationSessionId,
+      });
+
+      // 교육 대상자들의 출석 횟수 수정
+      const educationTerm = await educationTermsRepository.findOne({
+        where: { id: educationTermId },
+        relations: { educationEnrollments: true },
+      });
+
+      if (!educationTerm) {
+        throw new NotFoundException('해당 교육 기수가 존재하지 않습니다.');
+      }
+
+      const educationEnrollments = educationTerm.educationEnrollments;
+      const educationEnrollmentsRepository =
+        this.getEducationEnrollmentsRepository(qr);
+
+      for (const enrollment of educationEnrollments) {
+        // 출석 횟수
+        const newAttendanceCount = await sessionAttendanceRepository.count({
+          where: {
+            educationEnrollmentId: enrollment.id,
+            isPresent: true,
+          },
+        });
+
+        await educationEnrollmentsRepository.update(
+          {
+            id: enrollment.id,
+          },
+          {
+            attendanceCount: newAttendanceCount,
+          },
+        );
+      }
+    }
 
     return `educationSessionId: ${educationSessionId} deleted`;
   }
@@ -699,6 +800,26 @@ export class EducationsService {
             : 'desc',
       },
     });
+  }
+
+  async getEducationEnrollmentModelById(
+    educationEnrollmentId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    const enrollment = await educationEnrollmentsRepository.findOne({
+      where: {
+        id: educationEnrollmentId,
+      },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('해당 교육 대상자 내역을 찾을 수 없습니다.');
+    }
+
+    return enrollment;
   }
 
   async getEducationEnrollmentById(
@@ -751,7 +872,7 @@ export class EducationsService {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository();
 
-    const educationTerm = await this.getEducationTermById(
+    const educationTerm = await this.getEducationTermModelById(
       churchId,
       educationId,
       educationTermId,
@@ -810,15 +931,31 @@ export class EducationsService {
       qr,
     );
 
-    // 기존 statusCount 감소
-    await this.decrementEducationStatusCount(
-      educationTermId,
-      targetEducationEnrollment.status,
-      qr,
-    );
+    // 교육 이수 상태 변경 시 해당 기수의 이수자 통계 업데이트
+    if (dto.status) {
+      // 기존 statusCount 감소
+      // 기존 status 가 존재하고 새 status 가 다른 요청일 경우에만
+      if (
+        targetEducationEnrollment.status &&
+        targetEducationEnrollment.status !== dto.status
+      ) {
+        await this.decrementEducationStatusCount(
+          educationTermId,
+          targetEducationEnrollment.status,
+          qr,
+        );
+      }
 
-    // 새 statusCount 증가
-    await this.incrementEducationStatusCount(educationTermId, dto.status, qr);
+      // 새 statusCount 증가
+      // 기존 status 와 새 status 가 다를 때만
+      if (dto.status !== targetEducationEnrollment.status) {
+        await this.incrementEducationStatusCount(
+          educationTermId,
+          dto.status,
+          qr,
+        );
+      }
+    }
 
     // 교육등록 업데이트
     await educationEnrollmentsRepository.update(
@@ -837,6 +974,15 @@ export class EducationsService {
     });
   }
 
+  /**
+   * 교육 등록 삭제
+   * 기수의 enrollmentCount, inProgressCount, completedCount, incompleteCount 수정
+   * 하위의 출석 데이터 삭제
+   * @param educationId
+   * @param educationTermId
+   * @param educationEnrollmentId
+   * @param qr
+   */
   async deleteEducationEnrollment(
     educationId: number,
     educationTermId: number,
@@ -862,6 +1008,12 @@ export class EducationsService {
     await educationEnrollmentsRepository.softDelete({
       id: educationEnrollmentId,
       educationTermId,
+    });
+
+    // 해당 교육 등록과 관련된 출석 정보 삭제
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
+    await sessionAttendanceRepository.softDelete({
+      educationEnrollmentId: educationEnrollmentId,
     });
 
     return `educationEnrollment: ${educationEnrollmentId} deleted`;
@@ -943,43 +1095,204 @@ export class EducationsService {
     return result;
   }
 
-  async incrementAttendanceCount(
-    educationEnrollmentId: number,
+  private getSessionAttendanceRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository(SessionAttendanceModel)
+      : this.sessionAttendanceRepository;
+  }
+
+  async getSessionAttendance(educationSessionId: number) {
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository();
+
+    const sessionAttendance = await sessionAttendanceRepository.find({
+      where: {
+        educationSessionId,
+      },
+      relations: {
+        educationEnrollment: {
+          member: {
+            group: true,
+            officer: true,
+          },
+        },
+      },
+    });
+
+    sessionAttendance.forEach((attendance) => {
+      attendance.educationEnrollment.member.group =
+        attendance.educationEnrollment.member.group.filter(
+          (group) => group.endDate === null,
+        );
+    });
+
+    return sessionAttendance;
+  }
+
+  async getSessionAttendanceModelById(
+    sessionAttendanceId: number,
+    qr?: QueryRunner,
+  ) {
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
+
+    const sessionAttendance = await sessionAttendanceRepository.findOne({
+      where: { id: sessionAttendanceId },
+    });
+
+    if (!sessionAttendance) {
+      throw new NotFoundException('해당 세션 출석 정보를 찾을 수 없습니다.');
+    }
+
+    return sessionAttendance;
+  }
+
+  async createSessionAttendance(
+    educationTermId: number,
+    educationSessionId: number,
     qr: QueryRunner,
   ) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
-    const result = await educationEnrollmentsRepository.increment(
-      { id: educationEnrollmentId },
-      'attendanceCount',
-      1,
+    // 수강 등록생 조회
+    const educationEnrollments = await educationEnrollmentsRepository.find({
+      where: {
+        educationTermId,
+      },
+    });
+
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
+
+    // 해당 세션에 이미 만들어진 출석부 조회
+    const existingAttendances = await sessionAttendanceRepository.find({
+      where: {
+        educationSessionId,
+        educationEnrollmentId: In(
+          educationEnrollments.map((enrollment) => enrollment.id),
+        ),
+      },
+    });
+
+    const existingIds = new Set(
+      existingAttendances.map((attendance) => attendance.educationEnrollmentId),
     );
 
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 대상자 내역을 찾을 수 없습니다.');
-    }
+    // 이미 만들어진 출석부는 제외하고 생성
+    await sessionAttendanceRepository.save(
+      educationEnrollments
+        .filter((enrollment) => !existingIds.has(enrollment.id))
+        .map((enrollment) => ({
+          educationSessionId,
+          educationEnrollment: enrollment,
+        })),
+    );
+
+    const result = await sessionAttendanceRepository.find({
+      where: {
+        educationSessionId,
+      },
+      relations: {
+        educationEnrollment: {
+          member: {
+            group: true,
+            officer: true,
+          },
+        },
+      },
+    });
+
+    // 현재 그룹만 필터링
+    result.forEach((attendance) => {
+      attendance.educationEnrollment.member.group =
+        attendance.educationEnrollment.member.group.filter(
+          (group) => group.endDate === null,
+        );
+    });
 
     return result;
   }
 
-  async decrementAttendanceCount(
-    educationEnrollmentId: number,
+  async updateSessionAttendance(
+    educationSessionId: number,
+    sessionAttendanceId: number,
+    dto: UpdateAttendanceDto,
     qr: QueryRunner,
   ) {
+    // 출석 업데이트 시 Enrollment 의 출석 횟수 변경
+    // sessionAttendance, educationEnrollment 필요
+
+    /**
+     * 업데이트 대상
+     *  1. 출석 --> sessionAttendance, educationEnrollment 수정
+     *  2. 비고 --> sessionAttendance 만 수정
+     */
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
+
+    const sessionAttendance =
+      await this.getSessionAttendanceModelById(sessionAttendanceId);
+
+    // sessionAttendance 업데이트
+    await sessionAttendanceRepository.update(
+      {
+        id: sessionAttendanceId,
+      },
+      {
+        isPresent: dto.isPresent,
+        note: dto.isDeleteNote ? null : dto.note,
+      },
+    );
+
+    // 출석 정보 업데이트 시
+    // isPresent 가 boolean 이기 때문에 undefined 로 판단
+    if (dto.isPresent !== undefined) {
+      await this.updateAttendanceCount(sessionAttendance, qr);
+    }
+
+    return sessionAttendanceRepository.findOne({
+      where: {
+        id: sessionAttendanceId,
+      },
+    });
+  }
+
+  private async updateAttendanceCount(
+    sessionAttendance: SessionAttendanceModel,
+    qr: QueryRunner,
+  ) {
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
-    const result = await educationEnrollmentsRepository.decrement(
-      { id: educationEnrollmentId },
-      'attendanceCount',
-      1,
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const enrollment = await this.getEducationEnrollmentModelById(
+      sessionAttendance.educationEnrollmentId,
+      qr,
     );
 
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 대상자 내역을 찾을 수 없습니다.');
+    const educationTerm = await educationTermsRepository.findOne({
+      where: {
+        id: enrollment.educationTermId,
+      },
+    });
+
+    if (!educationTerm) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
     }
 
-    return result;
+    const attendanceCount = await sessionAttendanceRepository.count({
+      where: {
+        educationEnrollmentId: sessionAttendance.educationEnrollmentId,
+        isPresent: true,
+      },
+    });
+
+    await educationEnrollmentsRepository.update(
+      {
+        id: enrollment.id,
+      },
+      {
+        attendanceCount: attendanceCount,
+      },
+    );
   }
 }

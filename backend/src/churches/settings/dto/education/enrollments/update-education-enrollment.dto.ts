@@ -16,8 +16,10 @@ export class UpdateEducationEnrollmentDto extends PickType(
   @ApiProperty({
     description: '교육 이수 상태',
     enum: EducationStatus,
+    required: false,
   })
   @IsEnum(EducationStatus)
+  @IsOptional()
   override status: EducationStatus;
 
   @ApiProperty({
