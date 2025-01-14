@@ -55,7 +55,7 @@ export class EducationSessionsController {
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
   ) {
-    return this.educationsService.getEducationSessionsById(
+    return this.educationsService.getEducationSessionById(
       educationTermId,
       educationSessionId,
     );
@@ -95,6 +95,7 @@ export class EducationSessionsController {
       educationTermId,
       educationSessionId,
       qr,
+      true,
     );
   }
 }
