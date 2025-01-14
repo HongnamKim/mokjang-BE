@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { GroupModel } from '../../settings/entity/group.entity';
+import { GroupModel } from '../../settings/entity/group/group.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 
 @Entity()

@@ -1,8 +1,8 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import { ChurchModel } from '../../entity/church.entity';
-import { BaseChurchSettingModel } from './base-church-setting.entity';
+import { ChurchModel } from '../../../entity/church.entity';
+import { BaseChurchSettingModel } from '../base-church-setting.entity';
 import { GroupRoleModel } from './group-role.entity';
-import { GroupHistoryModel } from '../../members-settings/entity/group-history.entity';
+import { GroupHistoryModel } from '../../../members-settings/entity/group-history.entity';
 
 @Entity()
 export class GroupModel extends BaseChurchSettingModel {
