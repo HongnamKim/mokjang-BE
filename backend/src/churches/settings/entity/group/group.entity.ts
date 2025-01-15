@@ -1,25 +1,17 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { ChurchModel } from '../../../entity/church.entity';
-import { BaseChurchSettingModel } from '../base-church-setting.entity';
 import { GroupRoleModel } from './group-role.entity';
 import { GroupHistoryModel } from '../../../members-settings/entity/group-history.entity';
+import { BaseModel } from '../../../../common/entity/base.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Entity()
-export class GroupModel extends BaseChurchSettingModel {
-  /*
-  @Index()
-  @Column()
-  churchId: number;
-
+export class GroupModel extends BaseModel {
   @Column()
   name: string;
 
-  @Column({ default: 0 })
-  membersCount: number;
-   */
-
-  @Column({ nullable: true })
-  parentGroupId?: number;
+  @Column({ type: 'int', nullable: true })
+  parentGroupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.childGroups)
   parentGroup: GroupModel;
@@ -30,11 +22,18 @@ export class GroupModel extends BaseChurchSettingModel {
   @OneToMany(() => GroupModel, (group) => group.parentGroup)
   childGroups: GroupModel[];
 
+  @Column()
+  @Index()
+  churchId: number;
+
   @ManyToOne(() => ChurchModel, (church) => church.groups)
   church: ChurchModel;
 
-  /*@OneToMany(() => MemberModel, (member) => member.group)
-  members: MemberModel[];*/
+  @Column({ default: 0 })
+  membersCount: number;
+
+  @OneToMany(() => MemberModel, (member) => member.group)
+  members: MemberModel[];
 
   @OneToMany(() => GroupRoleModel, (groupRole) => groupRole.group)
   roles: GroupRoleModel[];

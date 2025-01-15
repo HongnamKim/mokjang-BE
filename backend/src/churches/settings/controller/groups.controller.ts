@@ -16,8 +16,6 @@ import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-// import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
-// import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 
 @ApiTags('Settings:Groups')
 @Controller('groups')
@@ -44,9 +42,7 @@ export class GroupsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
   ) {
-    return this.groupsService.getGroupById(churchId, groupId, undefined, {
-      //members: true,
-    });
+    return this.groupsService.getGroupByIdWithParents(churchId, groupId);
   }
 
   @Patch(':groupId')

@@ -122,7 +122,7 @@ export class GroupsRolesService {
     groupId: number,
     dto: CreateGroupRoleDto,
   ) {
-    const group = await this.groupsService.getGroupById(churchId, groupId);
+    const group = await this.groupsService.getGroupModelById(churchId, groupId);
 
     const groupRolesRepository = this.getGroupRolesRepository();
 
