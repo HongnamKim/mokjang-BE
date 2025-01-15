@@ -21,6 +21,7 @@ import { EducationHistoryModel } from '../../members-settings/entity/education-h
 import { GroupHistoryModel } from '../../members-settings/entity/group-history.entity';
 import { EducationTermModel } from '../../settings/entity/education/education-term.entity';
 import { EducationEnrollmentModel } from '../../settings/entity/education/education-enrollment.entity';
+import { GroupModel } from '../../settings/entity/group/group.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -140,6 +141,9 @@ export class MemberModel extends BaseModel {
 
   /*@ManyToOne(() => GroupModel, (group) => group.members)
   group: GroupModel;*/
+
+  @OneToMany(() => GroupModel, (group) => group.members)
+  currentGroup: GroupModel;
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   group: GroupHistoryModel[];

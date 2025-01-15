@@ -94,7 +94,13 @@ export class GroupHistoryService {
 
     this.validateDate(dto);
 
-    const group = await this.groupsService.getGroupById(
+    /*const group = await this.groupsService.getGroupById(
+      churchId,
+      dto.groupId,
+      qr,
+    );*/
+
+    const group = await this.groupsService.getGroupModelById(
       churchId,
       dto.groupId,
       qr,
