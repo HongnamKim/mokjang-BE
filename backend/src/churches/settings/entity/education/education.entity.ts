@@ -5,7 +5,7 @@ import { ChurchModel } from '../../../entity/church.entity';
 
 @Entity()
 export class EducationModel extends BaseModel {
-  @Column({ length: 50, comment: '교육명', nullable: true })
+  @Column({ length: 50, comment: '교육명' })
   name: string;
 
   @Column({

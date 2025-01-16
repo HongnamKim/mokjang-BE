@@ -4,7 +4,7 @@ import { SettingsService } from '../../settings/service/settings.service';
 import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
 import { QueryRunner } from 'typeorm';
 import { MinistryModel } from '../../settings/entity/ministry/ministry.entity';
-import { MinistryService } from '../../settings/service/ministry.service';
+import { MinistryService } from '../../settings/service/ministry/ministry.service';
 
 @Injectable()
 export class MemberMinistryService {

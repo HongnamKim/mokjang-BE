@@ -4,13 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GroupModel } from '../entity/group/group.entity';
+import { GroupModel } from '../../entity/group/group.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../churches.service';
-import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupDto } from '../dto/group/update-group.dto';
-import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
-import { GroupExceptionMessage } from '../const/exception/group/group.exception';
+import { ChurchesService } from '../../../churches.service';
+import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import { UpdateGroupDto } from '../../dto/group/update-group.dto';
+import { SETTING_EXCEPTION } from '../../exception-messages/exception-messages.const';
+import { GroupExceptionMessage } from '../../const/exception/group/group.exception';
 
 @Injectable()
 export class GroupsService {
@@ -215,13 +215,11 @@ export class GroupsService {
     const groupRepository = this.getGroupRepository(qr);
 
     // 변경 전 그룹
-    const beforeUpdateGroup = await groupRepository.findOne({
-      where: { id: groupId },
-    });
-
-    if (!beforeUpdateGroup) {
-      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
-    }
+    const beforeUpdateGroup = await this.getGroupModelById(
+      churchId,
+      groupId,
+      qr,
+    );
 
     // 상위 그룹을 변경하는 경우
     if (dto.parentGroupId) {
