@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { QueryRunner, Repository } from 'typeorm';
-import { GroupRoleModel } from '../entity/group/group-role.entity';
+import { GroupRoleModel } from '../../entity/group/group-role.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupsService } from './groups.service';
-import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
-import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
+import { CreateGroupRoleDto } from '../../dto/group/create-group-role.dto';
+import { UpdateGroupRoleDto } from '../../dto/group/update-group-role.dto';
 
 @Injectable()
 export class GroupsRolesService {
@@ -122,7 +122,7 @@ export class GroupsRolesService {
     groupId: number,
     dto: CreateGroupRoleDto,
   ) {
-    const group = await this.groupsService.getGroupById(churchId, groupId);
+    const group = await this.groupsService.getGroupModelById(churchId, groupId);
 
     const groupRolesRepository = this.getGroupRolesRepository();
 

@@ -11,7 +11,7 @@ import {
 import { CreateGroupRoleDto } from '../dto/group/create-group-role.dto';
 import { UpdateGroupRoleDto } from '../dto/group/update-group-role.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { GroupsRolesService } from '../service/groups-roles.service';
+import { GroupsRolesService } from '../service/group/groups-roles.service';
 
 @ApiTags('Settings:Groups:Roles')
 // churches/{churchId}/settings

@@ -4,12 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GroupModel } from '../entity/group/group.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../churches.service';
-import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupDto } from '../dto/group/update-group.dto';
-import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
+import { GroupModel } from '../../entity/group/group.entity';
+import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { ChurchesService } from '../../../churches.service';
+import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import { UpdateGroupDto } from '../../dto/group/update-group.dto';
+import { SETTING_EXCEPTION } from '../../exception-messages/exception-messages.const';
+import { GroupExceptionMessage } from '../../const/exception/group/group.exception';
 
 @Injectable()
 export class GroupsService {
@@ -58,11 +59,27 @@ export class GroupsService {
     });
   }
 
-  async getGroupById(
+  async getGroupModelById(churchId: number, groupId: number, qr?: QueryRunner) {
+    const groupsRepository = this.getGroupRepository(qr);
+
+    const group = await groupsRepository.findOne({
+      where: {
+        id: groupId,
+        churchId,
+      },
+    });
+
+    if (!group) {
+      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+    }
+
+    return group;
+  }
+
+  async getGroupByIdWithParents(
     churchId: number,
     groupId: number,
     qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<GroupModel>,
   ) {
     await this.checkChurchExist(churchId, qr);
 
@@ -70,37 +87,89 @@ export class GroupsService {
 
     const group = await groupsRepository.findOne({
       where: { churchId, id: groupId },
-      relations: { roles: true, ...relationOptions },
+      relations: { roles: true },
     });
 
     if (!group) {
-      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
+      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
     }
 
-    return group;
+    return {
+      ...group,
+      parentGroups: await this.getParentGroups(groupId, groupsRepository),
+    };
+  }
+
+  private async getParentGroups(
+    groupId: number,
+    groupsRepository: Repository<GroupModel>,
+  ) {
+    const parents = await groupsRepository.query(
+      `
+    WITH RECURSIVE parent_groups AS (
+      -- 초기 그룹의 부모
+      SELECT g.* 
+      FROM group_model g
+      JOIN group_model child 
+      ON g.id = child."parentGroupId"
+      WHERE child.id = $1
+      
+      UNION ALL
+      
+      -- 재귀적으로 부모의 부모 찾기
+      SELECT g.*
+      FROM group_model g
+      JOIN parent_groups pg 
+      ON g.id = pg."parentGroupId"
+    )
+    SELECT * FROM parent_groups;
+    `,
+      [groupId],
+    );
+
+    let result: {
+      id: number;
+      name: string;
+      parentGroupId: number | null;
+      depth: number;
+    }[] = [];
+    parents.forEach((parent: GroupModel, i: number) => {
+      result.unshift({
+        id: parent.id,
+        name: parent.name,
+        parentGroupId: parent.parentGroupId,
+        depth: parents.length - i,
+      });
+    });
+
+    return result;
   }
 
   async postGroup(churchId: number, dto: CreateGroupDto, qr?: QueryRunner) {
     await this.checkChurchExist(churchId, qr);
 
     if (await this.isExistGroup(churchId, dto.name, qr)) {
-      throw new BadRequestException(SETTING_EXCEPTION.GroupModel.ALREADY_EXIST);
+      throw new BadRequestException(GroupExceptionMessage.ALREADY_EXIST);
     }
 
     const groupsRepository = this.getGroupRepository(qr);
 
     // 상위 그룹 지정 시
     if (dto.parentGroupId) {
-      const parentGroup = await groupsRepository.findOne({
-        where: {
-          id: dto.parentGroupId,
-          churchId: churchId,
-        },
-      });
+      const parentGroup = await this.getGroupModelById(
+        churchId,
+        dto.parentGroupId,
+        qr,
+      );
 
-      if (!parentGroup) {
-        throw new NotFoundException(
-          SETTING_EXCEPTION.GroupModel.PARENT_NOT_FOUND,
+      const grandParentGroups = await this.getParentGroups(
+        parentGroup.id,
+        groupsRepository,
+      );
+
+      if (grandParentGroups.length + 1 === 5) {
+        throw new BadRequestException(
+          GroupExceptionMessage.LIMIT_DEPTH_REACHED,
         );
       }
 
@@ -146,13 +215,11 @@ export class GroupsService {
     const groupRepository = this.getGroupRepository(qr);
 
     // 변경 전 그룹
-    const beforeUpdateGroup = await groupRepository.findOne({
-      where: { id: groupId },
-    });
-
-    if (!beforeUpdateGroup) {
-      throw new NotFoundException(SETTING_EXCEPTION.GroupModel.NOT_FOUND);
-    }
+    const beforeUpdateGroup = await this.getGroupModelById(
+      churchId,
+      groupId,
+      qr,
+    );
 
     // 상위 그룹을 변경하는 경우
     if (dto.parentGroupId) {
@@ -172,7 +239,7 @@ export class GroupsService {
       // 컴퓨터의 폴더 구조와 동일한 방식
       if (beforeUpdateGroup.childGroupIds.includes(dto.parentGroupId)) {
         throw new BadRequestException(
-          '현재 하위 그룹을 새로운 상위 그룹으로 지정할 수 없습니다.',
+          GroupExceptionMessage.CANNOT_SET_SUBGROUP_AS_PARENT,
         );
       }
 
@@ -246,7 +313,7 @@ export class GroupsService {
       deleteTarget.membersCount !== 0
     ) {
       throw new BadRequestException(
-        '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
+        GroupExceptionMessage.GROUP_HAS_DEPENDENCIES,
       );
     }
 

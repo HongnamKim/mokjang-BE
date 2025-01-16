@@ -24,5 +24,5 @@ export class CreateGroupDto extends PickType(GroupModel, [
   })
   @IsNumber()
   @IsOptional()
-  override parentGroupId?: number;
+  override parentGroupId: number;
 }
