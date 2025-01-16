@@ -333,12 +333,14 @@ export class EducationsService {
 
     const education = await this.getEducationById(churchId, educationId, qr);
 
-    const instructor = await this.membersService.getMemberModelById(
-      churchId,
-      dto.instructorId,
-      {},
-      qr,
-    );
+    const instructor = dto.instructorId
+      ? await this.membersService.getMemberModelById(
+          churchId,
+          dto.instructorId,
+          {},
+          qr,
+        )
+      : undefined;
 
     const isExistEducationTerm = await this.isExistEducationTerm(
       educationId,

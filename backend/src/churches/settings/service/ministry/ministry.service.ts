@@ -6,18 +6,17 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryModel } from '../../entity/ministry/ministry.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { MinistryGroupModel } from '../../entity/ministry/ministry-group.entity';
 import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
 import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
 import { MinistryExceptionMessage } from '../../const/exception/ministry/ministry.exception';
+import { MinistryGroupService } from './ministry-group.service';
 
 @Injectable()
 export class MinistryService {
   constructor(
     @InjectRepository(MinistryModel)
     private readonly ministryRepository: Repository<MinistryModel>,
-    @InjectRepository(MinistryGroupModel)
-    private readonly ministryGroupRepository: Repository<MinistryGroupModel>,
+    private readonly ministryGroupService: MinistryGroupService,
   ) {}
 
   private getMinistryRepository(qr?: QueryRunner) {
@@ -85,15 +84,26 @@ export class MinistryService {
       throw new BadRequestException(MinistryExceptionMessage.ALREADY_EXIST);
     }
 
+    const ministryGroup = dto.ministryGroupId
+      ? await this.ministryGroupService.getMinistryGroupModelById(
+          churchId,
+          dto.ministryGroupId,
+          qr,
+        )
+      : undefined;
+
     const newMinistry = await ministryRepository.save({
       name: dto.name,
       churchId: churchId,
-      /*ministryGroupId: dto.ministryGroupId*/
+      ministryGroup,
     });
 
     return ministryRepository.findOne({
       where: {
         id: newMinistry.id,
+      },
+      relations: {
+        ministryGroup: true,
       },
     });
   }
@@ -119,6 +129,15 @@ export class MinistryService {
       }
     }
 
+    // 사역 그룹
+    const ministryGroup = dto.ministryGroupId
+      ? await this.ministryGroupService.getMinistryGroupModelById(
+          churchId,
+          dto.ministryGroupId,
+          qr,
+        )
+      : undefined;
+
     const result = await ministryRepository.update(
       {
         id: ministryId,
@@ -126,6 +145,7 @@ export class MinistryService {
       },
       {
         name: dto.name,
+        ministryGroupId: ministryGroup?.id,
       },
     );
 

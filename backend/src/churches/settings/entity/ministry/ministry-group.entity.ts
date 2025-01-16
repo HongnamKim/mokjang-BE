@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { ChurchModel } from '../../../entity/church.entity';
 import { MinistryModel } from './ministry.entity';
 import { BaseModel } from '../../../../common/entity/base.entity';
@@ -9,6 +9,7 @@ export class MinistryGroupModel extends BaseModel {
   name: string;
 
   @Column({ nullable: true })
+  @Index()
   parentMinistryGroupId: number;
 
   @ManyToOne(
@@ -27,6 +28,7 @@ export class MinistryGroupModel extends BaseModel {
   childMinistryGroups: MinistryGroupModel[];
 
   @Column()
+  @Index()
   churchId: number;
 
   @ManyToOne(() => ChurchModel, (church) => church.ministryGroups)
