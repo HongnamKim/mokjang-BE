@@ -1,5 +1,4 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
-import { MinistryModel } from '../../entity/ministry/ministry.entity';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsNumber,
@@ -11,10 +10,10 @@ import {
 } from 'class-validator';
 import { TransformName } from '../../../decorator/transform-name';
 
-export class CreateMinistryDto extends PickType(MinistryModel, [
+export class CreateMinistryDto /*extends PickType(MinistryModel, [
   'name',
   'ministryGroupId',
-]) {
+]) */ {
   @ApiProperty({
     name: 'name',
     description: '사역 이름',
@@ -28,15 +27,16 @@ export class CreateMinistryDto extends PickType(MinistryModel, [
   @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
     message: '특수문자는 사용할 수 없습니다.',
   })
-  override name: string;
+  name: string;
 
   @ApiProperty({
-    description: '사역 그룹 ID',
-    minimum: 1,
+    description:
+      '지정/변경할 사역 그룹 ID (0 또는 undefined 일 경우 사역 그룹에 속하지 않음)',
+    minimum: 0,
     required: false,
   })
-  @Min(1)
+  @Min(0)
   @IsNumber()
   @IsOptional()
-  override ministryGroupId: number;
+  ministryGroupId: number;
 }
