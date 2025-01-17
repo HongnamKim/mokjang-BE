@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { MembersService } from '../../members/service/members.service';
 import { SettingsService } from '../../settings/service/settings.service';
 import { QueryRunner } from 'typeorm';
-import { OfficerModel } from '../../settings/entity/officer.entity';
+import { OfficerModel } from '../../settings/entity/officer/officer.entity';
 import { UpdateMemberOfficerDto } from '../dto/update-member-officer.dto';
 
 @Injectable()

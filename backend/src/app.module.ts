@@ -11,9 +11,9 @@ import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersModule } from './churches/members/members.module';
 import { MembersSettingsModule } from './churches/members-settings/members-settings.module';
-import { OfficerModel } from './churches/settings/entity/officer.entity';
-import { MinistryModel } from './churches/settings/entity/ministry.entity';
-import { GroupModel } from './churches/settings/entity/group.entity';
+import { OfficerModel } from './churches/settings/entity/officer/officer.entity';
+import { MinistryModel } from './churches/settings/entity/ministry/ministry.entity';
+import { GroupModel } from './churches/settings/entity/group/group.entity';
 import { SettingsModule } from './churches/settings/settings.module';
 import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -21,7 +21,7 @@ import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './auth/entity/user.entity';
-import { GroupRoleModel } from './churches/settings/entity/group-role.entity';
+import { GroupRoleModel } from './churches/settings/entity/group/group-role.entity';
 import { EducationHistoryModel } from './churches/members-settings/entity/education-history.entity';
 import { GroupHistoryModel } from './churches/members-settings/entity/group-history.entity';
 import { EducationModel } from './churches/settings/entity/education/education.entity';
@@ -29,6 +29,7 @@ import { EducationTermModel } from './churches/settings/entity/education/educati
 import { EducationSessionModel } from './churches/settings/entity/education/education-session.entity';
 import { SessionAttendanceModel } from './churches/settings/entity/education/session-attendance.entity';
 import { EducationEnrollmentModel } from './churches/settings/entity/education/education-enrollment.entity';
+import { MinistryGroupModel } from './churches/settings/entity/ministry/ministry-group.entity';
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { EducationEnrollmentModel } from './churches/settings/entity/education/e
           EducationHistoryModel,
           OfficerModel,
           MinistryModel,
+          MinistryGroupModel,
           GroupModel,
           GroupRoleModel,
           GroupHistoryModel,
