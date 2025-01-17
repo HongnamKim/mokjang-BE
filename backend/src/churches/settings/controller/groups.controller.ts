@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { GroupsService } from '../service/groups.service';
+import { GroupsService } from '../service/group/groups.service';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';

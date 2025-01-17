@@ -11,12 +11,12 @@ import { EducationsController } from './controller/education/educations.controll
 //import { EducationModel } from './entity/education.entity';
 import { GroupModel } from './entity/group/group.entity';
 import { GroupsController } from './controller/groups.controller';
-import { GroupsService } from './service/groups.service';
+import { GroupsService } from './service/group/groups.service';
 import { MembersModule } from '../members/members.module';
 import { GroupRoleModel } from './entity/group/group-role.entity';
 import { GroupsRolesController } from './controller/groups-roles.controller';
-import { GroupsRolesService } from './service/groups-roles.service';
-import { EducationsService } from './service/educations.service';
+import { GroupsRolesService } from './service/group/groups-roles.service';
+import { EducationsService } from './service/education/educations.service';
 import { EducationModel } from './entity/education/education.entity';
 import { EducationEnrollmentModel } from './entity/education/education-enrollment.entity';
 import { EducationSessionModel } from './entity/education/education-session.entity';
@@ -27,7 +27,9 @@ import { EducationEnrollmentsController } from './controller/education/education
 import { EducationSessionsController } from './controller/education/education-sessions.controller';
 import { SessionAttendanceController } from './controller/education/session-attendance.controller';
 import { MinistryGroupModel } from './entity/ministry/ministry-group.entity';
-import { MinistryService } from './service/ministry.service';
+import { MinistryService } from './service/ministry/ministry.service';
+import { MinistryGroupService } from './service/ministry/ministry-group.service';
+import { MinistryGroupsController } from './controller/ministry/ministry-groups.controller';
 
 @Module({
   imports: [
@@ -57,6 +59,7 @@ import { MinistryService } from './service/ministry.service';
   ],
   controllers: [
     OfficersController,
+    MinistryGroupsController,
     MinistriesController,
     EducationsController,
     EducationTermsController,
@@ -72,6 +75,7 @@ import { MinistryService } from './service/ministry.service';
     GroupsRolesService,
     EducationsService,
     MinistryService,
+    MinistryGroupService,
   ],
   exports: [
     SettingsService,

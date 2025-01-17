@@ -7,9 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GroupHistoryModel } from '../entity/group-history.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MembersService } from '../../members/service/members.service';
-import { GroupsService } from '../../settings/service/groups.service';
+import { GroupsService } from '../../settings/service/group/groups.service';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
-import { GroupsRolesService } from '../../settings/service/groups-roles.service';
+import { GroupsRolesService } from '../../settings/service/group/groups-roles.service';
 import { CreateGroupHistoryDto } from '../dto/group/create-group-history.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
 

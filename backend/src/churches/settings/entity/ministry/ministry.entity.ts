@@ -20,7 +20,8 @@ export class MinistryModel extends BaseModel {
   church: ChurchModel;
 
   @Column({ nullable: true })
-  ministryGroupId: number;
+  @Index()
+  ministryGroupId: number | null;
 
   @ManyToOne(
     () => MinistryGroupModel,
