@@ -21,7 +21,7 @@ export class MinistryModel extends BaseModel {
 
   @Column({ nullable: true })
   @Index()
-  ministryGroupId: number;
+  ministryGroupId: number | null;
 
   @ManyToOne(
     () => MinistryGroupModel,
