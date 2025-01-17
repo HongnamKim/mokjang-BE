@@ -33,7 +33,7 @@ import { FamilyService } from './family.service';
 import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
 import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
-import { MinistryModel } from '../../settings/entity/ministry.entity';
+import { MinistryModel } from '../../settings/entity/ministry/ministry.entity';
 import {
   DefaultMemberSelectOption,
   DefaultMembersRelationOption,

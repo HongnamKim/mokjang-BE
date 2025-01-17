@@ -1,7 +1,7 @@
 import { Column, Entity, Index, ManyToOne, Unique } from 'typeorm';
-import { BaseModel } from '../../../common/entity/base.entity';
+import { BaseModel } from '../../../../common/entity/base.entity';
 import { GroupModel } from './group.entity';
-import { ChurchModel } from '../../entity/church.entity';
+import { ChurchModel } from '../../../entity/church.entity';
 
 @Entity()
 @Unique(['role', 'groupId'])

@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { EducationsService } from '../../service/educations.service';
+import { EducationsService } from '../../service/education/educations.service';
 import { CreateEducationEnrollmentDto } from '../../dto/education/enrollments/create-education-enrollment.dto';
 import { GetEducationEnrollmentDto } from '../../dto/education/enrollments/get-education-enrollment.dto';
 import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';

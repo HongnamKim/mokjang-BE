@@ -5,30 +5,30 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThan, QueryRunner, Repository } from 'typeorm';
-import { EducationStatus } from '../../members-settings/const/education-status.enum';
-import { EducationModel } from '../entity/education/education.entity';
-import { GetEducationDto } from '../dto/education/education/get-education.dto';
-import { CreateEducationDto } from '../dto/education/education/create-education.dto';
-import { UpdateEducationDto } from '../dto/education/education/update-education.dto';
-import { EducationException } from '../const/exception/education/education.exception';
-import { EducationTermModel } from '../entity/education/education-term.entity';
-import { GetEducationTermDto } from '../dto/education/terms/get-education-term.dto';
+import { EducationStatus } from '../../../members-settings/const/education-status.enum';
+import { EducationModel } from '../../entity/education/education.entity';
+import { GetEducationDto } from '../../dto/education/education/get-education.dto';
+import { CreateEducationDto } from '../../dto/education/education/create-education.dto';
+import { UpdateEducationDto } from '../../dto/education/education/update-education.dto';
+import { EducationException } from '../../const/exception/education/education.exception';
+import { EducationTermModel } from '../../entity/education/education-term.entity';
+import { GetEducationTermDto } from '../../dto/education/terms/get-education-term.dto';
 import {
   EducationEnrollmentOrderEnum,
   EducationOrderEnum,
   EducationTermOrderEnum,
-} from '../const/education/order.enum';
-import { CreateEducationTermDto } from '../dto/education/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../dto/education/terms/update-education-term.dto';
-import { MembersService } from '../../members/service/members.service';
-import { EducationEnrollmentModel } from '../entity/education/education-enrollment.entity';
-import { CreateEducationEnrollmentDto } from '../dto/education/enrollments/create-education-enrollment.dto';
-import { GetEducationEnrollmentDto } from '../dto/education/enrollments/get-education-enrollment.dto';
-import { UpdateEducationEnrollmentDto } from '../dto/education/enrollments/update-education-enrollment.dto';
-import { EducationSessionModel } from '../entity/education/education-session.entity';
-import { UpdateEducationSessionDto } from '../dto/education/sessions/update-education-session.dto';
-import { SessionAttendanceModel } from '../entity/education/session-attendance.entity';
-import { UpdateAttendanceDto } from '../dto/education/attendance/update-attendance.dto';
+} from '../../const/education/order.enum';
+import { CreateEducationTermDto } from '../../dto/education/terms/create-education-term.dto';
+import { UpdateEducationTermDto } from '../../dto/education/terms/update-education-term.dto';
+import { MembersService } from '../../../members/service/members.service';
+import { EducationEnrollmentModel } from '../../entity/education/education-enrollment.entity';
+import { CreateEducationEnrollmentDto } from '../../dto/education/enrollments/create-education-enrollment.dto';
+import { GetEducationEnrollmentDto } from '../../dto/education/enrollments/get-education-enrollment.dto';
+import { UpdateEducationEnrollmentDto } from '../../dto/education/enrollments/update-education-enrollment.dto';
+import { EducationSessionModel } from '../../entity/education/education-session.entity';
+import { UpdateEducationSessionDto } from '../../dto/education/sessions/update-education-session.dto';
+import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
+import { UpdateAttendanceDto } from '../../dto/education/attendance/update-attendance.dto';
 
 @Injectable()
 export class EducationsService {
@@ -333,12 +333,14 @@ export class EducationsService {
 
     const education = await this.getEducationById(churchId, educationId, qr);
 
-    const instructor = await this.membersService.getMemberModelById(
-      churchId,
-      dto.instructorId,
-      {},
-      qr,
-    );
+    const instructor = dto.instructorId
+      ? await this.membersService.getMemberModelById(
+          churchId,
+          dto.instructorId,
+          {},
+          qr,
+        )
+      : undefined;
 
     const isExistEducationTerm = await this.isExistEducationTerm(
       educationId,
@@ -647,7 +649,7 @@ export class EducationsService {
       },
     );
 
-    return this.getEducationSessionById(educationTermId, newSession.id);
+    return this.getEducationSessionById(educationTermId, newSession.id, qr);
   }
 
   async updateEducationSession(
