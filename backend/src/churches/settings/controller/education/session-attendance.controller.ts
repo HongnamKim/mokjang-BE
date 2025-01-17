@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { EducationsService } from '../../service/educations.service';
+import { EducationsService } from '../../service/education/educations.service';
 import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
