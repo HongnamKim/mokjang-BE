@@ -22,6 +22,7 @@ import { GroupHistoryModel } from '../../members-settings/entity/group-history.e
 import { EducationTermModel } from '../../settings/entity/education/education-term.entity';
 import { EducationEnrollmentModel } from '../../settings/entity/education/education-enrollment.entity';
 import { GroupModel } from '../../settings/entity/group/group.entity';
+import { MinistryHistoryModel } from '../../members-settings/entity/ministry-history.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -101,6 +102,12 @@ export class MemberModel extends BaseModel {
   @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
   ministries: MinistryModel[];
+
+  @OneToMany(
+    () => MinistryHistoryModel,
+    (ministryHistory) => ministryHistory.member,
+  )
+  ministryHistory: MinistryHistoryModel[];
 
   @Column({ nullable: true, comment: '직분 ID' })
   officerId: number | null;
