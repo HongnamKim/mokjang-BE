@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OfficerModel } from '../entity/officer.entity';
+import { OfficerModel } from '../entity/officer/officer.entity';
 import {
   EntitySchema,
   EntityTarget,
@@ -14,7 +14,7 @@ import {
   Repository,
 } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
-import { MinistryModel } from '../entity/ministry.entity';
+import { MinistryModel } from '../entity/ministry/ministry.entity';
 import { CreateSettingDto } from '../dto/create-setting.dto';
 import { BaseChurchSettingModel } from '../entity/base-church-setting.entity';
 import { SETTING_EXCEPTION } from '../exception-messages/exception-messages.const';
@@ -28,15 +28,15 @@ export class SettingsService {
   constructor(
     @InjectRepository(OfficerModel)
     private readonly officersRepository: Repository<OfficerModel>,
-    @InjectRepository(MinistryModel)
-    private readonly ministryRepository: Repository<MinistryModel>,
+    /*@InjectRepository(MinistryModel)
+    private readonly ministryRepository: Repository<MinistryModel>,*/
     /*@InjectRepository(EducationModel)
     private readonly educationRepository: Repository<EducationModel>,*/
     private readonly churchesService: ChurchesService,
   ) {
     this.entityMap = new Map([
       [OfficerModel.name, officersRepository],
-      [MinistryModel.name, ministryRepository],
+      //[MinistryModel.name, ministryRepository],
       //[EducationModel.name, educationRepository],
     ]);
   }

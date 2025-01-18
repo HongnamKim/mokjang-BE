@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SettingsService } from '../service/settings.service';
-import { OfficerModel } from '../entity/officer.entity';
+import { OfficerModel } from '../entity/officer/officer.entity';
 import { CreateSettingDto } from '../dto/create-setting.dto';
 import { UpdateSettingDto } from '../dto/update-setting.dto';
 

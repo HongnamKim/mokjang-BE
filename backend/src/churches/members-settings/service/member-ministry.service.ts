@@ -3,13 +3,15 @@ import { MembersService } from '../../members/service/members.service';
 import { SettingsService } from '../../settings/service/settings.service';
 import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
 import { QueryRunner } from 'typeorm';
-import { MinistryModel } from '../../settings/entity/ministry.entity';
+import { MinistryModel } from '../../settings/entity/ministry/ministry.entity';
+import { MinistryService } from '../../settings/service/ministry/ministry.service';
 
 @Injectable()
 export class MemberMinistryService {
   constructor(
     private readonly membersService: MembersService,
     private readonly settingsService: SettingsService,
+    private readonly ministryService: MinistryService,
   ) {}
 
   async updateMemberMinistry(
@@ -45,17 +47,15 @@ export class MemberMinistryService {
     await this.membersService.updateMemberMinistry(member, dto, ministry, qr);
 
     if (dto.isDeleteMinistry) {
-      await this.settingsService.decrementMembersCount(
+      await this.ministryService.decrementMembersCount(
         churchId,
         dto.ministryId,
-        MinistryModel,
         qr,
       );
     } else {
-      await this.settingsService.incrementMembersCount(
+      await this.ministryService.incrementMembersCount(
         churchId,
         dto.ministryId,
-        MinistryModel,
         qr,
       );
     }
