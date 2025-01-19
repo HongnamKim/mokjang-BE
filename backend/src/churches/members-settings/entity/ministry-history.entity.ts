@@ -14,7 +14,7 @@ export class MinistryHistoryModel extends BaseModel {
 
   @Column({
     type: 'int',
-    comment: '사역 ID (현재 사역일 경우에만 값이 있음)',
+    comment: '현재 사역 ID (현재 사역일 경우에만 값이 있음)',
     nullable: true,
   })
   ministryId: number | null;
