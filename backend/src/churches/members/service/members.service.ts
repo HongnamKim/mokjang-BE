@@ -32,7 +32,7 @@ import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
 import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
-import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
+import { UpdateMemberMinistryDto } from '../../members-settings/dto/ministry/update-member-ministry.dto';
 import { MinistryModel } from '../../settings/entity/ministry/ministry.entity';
 import {
   DefaultMemberSelectOption,
@@ -640,6 +640,34 @@ export class MembersService {
       { id: member.id },
       { officerId, officerStartDate, officerStartChurch },
     );
+  }
+
+  async addMemberMinistry(
+    member: MemberModel,
+    ministry: MinistryModel,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const oldMinistries = member.ministries;
+
+    member.ministries = [...oldMinistries, ministry];
+
+    return membersRepository.save(member);
+  }
+
+  async removeMemberMinistry(
+    member: MemberModel,
+    targetMinistry: MinistryModel,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    member.ministries = member.ministries.filter(
+      (ministry) => ministry.id !== targetMinistry.id,
+    );
+
+    return membersRepository.save(member);
   }
 
   async updateMemberMinistry(

@@ -54,6 +54,9 @@ export class MinistryService {
         id: ministryId,
         churchId,
       },
+      relations: {
+        ministryGroup: true,
+      },
     });
 
     if (!ministry) {
