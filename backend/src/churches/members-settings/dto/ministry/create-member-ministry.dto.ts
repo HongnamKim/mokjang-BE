@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, Min } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateMemberMinistryDto {
   @ApiProperty({
@@ -11,7 +11,10 @@ export class CreateMemberMinistryDto {
 
   @ApiProperty({
     description: '사역 시작일',
+    default: new Date(),
+    required: false,
   })
+  @IsOptional()
   @IsDate()
-  startDate: Date;
+  startDate: Date = new Date();
 }
