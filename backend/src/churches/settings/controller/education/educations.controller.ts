@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { EducationsService } from '../../service/educations.service';
+import { EducationsService } from '../../service/education/educations.service';
 import { GetEducationDto } from '../../dto/education/education/get-education.dto';
 import {
   ApiDeleteEducation,

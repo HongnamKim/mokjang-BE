@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { GroupModel } from '../../entity/group.entity';
+import { GroupModel } from '../../entity/group/group.entity';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -24,5 +24,5 @@ export class CreateGroupDto extends PickType(GroupModel, [
   })
   @IsNumber()
   @IsOptional()
-  override parentGroupId?: number;
+  override parentGroupId: number;
 }

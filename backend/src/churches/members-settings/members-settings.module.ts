@@ -14,6 +14,8 @@ import { GroupHistoryModel } from './entity/group-history.entity';
 import { GroupHistoryService } from './service/group-history.service';
 import { EducationEnrollmentModel } from '../settings/entity/education/education-enrollment.entity';
 import { EducationHistoryService } from './service/education-history.service';
+import { MinistryHistoryModel } from './entity/ministry-history.entity';
+import { MemberMinistryController } from './controller/member-ministry.controller';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { EducationHistoryService } from './service/education-history.service';
       EducationHistoryModel,
       GroupHistoryModel,
       EducationEnrollmentModel,
+      MinistryHistoryModel,
     ]),
     MembersModule,
     SettingsModule,
@@ -43,6 +46,7 @@ import { EducationHistoryService } from './service/education-history.service';
     MemberSettingsController,
     EducationHistoryController,
     GroupHistoryController,
+    MemberMinistryController,
   ],
 })
 export class MembersSettingsModule {}
