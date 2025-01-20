@@ -30,6 +30,7 @@ import { EducationSessionModel } from './churches/settings/entity/education/educ
 import { SessionAttendanceModel } from './churches/settings/entity/education/session-attendance.entity';
 import { EducationEnrollmentModel } from './churches/settings/entity/education/education-enrollment.entity';
 import { MinistryGroupModel } from './churches/settings/entity/ministry/ministry-group.entity';
+import { MinistryHistoryModel } from './churches/members-settings/entity/ministry-history.entity';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { MinistryGroupModel } from './churches/settings/entity/ministry/ministry
           OfficerModel,
           MinistryModel,
           MinistryGroupModel,
+          MinistryHistoryModel,
           GroupModel,
           GroupRoleModel,
           GroupHistoryModel,
