@@ -1,8 +1,16 @@
-import { Column, Entity, Index, ManyToMany, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { ChurchModel } from '../../../entity/church.entity';
 import { MinistryGroupModel } from './ministry-group.entity';
 import { BaseModel } from '../../../../common/entity/base.entity';
+import { MinistryHistoryModel } from '../../../members-settings/entity/ministry-history.entity';
 
 @Entity()
 export class MinistryModel extends BaseModel {
@@ -31,4 +39,10 @@ export class MinistryModel extends BaseModel {
 
   @ManyToMany(() => MemberModel, (member) => member.ministries)
   members: MemberModel[];
+
+  @OneToMany(
+    () => MinistryHistoryModel,
+    (ministryHistory) => ministryHistory.ministry,
+  )
+  ministryHistory: MinistryModel[];
 }

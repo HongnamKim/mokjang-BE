@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryModel } from '../../entity/ministry/ministry.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
 import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
 import { MinistryExceptionMessage } from '../../const/exception/ministry/ministry.exception';
@@ -45,6 +45,7 @@ export class MinistryService {
   async getMinistryModelById(
     churchId: number,
     ministryId: number,
+    relationOptions: FindOptionsRelations<MinistryModel>,
     qr?: QueryRunner,
   ) {
     const ministryRepository = this.getMinistryRepository(qr);
@@ -53,6 +54,9 @@ export class MinistryService {
       where: {
         id: ministryId,
         churchId,
+      },
+      relations: {
+        ministryGroup: true,
       },
     });
 
@@ -172,6 +176,7 @@ export class MinistryService {
     const targetMinistry = await this.getMinistryModelById(
       churchId,
       ministryId,
+      {},
       qr,
     );
 

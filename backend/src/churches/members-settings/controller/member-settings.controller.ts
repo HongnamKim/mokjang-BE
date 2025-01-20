@@ -13,15 +13,13 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateMemberOfficerDto } from '../dto/update-member-officer.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateMemberOfficerPipe } from '../pipe/update-member-officer.pipe';
-import { MemberMinistryService } from '../service/member-ministry.service';
-import { UpdateMemberMinistryDto } from '../dto/update-member-ministry.dto';
 
 @ApiTags('Churches:Members:Settings')
 @Controller()
 export class MemberSettingsController {
   constructor(
     private readonly memberOfficerService: MemberOfficerService,
-    private readonly memberMinistryService: MemberMinistryService,
+    //private readonly memberMinistryService: MemberMinistryService,
     //private readonly memberEducationService: EducationHistoryService,
     //private readonly memberGroupService: MemberGroupService,
   ) {}
@@ -43,7 +41,7 @@ export class MemberSettingsController {
     return this.memberOfficerService.updateOfficer(churchId, memberId, dto, qr);
   }
 
-  @ApiOperation({
+  /*@ApiOperation({
     summary: '교인의 사역 수정/삭제',
     description:
       '<p>isDeleteMinistry 가 true 일 경우 사역 삭제</p>' +
@@ -65,7 +63,7 @@ export class MemberSettingsController {
       dto,
       qr,
     );
-  }
+  }*/
 
   /*@ApiOperation({
     summary: '교인의 교육이수 수정/삭제',

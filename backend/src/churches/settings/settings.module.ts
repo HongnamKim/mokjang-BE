@@ -80,6 +80,7 @@ import { MinistryGroupsController } from './controller/ministry/ministry-groups.
   exports: [
     SettingsService,
     MinistryService,
+    MinistryGroupService,
     GroupsService,
     EducationsService,
     GroupsRolesService,
