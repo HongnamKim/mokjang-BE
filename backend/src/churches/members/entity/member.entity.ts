@@ -128,6 +128,7 @@ export class MemberModel extends BaseModel {
   })
   baptism: BaptismEnum;
 
+  // TODO 멤버 삭제 시 EducationEnrollment 도 같이 삭제되어야 함.
   @OneToMany(
     () => EducationEnrollmentModel,
     (educationEnrollment) => educationEnrollment.member,
