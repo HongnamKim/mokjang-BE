@@ -23,6 +23,7 @@ import { EducationTermModel } from '../../settings/entity/education/education-te
 import { EducationEnrollmentModel } from '../../settings/entity/education/education-enrollment.entity';
 import { GroupModel } from '../../settings/entity/group/group.entity';
 import { MinistryHistoryModel } from '../../members-settings/entity/ministry-history.entity';
+import { GroupRoleModel } from '../../settings/entity/group/group-role.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -143,15 +144,18 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => EducationTermModel, (term) => term.instructor)
   instructingEducation: EducationTermModel[];
 
-  /*@Column({ nullable: true, comment: '소그룹 ID' })
-  groupId: number | null;*/
+  @Column({ comment: '그룹 ID', nullable: true })
+  groupId: number | null;
 
-  /*@ManyToOne(() => GroupModel, (group) => group.members)
-  group: GroupModel;*/
+  @ManyToOne(() => GroupModel, (group) => group.members)
+  group: GroupModel;
 
-  @OneToMany(() => GroupModel, (group) => group.members)
-  currentGroup: GroupModel;
+  @Column({ comment: '그룹 역할 ID', nullable: true })
+  groupRoleId: number | null;
+
+  @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)
+  groupRole: GroupRoleModel;
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
-  group: GroupHistoryModel[];
+  groupHistory: GroupHistoryModel[];
 }

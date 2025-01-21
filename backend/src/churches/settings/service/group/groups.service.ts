@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../../entity/group/group.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../../churches.service';
 import { CreateGroupDto } from '../../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../../dto/group/update-group.dto';
@@ -54,18 +54,26 @@ export class GroupsService {
 
     return this.groupsRepository.find({
       where: { churchId },
-      relations: { roles: true },
+      relations: { groupRoles: true },
       order: { createdAt: 'ASC' },
     });
   }
 
-  async getGroupModelById(churchId: number, groupId: number, qr?: QueryRunner) {
+  async getGroupModelById(
+    churchId: number,
+    groupId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<GroupModel>,
+  ) {
     const groupsRepository = this.getGroupRepository(qr);
 
     const group = await groupsRepository.findOne({
       where: {
         id: groupId,
         churchId,
+      },
+      relations: {
+        ...relationOptions,
       },
     });
 
@@ -87,7 +95,7 @@ export class GroupsService {
 
     const group = await groupsRepository.findOne({
       where: { churchId, id: groupId },
-      relations: { roles: true },
+      relations: { groupRoles: true },
     });
 
     if (!group) {
@@ -96,14 +104,18 @@ export class GroupsService {
 
     return {
       ...group,
-      parentGroups: await this.getParentGroups(groupId, groupsRepository),
+      parentGroups: await this.getParentGroups(churchId, groupId, qr),
     };
   }
 
-  private async getParentGroups(
+  async getParentGroups(
+    churchId: number,
     groupId: number,
-    groupsRepository: Repository<GroupModel>,
+    qr?: QueryRunner,
+    //groupsRepository: Repository<GroupModel>,
   ) {
+    const groupsRepository = this.getGroupRepository(qr);
+
     const parents = await groupsRepository.query(
       `
     WITH RECURSIVE parent_groups AS (
@@ -112,7 +124,7 @@ export class GroupsService {
       FROM group_model g
       JOIN group_model child 
       ON g.id = child."parentGroupId"
-      WHERE child.id = $1
+      WHERE child.id = $1 AND child."churchId" = $2
       
       UNION ALL
       
@@ -124,7 +136,7 @@ export class GroupsService {
     )
     SELECT * FROM parent_groups;
     `,
-      [groupId],
+      [groupId, churchId],
     );
 
     let result: {
@@ -163,8 +175,9 @@ export class GroupsService {
       );
 
       const grandParentGroups = await this.getParentGroups(
+        churchId,
         parentGroup.id,
-        groupsRepository,
+        qr,
       );
 
       if (grandParentGroups.length + 1 === 5) {
