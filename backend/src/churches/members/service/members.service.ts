@@ -39,6 +39,8 @@ import {
   DefaultMembersRelationOption,
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
+import { GroupModel } from '../../settings/entity/group/group.entity';
+import { GroupRoleModel } from '../../settings/entity/group/group-role.entity';
 
 @Injectable()
 export class MembersService {
@@ -159,10 +161,10 @@ export class MembersService {
           } else if (column === 'group') {
             selectOptions[column] = {
               id: true,
-              groupId: true,
-              groupName: true,
-              startDate: true,
-              endDate: true,
+              //groupId: true,
+              //groupName: true,
+              //startDate: true,
+              //endDate: true,
             };
           }
 
@@ -216,10 +218,10 @@ export class MembersService {
         } else if (key === 'group') {
           result[key] = {
             id: true,
-            groupId: true,
-            groupName: true,
-            startDate: true,
-            endDate: true,
+            //groupId: true,
+            //groupName: true,
+            //startDate: true,
+            //endDate: true,
           };
         } else {
           result[key] = {
@@ -279,7 +281,7 @@ export class MembersService {
       vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
       baptism: dto.baptism && In(dto.baptism),
       //groupId: dto.group && In(dto.group),
-      group: dto.group && {
+      groupHistory: dto.group && {
         groupId: In(dto.group),
         endDate: IsNull(),
       },
@@ -341,9 +343,11 @@ export class MembersService {
     });
 
     // 현재 그룹만 필터링
-    if (result.length > 0 && result[0].group) {
+    if (result.length > 0 && result[0].groupHistory) {
       result.forEach((member) => {
-        member.group = member.group.filter((group) => group.endDate === null);
+        member.groupHistory = member.groupHistory.filter(
+          (group) => group.endDate === null,
+        );
       });
     }
 
@@ -706,22 +710,36 @@ export class MembersService {
     return memberRepository.save(member);
   }*/
 
-  /*async updateMemberGroup(
+  async addMemberGroup(
     member: MemberModel,
-    dto: UpdateMemberGroupDto,
+    group: GroupModel,
+    groupRole: GroupRoleModel | undefined,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
-
-    const groupId = dto.isDeleteGroup ? null : dto.groupId;
 
     return membersRepository.update(
       {
         id: member.id,
       },
       {
-        groupId,
+        group,
+        groupRole,
       },
     );
-  }*/
+  }
+
+  async removeMemberGroup(member: MemberModel, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.update(
+      {
+        id: member.id,
+      },
+      {
+        groupId: null,
+        groupRoleId: null,
+      },
+    );
+  }
 }
