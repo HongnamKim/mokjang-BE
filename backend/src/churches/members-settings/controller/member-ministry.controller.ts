@@ -94,7 +94,7 @@ export class MemberMinistryController {
     @QueryRunner() qr: QR,
   ) {
     //return 'delete Ministry';
-    return this.memberMinistryService.deleteMemberMinistry(
+    return this.memberMinistryService.endMemberMinistry(
       churchId,
       memberId,
       ministryId,

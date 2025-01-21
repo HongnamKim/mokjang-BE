@@ -9,7 +9,7 @@ import { MemberMinistryService } from './service/member-ministry.service';
 //import { EducationHistoryService } from './service/education-history.service';
 import { EducationHistoryModel } from './entity/education-history.entity';
 import { EducationHistoryController } from './controller/education-history.controller';
-import { GroupHistoryController } from './controller/group-history.controller';
+import { MemberGroupController } from './controller/member-group.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
 import { GroupHistoryService } from './service/group-history.service';
 import { EducationEnrollmentModel } from '../settings/entity/education/education-enrollment.entity';
@@ -45,7 +45,7 @@ import { MemberMinistryController } from './controller/member-ministry.controlle
   controllers: [
     MemberSettingsController,
     EducationHistoryController,
-    GroupHistoryController,
+    MemberGroupController,
     MemberMinistryController,
   ],
 })

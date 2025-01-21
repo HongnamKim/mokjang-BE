@@ -1,7 +1,9 @@
-import { Column, Entity, Index, ManyToOne, Unique } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { BaseModel } from '../../../../common/entity/base.entity';
 import { GroupModel } from './group.entity';
 import { ChurchModel } from '../../../entity/church.entity';
+import { GroupHistoryModel } from '../../../members-settings/entity/group-history.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Entity()
 @Unique(['role', 'groupId'])
@@ -13,7 +15,7 @@ export class GroupRoleModel extends BaseModel {
   @Column()
   groupId: number;
 
-  @ManyToOne(() => GroupModel, (group) => group.roles)
+  @ManyToOne(() => GroupModel, (group) => group.groupRoles)
   group: GroupModel;
 
   @Index()
@@ -22,4 +24,10 @@ export class GroupRoleModel extends BaseModel {
 
   @ManyToOne(() => ChurchModel, (church) => church.groupRoles)
   church: ChurchModel;
+
+  @OneToMany(() => MemberModel, (member) => member.groupRole)
+  members: MemberModel[];
+
+  @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.groupRole)
+  history: GroupHistoryModel[];
 }

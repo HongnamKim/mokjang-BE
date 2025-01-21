@@ -26,7 +26,7 @@ export class MinistryHistoryModel extends BaseModel {
   ministrySnapShot: string;
 
   @Column({
-    comment: '사역 종료일 시점의 사역 그룹, 그룹 위계는 - 로 구분',
+    comment: '사역 종료일 시점의 사역 그룹, 그룹 위계는 __ 로 구분',
     nullable: true,
   })
   ministryGroupSnapShot: string;
