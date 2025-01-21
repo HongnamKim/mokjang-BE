@@ -250,11 +250,13 @@ export class EducationsService {
       relations: {
         instructor: {
           group: true,
+          groupRole: true,
           officer: true,
         },
         educationEnrollments: {
           member: {
             group: true,
+            groupRole: true,
             officer: true,
           },
         },
@@ -266,15 +268,16 @@ export class EducationsService {
       throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
     }
 
-    educationTerm.instructor.group = educationTerm.instructor.group.filter(
-      (group) => group.endDate === null,
-    );
+    /*educationTerm.instructor.groupHistory =
+      educationTerm.instructor.groupHistory.filter(
+        (group) => group.endDate === null,
+      );*/
 
-    educationTerm.educationEnrollments.forEach((enrollment) => {
-      enrollment.member.group = enrollment.member.group.filter(
+    /*educationTerm.educationEnrollments.forEach((enrollment) => {
+      enrollment.member.groupHistory = enrollment.member.groupHistory.filter(
         (group) => group.endDate === null,
       );
-    });
+    });*/
 
     return educationTerm;
   }
@@ -1114,18 +1117,19 @@ export class EducationsService {
         educationEnrollment: {
           member: {
             group: true,
+            groupRole: true,
             officer: true,
           },
         },
       },
     });
 
-    sessionAttendance.forEach((attendance) => {
-      attendance.educationEnrollment.member.group =
-        attendance.educationEnrollment.member.group.filter(
+    /*sessionAttendance.forEach((attendance) => {
+      attendance.educationEnrollment.member.groupHistory =
+        attendance.educationEnrollment.member.groupHistory.filter(
           (group) => group.endDate === null,
         );
-    });
+    });*/
 
     return sessionAttendance;
   }
@@ -1196,6 +1200,7 @@ export class EducationsService {
         educationEnrollment: {
           member: {
             group: true,
+            groupRole: true,
             officer: true,
           },
         },
@@ -1203,12 +1208,12 @@ export class EducationsService {
     });
 
     // 현재 그룹만 필터링
-    result.forEach((attendance) => {
-      attendance.educationEnrollment.member.group =
-        attendance.educationEnrollment.member.group.filter(
+    /*result.forEach((attendance) => {
+      attendance.educationEnrollment.member.groupHistory =
+        attendance.educationEnrollment.member.groupHistory.filter(
           (group) => group.endDate === null,
         );
-    });
+    });*/
 
     return result;
   }

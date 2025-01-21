@@ -9,9 +9,10 @@ import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MembersService } from '../../members/service/members.service';
 import { GroupsService } from '../../settings/service/group/groups.service';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
-import { GroupsRolesService } from '../../settings/service/group/groups-roles.service';
-import { CreateGroupHistoryDto } from '../dto/group/create-group-history.dto';
+import { AddMemberToGroupDto } from '../dto/group/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
+import { DefaultMemberRelationOption } from '../../members/const/default-find-options.const';
+import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
 
 @Injectable()
 export class GroupHistoryService {
@@ -20,7 +21,6 @@ export class GroupHistoryService {
     private readonly groupHistoryRepository: Repository<GroupHistoryModel>,
     private readonly membersService: MembersService,
     private readonly groupsService: GroupsService,
-    private readonly groupsRolesService: GroupsRolesService,
   ) {}
 
   private getGroupHistoryRepository(qr?: QueryRunner) {
@@ -29,123 +29,206 @@ export class GroupHistoryService {
       : this.groupHistoryRepository;
   }
 
-  getGroupHistory(churchId: number, memberId: number, dto: GetGroupHistoryDto) {
-    return this.groupHistoryRepository.find({
-      where: { memberId },
+  async getMemberGroupHistory(
+    churchId: number,
+    memberId: number,
+    dto: GetGroupHistoryDto,
+    qr?: QueryRunner,
+  ) {
+    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
+
+    const groupHistories = await groupHistoryRepository.find({
+      where: {
+        member: {
+          churchId,
+        },
+        memberId,
+      },
+      relations: {
+        group: true,
+        groupRole: true,
+      },
       order: {
         endDate: dto.orderDirection,
         startDate: dto.orderDirection,
-        createdAt: dto.orderDirection,
-      },
-    });
-  }
-
-  async getGroupHistoryById(id: number, memberId: number, qr?: QueryRunner) {
-    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
-
-    const groupHistory = await groupHistoryRepository.findOne({
-      where: {
-        id,
-        memberId,
+        id: dto.orderDirection,
       },
     });
 
-    if (!groupHistory) {
-      throw new NotFoundException('해당 그룹 이력이 존재하지 않습니다.');
-    }
+    return Promise.all(
+      groupHistories.map(async (groupHistory) => {
+        if (groupHistory.endDate) {
+          return { ...groupHistory };
+        }
 
-    return groupHistory;
+        const groupId = groupHistory.groupId;
+
+        const parentGroups = groupId
+          ? await this.groupsService.getParentGroups(churchId, groupId, qr)
+          : [];
+
+        const groupSnapShot = parentGroups
+          .map((parentGroup) => parentGroup.name)
+          .concat(groupHistory.group.name)
+          .join('__');
+
+        const groupRoleSnapShot = groupHistory.groupRole
+          ? groupHistory.groupRole.role
+          : null;
+
+        groupHistory.groupSnapShot = groupSnapShot;
+        groupHistory.groupRoleSnapShot = groupRoleSnapShot;
+
+        return {
+          ...groupHistory,
+          group: null,
+          groupRole: null,
+        };
+      }),
+    );
   }
 
-  async createGroupHistory(
+  // 등록하려는 그룹이 교회에 존재하는지
+  // 교인이 교회에 존재하는지
+  // 그룹 역할이 있을 경우 해당 역할이 그룹에 존재하는지
+  async addMemberToGroup(
     churchId: number,
     memberId: number,
-    dto: CreateGroupHistoryDto,
+    dto: AddMemberToGroupDto,
     qr: QueryRunner,
   ) {
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
-    // 기존 그룹이 있는지 확인
-    const existHistory = await groupHistoryRepository.findOne({
-      where: {
-        memberId,
-        endDate: IsNull(),
-      },
-    });
-
-    // 기존 그룹이 있을 경우 자동으로 종료일 지정
-    if (existHistory && dto.autoEndDate) {
-      // 그룹 자동 종료
-      await groupHistoryRepository.update(
-        { id: existHistory.id },
-        {
-          endDate: dto.startDate,
-        },
-      );
-
-      // 종료된 그룹의 인원수 감소
-      await this.groupsService.decrementMembersCount(existHistory.groupId, qr);
-    }
-
-    // 기존 그룹 있을 경우 Exception
-    if (existHistory && !dto.autoEndDate) {
-      throw new BadRequestException('이미 소속 그룹이 존재하는 교인입니다.');
-    }
-
-    this.validateDate(dto);
-
-    /*const group = await this.groupsService.getGroupById(
-      churchId,
-      dto.groupId,
-      qr,
-    );*/
-
+    // 그룹 검증
     const group = await this.groupsService.getGroupModelById(
       churchId,
       dto.groupId,
       qr,
+      { groupRoles: true },
     );
+
+    // 교인 검증
+    const member = await this.membersService.getMemberModelById(
+      churchId,
+      memberId,
+      { group: true },
+      qr,
+    );
+    // 기존 그룹 여부 검증
+    if (member.group) {
+      throw new BadRequestException('해당 교인은 이미 소속된 그룹이 있습니다.');
+    }
+    /*if (member.group && dto.autoEndGroup) {
+        // 기존 그룹 종료 로직 수행
+      }*/
+
+    const groupRole = dto.groupRoleId
+      ? group.groupRoles.filter(
+          (groupRole) => groupRole.id === dto.groupRoleId,
+        )[0]
+      : undefined;
+
+    if (dto.groupRoleId && !groupRole) {
+      throw new NotFoundException('해당 그룹에 존재하지 않는 역할입니다.');
+    }
+
+    // 이력 생성
+    await groupHistoryRepository.save({
+      member,
+      group,
+      groupRole,
+      startDate: dto.startDate,
+    });
+
+    // 그룹의 인원 수 증가
+    await this.groupsService.incrementMembersCount(dto.groupId, qr);
+
+    // 교인의 그룹 정보 업데이트
+    await this.membersService.addMemberGroup(member, group, groupRole, qr);
+
+    return this.membersService.getMemberById(
+      churchId,
+      memberId,
+      DefaultMemberRelationOption,
+      qr,
+    );
+  }
+
+  async endMemberGroup(
+    churchId: number,
+    memberId: number,
+    dto: EndMemberGroupDto,
+    qr: QueryRunner,
+  ) {
+    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
+
+    const groupHistory = await groupHistoryRepository.findOne({
+      where: {
+        member: {
+          churchId,
+        },
+        memberId,
+        endDate: IsNull(),
+      },
+      relations: {
+        group: true,
+        groupRole: true,
+      },
+    });
+
+    if (!groupHistory) {
+      throw new NotFoundException('그룹에 소속되지 않은 교인입니다.');
+    }
+
+    if (groupHistory.startDate > dto.endDate) {
+      throw new BadRequestException('그룹 종료일이 시작일을 앞설 수 없습니다.');
+    }
 
     const member = await this.membersService.getMemberModelById(
       churchId,
       memberId,
-      {},
+      { group: true },
       qr,
     );
 
-    const groupRole = dto.groupRoleId
-      ? await this.groupsRolesService.getGroupRoleById(
-          churchId,
-          dto.groupId,
-          dto.groupRoleId,
-          qr,
-        )
-      : undefined;
+    const { group, groupRole } = groupHistory;
 
-    const groupHistory = await groupHistoryRepository.save({
-      group: group,
-      groupName: group.name,
-      groupRoleId: groupRole && groupRole.id,
-      groupRoleName: groupRole && groupRole.role,
-      member: member,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
-    });
+    const parentGroups = group.parentGroupId
+      ? await this.groupsService.getParentGroups(churchId, group.id, qr)
+      : [];
 
-    // 종료일이 없는 경우에만 인원수 증가
-    if (!dto.endDate)
-      await this.groupsService.incrementMembersCount(dto.groupId, qr);
+    const groupSnapShot = parentGroups
+      .map((parentGroup) => parentGroup.name)
+      .concat(group.name)
+      .join('__');
 
-    return groupHistoryRepository.findOne({ where: { id: groupHistory.id } });
+    // 그룹 이력 종료 날짜 추가, 스냅샷 추가
+    await groupHistoryRepository.update(
+      {
+        memberId,
+      },
+      {
+        groupId: null,
+        groupRoleId: null,
+        groupRoleSnapShot: groupRole?.role,
+        groupSnapShot,
+        endDate: dto.endDate,
+      },
+    );
+
+    // MemberModel, GroupModel, GroupRoleModel relation 해제
+    await this.membersService.removeMemberGroup(member, qr);
+
+    await this.groupsService.decrementMembersCount(group.id, qr);
+
+    return this.membersService.getMemberById(
+      churchId,
+      memberId,
+      DefaultMemberRelationOption,
+      qr,
+    );
   }
 
-  /**
-   * update 요소
-   *  1. 그룹 -> 바꾸려는 그룹 존재여부 확인, 기존 그룹 인원수 차감, 새로운 그룹 인원수 증가
-   *  2. 그룹 내 역할 -> 바꾸려는 역할 존재여부 확인
-   *  3. 시작날짜 -> 종료날짜보다 앞에 있는지
-   *  4. 종료날짜 -> 시작날짜보다 뒤에 있는지
-   */
   async updateGroupHistory(
     churchId: number,
     memberId: number,
@@ -155,136 +238,83 @@ export class GroupHistoryService {
   ) {
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
-    const groupHistory = await this.getGroupHistoryById(
-      groupHistoryId,
-      memberId,
-      qr,
-    );
+    const targetHistory = await groupHistoryRepository.findOne({
+      where: {
+        member: {
+          churchId,
+        },
+        memberId,
+        id: groupHistoryId,
+      },
+    });
 
-    // 그룹 및 역할 변경 로직
-    /*const newGroup = dto.groupId
-      ? await this.groupsService.getGroupById(churchId, dto.groupId, qr)
-      : undefined;
-
-    // 그룹 변경 시 새 그룹 인원수 증가, 기존 그룹 인원수 감소
-    if (newGroup) {
-      await this.groupsService.incrementMembersCount(newGroup.id, qr);
-      await this.groupsService.decrementMembersCount(groupHistory.groupId, qr);
+    if (!targetHistory) {
+      throw new NotFoundException('해당 그룹 이력을 찾을 수 없습니다.');
     }
 
-    // 새 그룹은 있지만 역할은 수정하지 않을 경우 기존 역할 삭제
-    const deleteRole = !!(newGroup && !dto.groupRoleId);
-
-    const groupRole = dto.groupRoleId
-      ? dto.groupId
-        ? await this.groupsRolesService.getGroupRoleById(
-            // 그룹과 역할을 모두 바꾸는 경우
-            churchId,
-            dto.groupId,
-            dto.groupRoleId,
-            qr,
-          )
-        : await this.groupsRolesService.getGroupRoleById(
-            // 역할만 바꾸는 경우
-            churchId,
-            groupHistory.groupId,
-            dto.groupRoleId,
-            qr,
-          )
-      : undefined;*/
-
-    this.validateDate(dto, groupHistory);
-
-    // 현재 그룹을 종료하는 경우 --> 인원수 감소
-    if (dto.endDate) {
-      await this.groupsService.decrementMembersCount(groupHistory.groupId, qr);
+    if (targetHistory.endDate === null && dto.endDate) {
+      throw new BadRequestException(
+        '종료되지 않은 그룹의 종료 날짜를 수정할 수 없습니다.',
+      );
     }
 
-    const result = await groupHistoryRepository.update(
+    if (dto.startDate && !dto.endDate) {
+      if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
+        throw new BadRequestException(
+          '이력 시작일은 종료일보다 늦을 수 없습니다.',
+        );
+      }
+    }
+
+    if (dto.endDate && !dto.startDate) {
+      if (dto.endDate < targetHistory.startDate) {
+        throw new BadRequestException(
+          '이력 종료일은 시작일보다 빠를 수 없습니다.',
+        );
+      }
+    }
+
+    await groupHistoryRepository.update(
       {
         id: groupHistoryId,
       },
       {
-        //group: newGroup,
-        //groupName: newGroup && newGroup.name,
-        //groupRoleId: deleteRole ? null : groupRole && groupRole.id,
-        //groupRoleName: deleteRole ? null : groupRole && groupRole.role,
         startDate: dto.startDate,
         endDate: dto.endDate,
       },
     );
 
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 그룹 이력이 존재하지 않습니다.');
-    }
-
-    return groupHistoryRepository.findOne({ where: { id: groupHistory.id } });
-  }
-
-  private validateDate(
-    dto: CreateGroupHistoryDto | UpdateGroupHistoryDto,
-    groupHistory?: GroupHistoryModel,
-  ) {
-    // 종료일만 업데이트
-    if (!dto.startDate && dto.endDate) {
-      if (groupHistory && groupHistory.startDate > dto.endDate) {
-        throw new BadRequestException(
-          '그룹 종료일이 시작일보다 앞설 수 없습니다.',
-        );
-      }
-    }
-
-    // 시작일만 업데이트
-    if (dto.startDate && !dto.endDate) {
-      if (
-        groupHistory &&
-        groupHistory.endDate &&
-        dto.startDate > groupHistory.endDate
-      ) {
-        throw new BadRequestException(
-          '그룹 종료일이 시작일보다 앞설 수 없습니다.',
-        );
-      }
-    }
-
-    // 시작일, 종료일 업데이트
-    if (dto.startDate && dto.endDate) {
-      if (dto.startDate > dto.endDate) {
-        throw new BadRequestException(
-          '그룹 종료일이 시작일보다 앞설 수 없습니다.',
-        );
-      }
-    }
+    return groupHistoryRepository.findOne({ where: { id: groupHistoryId } });
   }
 
   async deleteGroupHistory(
+    churchId: number,
     memberId: number,
     groupHistoryId: number,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ) {
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
-    const groupHistory = await groupHistoryRepository.findOne({
+    const targetHistory = await groupHistoryRepository.findOne({
       where: {
         id: groupHistoryId,
-        memberId: memberId,
+        member: {
+          churchId,
+        },
+        memberId,
       },
     });
 
-    if (!groupHistory) {
-      throw new NotFoundException('해당 그룹 이력이 존재하지 않습니다.');
+    if (!targetHistory) {
+      throw new NotFoundException('해당 그룹 이력을 찾을 수 없습니다.');
     }
 
-    await groupHistoryRepository.softDelete({
-      id: groupHistoryId,
-      deletedAt: IsNull(),
-    });
+    if (targetHistory.endDate === null) {
+      throw new BadRequestException('종료되지 않은 이력을 삭제할 수 없습니다.');
+    }
 
-    // 종료일이 없는 상태에서 삭제하는 경우 인원수 감소
-    // 종료일이 있는 경우 --> 종료일 입력 시점에서 인원수가 이미 감소되었음.
-    if (groupHistory.endDate === null)
-      await this.groupsService.decrementMembersCount(groupHistory.groupId, qr);
+    await groupHistoryRepository.softDelete(targetHistory.id);
 
-    return 'ok';
+    return `groupHistoryId ${groupHistoryId} deleted`;
   }
 }
