@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MembersService } from '../../members/service/members.service';
-import { IsNull, Not, QueryRunner, Repository } from 'typeorm';
+import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MinistryService } from '../../settings/service/ministry/ministry.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
@@ -62,7 +62,7 @@ export class MemberMinistryService {
     return Promise.all(
       ministryHistories.map(async (ministryHistory) => {
         if (ministryHistory.endDate) {
-          return { ...ministryHistory, ministry: null };
+          return { ...ministryHistory /*, ministry: null */ };
         }
 
         const ministryGroupId = ministryHistory.ministry.ministryGroupId;
@@ -161,7 +161,7 @@ export class MemberMinistryService {
     );
   }
 
-  async deleteMemberMinistry(
+  async endMemberMinistry(
     churchId: number,
     memberId: number,
     ministryId: number,
@@ -302,7 +302,7 @@ export class MemberMinistryService {
     // 시작일,종료일 변경하는 경우 --> DTO 에서 검증
 
     if (dto.startDate && !dto.endDate) {
-      if (dto.startDate > targetHistory.endDate) {
+      if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
         throw new BadRequestException(
           '이력 시작일은 종료일보다 늦을 수 없습니다.',
         );
@@ -345,12 +345,16 @@ export class MemberMinistryService {
           churchId,
         },
         memberId,
-        endDate: Not(IsNull()),
+        //endDate: Not(IsNull()),
       },
     });
 
     if (!targetHistory) {
       throw new NotFoundException('해당 사역 이력을 찾을 수 없습니다.');
+    }
+
+    if (targetHistory.endDate === null) {
+      throw new BadRequestException('종료되지 않은 이력을 삭제할 수 없습니다.');
     }
 
     await ministryHistoryRepository.softDelete(targetHistory.id);
