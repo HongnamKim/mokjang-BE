@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsOptional, ValidateIf } from 'class-validator';
-import { IsAfterDate } from '../../../settings/decorator/is-valid-end-date.decorator';
+import { IsAfterDate } from '../../../management/decorator/is-valid-end-date.decorator';
 
 export class UpdateMinistryHistoryDto {
   @ApiProperty({

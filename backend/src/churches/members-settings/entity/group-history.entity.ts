@@ -1,8 +1,8 @@
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { GroupModel } from '../../settings/entity/group/group.entity';
+import { GroupModel } from '../../management/entity/group/group.entity';
 import { MemberModel } from '../../members/entity/member.entity';
-import { GroupRoleModel } from '../../settings/entity/group/group-role.entity';
+import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 
 @Entity()
 export class GroupHistoryModel extends BaseModel {

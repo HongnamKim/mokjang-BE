@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationEnrollmentModel } from '../../settings/entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
-import { EducationStatus } from '../const/education-status.enum';
+import { EducationStatus } from '../const/education/education-status.enum';
 
 @Injectable()
 export class EducationHistoryService {
