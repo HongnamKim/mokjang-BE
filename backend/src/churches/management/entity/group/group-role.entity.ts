@@ -2,7 +2,7 @@ import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { BaseModel } from '../../../../common/entity/base.entity';
 import { GroupModel } from './group.entity';
 import { ChurchModel } from '../../../entity/church.entity';
-import { GroupHistoryModel } from '../../../members-settings/entity/group-history.entity';
+import { GroupHistoryModel } from '../../../members-management/entity/group-history.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 
 @Entity()

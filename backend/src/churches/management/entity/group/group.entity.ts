@@ -1,7 +1,7 @@
 import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { ChurchModel } from '../../../entity/church.entity';
 import { GroupRoleModel } from './group-role.entity';
-import { GroupHistoryModel } from '../../../members-settings/entity/group-history.entity';
+import { GroupHistoryModel } from '../../../members-management/entity/group-history.entity';
 import { BaseModel } from '../../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 

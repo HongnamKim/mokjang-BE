@@ -10,7 +10,7 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { ChurchModel } from '../../../entity/church.entity';
 import { MinistryGroupModel } from './ministry-group.entity';
 import { BaseModel } from '../../../../common/entity/base.entity';
-import { MinistryHistoryModel } from '../../../members-settings/entity/ministry-history.entity';
+import { MinistryHistoryModel } from '../../../members-management/entity/ministry-history.entity';
 
 @Entity()
 export class MinistryModel extends BaseModel {

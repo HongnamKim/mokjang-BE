@@ -2,7 +2,7 @@ import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { ChurchModel } from '../../../entity/church.entity';
 import { BaseModel } from '../../../../common/entity/base.entity';
-import { OfficerHistoryModel } from '../../../members-settings/entity/officer-history.entity';
+import { OfficerHistoryModel } from '../../../members-management/entity/officer-history.entity';
 
 @Entity()
 export class OfficerModel extends BaseModel {

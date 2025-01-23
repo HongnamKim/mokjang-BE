@@ -1,6 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationEnrollmentModel } from '../../../entity/education/education-enrollment.entity';
-import { EducationStatus } from '../../../../members-settings/const/education/education-status.enum';
+import { EducationStatus } from '../../../const/education/education-status.enum';
 import {
   IsBoolean,
   IsEnum,
