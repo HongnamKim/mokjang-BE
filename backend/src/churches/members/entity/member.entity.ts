@@ -12,18 +12,18 @@ import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
-//import { EducationModel } from '../../settings/entity/education.entity';
-import { OfficerModel } from '../../settings/entity/officer/officer.entity';
-import { MinistryModel } from '../../settings/entity/ministry/ministry.entity';
+import { OfficerModel } from '../../management/entity/officer/officer.entity';
+import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { EducationHistoryModel } from '../../members-settings/entity/education-history.entity';
 import { GroupHistoryModel } from '../../members-settings/entity/group-history.entity';
-import { EducationTermModel } from '../../settings/entity/education/education-term.entity';
-import { EducationEnrollmentModel } from '../../settings/entity/education/education-enrollment.entity';
-import { GroupModel } from '../../settings/entity/group/group.entity';
+import { EducationTermModel } from '../../management/entity/education/education-term.entity';
+import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
+import { GroupModel } from '../../management/entity/group/group.entity';
 import { MinistryHistoryModel } from '../../members-settings/entity/ministry-history.entity';
-import { GroupRoleModel } from '../../settings/entity/group/group-role.entity';
+import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
+import { OfficerHistoryModel } from '../../members-settings/entity/officer-history.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -116,11 +116,17 @@ export class MemberModel extends BaseModel {
   @ManyToOne(() => OfficerModel, (officer) => officer.members)
   officer: OfficerModel;
 
-  @Column({ nullable: true, comment: '임직일' })
-  officerStartDate: Date;
+  @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
+  officerStartDate: Date | null;
 
-  @Column({ nullable: true, comment: '임직교회' })
-  officerStartChurch: string;
+  @Column({ type: 'varchar', nullable: true, comment: '임직교회' })
+  officerStartChurch: string | null;
+
+  @OneToMany(
+    () => OfficerHistoryModel,
+    (officerHistory) => officerHistory.member,
+  )
+  officerHistory: OfficerHistoryModel[];
 
   @Column({
     enum: BaptismEnum,

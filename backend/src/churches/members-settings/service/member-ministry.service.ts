@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { MembersService } from '../../members/service/members.service';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { MinistryService } from '../../settings/service/ministry/ministry.service';
+import { MinistryService } from '../../management/service/ministry/ministry.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
 import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.dto';
 import { DefaultMemberRelationOption } from '../../members/const/default-find-options.const';
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
-import { MinistryGroupService } from '../../settings/service/ministry/ministry-group.service';
+import { MinistryGroupService } from '../../management/service/ministry/ministry-group.service';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
 import { UpdateMinistryHistoryDto } from '../dto/ministry/update-ministry-history.dto';
 

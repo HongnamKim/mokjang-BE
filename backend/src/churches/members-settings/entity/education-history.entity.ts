@@ -2,7 +2,7 @@ import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 //import { EducationModel } from '../../settings/entity/education.entity';
 import { MemberModel } from '../../members/entity/member.entity';
-import { EducationStatus } from '../const/education-status.enum';
+import { EducationStatus } from '../const/education/education-status.enum';
 
 @Entity()
 export class EducationHistoryModel extends BaseModel {
