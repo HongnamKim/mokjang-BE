@@ -8,7 +8,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { EducationStatus } from '../../../../members-settings/const/education/education-status.enum';
+import { EducationStatus } from '../../../const/education/education-status.enum';
 
 export class CreateEducationEnrollmentDto extends PickType(
   EducationEnrollmentModel,

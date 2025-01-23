@@ -16,14 +16,13 @@ import { OfficerModel } from '../../management/entity/officer/officer.entity';
 import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
-import { EducationHistoryModel } from '../../members-settings/entity/education-history.entity';
-import { GroupHistoryModel } from '../../members-settings/entity/group-history.entity';
+import { GroupHistoryModel } from '../../members-management/entity/group-history.entity';
 import { EducationTermModel } from '../../management/entity/education/education-term.entity';
 import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
 import { GroupModel } from '../../management/entity/group/group.entity';
-import { MinistryHistoryModel } from '../../members-settings/entity/ministry-history.entity';
+import { MinistryHistoryModel } from '../../members-management/entity/ministry-history.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
-import { OfficerHistoryModel } from '../../members-settings/entity/officer-history.entity';
+import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])
@@ -100,6 +99,13 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true, comment: '이전교회 이름' })
   previousChurch: string;
 
+  @Column({
+    enum: BaptismEnum,
+    default: BaptismEnum.default,
+    comment: '신급',
+  })
+  baptism: BaptismEnum;
+
   @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
   ministries: MinistryModel[];
@@ -128,25 +134,12 @@ export class MemberModel extends BaseModel {
   )
   officerHistory: OfficerHistoryModel[];
 
-  @Column({
-    enum: BaptismEnum,
-    default: BaptismEnum.default,
-    comment: '신급',
-  })
-  baptism: BaptismEnum;
-
   // TODO 멤버 삭제 시 EducationEnrollment 도 같이 삭제되어야 함.
   @OneToMany(
     () => EducationEnrollmentModel,
     (educationEnrollment) => educationEnrollment.member,
   )
-  educationEnrollments: EducationEnrollmentModel[];
-
-  @OneToMany(
-    () => EducationHistoryModel,
-    (educationHistory) => educationHistory.member,
-  )
-  educationHistory: EducationHistoryModel[];
+  educations: EducationEnrollmentModel[];
 
   @OneToMany(() => EducationTermModel, (term) => term.instructor)
   instructingEducation: EducationTermModel[];

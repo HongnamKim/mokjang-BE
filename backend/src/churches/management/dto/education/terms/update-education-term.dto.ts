@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsNumber, IsOptional, Min, ValidateIf } from 'class-validator';
 import { IsLessOrEqualThan } from '../../../decorator/is-less-or-equal-than.decorator';
-import { IsAfterDate } from '../../../decorator/is-valid-end-date.decorator';
+import { IsAfterDate } from '../../../decorator/is-after-date.decorator';
 
 export class UpdateEducationTermDto {
   @ApiProperty({

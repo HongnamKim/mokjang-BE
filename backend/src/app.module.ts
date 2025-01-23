@@ -10,7 +10,7 @@ import { MemberModel } from './churches/members/entity/member.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersModule } from './churches/members/members.module';
-import { MembersSettingsModule } from './churches/members-settings/members-settings.module';
+import { MembersManagementModule } from './churches/members-management/members-management.module';
 import { OfficerModel } from './churches/management/entity/officer/officer.entity';
 import { MinistryModel } from './churches/management/entity/ministry/ministry.entity';
 import { GroupModel } from './churches/management/entity/group/group.entity';
@@ -22,16 +22,16 @@ import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './auth/entity/user.entity';
 import { GroupRoleModel } from './churches/management/entity/group/group-role.entity';
-import { EducationHistoryModel } from './churches/members-settings/entity/education-history.entity';
-import { GroupHistoryModel } from './churches/members-settings/entity/group-history.entity';
+//import { EducationHistoryModel } from './churches/members-management/entity/education-history.entity';
+import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
 import { EducationModel } from './churches/management/entity/education/education.entity';
 import { EducationTermModel } from './churches/management/entity/education/education-term.entity';
 import { EducationSessionModel } from './churches/management/entity/education/education-session.entity';
 import { SessionAttendanceModel } from './churches/management/entity/education/session-attendance.entity';
 import { EducationEnrollmentModel } from './churches/management/entity/education/education-enrollment.entity';
 import { MinistryGroupModel } from './churches/management/entity/ministry/ministry-group.entity';
-import { MinistryHistoryModel } from './churches/members-settings/entity/ministry-history.entity';
-import { OfficerHistoryModel } from './churches/members-settings/entity/officer-history.entity';
+import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
+import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 
 @Module({
   imports: [
@@ -106,7 +106,7 @@ import { OfficerHistoryModel } from './churches/members-settings/entity/officer-
           EducationSessionModel,
           SessionAttendanceModel,
           EducationEnrollmentModel,
-          EducationHistoryModel,
+          //EducationHistoryModel,
           // 직분 관련 엔티티
           OfficerModel,
           OfficerHistoryModel,
@@ -127,7 +127,7 @@ import { OfficerHistoryModel } from './churches/members-settings/entity/officer-
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
-    MembersSettingsModule,
+    MembersManagementModule,
     ManagementModule,
   ],
   controllers: [AppController],
