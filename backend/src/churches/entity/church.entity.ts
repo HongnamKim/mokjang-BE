@@ -10,15 +10,14 @@ import {
 } from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
-import { GroupModel } from '../settings/entity/group/group.entity';
-//import { EducationModel } from '../settings/entity/education.entity';
-import { OfficerModel } from '../settings/entity/officer/officer.entity';
-import { MinistryModel } from '../settings/entity/ministry/ministry.entity';
+import { GroupModel } from '../management/entity/group/group.entity';
+import { OfficerModel } from '../management/entity/officer/officer.entity';
+import { MinistryModel } from '../management/entity/ministry/ministry.entity';
 import { UserModel } from '../../auth/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
-import { GroupRoleModel } from '../settings/entity/group/group-role.entity';
-import { EducationModel } from '../settings/entity/education/education.entity';
-import { MinistryGroupModel } from '../settings/entity/ministry/ministry-group.entity';
+import { GroupRoleModel } from '../management/entity/group/group-role.entity';
+import { EducationModel } from '../management/entity/education/education.entity';
+import { MinistryGroupModel } from '../management/entity/ministry/ministry-group.entity';
 
 @Entity()
 @Unique(['name', 'identifyNumber'])
