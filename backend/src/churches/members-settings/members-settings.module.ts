@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MembersModule } from '../members/members.module';
-import { SettingsModule } from '../settings/settings.module';
+import { ManagementModule } from '../management/management.module';
 import { MemberOfficerService } from './service/member-officer.service';
-import { MemberSettingsController } from './controller/member-settings.controller';
+import { MemberOfficerController } from './controller/member-officer.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
 //import { EducationHistoryService } from './service/education-history.service';
@@ -12,10 +12,11 @@ import { EducationHistoryController } from './controller/education-history.contr
 import { MemberGroupController } from './controller/member-group.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
 import { GroupHistoryService } from './service/group-history.service';
-import { EducationEnrollmentModel } from '../settings/entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../management/entity/education/education-enrollment.entity';
 import { EducationHistoryService } from './service/education-history.service';
 import { MinistryHistoryModel } from './entity/ministry-history.entity';
 import { MemberMinistryController } from './controller/member-ministry.controller';
+import { OfficerHistoryModel } from './entity/officer-history.entity';
 
 @Module({
   imports: [
@@ -30,9 +31,10 @@ import { MemberMinistryController } from './controller/member-ministry.controlle
       GroupHistoryModel,
       EducationEnrollmentModel,
       MinistryHistoryModel,
+      OfficerHistoryModel,
     ]),
     MembersModule,
-    SettingsModule,
+    ManagementModule,
   ],
   exports: [],
   providers: [
@@ -43,7 +45,7 @@ import { MemberMinistryController } from './controller/member-ministry.controlle
     GroupHistoryService,
   ],
   controllers: [
-    MemberSettingsController,
+    MemberOfficerController,
     EducationHistoryController,
     MemberGroupController,
     MemberMinistryController,
