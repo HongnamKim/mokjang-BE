@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThan, QueryRunner, Repository } from 'typeorm';
-import { EducationStatus } from '../../../members-settings/const/education/education-status.enum';
+import { EducationStatus } from '../../const/education/education-status.enum';
 import { EducationModel } from '../../entity/education/education.entity';
 import { GetEducationDto } from '../../dto/education/education/get-education.dto';
 import { CreateEducationDto } from '../../dto/education/education/create-education.dto';

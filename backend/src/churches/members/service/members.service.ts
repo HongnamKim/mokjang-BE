@@ -293,13 +293,14 @@ export class MembersService {
       },*/
     };
 
+    // TODO EducationEnrollment 검색 조건
     // 1 : N 관게 요소 필터링할 경우 필터링 외의 요소들도 조회하기 위함.
     if (dto.educations || dto.ministries) {
       const memberIds = (
         await this.membersRepository.find({
           where: {
-            educationHistory: {
-              educationId: dto.educations && In(dto.educations),
+            educations: {
+              //educationId: dto.educations && In(dto.educations),
               status: dto.educationStatus && In(dto.educationStatus),
             },
             ministries: dto.ministries && { id: In(dto.ministries) },
@@ -641,7 +642,8 @@ export class MembersService {
       { id: member.id },
       {
         officerId: officer.id,
-        officerStartDate: officerStartChurch,
+        officerStartDate,
+        officerStartChurch,
       },
     );
   }
