@@ -2,7 +2,7 @@ import { BaseModel } from '../../../../common/entity/base.entity';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { EducationTermModel } from './education-term.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { EducationStatus } from '../../../members-settings/const/education/education-status.enum';
+import { EducationStatus } from '../../const/education/education-status.enum';
 import { SessionAttendanceModel } from './session-attendance.entity';
 
 @Entity()
@@ -13,7 +13,7 @@ export class EducationEnrollmentModel extends BaseModel {
   @Column({ comment: '교육 대상자 이름' })
   memberName: string;
 
-  @ManyToOne(() => MemberModel, (member) => member.educationEnrollments)
+  @ManyToOne(() => MemberModel, (member) => member.educations)
   member: MemberModel;
 
   @Column({ comment: '교육 기수 ID' })
