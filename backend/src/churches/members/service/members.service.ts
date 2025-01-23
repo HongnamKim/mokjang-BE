@@ -31,16 +31,15 @@ import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
 import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
-import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
-import { UpdateMemberMinistryDto } from '../../members-settings/dto/ministry/update-member-ministry.dto';
-import { MinistryModel } from '../../settings/entity/ministry/ministry.entity';
+import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import {
   DefaultMemberSelectOption,
   DefaultMembersRelationOption,
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
-import { GroupModel } from '../../settings/entity/group/group.entity';
-import { GroupRoleModel } from '../../settings/entity/group/group-role.entity';
+import { GroupModel } from '../../management/entity/group/group.entity';
+import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
+import { OfficerModel } from '../../management/entity/officer/officer.entity';
 
 @Injectable()
 export class MembersService {
@@ -629,20 +628,34 @@ export class MembersService {
     );
   }
 
-  async updateMemberOfficer(
+  async setMemberOfficer(
     member: MemberModel,
-    dto: UpdateMemberOfficerDto,
+    officer: OfficerModel,
+    officerStartDate: Date,
+    officerStartChurch: string,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const officerId = dto.isDeleteOfficer ? null : dto.officerId;
-    const officerStartDate = dto.officerStartDate;
-    const officerStartChurch = dto.officerStartChurch;
+    return membersRepository.update(
+      { id: member.id },
+      {
+        officerId: officer.id,
+        officerStartDate: officerStartChurch,
+      },
+    );
+  }
+
+  async endMemberOfficer(member: MemberModel, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
 
     return membersRepository.update(
       { id: member.id },
-      { officerId, officerStartDate, officerStartChurch },
+      {
+        officerId: null,
+        officerStartDate: null,
+        officerStartChurch: null,
+      },
     );
   }
 
@@ -673,42 +686,6 @@ export class MembersService {
 
     return membersRepository.save(member);
   }
-
-  async updateMemberMinistry(
-    member: MemberModel,
-    dto: UpdateMemberMinistryDto,
-    ministry: MinistryModel,
-    qr: QueryRunner,
-  ) {
-    const memberRepository = this.getMembersRepository(qr);
-
-    const oldMinistries = member.ministries;
-
-    member.ministries = dto.isDeleteMinistry
-      ? member.ministries.filter((ministry) => ministry.id !== dto.ministryId)
-      : [...oldMinistries, ministry];
-
-    return memberRepository.save(member);
-  }
-
-  /*async updateMemberEducation(
-    member: MemberModel,
-    dto: UpdateMemberEducationDto,
-    education: EducationModel,
-    qr: QueryRunner,
-  ) {
-    const memberRepository = this.getMembersRepository(qr);
-
-    const oldEducations = member.educations;
-
-    member.educations = dto.isDeleteEducation
-      ? member.educations.filter(
-          (education) => education.id !== dto.educationId,
-        )
-      : [...oldEducations, education];
-
-    return memberRepository.save(member);
-  }*/
 
   async addMemberGroup(
     member: MemberModel,
