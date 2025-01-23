@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryGroupModel } from '../../entity/ministry/ministry-group.entity';
-import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../../churches.service';
 import { CreateMinistryGroupDto } from '../../dto/ministry/create-ministry-group.dto';
 import { UpdateMinistryGroupDto } from '../../dto/ministry/update-ministry-group.dto';
@@ -37,6 +37,7 @@ export class MinistryGroupService {
 
   private async isExistMinistryGroup(
     churchId: number,
+    parentMinistryGroupId: number | undefined,
     name: string,
     qr?: QueryRunner,
   ) {
@@ -45,6 +46,9 @@ export class MinistryGroupService {
     const group = await ministryGroupsRepository.findOne({
       where: {
         churchId,
+        parentMinistryGroupId: parentMinistryGroupId
+          ? parentMinistryGroupId
+          : IsNull(),
         name,
       },
     });
@@ -56,7 +60,7 @@ export class MinistryGroupService {
     return this.ministryGroupRepository.find({
       where: { churchId },
       relations: {
-        ministries: true,
+        //ministries: true,
       },
       order: { createdAt: 'ASC' },
     });
@@ -174,7 +178,14 @@ export class MinistryGroupService {
   ) {
     await this.checkChurchExist(churchId, qr);
 
-    if (await this.isExistMinistryGroup(churchId, dto.name, qr)) {
+    if (
+      await this.isExistMinistryGroup(
+        churchId,
+        dto.parentMinistryGroupId,
+        dto.name,
+        qr,
+      )
+    ) {
       throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
     }
 
@@ -215,6 +226,32 @@ export class MinistryGroupService {
     });
   }
 
+  private async isValidParentMinistryGroup(
+    churchId: number,
+    targetMinistryGroup: MinistryGroupModel,
+    newParentGroupId: number,
+    qr: QueryRunner,
+  ) {
+    // 새 부모 그룹 조회, 없다면 NotFoundException
+    const newParentMinistryGroup = await this.getMinistryGroupModelById(
+      churchId,
+      newParentGroupId,
+      qr,
+    );
+
+    if (
+      targetMinistryGroup.childMinistryGroupIds.includes(
+        newParentMinistryGroup.id,
+      )
+    ) {
+      throw new BadRequestException(
+        '현재 하위 그룹을 새로운 상위 그룹으로 지정할 수 없습니다.',
+      );
+    }
+
+    return true;
+  }
+
   async updateMinistryGroup(
     churchId: number,
     ministryGroupId: number,
@@ -222,11 +259,6 @@ export class MinistryGroupService {
     qr: QueryRunner,
   ) {
     await this.checkChurchExist(churchId, qr);
-
-    // 이름 변경하는 경우 중복 확인
-    if (dto.name && (await this.isExistMinistryGroup(churchId, dto.name, qr))) {
-      throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
-    }
 
     const ministryGroupRepository = this.getMinistryGroupRepository(qr);
 
@@ -237,20 +269,32 @@ export class MinistryGroupService {
       qr,
     );
 
-    // 상위 그룹을 변경하려는 경우
-    if (dto.parentMinistryGroupId) {
-      // 변경하려는 상위 그룹이 있는지
-      const newParentMinistryGroup = await this.getMinistryGroupModelById(
-        churchId,
-        dto.parentMinistryGroupId,
-        qr,
-      );
+    const newParentMinistryGroupId =
+      dto.parentMinistryGroupId !== undefined
+        ? dto.parentMinistryGroupId
+        : targetGroup.parentMinistryGroupId;
 
-      if (
-        targetGroup.childMinistryGroupIds.includes(newParentMinistryGroup.id)
-      ) {
-        throw new BadRequestException(
-          '현재 하위 그룹을 새로운 상위 그룹으로 지정할 수 없습니다.',
+    // 이름 변경하는 경우 중복 확인
+    if (
+      dto.name &&
+      (await this.isExistMinistryGroup(
+        churchId,
+        newParentMinistryGroupId,
+        dto.name,
+        qr,
+      ))
+    ) {
+      throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
+    }
+
+    // 상위 그룹을 변경하려는 경우
+    if (dto.parentMinistryGroupId !== undefined) {
+      if (dto.parentMinistryGroupId !== null) {
+        await this.isValidParentMinistryGroup(
+          churchId,
+          targetGroup,
+          newParentMinistryGroupId,
+          qr,
         );
       }
 
@@ -272,10 +316,20 @@ export class MinistryGroupService {
 
       await ministryGroupRepository.update({ id: ministryGroupId }, { ...dto });
 
-      return ministryGroupRepository.findOne({
+      return this.getMinistryGroupById(churchId, ministryGroupId, qr);
+
+      /*return ministryGroupRepository.findOne({
         where: { id: ministryGroupId, churchId },
-      });
+      });*/
     }
+
+    // 이름만 변경하는 경우
+    await ministryGroupRepository.update({ id: ministryGroupId }, { ...dto });
+
+    return this.getMinistryGroupById(churchId, ministryGroupId, qr);
+    /*return ministryGroupRepository.findOne({
+      where: { id: ministryGroupId, churchId },
+    });*/
   }
 
   async deleteMinistryGroup(
