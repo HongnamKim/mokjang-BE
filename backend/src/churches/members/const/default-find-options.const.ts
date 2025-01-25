@@ -9,23 +9,16 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   officer: true,
   ministries: true,
-  //educations: true,
-  educationHistory: true,
+  educations: true,
   group: true,
+  groupRole: true,
 };
 
 export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
   guidedBy: {
     id: true,
     name: true,
-  } /*
-  family: {
-    relation: true,
-    familyMember: {
-      id: true,
-      name: true,
-    },
-  },*/,
+  },
   officer: {
     id: true,
     name: true,
@@ -34,34 +27,23 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educationHistory: {
-    id: true,
-    educationId: true,
-    educationName: true,
-    status: true,
-  },
-  /*group: {
-    id: true,
-    name: true,
-  },*/
+  educations: true,
   group: {
     id: true,
-    groupId: true,
-    groupName: true,
-    groupRoleId: true,
-    groupRoleName: true,
-    startDate: true,
-    endDate: true,
+    name: true,
+  },
+  groupRole: {
+    id: true,
+    role: true,
   },
 };
 
 export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
   //guidedBy: true,
-  //group: true,
   group: true,
+  groupRole: true,
   ministries: true,
-  //educations: true,
-  educationHistory: true,
+  educations: true,
   officer: true,
 };
 
@@ -75,31 +57,19 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
   birth: true,
   isLunar: true,
   gender: true,
-  /*group: {
-    id: true,
-    name: true,
-  },*/
   group: {
     id: true,
-    groupId: true,
-    groupName: true,
-    startDate: true,
-    endDate: true,
+    name: true,
+  },
+  groupRole: {
+    id: true,
+    role: true,
   },
   ministries: {
     id: true,
     name: true,
   },
-  /*educations: {
-    id: true,
-    name: true,
-  },*/
-  educationHistory: {
-    id: true,
-    educationId: true,
-    educationName: true,
-    status: true,
-  },
+  educations: true,
   officer: {
     id: true,
     name: true,
