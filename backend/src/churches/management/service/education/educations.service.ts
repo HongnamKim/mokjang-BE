@@ -186,6 +186,20 @@ export class EducationsService {
       },
     );
 
+    // 이름 변경 시 하위 기수들의 교육명 업데이트
+    if (dto.name) {
+      const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+      await educationTermsRepository.update(
+        {
+          educationId,
+        },
+        {
+          educationName: dto.name,
+        },
+      );
+    }
+
     return educationsRepository.findOne({ where: { id: educationId } });
   }
 
@@ -221,6 +235,9 @@ export class EducationsService {
 
     return educationTermsRepository.find({
       where: {
+        education: {
+          churchId,
+        },
         educationId: educationId,
       },
       order: {
@@ -246,6 +263,9 @@ export class EducationsService {
       where: {
         id: educationTermId,
         educationId,
+        education: {
+          churchId,
+        },
       },
       relations: {
         instructor: {
@@ -267,17 +287,6 @@ export class EducationsService {
     if (!educationTerm) {
       throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
     }
-
-    /*educationTerm.instructor.groupHistory =
-      educationTerm.instructor.groupHistory.filter(
-        (group) => group.endDate === null,
-      );*/
-
-    /*educationTerm.educationEnrollments.forEach((enrollment) => {
-      enrollment.member.groupHistory = enrollment.member.groupHistory.filter(
-        (group) => group.endDate === null,
-      );
-    });*/
 
     return educationTerm;
   }
