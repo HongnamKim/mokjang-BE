@@ -80,9 +80,9 @@ export class MembersService {
         if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
           if (column === 'educations') {
             relationOptions[column] = {
-              educationTerm: {
+              educationTerm: value /*{
                 education: value,
-              },
+              }*/,
             };
           } else if (column === 'group') {
             relationOptions[column] = true;
@@ -156,10 +156,11 @@ export class MembersService {
               educationTerm: {
                 id: true,
                 term: true,
+                educationName: true /*
                 education: {
                   id: true,
                   name: true,
-                },
+                },*/,
               },
             };
           } else if (column === 'group') {
@@ -266,7 +267,6 @@ export class MembersService {
     const selectOptions = this.parseSelectOption(dto);
 
     const relationOptions = this.parseRelationOption(dto);
-    console.log(selectOptions);
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> =
       await this.parseWhereOption(churchId, dto);
