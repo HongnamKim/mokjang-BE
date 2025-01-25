@@ -81,14 +81,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @QueryBoolean()
   @IsBoolean()
   @IsOptional()
-  select__group?: boolean;
-
-  @ApiProperty({
-    required: false,
-  })
-  @QueryBoolean()
-  @IsBoolean()
-  @IsOptional()
   select__birth?: boolean;
 
   @ApiProperty({
@@ -98,24 +90,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsBoolean()
   @IsOptional()
   select__gender?: boolean;
-
-  @ApiProperty({ required: false })
-  @QueryBoolean()
-  @IsBoolean()
-  @IsOptional()
-  select__officer?: boolean;
-
-  @ApiProperty({ required: false })
-  @QueryBoolean()
-  @IsBoolean()
-  @IsOptional()
-  select__ministries?: boolean;
-
-  @ApiProperty({ required: false })
-  @QueryBoolean()
-  @IsBoolean()
-  @IsOptional()
-  select__educations?: boolean;
 
   @ApiProperty({ required: false })
   @QueryBoolean()
@@ -160,6 +134,32 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   select__vehicleNumber?: boolean;
 
   @ApiProperty({
+    required: false,
+  })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__group?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__officer?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__ministries?: boolean;
+
+  @ApiProperty({ required: false })
+  @QueryBoolean()
+  @IsBoolean()
+  @IsOptional()
+  select__educations?: boolean;
+
+  @ApiProperty({
     description: '등록일자 ~부터',
     required: false,
   })
@@ -191,26 +191,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsOptional()
   updateBefore?: Date;
 
-  /*@ApiProperty({
-    name: 'createAfter',
-    description: '생성일자 ~부터',
-    //default: '1800-01-01',
-    required: false,
-  })
-  @IsDate()
-  @IsOptional()
-  createAfter?: Date; // = new Date('1800-01-01');
-
-  @ApiProperty({
-    name: 'createBefore',
-    description: '생성일자 ~까지',
-    //default: new Date(),
-    required: false,
-  })
-  @IsDate()
-  @IsOptional()
-  createBefore?: Date; // = new Date();*/
-
   @ApiProperty({
     name: 'name',
     description: '이름 검색어',
@@ -230,16 +210,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsNotEmpty()
   @IsOptional()
   mobilePhone?: string;
-
-  /*@ApiProperty({
-    name: 'marriage',
-    description: '결혼 여부',
-    enum: MarriageOptions,
-    required: false,
-  })
-  @IsEnum(MarriageOptions)
-  @IsOptional()
-  marriage?: MarriageOptions;*/
 
   @ApiProperty({
     description: '결혼 여부',
@@ -269,16 +239,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsDate()
   @IsOptional()
   birthBefore?: Date;
-
-  /*@ApiProperty({
-    name: 'gender',
-    description: '성별',
-    enum: GenderEnum,
-    required: false,
-  })
-  @IsEnum(GenderEnum)
-  @IsOptional()
-  gender?: GenderEnum;*/
 
   @ApiProperty({
     description: '성별',

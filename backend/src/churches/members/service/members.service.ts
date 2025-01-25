@@ -50,7 +50,7 @@ export class MembersService {
     private readonly familyService: FamilyService,
   ) {}
 
-  private CHURCH_SETTING_COLUMNS = [
+  private CHURCH_MANAGEMENT_COLUMNS = [
     'group',
     'ministries',
     'educations',
@@ -71,45 +71,39 @@ export class MembersService {
     let needDefaultRelationOptions = true;
 
     Object.entries(dto).forEach(([key, value]) => {
+      // 선택한 컬럼 추가
       if (key.startsWith(this.SELECT_PREFIX)) {
         const [, column] = key.split('__');
 
         needDefaultRelationOptions = false;
 
-        if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+        if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
           if (column === 'educations') {
-            relationOptions['educationHistory'] = value;
+            relationOptions[column] = {
+              educationTerm: value /*{
+                education: value,
+              }*/,
+            };
+          } else if (column === 'group') {
+            relationOptions[column] = true;
+            relationOptions['groupRole'] = true;
+          } else {
+            relationOptions[column] = value;
           }
-          relationOptions[column] = value;
         }
-
-        return;
-      }
-
-      /*if (key === 'educationStatus' || key === 'educationHistory') {
-        relationOptions['educationHistory'] = true;
-        return;
-      }*/
-
-      // 컬럼 사용자화 없이 필터링을 걸었을 경우
-      if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
-        if (key === 'educations') {
-          relationOptions['educationHistory'] = value;
-        }
-        relationOptions[key] = true;
-
         return;
       }
     });
 
+    // 컬럼 사용자화 하지 않은 경우 기본 relationOption 복사
     if (needDefaultRelationOptions) {
       Object.keys(DefaultMembersRelationOption).forEach((key) => {
-        relationOptions[key] = true;
+        relationOptions[key] = DefaultMembersRelationOption[key];
       });
     }
 
     // 정렬 기준이 join 이 필요한 컬럼인 경우
-    if (this.CHURCH_SETTING_COLUMNS.includes(dto.order)) {
+    if (this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)) {
       relationOptions[dto.order as string] = true;
     }
 
@@ -131,6 +125,8 @@ export class MembersService {
       findOptionsOrder[dto.order as string] = dto.orderDirection;
       if (dto.order !== GetMemberOrderEnum.registeredAt) {
         findOptionsOrder.registeredAt = 'asc';
+      } else {
+        findOptionsOrder.id = 'asc';
       }
     }
 
@@ -144,44 +140,67 @@ export class MembersService {
 
     // 컬럼 사용자화
     Object.entries(dto).forEach(([key, value]) => {
+      // 페이징 관련 옵션 건너뛰기
       if (this.PAGING_OPTIONS.includes(key)) return;
 
+      // 컬럼 사용자화
       if (key.startsWith(this.SELECT_PREFIX)) {
         const [, column] = key.split('__');
 
-        if (this.CHURCH_SETTING_COLUMNS.includes(column)) {
+        if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
+          // 사역, 직분, 그룹, 교육
           if (column === 'educations') {
-            selectOptions['educationHistory'] = {
+            selectOptions[column] = {
               id: true,
-              educationId: true,
-              educationName: true,
               status: true,
+              educationTerm: {
+                id: true,
+                term: true,
+                educationName: true /*
+                education: {
+                  id: true,
+                  name: true,
+                },*/,
+              },
             };
           } else if (column === 'group') {
             selectOptions[column] = {
               id: true,
-              //groupId: true,
-              //groupName: true,
-              //startDate: true,
-              //endDate: true,
+              name: true,
             };
-          }
+            selectOptions['groupRole'] = {
+              id: true,
+              role: true,
+            };
+          } else
+            selectOptions[column] = {
+              id: value,
+              name: value,
+            };
+          needDefaultSelectOptions = false;
+          return;
+        }
 
-          selectOptions[column] = {
-            id: value,
-            name: value,
-          };
-        } else if (column === 'address') {
+        if (column === 'address') {
           // 도로명 주소 선택 시 상제 주소 추가
           selectOptions[column] = value;
           selectOptions['detailAddress'] = value;
-        } else if (column === 'birth') {
+
+          needDefaultSelectOptions = false;
+
+          return;
+        }
+        if (column === 'birth') {
           // 생년월일 추가 시 음력여부 추가
           selectOptions[column] = value;
           selectOptions['isLunar'] = value;
-        } else {
-          selectOptions[column] = value;
+
+          needDefaultSelectOptions = false;
+
+          return;
         }
+
+        selectOptions[column] = value;
 
         needDefaultSelectOptions = false;
       }
@@ -192,62 +211,10 @@ export class MembersService {
       id: true,
       registeredAt: true,
       name: true,
-      [dto.order]: this.CHURCH_SETTING_COLUMNS.includes(dto.order)
+      [dto.order]: this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)
         ? { id: true, name: true }
         : true,
     };
-
-    // 필터링 선택한 컬럼
-    Object.keys(dto).forEach((key) => {
-      if (
-        this.PAGING_OPTIONS.includes(key) ||
-        key.startsWith(this.SELECT_PREFIX) ||
-        key === 'educationStatus'
-      )
-        return;
-
-      if (this.CHURCH_SETTING_COLUMNS.includes(key)) {
-        if (key === 'educations') {
-          result['educationHistory'] = {
-            id: true,
-            educationName: true,
-            status: true,
-            educationId: true,
-          };
-        } else if (key === 'group') {
-          result[key] = {
-            id: true,
-            //groupId: true,
-            //groupName: true,
-            //startDate: true,
-            //endDate: true,
-          };
-        } else {
-          result[key] = {
-            id: true,
-            name: true,
-          };
-        }
-        return;
-      }
-
-      if (key === 'registerAfter' || key === 'registerBefore') {
-        result['registeredAt'] = true;
-        return;
-      }
-
-      if (key === 'birthAfter' || key === 'birthBefore') {
-        result['birth'] = true;
-        return;
-      }
-
-      if (key === 'updateAfter' || key === 'updateBefore') {
-        result['updatedAt'] = true;
-        return;
-      }
-
-      result[key] = true;
-    });
 
     return needDefaultSelectOptions
       ? { ...result, ...DefaultMembersSelectOption }
@@ -273,43 +240,23 @@ export class MembersService {
       birth: createDateFilter(dto.birthAfter, dto.birthBefore),
       registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
       updatedAt: createDateFilter(dto.updateAfter, dto.updateBefore),
-      gender: dto.gender && In(dto.gender), //dto?.gender,
-      marriage: dto.marriage && In(dto.marriage), //dto?.marriage,
+      gender: dto.gender && In(dto.gender),
+      marriage: dto.marriage && In(dto.marriage),
       school: dto.school && Like(`%${dto.school}%`),
       occupation: dto.occupation && Like(`%${dto.occupation}%`),
       vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
       baptism: dto.baptism && In(dto.baptism),
-      //groupId: dto.group && In(dto.group),
-      groupHistory: dto.group && {
-        groupId: In(dto.group),
-        endDate: IsNull(),
-      },
+      groupId: dto.group && In(dto.group),
       officerId: dto.officer && In(dto.officer),
-      //ministries: dto.ministries && { id: In(dto.ministries) },
-      //educations: dto.educations && { id: In(dto.educations) },
-      /*educationHistory: dto.educations && {
-        educationId: In(dto.educations),
+      ministries: dto.ministries && { id: In(dto.ministries) },
+      educations: dto.educations && {
+        educationTerm: {
+          educationId: In(dto.educations),
+        },
         status: dto.educationStatus && In(dto.educationStatus),
-      },*/
+        /*id: In(dto.educations)*/
+      },
     };
-
-    // TODO EducationEnrollment 검색 조건
-    // 1 : N 관게 요소 필터링할 경우 필터링 외의 요소들도 조회하기 위함.
-    if (dto.educations || dto.ministries) {
-      const memberIds = (
-        await this.membersRepository.find({
-          where: {
-            educations: {
-              //educationId: dto.educations && In(dto.educations),
-              status: dto.educationStatus && In(dto.educationStatus),
-            },
-            ministries: dto.ministries && { id: In(dto.ministries) },
-          },
-        })
-      ).map((model) => model.id);
-
-      findOptionsWhere.id = In(memberIds);
-    }
 
     return findOptionsWhere;
   }
