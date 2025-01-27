@@ -58,19 +58,39 @@ export class EducationsService {
       : this.educationsRepository;
   }
 
-  getEducations(churchId: number, dto: GetEducationDto, qr?: QueryRunner) {
+  async getEducations(
+    churchId: number,
+    dto: GetEducationDto,
+    qr?: QueryRunner,
+  ) {
     const educationsRepository = this.getEducationsRepository(qr);
 
-    return educationsRepository.find({
-      where: {
-        churchId,
-      },
-      order: {
-        [dto.order]: dto.orderDirection,
-        createdAt:
-          dto.order === EducationOrderEnum.createdAt ? undefined : 'desc',
-      },
-    });
+    const [result, totalCount] = await Promise.all([
+      educationsRepository.find({
+        where: {
+          churchId,
+        },
+        order: {
+          [dto.order]: dto.orderDirection,
+          createdAt:
+            dto.order === EducationOrderEnum.createdAt ? undefined : 'desc',
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      educationsRepository.count({
+        where: {
+          churchId,
+        },
+      }),
+    ]);
+
+    return {
+      data: result,
+      totalCount,
+      count: result.length,
+      page: dto.page,
+    };
   }
 
   async getEducationById(
@@ -140,6 +160,8 @@ export class EducationsService {
       throw new BadRequestException(EducationException.ALREADY_EXIST);
     }
 
+    console.log(dto.description);
+
     return educationsRepository.save({
       name: dto.name,
       description: dto.description,
@@ -156,7 +178,10 @@ export class EducationsService {
     const educationsRepository = this.getEducationsRepository(qr);
 
     const education = await educationsRepository.findOne({
-      where: { id: educationId },
+      where: {
+        churchId,
+        id: educationId,
+      },
     });
 
     if (!education) {
@@ -169,11 +194,7 @@ export class EducationsService {
       : false;
 
     if (existEducation) {
-      if (existEducation.deletedAt !== null) {
-        await educationsRepository.delete({ id: existEducation.id });
-      } else {
-        throw new BadRequestException(EducationException.ALREADY_EXIST);
-      }
+      throw new BadRequestException(EducationException.ALREADY_EXIST);
     }
 
     await educationsRepository.update(
@@ -210,7 +231,10 @@ export class EducationsService {
   ) {
     const educationsRepository = this.getEducationsRepository(qr);
 
-    const result = await educationsRepository.softDelete({ id: educationId });
+    const result = await educationsRepository.softDelete({
+      id: educationId,
+      churchId,
+    });
 
     if (result.affected === 0) {
       throw new NotFoundException(EducationException.NOT_FOUND);
