@@ -28,14 +28,13 @@ export class CreateEducationDto extends PickType(EducationModel, [
   override name: string;
 
   @ApiProperty({
-    description: '교육 설명 (최대 300자)',
+    description: '교육 설명 (최대 300자, 빈 문자열 허용)',
     maxLength: 300,
     required: false,
   })
   @IsString()
-  @IsNotEmpty()
   @MaxLength(300)
-  @Transform(({ value }) => (value.trim().length === 0 ? undefined : value))
+  @Transform(({ value }) => value?.trim() ?? '')
   @IsOptional()
-  override description: string;
+  override description: string = '';
 }
