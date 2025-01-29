@@ -22,6 +22,9 @@ export class EducationSessionModel extends BaseModel {
   })
   content: string | null;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  sessionDate: Date;
+
   @OneToMany(
     () => SessionAttendanceModel,
     (attendance) => attendance.educationSession,

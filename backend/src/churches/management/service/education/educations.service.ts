@@ -124,6 +124,27 @@ export class EducationsService {
     return education;
   }
 
+  private async getEducationModelById(
+    churchId: number,
+    educationId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationsRepository = this.getEducationsRepository(qr);
+
+    const education = await educationsRepository.findOne({
+      where: {
+        id: educationId,
+        churchId,
+      },
+    });
+
+    if (!education) {
+      throw new NotFoundException(EducationException.NOT_FOUND);
+    }
+
+    return education;
+  }
+
   async isExistEducation(
     churchId: number,
     educationName: string,
@@ -257,22 +278,45 @@ export class EducationsService {
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
-    return educationTermsRepository.find({
-      where: {
-        education: {
-          churchId,
+    const [result, totalCount] = await Promise.all([
+      educationTermsRepository.find({
+        where: {
+          education: {
+            churchId,
+          },
+          educationId: educationId,
         },
-        educationId: educationId,
-      },
-      order: {
-        [dto.order]: dto.orderDirection,
-        createdAt:
-          dto.order === EducationTermOrderEnum.createdAt ? undefined : 'desc',
-      },
-      relations: {
-        instructor: true,
-      },
-    });
+        order: {
+          [dto.order]: dto.orderDirection,
+          createdAt:
+            dto.order === EducationTermOrderEnum.createdAt ? undefined : 'desc',
+        },
+        relations: {
+          instructor: {
+            officer: true,
+            group: true,
+            groupRole: true,
+          },
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      educationTermsRepository.count({
+        where: {
+          education: {
+            churchId,
+          },
+          educationId,
+        },
+      }),
+    ]);
+
+    return {
+      data: result,
+      totalCount,
+      count: result.length,
+      page: dto.page,
+    };
   }
 
   async getEducationTermById(
@@ -327,6 +371,9 @@ export class EducationsService {
       where: {
         id: educationTermId,
         educationId,
+        education: {
+          churchId,
+        },
       },
       relations: {
         //instructor: true,
@@ -364,10 +411,13 @@ export class EducationsService {
     dto: CreateEducationTermDto,
     qr: QueryRunner,
   ) {
-    //const educationsRepository = this.getEducationsRepository(qr);
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
-    const education = await this.getEducationById(churchId, educationId, qr);
+    const education = await this.getEducationModelById(
+      churchId,
+      educationId,
+      qr,
+    );
 
     const instructor = dto.instructorId
       ? await this.membersService.getMemberModelById(
@@ -412,12 +462,11 @@ export class EducationsService {
     });
   }
 
-  private async validateUpdateEducationTerm(
-    churchId: number,
+  private validateUpdateEducationTerm(
     dto: UpdateEducationTermDto,
     educationTerm: EducationTermModel,
-    qr?: QueryRunner,
   ) {
+    // 회자만 수정
     if (dto.numberOfSessions && !dto.completionCriteria) {
       if (
         educationTerm.completionCriteria &&
@@ -429,6 +478,7 @@ export class EducationsService {
       }
     }
 
+    // 이수 조건만 수정
     if (dto.completionCriteria && !dto.numberOfSessions) {
       if (dto.completionCriteria > educationTerm.numberOfSessions) {
         throw new BadRequestException(
@@ -437,6 +487,7 @@ export class EducationsService {
       }
     }
 
+    // 시작일만 수정
     if (dto.startDate && !dto.endDate) {
       if (dto.startDate > educationTerm.endDate) {
         throw new BadRequestException(
@@ -445,24 +496,13 @@ export class EducationsService {
       }
     }
 
+    // 종료일만 수정
     if (dto.endDate && !dto.startDate) {
       if (educationTerm.startDate > dto.endDate) {
         throw new BadRequestException(
           '교육 종료일은 시작일보다 앞설 수 없습니다.',
         );
       }
-    }
-
-    /*
-    교육 진행자 검증
-     */
-    if (dto.instructorId) {
-      return this.membersService.getMemberModelById(
-        churchId,
-        dto.instructorId,
-        {},
-        qr,
-      );
     }
   }
 
@@ -510,12 +550,16 @@ export class EducationsService {
       7-2. 진행자가 해당 교회에 소속X --> 해당 교인을 찾을 수 없음. NotFoundException
      */
 
-    const instructor = await this.validateUpdateEducationTerm(
-      churchId,
-      dto,
-      educationTerm,
-      qr,
-    );
+    this.validateUpdateEducationTerm(dto, educationTerm);
+
+    const instructor = dto.instructorId
+      ? await this.membersService.getMemberModelById(
+          churchId,
+          dto.instructorId,
+          {},
+          qr,
+        )
+      : undefined;
 
     if (dto.term) {
       const isExistEducationTerm = await this.isExistEducationTerm(
@@ -538,16 +582,18 @@ export class EducationsService {
           this.getEducationSessionsRepository(qr);
 
         // dto: 8, term: 5 --> session 6, 7, 8 생성
-        for (
-          let i = educationTerm.educationSessions.length + 1;
-          i <= dto.numberOfSessions;
-          i++
-        ) {
-          await educationSessionsRepository.save({
-            educationTermId,
-            session: i,
-          });
-        }
+        await educationSessionsRepository.save(
+          Array.from(
+            {
+              length:
+                dto.numberOfSessions - educationTerm.educationSessions.length,
+            },
+            (_, index) => ({
+              educationTermId,
+              session: educationTerm.educationSessions.length + index + 1,
+            }),
+          ),
+        );
       }
     }
 
@@ -589,11 +635,21 @@ export class EducationsService {
       : this.educationSessionsRepository;
   }
 
-  async getEducationSessions(educationTermId: number) {
+  async getEducationSessions(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+  ) {
     const educationSessionsRepository = this.getEducationSessionsRepository();
 
     return educationSessionsRepository.find({
       where: {
+        educationTerm: {
+          educationId,
+          education: {
+            churchId,
+          },
+        },
         educationTermId,
       },
       order: {
@@ -603,6 +659,8 @@ export class EducationsService {
   }
 
   async getEducationSessionById(
+    churchId: number,
+    educationId: number,
     educationTermId: number,
     educationSessionId: number,
     qr?: QueryRunner,
@@ -613,10 +671,13 @@ export class EducationsService {
       where: {
         id: educationSessionId,
         educationTermId,
+        educationTerm: {
+          educationId,
+          education: {
+            churchId,
+          },
+        },
       },
-      /*relations: {
-        sessionAttendances: true,
-      },*/
     });
 
     if (!session) {
@@ -642,6 +703,7 @@ export class EducationsService {
   }
 
   async createSingleEducationSession(
+    churchId: number,
     educationId: number,
     educationTermId: number,
     qr: QueryRunner,
@@ -678,14 +740,19 @@ export class EducationsService {
     });
 
     // 교육 세션 개수 업데이트
-    await educationTermsRepository.update(
+    await educationTermsRepository.increment(
       { id: educationTermId },
-      {
-        numberOfSessions: () => '"numberOfSessions" + 1',
-      },
+      'numberOfSessions',
+      1,
     );
 
-    return this.getEducationSessionById(educationTermId, newSession.id, qr);
+    return this.getEducationSessionById(
+      churchId,
+      educationId,
+      educationTermId,
+      newSession.id,
+      qr,
+    );
   }
 
   async updateEducationSession(
@@ -702,7 +769,8 @@ export class EducationsService {
         educationTermId,
       },
       {
-        content: dto.deleteContent ? null : dto.content,
+        content: dto.content,
+        sessionDate: dto.sessionDate,
       },
     );
 
@@ -716,14 +784,17 @@ export class EducationsService {
   }
 
   async deleteEducationSessions(
+    churchId: number,
+    educationId: number,
     educationTermId: number,
     educationSessionId: number,
     qr: QueryRunner,
-    cascade?: boolean,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
 
     const targetSession = await this.getEducationSessionById(
+      churchId,
+      educationId,
       educationTermId,
       educationSessionId,
       qr,
@@ -738,71 +809,46 @@ export class EducationsService {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     // 다른 회차들 session 번호 수정
-    await educationSessionsRepository.update(
-      {
-        educationTermId,
-        session: MoreThan(targetSession.session),
-      },
-      {
-        session: () => '"session" - 1',
-      },
+    await educationSessionsRepository.decrement(
+      { educationTermId, session: MoreThan(targetSession.session) },
+      'session',
+      1,
     );
 
     // 해당 기수의 세션 개수 업데이트
-    const newNumberOfSessions = await educationSessionsRepository.count({
-      where: { educationTermId },
-    });
-
-    await educationTermsRepository.update(
+    await educationTermsRepository.decrement(
       { id: educationTermId },
-      {
-        numberOfSessions: newNumberOfSessions,
-      },
+      'numberOfSessions',
+      1,
     );
 
     // 해당 세션 하위의 출석 정보 삭제
-    if (cascade) {
-      // 해당 세션의 출석 정보 삭제
-      const sessionAttendanceRepository =
-        this.getSessionAttendanceRepository(qr);
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
-      await sessionAttendanceRepository.softDelete({
-        educationSessionId: educationSessionId,
-      });
+    const attendances = await sessionAttendanceRepository.find({
+      where: {
+        educationSessionId,
+      },
+    });
 
-      // 교육 대상자들의 출석 횟수 수정
-      const educationTerm = await educationTermsRepository.findOne({
-        where: { id: educationTermId },
-        relations: { educationEnrollments: true },
-      });
+    // 삭제할 세션에 출석한 교육 대상자 ID
+    const attendedEnrollmentIds = attendances
+      .filter((attendance) => attendance.isPresent)
+      .map((attendance) => attendance.educationEnrollmentId);
 
-      if (!educationTerm) {
-        throw new NotFoundException('해당 교육 기수가 존재하지 않습니다.');
-      }
+    // 해당 세션의 출석 정보 삭제
+    await sessionAttendanceRepository.softDelete({
+      educationSessionId: educationSessionId,
+    });
 
-      const educationEnrollments = educationTerm.educationEnrollments;
-      const educationEnrollmentsRepository =
-        this.getEducationEnrollmentsRepository(qr);
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
 
-      for (const enrollment of educationEnrollments) {
-        // 출석 횟수
-        const newAttendanceCount = await sessionAttendanceRepository.count({
-          where: {
-            educationEnrollmentId: enrollment.id,
-            isPresent: true,
-          },
-        });
-
-        await educationEnrollmentsRepository.update(
-          {
-            id: enrollment.id,
-          },
-          {
-            attendanceCount: newAttendanceCount,
-          },
-        );
-      }
-    }
+    await educationEnrollmentsRepository.decrement(
+      { id: In(attendedEnrollmentIds) },
+      'attendanceCount',
+      1,
+    );
 
     return `educationSessionId: ${educationSessionId} deleted`;
   }
@@ -1239,14 +1285,6 @@ export class EducationsService {
         },
       },
     });
-
-    // 현재 그룹만 필터링
-    /*result.forEach((attendance) => {
-      attendance.educationEnrollment.member.groupHistory =
-        attendance.educationEnrollment.member.groupHistory.filter(
-          (group) => group.endDate === null,
-        );
-    });*/
 
     return result;
   }
