@@ -1,8 +1,28 @@
-import { IsEnum, IsIn, IsOptional } from 'class-validator';
+import { IsEnum, IsIn, IsNumber, IsOptional, Min } from 'class-validator';
 import { EducationEnrollmentOrderEnum } from '../../../const/education/order.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetEducationEnrollmentDto {
+  @ApiProperty({
+    description: '요청 데이터 개수',
+    default: 20,
+    minimum: 1,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  take: number = 20;
+
+  @ApiProperty({
+    description: '요청 페이지',
+    default: 1,
+    minimum: 1,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  page: number = 1;
+
   @ApiProperty({
     description: '정렬 기준',
     required: false,
