@@ -4,7 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, MoreThan, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  In,
+  MoreThan,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { EducationStatus } from '../../const/education/education-status.enum';
 import { EducationModel } from '../../entity/education/education.entity';
 import { GetEducationDto } from '../../dto/education/education/get-education.dto';
@@ -29,6 +35,7 @@ import { EducationSessionModel } from '../../entity/education/education-session.
 import { UpdateEducationSessionDto } from '../../dto/education/sessions/update-education-session.dto';
 import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
 import { UpdateAttendanceDto } from '../../dto/education/attendance/update-attendance.dto';
+import { session } from 'passport';
 
 @Injectable()
 export class EducationsService {
@@ -341,13 +348,13 @@ export class EducationsService {
           groupRole: true,
           officer: true,
         },
-        educationEnrollments: {
+        /*educationEnrollments: {
           member: {
             group: true,
             groupRole: true,
             officer: true,
           },
-        },
+        },*/
         educationSessions: true,
       },
     });
@@ -364,6 +371,7 @@ export class EducationsService {
     educationId: number,
     educationTermId: number,
     qr?: QueryRunner,
+    relations?: FindOptionsRelations<EducationTermModel>,
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
@@ -378,6 +386,7 @@ export class EducationsService {
       relations: {
         //instructor: true,
         educationSessions: true,
+        ...relations,
       },
     });
 
@@ -511,7 +520,7 @@ export class EducationsService {
     educationId: number,
     educationTermId: number,
     dto: UpdateEducationTermDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
@@ -520,6 +529,7 @@ export class EducationsService {
       educationId,
       educationTermId,
       qr,
+      { educationEnrollments: true },
     );
 
     /*
@@ -574,27 +584,46 @@ export class EducationsService {
     }
 
     // 회차 수정 시
-    if (dto.numberOfSessions) {
-      // 회차 감소 --> 회차 삭제 X, 수동 삭제
-      // 회차 증가 --> 회차 생성
-      if (dto.numberOfSessions > educationTerm.educationSessions.length) {
-        const educationSessionsRepository =
-          this.getEducationSessionsRepository(qr);
+    // 회차 감소 --> 회차 삭제 X, 수동 삭제
+    // 회차 증가 --> 회차 생성
+    if (
+      dto.numberOfSessions &&
+      dto.numberOfSessions > educationTerm.educationSessions.length
+    ) {
+      const educationSessionsRepository =
+        this.getEducationSessionsRepository(qr);
 
-        // dto: 8, term: 5 --> session 6, 7, 8 생성
-        await educationSessionsRepository.save(
-          Array.from(
-            {
-              length:
-                dto.numberOfSessions - educationTerm.educationSessions.length,
-            },
-            (_, index) => ({
-              educationTermId,
-              session: educationTerm.educationSessions.length + index + 1,
-            }),
-          ),
-        );
-      }
+      // dto: 8, term: 5 --> session 6, 7, 8 생성
+      const newSessions = await educationSessionsRepository.save(
+        Array.from(
+          {
+            length:
+              dto.numberOfSessions - educationTerm.educationSessions.length,
+          },
+          (_, index) => ({
+            educationTermId,
+            session: educationTerm.educationSessions.length + index + 1,
+          }),
+        ),
+      );
+
+      // 증가된 세션에 대한 출석 정보 생성
+      const newSessionIds = newSessions.map((newSession) => newSession.id);
+      const enrollmentIds = educationTerm.educationEnrollments.map(
+        (enrollment) => enrollment.id,
+      );
+
+      const sessionAttendanceRepository =
+        this.getSessionAttendanceRepository(qr);
+
+      const attendances = newSessionIds.flatMap((sessionId) =>
+        enrollmentIds.map((enrollmentId) => ({
+          educationSessionId: sessionId,
+          educationEnrollmentId: enrollmentId,
+        })),
+      );
+
+      await sessionAttendanceRepository.save(attendances);
     }
 
     await educationTermsRepository.update(
@@ -716,6 +745,9 @@ export class EducationsService {
         id: educationTermId,
         educationId,
       },
+      relations: {
+        educationEnrollments: true,
+      },
     });
 
     if (!educationTerm) {
@@ -739,12 +771,21 @@ export class EducationsService {
       educationTermId,
     });
 
-    // 교육 세션 개수 업데이트
-    await educationTermsRepository.increment(
-      { id: educationTermId },
-      'numberOfSessions',
-      1,
-    );
+    await Promise.all([
+      // 교육 세션 개수 업데이트
+      educationTermsRepository.increment(
+        { id: educationTermId },
+        'numberOfSessions',
+        1,
+      ),
+      // 세션 출석 정보 생성
+      this.getSessionAttendanceRepository(qr).save(
+        educationTerm.educationEnrollments.map((enrollment) => ({
+          educationSessionId: newSession.id,
+          educationEnrollmentId: enrollment.id,
+        })),
+      ),
+    ]);
 
     return this.getEducationSessionById(
       churchId,
