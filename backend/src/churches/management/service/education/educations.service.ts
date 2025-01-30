@@ -348,13 +348,13 @@ export class EducationsService {
           groupRole: true,
           officer: true,
         },
-        educationEnrollments: {
+        /*educationEnrollments: {
           member: {
             group: true,
             groupRole: true,
             officer: true,
           },
-        },
+        },*/
         educationSessions: true,
       },
     });
