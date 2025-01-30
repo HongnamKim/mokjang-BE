@@ -1,13 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationEnrollmentModel } from '../../../entity/education/education-enrollment.entity';
 import { EducationStatus } from '../../../const/education/education-status.enum';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateEducationEnrollmentDto extends PickType(
   EducationEnrollmentModel,
@@ -29,15 +24,7 @@ export class UpdateEducationEnrollmentDto extends PickType(
   })
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
+  @MaxLength(120)
+  @Transform(({ value }) => value?.trim() ?? '')
   note: string;
-
-  @ApiProperty({
-    description: '비고 삭제 시 true',
-    default: false,
-    required: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isDeleteNote: boolean = false;
 }

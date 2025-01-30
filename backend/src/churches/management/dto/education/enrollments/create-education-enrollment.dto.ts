@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { EducationStatus } from '../../../const/education/education-status.enum';
@@ -39,5 +40,6 @@ export class CreateEducationEnrollmentDto extends PickType(
   @IsString()
   @IsOptional()
   @IsNotEmpty()
+  @MaxLength(120)
   note: string;
 }

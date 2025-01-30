@@ -68,6 +68,7 @@ export class EducationEnrollmentsController {
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.updateEducationEnrollment(
+      churchId,
       educationId,
       educationTermId,
       educationEnrollmentId,
@@ -86,6 +87,7 @@ export class EducationEnrollmentsController {
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.deleteEducationEnrollment(
+      churchId,
       educationId,
       educationTermId,
       educationEnrollmentId,
