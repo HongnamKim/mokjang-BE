@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateAttendanceDto {
   @ApiProperty({
@@ -11,21 +12,13 @@ export class UpdateAttendanceDto {
   isPresent: boolean;
 
   @ApiProperty({
-    description: '비고',
+    description: '비고 (최대 120자, 빈 문자열 허용)',
     maxLength: 120,
     required: false,
   })
   @IsString()
-  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim() ?? '')
   @IsOptional()
+  @MaxLength(120)
   note: string;
-
-  @ApiProperty({
-    description: '비고 삭제 시 true',
-    required: false,
-    default: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  isDeleteNote: boolean = false;
 }
