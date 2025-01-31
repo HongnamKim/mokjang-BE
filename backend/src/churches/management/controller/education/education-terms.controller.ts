@@ -104,4 +104,26 @@ export class EducationTermsController {
       educationTermId,
     );
   }
+
+  @ApiOperation({
+    summary: '교육 기수의 출석 정보 동기화',
+    description:
+      '<p><h2>해당 기수의 누락된 출석 정보를 동기화합니다.</h2></p>' +
+      '<p>누락된 출석 정보가 없을 경우 BadRequestException</p>',
+  })
+  @Post(':educationTermId/sync-attendance')
+  @UseInterceptors(TransactionInterceptor)
+  syncAttendance(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.educationService.syncSessionAttendances(
+      churchId,
+      educationId,
+      educationTermId,
+      qr,
+    );
+  }
 }

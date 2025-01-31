@@ -35,7 +35,7 @@ import { EducationSessionModel } from '../../entity/education/education-session.
 import { UpdateEducationSessionDto } from '../../dto/education/sessions/update-education-session.dto';
 import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
 import { UpdateAttendanceDto } from '../../dto/education/attendance/update-attendance.dto';
-import { session } from 'passport';
+import { GetAttendanceDto } from '../../dto/education/attendance/get-attendance.dto';
 
 @Injectable()
 export class EducationsService {
@@ -1284,42 +1284,83 @@ export class EducationsService {
       : this.sessionAttendanceRepository;
   }
 
-  async getSessionAttendance(educationSessionId: number) {
+  async getSessionAttendance(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    educationSessionId: number,
+    dto: GetAttendanceDto,
+  ) {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository();
 
-    const sessionAttendance = await sessionAttendanceRepository.find({
-      where: {
-        educationSessionId,
-      },
-      relations: {
-        educationEnrollment: {
-          member: {
-            group: true,
-            groupRole: true,
-            officer: true,
+    const [result, totalCount] = await Promise.all([
+      sessionAttendanceRepository.find({
+        where: {
+          educationSession: {
+            educationTermId,
+            educationTerm: {
+              educationId,
+              education: {
+                churchId,
+              },
+            },
+          },
+          educationSessionId,
+        },
+        relations: {
+          educationEnrollment: {
+            member: {
+              group: true,
+              groupRole: true,
+              officer: true,
+            },
           },
         },
-      },
-    });
+        order: {
+          [dto.order]: dto.orderDirection,
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      sessionAttendanceRepository.count({
+        where: {
+          educationSessionId,
+        },
+      }),
+    ]);
 
-    /*sessionAttendance.forEach((attendance) => {
-      attendance.educationEnrollment.member.groupHistory =
-        attendance.educationEnrollment.member.groupHistory.filter(
-          (group) => group.endDate === null,
-        );
-    });*/
-
-    return sessionAttendance;
+    return {
+      data: result,
+      totalCount,
+      count: result.length,
+      page: dto.page,
+    };
   }
 
   async getSessionAttendanceModelById(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    educationSessionId: number,
     sessionAttendanceId: number,
     qr?: QueryRunner,
   ) {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
     const sessionAttendance = await sessionAttendanceRepository.findOne({
-      where: { id: sessionAttendanceId },
+      where: {
+        id: sessionAttendanceId,
+        educationSessionId,
+        educationSession: {
+          educationTermId,
+          educationTerm: {
+            educationId,
+            education: {
+              churchId,
+            },
+          },
+        },
+      },
     });
 
     if (!sessionAttendance) {
@@ -1329,7 +1370,131 @@ export class EducationsService {
     return sessionAttendance;
   }
 
-  async createSessionAttendance(
+  async syncSessionAttendances(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    qr: QueryRunner,
+  ) {
+    type AttendanceKey = {
+      educationSessionId: number;
+      educationEnrollmentId: number;
+    };
+
+    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const [currentSessionAttendances, educationTerm] = await Promise.all([
+      sessionAttendanceRepository.find({
+        where: {
+          educationSession: {
+            educationTermId,
+          },
+        },
+        order: {
+          educationEnrollmentId: 'asc',
+          educationSessionId: 'asc',
+        },
+        select: {
+          educationSessionId: true,
+          educationEnrollmentId: true,
+        },
+      }),
+
+      educationTermsRepository.findOne({
+        where: {
+          id: educationTermId,
+          educationId,
+          education: {
+            churchId,
+          },
+        },
+        relations: {
+          educationSessions: true,
+          educationEnrollments: true,
+        },
+        select: {
+          educationSessions: {
+            id: true,
+          },
+          educationEnrollments: {
+            id: true,
+          },
+        },
+      }),
+    ]);
+
+    if (!educationTerm) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    const totalExpectedAttendances =
+      educationTerm.educationEnrollments.length *
+      educationTerm.educationSessions.length;
+
+    if (currentSessionAttendances.length === totalExpectedAttendances) {
+      throw new BadRequestException('모든 출석 정보가 이미 존재합니다.');
+    }
+
+    const createAttendanceKey = (attendance: AttendanceKey) =>
+      `${attendance.educationSessionId}-${attendance.educationEnrollmentId}`;
+
+    const currentAttendancesMap = new Set(
+      currentSessionAttendances.map(createAttendanceKey),
+    );
+
+    const missingAttendances = educationTerm.educationEnrollments
+      .flatMap((enrollment) =>
+        educationTerm.educationSessions.map((session) => ({
+          educationSessionId: session.id,
+          educationEnrollmentId: enrollment.id,
+        })),
+      )
+      .filter(
+        (attendance) =>
+          !currentAttendancesMap.has(createAttendanceKey(attendance)),
+      );
+
+    /*
+    const { educationEnrollments, educationSessions } = educationTerm;
+    const shouldBeExistAttendances: {
+      educationSessionId: number;
+      educationEnrollmentId: number;
+    }[] = educationEnrollments
+      .flatMap((enrollment) =>
+        educationSessions.map((session) => ({
+          educationSessionId: session.id,
+          educationEnrollmentId: enrollment.id,
+        })),
+      )
+      .sort(
+        (a, b) =>
+          a.educationEnrollmentId - b.educationEnrollmentId ||
+          a.educationSessionId - b.educationSessionId,
+      );
+
+    const currentAttendancesMap = new Map(
+      currentSessionAttendances.map((attendance) => [
+        `${attendance.educationSessionId}-${attendance.educationEnrollmentId}`,
+        1,
+      ]),
+    );
+
+    const missingAttendances = shouldBeExistAttendances.filter(
+      (should) =>
+        !currentAttendancesMap.has(
+          `${should.educationSessionId}-${should.educationEnrollmentId}`,
+        ),
+    );*/
+
+    if (missingAttendances.length > 0) {
+      return sessionAttendanceRepository.save(missingAttendances);
+    }
+
+    return [];
+  }
+
+  /*async createSessionAttendance(
     educationTermId: number,
     educationSessionId: number,
     qr: QueryRunner,
@@ -1386,9 +1551,12 @@ export class EducationsService {
     });
 
     return result;
-  }
+  }*/
 
   async updateSessionAttendance(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
     educationSessionId: number,
     sessionAttendanceId: number,
     dto: UpdateAttendanceDto,
@@ -1404,8 +1572,13 @@ export class EducationsService {
      */
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
-    const sessionAttendance =
-      await this.getSessionAttendanceModelById(sessionAttendanceId);
+    const sessionAttendance = await this.getSessionAttendanceModelById(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      sessionAttendanceId,
+    );
 
     // sessionAttendance 업데이트
     await sessionAttendanceRepository.update(
@@ -1414,7 +1587,7 @@ export class EducationsService {
       },
       {
         isPresent: dto.isPresent,
-        note: dto.isDeleteNote ? null : dto.note,
+        note: dto.note,
       },
     );
 
@@ -1439,13 +1612,25 @@ export class EducationsService {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
+    const [enrollment, attendanceCount] = await Promise.all([
+      this.getEducationEnrollmentModelById(
+        sessionAttendance.educationEnrollmentId,
+        qr,
+      ),
+      sessionAttendanceRepository.count({
+        where: {
+          educationEnrollmentId: sessionAttendance.educationEnrollmentId,
+          isPresent: true,
+        },
+      }),
+    ]);
+
+    /*const enrollment = await
+
+    const attendanceCount = await*/
+
+    /*
     const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const enrollment = await this.getEducationEnrollmentModelById(
-      sessionAttendance.educationEnrollmentId,
-      qr,
-    );
-
     const educationTerm = await educationTermsRepository.findOne({
       where: {
         id: enrollment.educationTermId,
@@ -1454,14 +1639,7 @@ export class EducationsService {
 
     if (!educationTerm) {
       throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    const attendanceCount = await sessionAttendanceRepository.count({
-      where: {
-        educationEnrollmentId: sessionAttendance.educationEnrollmentId,
-        isPresent: true,
-      },
-    });
+    }*/
 
     await educationEnrollmentsRepository.update(
       {
