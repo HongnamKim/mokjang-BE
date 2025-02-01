@@ -40,6 +40,8 @@ import {
 import { GroupModel } from '../../management/entity/group/group.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerModel } from '../../management/entity/officer/officer.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { MemberDeletedEvent } from '../events/member.event';
 
 @Injectable()
 export class MembersService {
@@ -48,6 +50,7 @@ export class MembersService {
     private readonly membersRepository: Repository<MemberModel>,
     private readonly churchesService: ChurchesService,
     private readonly familyService: FamilyService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private CHURCH_MANAGEMENT_COLUMNS = [
@@ -483,6 +486,11 @@ export class MembersService {
     if (result.affected === 0) {
       throw new NotFoundException('존재하지 않는 교인입니다.');
     }
+
+    this.eventEmitter.emit(
+      'member.deleted',
+      new MemberDeletedEvent(churchId, memberId),
+    );
 
     return {
       timestamp: new Date(),
