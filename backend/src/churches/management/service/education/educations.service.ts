@@ -1,10 +1,12 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  DataSource,
   FindOptionsRelations,
   In,
   MoreThan,
@@ -36,6 +38,8 @@ import { UpdateEducationSessionDto } from '../../dto/education/sessions/update-e
 import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
 import { UpdateAttendanceDto } from '../../dto/education/attendance/update-attendance.dto';
 import { GetAttendanceDto } from '../../dto/education/attendance/get-attendance.dto';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { MemberDeletedEvent } from '../../../members/events/member.event';
 
 @Injectable()
 export class EducationsService {
@@ -51,7 +55,103 @@ export class EducationsService {
     @InjectRepository(SessionAttendanceModel)
     private readonly sessionAttendanceRepository: Repository<SessionAttendanceModel>,
     private readonly membersService: MembersService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly dataSource: DataSource,
   ) {}
+
+  @OnEvent('member.deleted', {})
+  async handleMemberDeleted(event: MemberDeletedEvent) {
+    const { churchId, memberId, attempt, maxAttempts } = event;
+
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+
+    await qr.startTransaction();
+
+    try {
+      if (attempt !== 4) {
+        throw new InternalServerErrorException('테스트 에러');
+      }
+
+      const educationEnrollmentsRepository =
+        this.getEducationEnrollmentsRepository(qr);
+
+      const enrollments = await educationEnrollmentsRepository.find({
+        where: {
+          memberId,
+          educationTerm: {
+            education: {
+              churchId,
+            },
+          },
+        },
+        relations: {
+          educationTerm: true,
+        },
+      });
+
+      await Promise.all(
+        enrollments.map((enrollment) =>
+          this.deleteEducationEnrollment(
+            churchId,
+            enrollment.educationTerm.educationId,
+            enrollment.educationTermId,
+            enrollment.id,
+            qr,
+          ),
+        ),
+      );
+
+      console.log(
+        `Successfully processed member deletion for churchId: ${churchId}, memberId: ${memberId}`,
+      );
+
+      await qr.commitTransaction();
+      await qr.release();
+    } catch (error) {
+      await qr.rollbackTransaction();
+      await qr.release();
+
+      console.error(
+        `Failed to process member deletion. churchId: ${churchId}, memberId: ${memberId}, attempt: ${attempt}`,
+        error.stack,
+      );
+
+      if (attempt < maxAttempts) {
+        console.log(`Retrying... Attempt ${attempt + 1} of ${maxAttempts}`);
+
+        // 일정 시간 후 재시도
+        setTimeout(() => {
+          this.eventEmitter.emit(
+            'member.deleted',
+            new MemberDeletedEvent(
+              churchId,
+              memberId,
+              attempt + 1,
+              maxAttempts,
+            ),
+          );
+        }, this.getRetryDelay(attempt));
+      } else {
+        // 최대 시도 횟수 초과
+        console.error(
+          `Max retry attempts reached for member deletion. churchId: ${churchId}, memberId: ${memberId}`,
+        );
+
+        // 실패 처리 이벤트 발행
+        /*this.eventEmitter.emit('member.deletion.failed', {
+          churchId,
+          memberId,
+          error: error.message,
+        });*/
+      }
+    }
+  }
+
+  // 재시도 간격을 지수적으로 증가 (exponential backoff)
+  private getRetryDelay(attempt: number): number {
+    return Math.min(1000 * Math.pow(2, attempt), 10000); // 최대 10초
+  }
 
   private CountColumnMap = {
     [EducationStatus.IN_PROGRESS]: 'inProgressCount',
