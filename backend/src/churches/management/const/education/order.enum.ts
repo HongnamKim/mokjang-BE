@@ -12,8 +12,15 @@ export enum EducationTermOrderEnum {
 
 export enum EducationEnrollmentOrderEnum {
   memberId = 'memberId',
-  memberName = 'memberName',
   status = 'status',
+  createdAt = 'createdAt',
+  updatedAt = 'updatedAt',
+}
+
+export enum AttendanceOrderEnum {
+  //name = 'name',
+  educationEnrollmentId = 'educationEnrollmentId',
+  isPresent = 'isPresent',
   createdAt = 'createdAt',
   updatedAt = 'updatedAt',
 }

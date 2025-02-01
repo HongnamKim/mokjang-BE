@@ -10,9 +10,6 @@ export class EducationEnrollmentModel extends BaseModel {
   @Column({ comment: '교육 대상자 ID' })
   memberId: number;
 
-  @Column({ comment: '교육 대상자 이름' })
-  memberName: string;
-
   @ManyToOne(() => MemberModel, (member) => member.educations)
   member: MemberModel;
 
