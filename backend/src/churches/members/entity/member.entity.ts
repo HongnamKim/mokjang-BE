@@ -6,7 +6,6 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  Unique,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
@@ -25,7 +24,6 @@ import { GroupRoleModel } from '../../management/entity/group/group-role.entity'
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 
 @Entity()
-@Unique(['churchId', 'name', 'mobilePhone'])
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
