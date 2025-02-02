@@ -42,6 +42,7 @@ import { GroupRoleModel } from '../../management/entity/group/group-role.entity'
 import { OfficerModel } from '../../management/entity/officer/officer.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
+import { CreateFamilyDto } from '../dto/family/create-family.dto';
 
 @Injectable()
 export class MembersService {
@@ -538,6 +539,25 @@ export class MembersService {
     return this.familyService.getFamilyMember(member);
   }
 
+  async createFamilyRelation(
+    churchId: number,
+    memberId: number,
+    dto: CreateFamilyDto,
+    qr: QueryRunner,
+  ) {
+    const [member, familyMember] = await Promise.all([
+      this.getMemberModelById(churchId, memberId, {}, qr),
+      this.getMemberModelById(churchId, dto.familyMemberId, {}, qr),
+    ]);
+
+    return this.familyService.createFamilyMember(
+      member,
+      familyMember,
+      dto.relation,
+      qr,
+    );
+  }
+
   async fetchFamilyRelation(
     churchId: number,
     memberId: number,
@@ -559,12 +579,14 @@ export class MembersService {
   }
 
   async patchFamilyRelation(
+    churchId: number,
     memberId: number,
     familyMemberId: number,
     relation: string,
     qr: QueryRunner,
   ) {
     return this.familyService.updateFamilyRelation(
+      churchId,
       memberId,
       familyMemberId,
       relation,
@@ -573,11 +595,13 @@ export class MembersService {
   }
 
   async deleteFamilyRelation(
+    churchId: number,
     memberId: number,
     familyMemberId: number,
     qr?: QueryRunner,
   ) {
     return this.familyService.deleteFamilyRelation(
+      churchId,
       memberId,
       familyMemberId,
       qr,
