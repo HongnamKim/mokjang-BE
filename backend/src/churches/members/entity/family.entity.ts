@@ -6,13 +6,11 @@ import {
   Index,
   ManyToOne,
   PrimaryColumn,
-  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { MemberModel } from './member.entity';
 
 @Entity()
-@Unique(['meId', 'familyMemberId'])
 export class FamilyModel {
   @PrimaryColumn()
   @Index()

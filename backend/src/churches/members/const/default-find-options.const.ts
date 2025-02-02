@@ -9,7 +9,12 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   officer: true,
   ministries: true,
-  educations: true,
+  //educations: true,
+  educations: {
+    educationTerm: true /*{
+      education: true,
+    },*/,
+  },
   group: true,
   groupRole: true,
 };
@@ -27,7 +32,19 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educations: true,
+  educations: {
+    id: true,
+    status: true,
+    educationTerm: {
+      id: true,
+      term: true,
+      educationName: true /*
+      education: {
+        id: true,
+        name: true,
+      },*/,
+    },
+  },
   group: {
     id: true,
     name: true,
@@ -43,7 +60,12 @@ export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
   group: true,
   groupRole: true,
   ministries: true,
-  educations: true,
+  //educations: true,
+  educations: {
+    educationTerm: true /*{
+      education: true,
+    }*/,
+  },
   officer: true,
 };
 
@@ -69,7 +91,20 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educations: true,
+  //educations: true,
+  educations: {
+    id: true,
+    status: true,
+    educationTerm: {
+      id: true,
+      term: true,
+      educationName: true /*
+      education: {
+        id: true,
+        name: true,
+      },*/,
+    },
+  },
   officer: {
     id: true,
     name: true,

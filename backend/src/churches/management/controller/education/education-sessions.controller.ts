@@ -28,7 +28,11 @@ export class EducationSessionsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
   ) {
-    return this.educationsService.getEducationSessions(educationTermId);
+    return this.educationsService.getEducationSessions(
+      churchId,
+      educationId,
+      educationTermId,
+    );
   }
 
   @ApiOperation({ summary: '교육 회차 생성' })
@@ -41,6 +45,7 @@ export class EducationSessionsController {
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.createSingleEducationSession(
+      churchId,
       educationId,
       educationTermId,
       qr,
@@ -56,6 +61,8 @@ export class EducationSessionsController {
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
   ) {
     return this.educationsService.getEducationSessionById(
+      churchId,
+      educationId,
       educationTermId,
       educationSessionId,
     );
@@ -63,17 +70,22 @@ export class EducationSessionsController {
 
   @ApiOperation({ summary: '교육 진행 내용 업데이트' })
   @Patch(':educationSessionId')
+  @UseInterceptors(TransactionInterceptor)
   patchEducationSession(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
     @Body() dto: UpdateEducationSessionDto,
+    @QueryRunner() qr: QR,
   ) {
     return this.educationsService.updateEducationSession(
+      churchId,
+      educationId,
       educationTermId,
       educationSessionId,
       dto,
+      qr,
     );
   }
 
@@ -92,10 +104,11 @@ export class EducationSessionsController {
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.deleteEducationSessions(
+      churchId,
+      educationId,
       educationTermId,
       educationSessionId,
       qr,
-      true,
     );
   }
 }

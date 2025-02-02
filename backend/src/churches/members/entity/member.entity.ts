@@ -6,7 +6,6 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  Unique,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
@@ -25,7 +24,6 @@ import { GroupRoleModel } from '../../management/entity/group/group-role.entity'
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 
 @Entity()
-@Unique(['churchId', 'name', 'mobilePhone'])
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
@@ -116,6 +114,7 @@ export class MemberModel extends BaseModel {
   )
   ministryHistory: MinistryHistoryModel[];
 
+  @Index()
   @Column({ nullable: true, comment: '직분 ID' })
   officerId: number | null;
 
@@ -144,12 +143,14 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => EducationTermModel, (term) => term.instructor)
   instructingEducation: EducationTermModel[];
 
+  @Index()
   @Column({ comment: '그룹 ID', nullable: true })
   groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.members)
   group: GroupModel;
 
+  @Index()
   @Column({ comment: '그룹 역할 ID', nullable: true })
   groupRoleId: number | null;
 
