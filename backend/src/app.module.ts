@@ -22,7 +22,6 @@ import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './auth/entity/user.entity';
 import { GroupRoleModel } from './churches/management/entity/group/group-role.entity';
-//import { EducationHistoryModel } from './churches/members-management/entity/education-history.entity';
 import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
 import { EducationModel } from './churches/management/entity/education/education.entity';
 import { EducationTermModel } from './churches/management/entity/education/education-term.entity';
@@ -32,9 +31,11 @@ import { EducationEnrollmentModel } from './churches/management/entity/education
 import { MinistryGroupModel } from './churches/management/entity/ministry/ministry-group.entity';
 import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -85,6 +86,7 @@ import { OfficerHistoryModel } from './churches/members-management/entity/office
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: configService.get<string>('DB_TYPE') as 'postgres',
+        //url: configService.get<string>('DB_HOST') as string,
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),

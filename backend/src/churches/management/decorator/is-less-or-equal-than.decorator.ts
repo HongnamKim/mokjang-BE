@@ -15,7 +15,7 @@ export class IsLessOrEqualThanConstraint
 
     const constraintValue = (validationArguments.object as any)[constraintKey];
 
-    return value <= constraintValue;
+    return constraintValue ? value <= constraintValue : true;
   }
 
   defaultMessage(args: ValidationArguments): string {

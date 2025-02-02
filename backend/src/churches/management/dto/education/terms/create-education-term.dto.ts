@@ -51,7 +51,7 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
     description: '교육회차 종료일',
   })
   @IsDate()
-  @ValidateIf((o) => o.startDate !== undefined)
+  //@ValidateIf((o) => o.startDate !== undefined)
   @IsAfterDate('startDate')
   override endDate: Date;
 

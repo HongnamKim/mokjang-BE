@@ -5,7 +5,7 @@ import { SessionAttendanceModel } from './session-attendance.entity';
 
 @Entity()
 export class EducationSessionModel extends BaseModel {
-  @Column()
+  @Column({ comment: '교육 기수 ID' })
   educationTermId: number;
 
   @ManyToOne(() => EducationTermModel, (term) => term.educationSessions)
@@ -21,6 +21,12 @@ export class EducationSessionModel extends BaseModel {
     nullable: true,
   })
   content: string | null;
+
+  @Column({ type: 'timestamptz', comment: '교육 진행 날짜', nullable: true })
+  sessionDate: Date;
+
+  @Column({ default: false, comment: '교육 진행 여부' })
+  isDone: boolean;
 
   @OneToMany(
     () => SessionAttendanceModel,

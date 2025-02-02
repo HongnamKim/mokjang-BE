@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional, Min, ValidateIf } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { IsLessOrEqualThan } from '../../../decorator/is-less-or-equal-than.decorator';
 import { IsAfterDate } from '../../../decorator/is-after-date.decorator';
+import { TransformStartDate } from '../../../../members-management/decorator/transform-start-date.decorator';
+import { TransformEndDate } from '../../../../members-management/decorator/transform-end-date.decorator';
 
 export class UpdateEducationTermDto {
   @ApiProperty({
@@ -32,15 +34,16 @@ export class UpdateEducationTermDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  @ValidateIf((o) => o.numberOfSessions !== undefined)
+  //@ValidateIf((o) => o.numberOfSessions !== undefined)
   @IsLessOrEqualThan('numberOfSessions')
   completionCriteria: number;
 
   @ApiProperty({
     description: '교육회차 시작일',
   })
-  @IsDate()
   @IsOptional()
+  @IsDate()
+  @TransformStartDate()
   startDate: Date;
 
   @ApiProperty({
@@ -48,7 +51,8 @@ export class UpdateEducationTermDto {
   })
   @IsOptional()
   @IsDate()
-  @ValidateIf((o) => o.startDate !== undefined)
+  @TransformEndDate()
+  //@ValidateIf((o) => o.startDate !== undefined)
   @IsAfterDate('startDate')
   endDate: Date;
 
