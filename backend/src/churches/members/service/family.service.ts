@@ -45,7 +45,6 @@ export class FamilyService {
       where: {
         meId,
         familyMemberId,
-        deletedAt: IsNull(),
       },
     });
 
@@ -59,7 +58,6 @@ export class FamilyService {
       await familyRepository.find({
         where: {
           meId: memberId,
-          deletedAt: IsNull(),
         },
       })
     ).map((relation) => relation.familyMemberId);
@@ -114,6 +112,7 @@ export class FamilyService {
   }
 
   async updateFamilyRelation(
+    churchId: number,
     meId: number,
     familyMemberId: number,
     relation: string,
@@ -122,7 +121,13 @@ export class FamilyService {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.update(
-      { meId: meId, familyMemberId: familyMemberId, deletedAt: IsNull() },
+      {
+        me: { churchId },
+        meId: meId,
+        familyMember: { churchId },
+        familyMemberId: familyMemberId,
+        deletedAt: IsNull(),
+      },
       { relation },
     );
 
@@ -136,6 +141,7 @@ export class FamilyService {
   }
 
   async deleteFamilyRelation(
+    churchId: number,
     meId: number,
     familyMemberId: number,
     qr?: QueryRunner,
@@ -143,7 +149,13 @@ export class FamilyService {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.softDelete({
+      me: {
+        churchId,
+      },
       meId,
+      familyMember: {
+        churchId,
+      },
       familyMemberId,
       deletedAt: IsNull(),
     });
@@ -155,7 +167,7 @@ export class FamilyService {
     return 'ok';
   }
 
-  private async createFamilyMember(
+  async createFamilyMember(
     me: MemberModel,
     familyMember: MemberModel,
     relation: string,
@@ -163,68 +175,33 @@ export class FamilyService {
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
-    // soft delete 된 레코드를 포함하여 조회
-    const existingRelation = await familyRepository.findOne({
-      where: {
-        meId: me.id,
-        familyMemberId: familyMember.id,
-      },
-      withDeleted: true,
-    });
+    const isExistRelation = await this.isExistFamilyRelation(
+      me.id,
+      familyMember.id,
+      qr,
+    );
 
-    if (existingRelation) {
-      if (!existingRelation.deletedAt) {
-        throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
-      }
-      // soft delete된 레코드가 있으면 복구
-      await familyRepository.restore({
-        meId: me.id,
-        familyMemberId: familyMember.id,
-      });
-      // 관계 업데이트
-      await familyRepository.update(
-        {
-          meId: me.id,
-          familyMemberId: familyMember.id,
-        },
-        { relation },
-      );
-    } else {
-      // 레코드가 없으면 새로 생성
-      await familyRepository.save({
-        meId: me.id,
-        familyMemberId: familyMember.id,
-        relation,
-      });
+    if (isExistRelation) {
+      throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
     }
 
-    // 반대 방향의 관계도 같은 방식으로 처리
-    const existingCounterRelation = await familyRepository.findOne({
-      where: {
-        meId: familyMember.id,
-        familyMemberId: me.id,
-      },
-      withDeleted: true,
+    // 가족 관계 생성
+    await familyRepository.save({
+      meId: me.id,
+      familyMemberId: familyMember.id,
+      relation,
     });
 
-    if (existingCounterRelation) {
-      if (!existingCounterRelation.deletedAt) {
-        // 이미 활성화된 반대 관계가 있으면 넘어감
-      } else {
-        // soft delete된 반대 관계가 있으면 복구 및 업데이트
-        await familyRepository.restore({
-          meId: familyMember.id,
-          familyMemberId: me.id,
-        });
-        await familyRepository.update(
-          {
-            meId: familyMember.id,
-            familyMemberId: me.id,
-          },
-          { relation: this.getCounterRelation(relation, me) },
-        );
-      }
-    } else {
+    // 반대 관계가 이미 있으면 생성 생략
+    // 없으면 새로 생성
+
+    const isExistingCounterRelation = await this.isExistFamilyRelation(
+      familyMember.id,
+      me.id,
+      qr,
+    );
+
+    if (!isExistingCounterRelation) {
       // 반대 관계가 없으면 새로 생성
       await familyRepository.save({
         meId: familyMember.id,
