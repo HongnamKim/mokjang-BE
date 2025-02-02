@@ -11,6 +11,14 @@ import { Transform } from 'class-transformer';
 
 export class UpdateEducationSessionDto {
   @ApiProperty({
+    description: '교육 완료 상태',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isDone: boolean;
+
+  @ApiProperty({
     description: '교육 일시',
     default: new Date(),
     required: false,
