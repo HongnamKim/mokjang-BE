@@ -69,10 +69,6 @@ export class EducationsService {
     await qr.startTransaction();
 
     try {
-      if (attempt !== 4) {
-        throw new InternalServerErrorException('테스트 에러');
-      }
-
       const educationEnrollmentsRepository =
         this.getEducationEnrollmentsRepository(qr);
 
@@ -897,21 +893,52 @@ export class EducationsService {
   }
 
   async updateEducationSession(
+    churchId: number,
+    educationId: number,
     educationTermId: number,
     educationSessionId: number,
     dto: UpdateEducationSessionDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
 
+    const targetSession = await this.getEducationSessionById(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      qr,
+    );
+
+    /*
+    기존 session 의 isDone 이 true
+    --> dto.isDone = true -> isDoneCount 변화 X
+    --> dto.isDone = false -> isDoneCount 감소
+    */
+    if (dto.isDone !== undefined && dto.isDone !== targetSession.isDone) {
+      if (dto.isDone) {
+        console.log('isDoneCount 증가');
+        await this.incrementIsDoneCount(educationTermId, qr);
+      } else if (!dto.isDone) {
+        console.log('isDoneCount 감소');
+        await this.decrementIsDoneCount(educationTermId, qr);
+      }
+    }
+
+    /*
+    기존 session 의 isDone 이 false
+    --> dto.isDone = true -> isDoneCount 증가
+    --> dto.isDone = false --> isDoneCount 변화 X
+     */
+
     const result = await educationSessionsRepository.update(
       {
-        id: educationSessionId,
-        educationTermId,
+        id: targetSession.id,
       },
       {
         content: dto.content,
         sessionDate: dto.sessionDate,
+        isDone: dto.isDone,
       },
     );
 
@@ -962,6 +989,10 @@ export class EducationsService {
       'numberOfSessions',
       1,
     );
+
+    if (targetSession.isDone) {
+      await this.decrementIsDoneCount(educationTermId, qr);
+    }
 
     // 해당 세션 하위의 출석 정보 삭제
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
@@ -1302,6 +1333,38 @@ export class EducationsService {
     return `educationEnrollment: ${educationEnrollmentId} deleted`;
   }
 
+  async incrementIsDoneCount(educationTermId: number, qr: QueryRunner) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.increment(
+      { id: educationTermId },
+      'isDoneCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }
+
+  async decrementIsDoneCount(educationTermId: number, qr: QueryRunner) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.decrement(
+      { id: educationTermId },
+      'isDoneCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }
+
   async incrementEnrollmentCount(educationTermId: number, qr: QueryRunner) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
@@ -1555,103 +1618,12 @@ export class EducationsService {
           !currentAttendancesMap.has(createAttendanceKey(attendance)),
       );
 
-    /*
-    const { educationEnrollments, educationSessions } = educationTerm;
-    const shouldBeExistAttendances: {
-      educationSessionId: number;
-      educationEnrollmentId: number;
-    }[] = educationEnrollments
-      .flatMap((enrollment) =>
-        educationSessions.map((session) => ({
-          educationSessionId: session.id,
-          educationEnrollmentId: enrollment.id,
-        })),
-      )
-      .sort(
-        (a, b) =>
-          a.educationEnrollmentId - b.educationEnrollmentId ||
-          a.educationSessionId - b.educationSessionId,
-      );
-
-    const currentAttendancesMap = new Map(
-      currentSessionAttendances.map((attendance) => [
-        `${attendance.educationSessionId}-${attendance.educationEnrollmentId}`,
-        1,
-      ]),
-    );
-
-    const missingAttendances = shouldBeExistAttendances.filter(
-      (should) =>
-        !currentAttendancesMap.has(
-          `${should.educationSessionId}-${should.educationEnrollmentId}`,
-        ),
-    );*/
-
     if (missingAttendances.length > 0) {
       return sessionAttendanceRepository.save(missingAttendances);
     }
 
     return [];
   }
-
-  /*async createSessionAttendance(
-    educationTermId: number,
-    educationSessionId: number,
-    qr: QueryRunner,
-  ) {
-    const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    // 수강 등록생 조회
-    const educationEnrollments = await educationEnrollmentsRepository.find({
-      where: {
-        educationTermId,
-      },
-    });
-
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
-
-    // 해당 세션에 이미 만들어진 출석부 조회
-    const existingAttendances = await sessionAttendanceRepository.find({
-      where: {
-        educationSessionId,
-        educationEnrollmentId: In(
-          educationEnrollments.map((enrollment) => enrollment.id),
-        ),
-      },
-    });
-
-    const existingIds = new Set(
-      existingAttendances.map((attendance) => attendance.educationEnrollmentId),
-    );
-
-    // 이미 만들어진 출석부는 제외하고 생성
-    await sessionAttendanceRepository.save(
-      educationEnrollments
-        .filter((enrollment) => !existingIds.has(enrollment.id))
-        .map((enrollment) => ({
-          educationSessionId,
-          educationEnrollment: enrollment,
-        })),
-    );
-
-    const result = await sessionAttendanceRepository.find({
-      where: {
-        educationSessionId,
-      },
-      relations: {
-        educationEnrollment: {
-          member: {
-            group: true,
-            groupRole: true,
-            officer: true,
-          },
-        },
-      },
-    });
-
-    return result;
-  }*/
 
   async updateSessionAttendance(
     churchId: number,
@@ -1724,22 +1696,6 @@ export class EducationsService {
         },
       }),
     ]);
-
-    /*const enrollment = await
-
-    const attendanceCount = await*/
-
-    /*
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-    const educationTerm = await educationTermsRepository.findOne({
-      where: {
-        id: enrollment.educationTermId,
-      },
-    });
-
-    if (!educationTerm) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }*/
 
     await educationEnrollmentsRepository.update(
       {
