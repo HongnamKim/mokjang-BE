@@ -59,6 +59,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
         FROM_NUMBER: Joi.string().required(),
+        BETA_TEST_TO_NUMBER: Joi.string().required(),
         //JWT
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_TEMP: Joi.string().required(),

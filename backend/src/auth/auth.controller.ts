@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  ParseBoolPipe,
   Post,
   Query,
   UseGuards,
@@ -81,16 +80,10 @@ export class AuthController {
   @UseGuards(TemporalTokenGuard)
   requestVerifyCode(
     @TemporalToken() temporalToken: JwtTemporalPayload,
-    @Query('isTest', ParseBoolPipe) isTest: boolean,
     @Body() dto: RequestVerificationCodeDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.authService.requestVerificationCode(
-      temporalToken,
-      dto,
-      isTest,
-      qr,
-    );
+    return this.authService.requestVerificationCode(temporalToken, dto, qr);
   }
 
   @ApiBearerAuth()

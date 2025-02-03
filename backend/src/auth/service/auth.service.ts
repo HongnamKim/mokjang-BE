@@ -21,9 +21,13 @@ import {
   SignInException,
   VerifyException,
 } from '../exception/exception.message';
-import { VERIFICATION } from '../const/env.const';
-import { VerificationMessage } from '../const/verification-message.const';
+import { MESSAGE_SERVICE, VERIFICATION } from '../const/env.const';
 import { JwtTemporalPayload } from '../type/jwt';
+import { TestEnvironment } from '../const/test-environment.enum';
+import {
+  BetaVerificationMessage,
+  VerificationMessage,
+} from '../const/verification-message.const';
 
 @Injectable()
 export class AuthService {
@@ -135,8 +139,7 @@ export class AuthService {
   async requestVerificationCode(
     temporalToken: JwtTemporalPayload,
     dto: RequestVerificationCodeDto,
-    isTest: boolean,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const tempUserRepository = this.getTempUserRepository(qr);
 
@@ -186,11 +189,24 @@ export class AuthService {
       },
     );
 
-    const message = VerificationMessage(code);
+    const message =
+      dto.isTest === TestEnvironment.BetaTest
+        ? BetaVerificationMessage(code, dto.mobilePhone)
+        : VerificationMessage(code);
 
-    return isTest
-      ? message
-      : this.messagesService.sendVerificationCode(dto.mobilePhone, message);
+    if (dto.isTest === TestEnvironment.Production) {
+      return this.messagesService.sendVerificationCode(
+        dto.mobilePhone,
+        message,
+      );
+    } else if (dto.isTest === TestEnvironment.BetaTest) {
+      return this.messagesService.sendVerificationCode(
+        this.configService.getOrThrow(MESSAGE_SERVICE.BETA_TEST_TO_NUMBER),
+        message,
+      );
+    } else {
+      return message;
+    }
   }
 
   private getCodeExpiresAt() {
