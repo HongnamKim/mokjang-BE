@@ -11,6 +11,7 @@ import { MessagesService } from './service/messages.service';
 import { CoolSMSProvider } from './provider/coolsms.provider';
 import { NaverStrategy } from './strategy/naver.strategy';
 import { KakaoStrategy } from './strategy/kakao.strategy';
+import { UserService } from './service/user.service';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { KakaoStrategy } from './strategy/kakao.strategy';
     GoogleStrategy,
     NaverStrategy,
     KakaoStrategy,
+    UserService,
   ],
   exports: [TokenService],
 })
