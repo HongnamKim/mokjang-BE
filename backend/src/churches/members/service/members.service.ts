@@ -11,8 +11,10 @@ import {
   Between,
   FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsSelect,
   FindOptionsWhere,
   ILike,
+  In,
   IsNull,
   LessThanOrEqual,
   Like,
@@ -29,17 +31,18 @@ import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
 import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
-import { UpdateMemberOfficerDto } from '../../members-settings/dto/update-member-officer.dto';
-import { UpdateMemberMinistryDto } from '../../members-settings/dto/update-member-ministry.dto';
-import { MinistryModel } from '../../settings/entity/ministry.entity';
+import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import {
   DefaultMemberSelectOption,
   DefaultMembersRelationOption,
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
-import { UpdateMemberEducationDto } from '../../members-settings/dto/update-member-education.dto';
-import { EducationModel } from '../../settings/entity/education.entity';
-import { UpdateMemberGroupDto } from '../../members-settings/dto/update-member-group.dto';
+import { GroupModel } from '../../management/entity/group/group.entity';
+import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
+import { OfficerModel } from '../../management/entity/officer/officer.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { MemberDeletedEvent } from '../events/member.event';
+import { CreateFamilyDto } from '../dto/family/create-family.dto';
 
 @Injectable()
 export class MembersService {
@@ -48,56 +51,232 @@ export class MembersService {
     private readonly membersRepository: Repository<MemberModel>,
     private readonly churchesService: ChurchesService,
     private readonly familyService: FamilyService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  private CHURCH_MANAGEMENT_COLUMNS = [
+    'group',
+    'ministries',
+    'educations',
+    'officer',
+  ];
+
+  private SELECT_PREFIX = 'select__';
+
+  private PAGING_OPTIONS = ['take', 'page', 'order', 'orderDirection'];
 
   private getMembersRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
   }
 
-  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
-    const membersRepository = this.getMembersRepository(qr);
+  parseRelationOption(dto: GetMemberDto) {
+    const relationOptions: FindOptionsRelations<MemberModel> = {};
 
-    const birthOption = (dto: GetMemberDto) => {
-      // 생년월일 앞뒤
-      if (dto.birthAfter && dto.birthBefore)
-        return Between(dto.birthAfter, dto.birthBefore);
-      // 생년월일 앞
-      if (dto.birthAfter && !dto.birthBefore)
-        return MoreThanOrEqual(dto.birthAfter);
-      // 생년월일 뒤
-      if (!dto.birthAfter && dto.birthBefore)
-        return LessThanOrEqual(dto.birthBefore);
-      // 생년월일 설정 없는 경우
-      return undefined;
-    };
+    let needDefaultRelationOptions = true;
 
-    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
-      churchId,
-      name: dto.name && ILike(`${dto.name}%`),
-      //birth: Between(dto.birthAfter, dto.birthBefore),
-      birth: birthOption(dto),
-      gender: dto?.gender,
-      school: dto.school && Like(`%${dto.school}%`),
-      vehicleNumber: dto.vehicleNumber && ArrayContains([dto.vehicleNumber]),
-      baptism: dto?.baptism,
-      groupId: dto?.groupId,
-      officerId: dto?.officerId,
-    };
+    Object.entries(dto).forEach(([key, value]) => {
+      // 선택한 컬럼 추가
+      if (key.startsWith(this.SELECT_PREFIX)) {
+        const [, column] = key.split('__');
 
+        needDefaultRelationOptions = false;
+
+        if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
+          if (column === 'educations') {
+            relationOptions[column] = {
+              educationTerm: value /*{
+                education: value,
+              }*/,
+            };
+          } else if (column === 'group') {
+            relationOptions[column] = true;
+            relationOptions['groupRole'] = true;
+          } else {
+            relationOptions[column] = value;
+          }
+        }
+        return;
+      }
+    });
+
+    // 컬럼 사용자화 하지 않은 경우 기본 relationOption 복사
+    if (needDefaultRelationOptions) {
+      Object.keys(DefaultMembersRelationOption).forEach((key) => {
+        relationOptions[key] = DefaultMembersRelationOption[key];
+      });
+    }
+
+    // 정렬 기준이 join 이 필요한 컬럼인 경우
+    if (this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)) {
+      relationOptions[dto.order as string] = true;
+    }
+
+    return relationOptions;
+  }
+
+  parseOrderOption(dto: GetMemberDto) {
     const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
 
     if (
-      dto.order === GetMemberOrderEnum.groupId ||
-      dto.order === GetMemberOrderEnum.officerId
+      dto.order === GetMemberOrderEnum.group ||
+      dto.order === GetMemberOrderEnum.officer
     ) {
       findOptionsOrder[dto.order as string] = {
         name: dto.orderDirection,
       };
-      findOptionsOrder.createdAt = 'asc';
+      findOptionsOrder.registeredAt = 'asc';
     } else {
       findOptionsOrder[dto.order as string] = dto.orderDirection;
-      findOptionsOrder.createdAt = 'asc';
+      if (dto.order !== GetMemberOrderEnum.registeredAt) {
+        findOptionsOrder.registeredAt = 'asc';
+      } else {
+        findOptionsOrder.id = 'asc';
+      }
     }
+
+    return findOptionsOrder;
+  }
+
+  parseSelectOption(dto: GetMemberDto) {
+    const selectOptions: FindOptionsSelect<MemberModel> = {};
+
+    let needDefaultSelectOptions = true;
+
+    // 컬럼 사용자화
+    Object.entries(dto).forEach(([key, value]) => {
+      // 페이징 관련 옵션 건너뛰기
+      if (this.PAGING_OPTIONS.includes(key)) return;
+
+      // 컬럼 사용자화
+      if (key.startsWith(this.SELECT_PREFIX)) {
+        const [, column] = key.split('__');
+
+        if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
+          // 사역, 직분, 그룹, 교육
+          if (column === 'educations') {
+            selectOptions[column] = {
+              id: true,
+              status: true,
+              educationTerm: {
+                id: true,
+                term: true,
+                educationName: true /*
+                education: {
+                  id: true,
+                  name: true,
+                },*/,
+              },
+            };
+          } else if (column === 'group') {
+            selectOptions[column] = {
+              id: true,
+              name: true,
+            };
+            selectOptions['groupRole'] = {
+              id: true,
+              role: true,
+            };
+          } else
+            selectOptions[column] = {
+              id: value,
+              name: value,
+            };
+          needDefaultSelectOptions = false;
+          return;
+        }
+
+        if (column === 'address') {
+          // 도로명 주소 선택 시 상제 주소 추가
+          selectOptions[column] = value;
+          selectOptions['detailAddress'] = value;
+
+          needDefaultSelectOptions = false;
+
+          return;
+        }
+        if (column === 'birth') {
+          // 생년월일 추가 시 음력여부 추가
+          selectOptions[column] = value;
+          selectOptions['isLunar'] = value;
+
+          needDefaultSelectOptions = false;
+
+          return;
+        }
+
+        selectOptions[column] = value;
+
+        needDefaultSelectOptions = false;
+      }
+    });
+
+    // 항상 들어가야할 컬럼
+    const result: FindOptionsSelect<MemberModel> = {
+      id: true,
+      registeredAt: true,
+      name: true,
+      [dto.order]: this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)
+        ? { id: true, name: true }
+        : true,
+    };
+
+    return needDefaultSelectOptions
+      ? { ...result, ...DefaultMembersSelectOption }
+      : { ...result, ...selectOptions };
+  }
+
+  async parseWhereOption(churchId: number, dto: GetMemberDto) {
+    const createDateFilter = (start?: Date, end?: Date) =>
+      start && end
+        ? Between(start, end)
+        : start
+          ? MoreThanOrEqual(start)
+          : end
+            ? LessThanOrEqual(end)
+            : undefined;
+
+    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
+      churchId,
+      name: dto.name && ILike(`%${dto.name}%`),
+      mobilePhone: dto.mobilePhone && Like(`%${dto.mobilePhone}%`),
+      homePhone: dto.homePhone && Like(`%${dto.homePhone}%`),
+      address: dto.address && Like(`%${dto.address}%`),
+      birth: createDateFilter(dto.birthAfter, dto.birthBefore),
+      registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
+      updatedAt: createDateFilter(dto.updateAfter, dto.updateBefore),
+      gender: dto.gender && In(dto.gender),
+      marriage: dto.marriage && In(dto.marriage),
+      school: dto.school && Like(`%${dto.school}%`),
+      occupation: dto.occupation && Like(`%${dto.occupation}%`),
+      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
+      baptism: dto.baptism && In(dto.baptism),
+      groupId: dto.group && In(dto.group),
+      officerId: dto.officer && In(dto.officer),
+      ministries: dto.ministries && { id: In(dto.ministries) },
+      educations: dto.educations && {
+        educationTerm: {
+          educationId: In(dto.educations),
+        },
+        status: dto.educationStatus && In(dto.educationStatus),
+        /*id: In(dto.educations)*/
+      },
+    };
+
+    return findOptionsWhere;
+  }
+
+  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const selectOptions = this.parseSelectOption(dto);
+
+    const relationOptions = this.parseRelationOption(dto);
+
+    const findOptionsWhere: FindOptionsWhere<MemberModel> =
+      await this.parseWhereOption(churchId, dto);
+
+    const findOptionsOrder: FindOptionsOrder<MemberModel> =
+      this.parseOrderOption(dto);
 
     const totalCount = await membersRepository.count({
       where: findOptionsWhere,
@@ -108,11 +287,20 @@ export class MembersService {
     const result = await membersRepository.find({
       where: findOptionsWhere,
       order: findOptionsOrder,
-      relations: DefaultMembersRelationOption,
-      select: DefaultMembersSelectOption,
+      relations: relationOptions,
+      select: selectOptions,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
+
+    // 현재 그룹만 필터링
+    if (result.length > 0 && result[0].groupHistory) {
+      result.forEach((member) => {
+        member.groupHistory = member.groupHistory.filter(
+          (group) => group.endDate === null,
+        );
+      });
+    }
 
     return new ResponsePaginationDto<MemberModel>(
       result,
@@ -196,7 +384,7 @@ export class MembersService {
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.findById(churchId, qr);
+    const church = await this.churchesService.findChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
@@ -300,6 +488,11 @@ export class MembersService {
       throw new NotFoundException('존재하지 않는 교인입니다.');
     }
 
+    this.eventEmitter.emit(
+      'member.deleted',
+      new MemberDeletedEvent(churchId, memberId),
+    );
+
     return {
       timestamp: new Date(),
       success: true,
@@ -346,6 +539,25 @@ export class MembersService {
     return this.familyService.getFamilyMember(member);
   }
 
+  async createFamilyRelation(
+    churchId: number,
+    memberId: number,
+    dto: CreateFamilyDto,
+    qr: QueryRunner,
+  ) {
+    const [member, familyMember] = await Promise.all([
+      this.getMemberModelById(churchId, memberId, {}, qr),
+      this.getMemberModelById(churchId, dto.familyMemberId, {}, qr),
+    ]);
+
+    return this.familyService.createFamilyMember(
+      member,
+      familyMember,
+      dto.relation,
+      qr,
+    );
+  }
+
   async fetchFamilyRelation(
     churchId: number,
     memberId: number,
@@ -367,12 +579,14 @@ export class MembersService {
   }
 
   async patchFamilyRelation(
+    churchId: number,
     memberId: number,
     familyMemberId: number,
     relation: string,
     qr: QueryRunner,
   ) {
     return this.familyService.updateFamilyRelation(
+      churchId,
       memberId,
       familyMemberId,
       relation,
@@ -381,85 +595,108 @@ export class MembersService {
   }
 
   async deleteFamilyRelation(
+    churchId: number,
     memberId: number,
     familyMemberId: number,
     qr?: QueryRunner,
   ) {
     return this.familyService.deleteFamilyRelation(
+      churchId,
       memberId,
       familyMemberId,
       qr,
     );
   }
 
-  async updateMemberOfficer(
+  async setMemberOfficer(
     member: MemberModel,
-    dto: UpdateMemberOfficerDto,
+    officer: OfficerModel,
+    officerStartDate: Date,
+    officerStartChurch: string,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
-
-    const officerId = dto.isDeleteOfficer ? null : dto.officerId;
-    const officerStartDate = dto.officerStartDate;
-    const officerStartChurch = dto.officerStartChurch;
 
     return membersRepository.update(
       { id: member.id },
-      { officerId, officerStartDate, officerStartChurch },
+      {
+        officerId: officer.id,
+        officerStartDate,
+        officerStartChurch,
+      },
     );
   }
 
-  async updateMemberMinistry(
+  async endMemberOfficer(member: MemberModel, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.update(
+      { id: member.id },
+      {
+        officerId: null,
+        officerStartDate: null,
+        officerStartChurch: null,
+      },
+    );
+  }
+
+  async addMemberMinistry(
     member: MemberModel,
-    dto: UpdateMemberMinistryDto,
     ministry: MinistryModel,
-    qr: QueryRunner,
-  ) {
-    const memberRepository = this.getMembersRepository(qr);
-
-    const oldMinistries = member.ministries;
-
-    member.ministries = dto.isDeleteMinistry
-      ? member.ministries.filter((ministry) => ministry.id !== dto.ministryId)
-      : [...oldMinistries, ministry];
-
-    return memberRepository.save(member);
-  }
-
-  async updateMemberEducation(
-    member: MemberModel,
-    dto: UpdateMemberEducationDto,
-    education: EducationModel,
-    qr: QueryRunner,
-  ) {
-    const memberRepository = this.getMembersRepository(qr);
-
-    const oldEducations = member.educations;
-
-    member.educations = dto.isDeleteEducation
-      ? member.educations.filter(
-          (education) => education.id !== dto.educationId,
-        )
-      : [...oldEducations, education];
-
-    return memberRepository.save(member);
-  }
-
-  async updateMemberGroup(
-    member: MemberModel,
-    dto: UpdateMemberGroupDto,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const groupId = dto.isDeleteGroup ? null : dto.groupId;
+    const oldMinistries = member.ministries;
+
+    member.ministries = [...oldMinistries, ministry];
+
+    return membersRepository.save(member);
+  }
+
+  async removeMemberMinistry(
+    member: MemberModel,
+    targetMinistry: MinistryModel,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    member.ministries = member.ministries.filter(
+      (ministry) => ministry.id !== targetMinistry.id,
+    );
+
+    return membersRepository.save(member);
+  }
+
+  async addMemberGroup(
+    member: MemberModel,
+    group: GroupModel,
+    groupRole: GroupRoleModel | undefined,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
 
     return membersRepository.update(
       {
         id: member.id,
       },
       {
-        groupId,
+        group,
+        groupRole,
+      },
+    );
+  }
+
+  async removeMemberGroup(member: MemberModel, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.update(
+      {
+        id: member.id,
+      },
+      {
+        groupId: null,
+        groupRoleId: null,
       },
     );
   }

@@ -6,20 +6,24 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  Unique,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../../enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
-import { EducationModel } from '../../settings/entity/education.entity';
-import { OfficerModel } from '../../settings/entity/officer.entity';
-import { MinistryModel } from '../../settings/entity/ministry.entity';
-import { GroupModel } from '../../settings/entity/group.entity';
+import { OfficerModel } from '../../management/entity/officer/officer.entity';
+import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import { FamilyModel } from './family.entity';
+import { MarriageOptions } from '../const/marriage-options.const';
+import { GroupHistoryModel } from '../../members-management/entity/group-history.entity';
+import { EducationTermModel } from '../../management/entity/education/education-term.entity';
+import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
+import { GroupModel } from '../../management/entity/group/group.entity';
+import { MinistryHistoryModel } from '../../members-management/entity/ministry-history.entity';
+import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
+import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 
 @Entity()
-@Unique(['churchId', 'name', 'mobilePhone'])
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
@@ -27,6 +31,9 @@ export class MemberModel extends BaseModel {
 
   @ManyToOne(() => ChurchModel, (church) => church.members)
   church: ChurchModel;
+
+  @Column({ default: new Date() })
+  registeredAt: Date;
 
   @Column()
   @Index()
@@ -67,8 +74,11 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true })
   school: string;
 
+  @Column({ enum: MarriageOptions, nullable: true })
+  marriage: MarriageOptions;
+
   @Column({ nullable: true })
-  marriage: string;
+  marriageDetail: string;
 
   @Column('text', { array: true, default: [] })
   vehicleNumber: string[];
@@ -87,28 +97,6 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true, comment: '이전교회 이름' })
   previousChurch: string;
 
-  @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
-  @JoinTable()
-  ministries: MinistryModel[];
-
-  @Column({ nullable: true, comment: '소그룹 ID' })
-  groupId: number | null;
-
-  @ManyToOne(() => GroupModel, (group) => group.members)
-  group: GroupModel;
-
-  @Column({ nullable: true, comment: '직분 ID' })
-  officerId: number | null;
-
-  @ManyToOne(() => OfficerModel, (officer) => officer.members)
-  officer: OfficerModel;
-
-  @Column({ nullable: true, comment: '임직일' })
-  officerStartDate: Date;
-
-  @Column({ nullable: true, comment: '임직교회' })
-  officerStartChurch: string;
-
   @Column({
     enum: BaptismEnum,
     default: BaptismEnum.default,
@@ -116,7 +104,59 @@ export class MemberModel extends BaseModel {
   })
   baptism: BaptismEnum;
 
-  @ManyToMany(() => EducationModel, (education) => education.members)
+  @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
-  educations: EducationModel[];
+  ministries: MinistryModel[];
+
+  @OneToMany(
+    () => MinistryHistoryModel,
+    (ministryHistory) => ministryHistory.member,
+  )
+  ministryHistory: MinistryHistoryModel[];
+
+  @Index()
+  @Column({ nullable: true, comment: '직분 ID' })
+  officerId: number | null;
+
+  @ManyToOne(() => OfficerModel, (officer) => officer.members)
+  officer: OfficerModel;
+
+  @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
+  officerStartDate: Date | null;
+
+  @Column({ type: 'varchar', nullable: true, comment: '임직교회' })
+  officerStartChurch: string | null;
+
+  @OneToMany(
+    () => OfficerHistoryModel,
+    (officerHistory) => officerHistory.member,
+  )
+  officerHistory: OfficerHistoryModel[];
+
+  // TODO 멤버 삭제 시 EducationEnrollment 도 같이 삭제되어야 함.
+  @OneToMany(
+    () => EducationEnrollmentModel,
+    (educationEnrollment) => educationEnrollment.member,
+  )
+  educations: EducationEnrollmentModel[];
+
+  @OneToMany(() => EducationTermModel, (term) => term.instructor)
+  instructingEducation: EducationTermModel[];
+
+  @Index()
+  @Column({ comment: '그룹 ID', nullable: true })
+  groupId: number | null;
+
+  @ManyToOne(() => GroupModel, (group) => group.members)
+  group: GroupModel;
+
+  @Index()
+  @Column({ comment: '그룹 역할 ID', nullable: true })
+  groupRoleId: number | null;
+
+  @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)
+  groupRole: GroupRoleModel;
+
+  @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
+  groupHistory: GroupHistoryModel[];
 }

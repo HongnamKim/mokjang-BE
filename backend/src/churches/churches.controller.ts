@@ -27,14 +27,14 @@ export class ChurchesController {
 
   @Get()
   getAllChurches() {
-    return this.churchesService.findAll();
+    return this.churchesService.findAllChurches();
   }
 
   @Get(':churchId')
   @ApiBearerAuth()
   @UseGuards(AccessTokenGuard, ChurchAdminGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.churchesService.findById(churchId);
+    return this.churchesService.findChurchById(churchId);
   }
 
   @Post()
