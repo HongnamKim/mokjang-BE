@@ -13,18 +13,31 @@ import { OauthDto } from './dto/oauth.dto';
 import { TransactionInterceptor } from '../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { RefreshTokenGuard, TemporalTokenGuard } from './guard/jwt.guard';
-import { RefreshToken, TemporalToken } from './decorator/jwt.decorator';
+import {
+  AccessTokenGuard,
+  RefreshTokenGuard,
+  TemporalTokenGuard,
+} from './guard/jwt.guard';
+import {
+  AccessToken,
+  RefreshToken,
+  TemporalToken,
+} from './decorator/jwt.decorator';
 import { RequestVerificationCodeDto } from './dto/request-verification-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { JwtRefreshPayload, JwtTemporalPayload } from './type/jwt';
+import {
+  JwtAccessPayload,
+  JwtRefreshPayload,
+  JwtTemporalPayload,
+} from './type/jwt';
 import { TokenService } from './service/token.service';
 import {
   OAuthLogin,
   OAuthRedirect,
   OAuthUser,
 } from './decorator/auth.decorator';
+import { UserService } from './service/user.service';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -32,6 +45,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
+    private readonly userService: UserService,
   ) {}
 
   @Get('test/sign-in')
@@ -113,5 +127,12 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   refreshToken(@RefreshToken() payload: JwtRefreshPayload) {
     return this.tokenService.rotateToken(payload);
+  }
+
+  @ApiBearerAuth()
+  @Get('user')
+  @UseGuards(AccessTokenGuard)
+  getUser(@AccessToken() payload: JwtAccessPayload) {
+    return this.userService.getUserById(payload.id);
   }
 }
