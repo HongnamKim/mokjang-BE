@@ -1,4 +1,4 @@
-import { AuthType } from '../enum/auth-type.enum';
+import { AuthType } from '../const/enum/auth-type.enum';
 
 export type JwtPayload = {
   id: number;
