@@ -209,7 +209,7 @@ export class RequestInfoService {
     });
 
     // 교회 존재 여부 확인 && 교회 데이터 불러오기
-    const church = await this.churchesService.findChurchById(churchId, qr);
+    const church = await this.churchesService.getChurchById(churchId, qr);
 
     return existingRequest
       ? this.handleExistingRequest(existingRequest, church, qr)

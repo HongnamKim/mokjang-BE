@@ -30,7 +30,7 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
-import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
+import { GetMemberOrderEnum } from '../const/enum/get-member-order.enum';
 import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import {
   DefaultMemberSelectOption,
@@ -384,7 +384,7 @@ export class MembersService {
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.findChurchById(churchId, qr);
+    const church = await this.churchesService.getChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
