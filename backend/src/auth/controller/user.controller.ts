@@ -4,11 +4,13 @@ import { AccessToken } from '../decorator/jwt.decorator';
 import { JwtAccessPayload } from '../type/jwt';
 import { UserService } from '../service/user.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiGetUser } from '../const/swagger/user/controller.swagger';
 
 @Controller('auth')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @ApiGetUser()
   @ApiBearerAuth()
   @Get('user')
   @UseGuards(AccessTokenGuard)

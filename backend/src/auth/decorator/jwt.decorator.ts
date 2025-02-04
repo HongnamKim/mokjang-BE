@@ -4,8 +4,8 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthType } from '../enum/auth-type.enum';
-import { AuthException } from '../exception/exception.message';
+import { AuthType } from '../const/enum/auth-type.enum';
+import { AuthException } from '../const/exception-message/exception.message';
 
 export const JwtDecorator = createParamDecorator(
   (data, context: ExecutionContext) => {

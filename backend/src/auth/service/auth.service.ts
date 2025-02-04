@@ -7,23 +7,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TempUserModel } from '../entity/temp-user.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { UserModel } from '../entity/user.entity';
-import { OauthDto } from '../dto/oauth.dto';
-import { AuthType } from '../enum/auth-type.enum';
+import { OauthDto } from '../dto/auth/oauth.dto';
+import { AuthType } from '../const/enum/auth-type.enum';
 import { TokenService } from './token.service';
-import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
+import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
 import { ConfigService } from '@nestjs/config';
 import { MessagesService } from './messages.service';
-import { VerifyCodeDto } from '../dto/verify-code.dto';
+import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
 import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
-import { RegisterUserDto } from '../dto/register-user.dto';
+import { RegisterUserDto } from '../dto/user/register-user.dto';
 import {
   AuthException,
   SignInException,
   VerifyException,
-} from '../exception/exception.message';
+} from '../const/exception-message/exception.message';
 import { MESSAGE_SERVICE, VERIFICATION } from '../const/env.const';
 import { JwtTemporalPayload } from '../type/jwt';
-import { TestEnvironment } from '../const/test-environment.enum';
+import { TestEnvironment } from '../const/enum/test-environment.enum';
 import {
   BetaVerificationMessage,
   VerificationMessage,
