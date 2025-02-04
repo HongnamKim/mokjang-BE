@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FamilyModel } from '../entity/family.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../entity/member.entity';
-import { GenderEnum } from '../../enum/gender.enum';
+import { GenderEnum } from '../const/enum/gender.enum';
 import { FamilyRelation } from '../const/family-relation.const';
 import { FamilyExceptionMessage } from '../exception-message/family-exception.message';
 
