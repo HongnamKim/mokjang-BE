@@ -12,9 +12,9 @@ import {
   Length,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
-import { GenderEnum } from '../../enum/gender.enum';
+import { GenderEnum } from '../const/enum/gender.enum';
 import { BaptismEnum } from '../enum/baptism.enum';
-import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
+import { GetMemberOrderEnum } from '../const/enum/get-member-order.enum';
 import {
   TransformNumberArray,
   TransformStringArray,
