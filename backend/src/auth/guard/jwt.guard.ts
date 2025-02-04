@@ -5,9 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtAccessPayload, JwtRefreshPayload } from '../type/jwt';
-import { AuthType } from '../enum/auth-type.enum';
+import { AuthType } from '../const/enum/auth-type.enum';
 import { TokenService } from '../service/token.service';
-import { AuthException } from '../exception/exception.message';
+import { AuthException } from '../const/exception-message/exception.message';
 import { TOKEN_HEADER } from '../const/token-header.const';
 
 export class JwtGuard implements CanActivate {

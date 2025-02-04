@@ -10,7 +10,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
-import { AuthException } from '../exception/exception.message';
+import { AuthException } from '../const/exception-message/exception.message';
 
 export const OAuthLogin = (provider: string) => {
   return applyDecorators(
@@ -27,6 +27,7 @@ export const OAuthRedirect = (provider: string) => {
     UseInterceptors(TransactionInterceptor),
   );
 };
+
 export const OAuthUser = createParamDecorator(
   (data, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();

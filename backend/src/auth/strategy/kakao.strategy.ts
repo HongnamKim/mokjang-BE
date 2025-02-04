@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-kakao';
 import { ConfigService } from '@nestjs/config';
-import { OauthDto } from '../dto/oauth.dto';
+import { OauthDto } from '../dto/auth/oauth.dto';
 import { KAKAO_OAUTH } from '../const/env.const';
 
 @Injectable()
