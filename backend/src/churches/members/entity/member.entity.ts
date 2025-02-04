@@ -8,7 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { GenderEnum } from '../../enum/gender.enum';
+import { GenderEnum } from '../const/enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
 import { OfficerModel } from '../../management/entity/officer/officer.entity';

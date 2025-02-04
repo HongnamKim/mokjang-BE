@@ -7,59 +7,52 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TempUserModel } from '../entity/temp-user.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { UserModel } from '../entity/user.entity';
-import { OauthDto } from '../dto/oauth.dto';
-import { AuthType } from '../enum/auth-type.enum';
+import { OauthDto } from '../dto/auth/oauth.dto';
+import { AuthType } from '../const/enum/auth-type.enum';
 import { TokenService } from './token.service';
-import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
+import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
 import { ConfigService } from '@nestjs/config';
 import { MessagesService } from './messages.service';
-import { VerifyCodeDto } from '../dto/verify-code.dto';
+import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
 import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
-import { RegisterUserDto } from '../dto/register-user.dto';
+import { RegisterUserDto } from '../dto/user/register-user.dto';
 import {
   AuthException,
   SignInException,
   VerifyException,
-} from '../exception/exception.message';
-import { VERIFICATION } from '../const/env.const';
-import { VerificationMessage } from '../const/verification-message.const';
+} from '../const/exception-message/exception.message';
+import { MESSAGE_SERVICE, VERIFICATION } from '../const/env.const';
 import { JwtTemporalPayload } from '../type/jwt';
+import { TestEnvironment } from '../const/enum/test-environment.enum';
+import {
+  BetaVerificationMessage,
+  VerificationMessage,
+} from '../const/verification-message.const';
+import { CreateUserDto } from '../dto/user/create-user.dto';
+import { UserService } from './user.service';
+import { TempUserService } from './temp-user.service';
+import { UpdateTempUserDto } from '../dto/user/update-temp-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(TempUserModel)
-    private readonly tempUserRepository: Repository<TempUserModel>,
-    @InjectRepository(UserModel)
-    private readonly userRepository: Repository<UserModel>,
+    private readonly tempUserService: TempUserService,
+    private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly tokenService: TokenService,
     private readonly messagesService: MessagesService,
   ) {}
 
-  private getUserRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(UserModel) : this.userRepository;
-  }
-
-  private getTempUserRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(TempUserModel)
-      : this.tempUserRepository;
-  }
-
   async loginUser(oauthDto: OauthDto, qr: QueryRunner) {
-    const userRepository = this.getUserRepository(qr);
-
     if (!oauthDto.provider || !oauthDto.providerId) {
       throw new BadRequestException(AuthException.MISSING_OAUTH_DATA);
     }
 
-    const user = await userRepository.findOne({
-      where: {
-        provider: oauthDto.provider,
-        providerId: oauthDto.providerId,
-      },
-    });
+    const user = await this.userService.findUserModelByOAuth(
+      oauthDto.provider,
+      oauthDto.providerId,
+      qr,
+    );
 
     return user
       ? this.handleRegisteredUser(user)
@@ -77,20 +70,18 @@ export class AuthService {
   }
 
   private async handleNewUser(oauthDto: OauthDto, qr: QueryRunner) {
-    const tempUserRepository = this.getTempUserRepository(qr);
-
-    let tempUser = await tempUserRepository.findOne({
-      where: {
-        provider: oauthDto.provider,
-        providerId: oauthDto.providerId,
-      },
-    });
+    let tempUser = await this.tempUserService.findTempUserModelByOAuth(
+      oauthDto.provider,
+      oauthDto.providerId,
+      qr,
+    );
 
     if (!tempUser) {
-      tempUser = await tempUserRepository.save({
-        provider: oauthDto.provider,
-        providerId: oauthDto.providerId,
-      });
+      tempUser = await this.tempUserService.createTempUser(
+        oauthDto.provider,
+        oauthDto.providerId,
+        qr,
+      );
     }
 
     const token = this.tokenService.signToken(tempUser.id, AuthType.TEMP);
@@ -100,68 +91,35 @@ export class AuthService {
     };
   }
 
-  async getTempUserById(id: number, qr?: QueryRunner) {
-    const tempUserRepository = this.getTempUserRepository(qr);
-
-    const tempUser = await tempUserRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
-    if (!tempUser) {
-      throw new NotFoundException(AuthException.TEMP_USER_NOT_FOUND);
-    }
-
-    return tempUser;
-  }
-
-  async getUserById(id: number, qr?: QueryRunner) {
-    const userRepository = this.getUserRepository(qr);
-
-    const user = await userRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException(AuthException.USER_NOT_FOUND);
-    }
-
-    return user;
-  }
-
   async requestVerificationCode(
     temporalToken: JwtTemporalPayload,
     dto: RequestVerificationCodeDto,
-    isTest: boolean,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
-    const tempUserRepository = this.getTempUserRepository(qr);
-
-    const tempUser = await this.getTempUserById(temporalToken.id, qr);
+    const tempUser = await this.tempUserService.getTempUserById(
+      temporalToken.id,
+      qr,
+    );
 
     // 하루 요청 횟수 제한 검증
     const requestLimits = this.configService.getOrThrow<number>(
       VERIFICATION.DAILY_VERIFY_REQUEST_LIMITS,
     );
 
+    // 마지막 요청 날짜가 지난 경우, 요청 횟수 초기화
+    if (DateUtils.isNewDay(new Date(), tempUser.requestedAt)) {
+      tempUser.requestAttempts = 0;
+      await this.tempUserService.initRequestAttempt(tempUser, qr);
+    }
+
+    // 요청 횟수가 초과된 경우
     if (tempUser.requestAttempts >= requestLimits) {
+      // 마지막 인증 요청 날짜가 지나지 않은 경우 요청 횟수 초과
       if (!DateUtils.isNewDay(new Date(), tempUser.requestedAt)) {
         throw new BadRequestException(
           VerifyException.DAILY_LIMIT_EXCEEDED(requestLimits),
         );
       }
-
-      await tempUserRepository.update(
-        {
-          id: tempUser.id,
-        },
-        {
-          requestAttempts: 0,
-        },
-      );
     }
 
     const digit = this.configService.getOrThrow<number>(
@@ -172,25 +130,37 @@ export class AuthService {
       .toString()
       .padStart(6, '0');
 
-    await tempUserRepository.update(
-      { id: tempUser.id },
-      {
-        verificationCode: code,
-        name: dto.name,
-        mobilePhone: dto.mobilePhone,
-        codeExpiresAt: this.getCodeExpiresAt(),
-        isVerified: false,
-        verificationAttempts: 0,
-        requestAttempts: () => `"requestAttempts" + 1`,
-        requestedAt: new Date(),
-      },
-    );
+    const updateTempUserDto: UpdateTempUserDto = {
+      verificationCode: code,
+      name: dto.name,
+      mobilePhone: dto.mobilePhone,
+      codeExpiresAt: this.getCodeExpiresAt(),
+      isVerified: false,
+      verificationAttempts: 0,
+      requestAttempts: tempUser.requestAttempts + 1,
+      requestedAt: new Date(),
+    };
 
-    const message = VerificationMessage(code);
+    await this.tempUserService.updateTempUser(tempUser, updateTempUserDto, qr);
 
-    return isTest
-      ? message
-      : this.messagesService.sendVerificationCode(dto.mobilePhone, message);
+    const message =
+      dto.isTest === TestEnvironment.BetaTest
+        ? BetaVerificationMessage(code, dto.mobilePhone)
+        : VerificationMessage(code);
+
+    if (dto.isTest === TestEnvironment.Production) {
+      return this.messagesService.sendVerificationCode(
+        dto.mobilePhone,
+        message,
+      );
+    } else if (dto.isTest === TestEnvironment.BetaTest) {
+      return this.messagesService.sendVerificationCode(
+        this.configService.getOrThrow(MESSAGE_SERVICE.BETA_TEST_TO_NUMBER),
+        message,
+      );
+    } else {
+      return message;
+    }
   }
 
   private getCodeExpiresAt() {
@@ -203,37 +173,21 @@ export class AuthService {
     return new Date(now.getTime() + expiresMinutes * 60 * 1000);
   }
 
-  async verifyCode(
-    temporalToken: JwtTemporalPayload,
-    dto: VerifyCodeDto,
-    qr?: QueryRunner,
-  ) {
-    const tempUser = await this.getTempUserById(temporalToken.id);
+  async verifyCode(temporalToken: JwtTemporalPayload, dto: VerifyCodeDto) {
+    const tempUser = await this.tempUserService.getTempUserById(
+      temporalToken.id,
+    );
 
     // 검증 전처리
-    await this.validateVerificationAttempts(tempUser);
-
-    const tempUserRepository = this.getTempUserRepository(qr);
+    this.validateVerificationAttempts(tempUser);
 
     if (tempUser.verificationCode !== dto.code) {
-      await this.tempUserRepository.increment(
-        { id: tempUser.id },
-        'verificationAttempts',
-        1,
-      );
-
+      await this.tempUserService.incrementVerificationAttempts(tempUser);
       throw new BadRequestException(VerifyException.CODE_NOT_MATCH);
     }
 
     // 인증 성공 로직
-    await tempUserRepository.update(
-      {
-        id: tempUser.id,
-      },
-      {
-        isVerified: true,
-      },
-    );
+    await this.tempUserService.markAsVerified(tempUser);
 
     return {
       timestamp: new Date(),
@@ -241,7 +195,7 @@ export class AuthService {
     };
   }
 
-  private async validateVerificationAttempts(tempUser: TempUserModel) {
+  private validateVerificationAttempts(tempUser: TempUserModel) {
     const verificationLimits = this.configService.getOrThrow<number>(
       VERIFICATION.VERIFY_LIMITS,
     );
@@ -264,10 +218,10 @@ export class AuthService {
     dto: RegisterUserDto,
     qr: QueryRunner,
   ) {
-    const userRepository = this.getUserRepository(qr);
-    const tempUserRepository = this.getTempUserRepository(qr);
-
-    const tempUser = await this.getTempUserById(temporalToken.id, qr);
+    const tempUser = await this.tempUserService.getTempUserById(
+      temporalToken.id,
+      qr,
+    );
 
     if (!tempUser.isVerified) {
       throw new BadRequestException(
@@ -279,19 +233,19 @@ export class AuthService {
       throw new BadRequestException(SignInException.PRIVACY_POLICY_REQUIRED);
     }
 
-    const user = userRepository.create({
+    const createUserDto: CreateUserDto = {
       provider: tempUser.provider,
       providerId: tempUser.providerId,
       name: tempUser.name,
       mobilePhone: tempUser.mobilePhone,
       mobilePhoneVerified: tempUser.isVerified,
       privacyPolicyAgreed: dto.privacyPolicyAgreed,
-    });
+    };
 
-    const newUser = await userRepository.save(user);
+    const newUser = await this.userService.createUser(createUserDto, qr);
 
-    await tempUserRepository.delete(tempUser.id);
+    await this.tempUserService.deleteTempUser(tempUser, qr);
 
-    return userRepository.findOne({ where: { id: newUser.id } });
+    return this.handleRegisteredUser(newUser);
   }
 }

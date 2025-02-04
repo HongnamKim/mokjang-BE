@@ -20,7 +20,7 @@ import { EducationModel } from '../management/entity/education/education.entity'
 import { MinistryGroupModel } from '../management/entity/ministry/ministry-group.entity';
 
 @Entity()
-@Unique(['name', 'identifyNumber'])
+//@Unique(['name', 'identifyNumber'])
 export class ChurchModel extends BaseModel {
   @Column()
   name: string;
