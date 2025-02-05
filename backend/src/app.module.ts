@@ -32,6 +32,7 @@ import { MinistryGroupModel } from './churches/management/entity/ministry/minist
 import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { DummyDataService } from './dummy-data.service';
 
 @Module({
   imports: [
@@ -140,6 +141,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    DummyDataService,
   ],
 })
 export class AppModule {}
