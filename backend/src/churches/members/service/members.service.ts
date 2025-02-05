@@ -383,6 +383,22 @@ export class MembersService {
     return member;
   }
 
+  createMemberModel(dto: CreateMemberDto & { churchId: number }) {
+    return this.membersRepository.create(dto);
+  }
+
+  async createMultipleMembers(
+    churchId: number,
+    members: MemberModel[],
+    qr?: QueryRunner,
+  ) {
+    await this.churchesService.getChurchById(churchId, qr);
+
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.save(members);
+  }
+
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
     const church = await this.churchesService.getChurchById(churchId, qr);
 
