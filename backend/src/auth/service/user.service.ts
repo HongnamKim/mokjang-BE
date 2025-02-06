@@ -82,7 +82,7 @@ export class UserService {
     const isExistUser = await this.isExistUser(dto.provider, dto.providerId);
 
     if (isExistUser) {
-      throw new BadRequestException('이미 가입 이력이 있는 소셜 계정입니다.');
+      throw new BadRequestException('이미 가입된 계정입니다.');
     }
 
     const userRepository = this.getUserRepository(qr);
