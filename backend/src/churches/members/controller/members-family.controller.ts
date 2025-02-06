@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,12 +17,20 @@ import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateFamilyDto } from '../dto/family/update-family.dto';
 import { MembersService } from '../service/members.service';
+import {
+  ApiDeleteFamilyMember,
+  ApiFetchFamilyMember,
+  ApiGetFamilyMember,
+  ApiPatchFamilyMember,
+  ApiPostFamilyMember,
+} from '../const/swagger/member-family/controller.swagger';
 
 @ApiTags('Churches:Members:Family')
 @Controller(':memberId/family')
 export class MembersFamilyController {
   constructor(private readonly memberService: MembersService) {}
 
+  @ApiGetFamilyMember()
   @Get()
   getFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -30,6 +39,7 @@ export class MembersFamilyController {
     return this.memberService.getFamilyRelation(churchId, memberId);
   }
 
+  @ApiPostFamilyMember()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postFamilyMember(
@@ -46,6 +56,7 @@ export class MembersFamilyController {
     );
   }
 
+  @ApiFetchFamilyMember()
   @Post('fetch-family')
   @UseInterceptors(TransactionInterceptor)
   fetchFamilyMember(
@@ -54,15 +65,18 @@ export class MembersFamilyController {
     @Body() dto: CreateFamilyDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberService.fetchFamilyRelation(
+    throw new GoneException('더 이상 사용할 수 없는 요청입니다.');
+
+    /*return this.memberService.fetchFamilyRelation(
       churchId,
       memberId,
       dto.familyMemberId,
       dto.relation,
       qr,
-    );
+    );*/
   }
 
+  @ApiPatchFamilyMember()
   @Patch(':familyMemberId')
   @UseInterceptors(TransactionInterceptor)
   patchFamilyMember(
@@ -81,6 +95,7 @@ export class MembersFamilyController {
     );
   }
 
+  @ApiDeleteFamilyMember()
   @Delete(':familyMemberId')
   deleteFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
