@@ -33,6 +33,7 @@ export class EducationTermModel extends BaseModel {
   @Column({ type: 'timestamptz', comment: '기수 종료일' })
   endDate: Date;
 
+  @Index()
   @Column({ type: 'int', comment: '교육 진행자 ID', nullable: true })
   instructorId!: number | null;
 

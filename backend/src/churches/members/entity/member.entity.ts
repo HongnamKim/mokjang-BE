@@ -32,6 +32,7 @@ export class MemberModel extends BaseModel {
   @ManyToOne(() => ChurchModel, (church) => church.members)
   church: ChurchModel;
 
+  @Index()
   @Column({ default: new Date() })
   registeredAt: Date;
 
@@ -46,9 +47,11 @@ export class MemberModel extends BaseModel {
   @Column({ default: false })
   isLunar: boolean;
 
+  @Index()
   @Column({ nullable: true })
   birth: Date;
 
+  @Index()
   @Column({ enum: GenderEnum, nullable: true })
   gender: GenderEnum;
 
@@ -58,6 +61,7 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true })
   detailAddress: string;
 
+  @Index()
   @Column({ nullable: true })
   homePhone: string;
 
@@ -68,18 +72,22 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => FamilyModel, (family) => family.familyMember)
   counterFamily: FamilyModel[];
 
+  @Index()
   @Column({ nullable: true })
   occupation: string;
 
+  @Index()
   @Column({ nullable: true })
   school: string;
 
+  @Index()
   @Column({ enum: MarriageOptions, nullable: true })
   marriage: MarriageOptions;
 
   @Column({ nullable: true })
   marriageDetail: string;
 
+  @Index()
   @Column('text', { array: true, default: [] })
   vehicleNumber: string[];
 
@@ -97,6 +105,7 @@ export class MemberModel extends BaseModel {
   @Column({ nullable: true, comment: '이전교회 이름' })
   previousChurch: string;
 
+  @Index()
   @Column({
     enum: BaptismEnum,
     default: BaptismEnum.default,
@@ -133,7 +142,6 @@ export class MemberModel extends BaseModel {
   )
   officerHistory: OfficerHistoryModel[];
 
-  // TODO 멤버 삭제 시 EducationEnrollment 도 같이 삭제되어야 함.
   @OneToMany(
     () => EducationEnrollmentModel,
     (educationEnrollment) => educationEnrollment.member,

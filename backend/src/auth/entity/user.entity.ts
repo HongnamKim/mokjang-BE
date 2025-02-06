@@ -1,10 +1,11 @@
-import { Column, Entity, ManyToOne, OneToOne, Unique } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToOne } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Entity()
-@Unique(['provider', 'providerId'])
+//@Unique(['provider', 'providerId'])
 export class UserModel extends BaseModel {
+  @Index()
   @Column()
   provider: string;
 

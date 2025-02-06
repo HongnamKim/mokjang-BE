@@ -10,6 +10,7 @@ export class GroupModel extends BaseModel {
   @Column()
   name: string;
 
+  @Index()
   @Column({ type: 'int', nullable: true })
   parentGroupId: number | null;
 
