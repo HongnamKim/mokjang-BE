@@ -7,18 +7,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../entity/member.entity';
 import {
-  ArrayContains,
-  Between,
   FindOptionsOrder,
   FindOptionsRelations,
-  FindOptionsSelect,
   FindOptionsWhere,
-  ILike,
-  In,
   IsNull,
-  LessThanOrEqual,
-  Like,
-  MoreThanOrEqual,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -30,19 +22,15 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
-import { GetMemberOrderEnum } from '../../enum/get-member-order.enum';
 import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
-import {
-  DefaultMemberSelectOption,
-  DefaultMembersRelationOption,
-  DefaultMembersSelectOption,
-} from '../const/default-find-options.const';
+import { DefaultMemberSelectOption } from '../const/default-find-options.const';
 import { GroupModel } from '../../management/entity/group/group.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerModel } from '../../management/entity/officer/officer.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
 import { CreateFamilyDto } from '../dto/family/create-family.dto';
+import { SearchMembersService } from './search-members.service';
 
 @Injectable()
 export class MembersService {
@@ -52,255 +40,50 @@ export class MembersService {
     private readonly churchesService: ChurchesService,
     private readonly familyService: FamilyService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly searchMembersService: SearchMembersService,
   ) {}
-
-  private CHURCH_MANAGEMENT_COLUMNS = [
-    'group',
-    'ministries',
-    'educations',
-    'officer',
-  ];
-
-  private SELECT_PREFIX = 'select__';
-
-  private PAGING_OPTIONS = ['take', 'page', 'order', 'orderDirection'];
 
   private getMembersRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
   }
 
-  parseRelationOption(dto: GetMemberDto) {
-    const relationOptions: FindOptionsRelations<MemberModel> = {};
-
-    let needDefaultRelationOptions = true;
-
-    Object.entries(dto).forEach(([key, value]) => {
-      // 선택한 컬럼 추가
-      if (key.startsWith(this.SELECT_PREFIX)) {
-        const [, column] = key.split('__');
-
-        needDefaultRelationOptions = false;
-
-        if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
-          if (column === 'educations') {
-            relationOptions[column] = {
-              educationTerm: value /*{
-                education: value,
-              }*/,
-            };
-          } else if (column === 'group') {
-            relationOptions[column] = true;
-            relationOptions['groupRole'] = true;
-          } else {
-            relationOptions[column] = value;
-          }
-        }
-        return;
-      }
-    });
-
-    // 컬럼 사용자화 하지 않은 경우 기본 relationOption 복사
-    if (needDefaultRelationOptions) {
-      Object.keys(DefaultMembersRelationOption).forEach((key) => {
-        relationOptions[key] = DefaultMembersRelationOption[key];
-      });
-    }
-
-    // 정렬 기준이 join 이 필요한 컬럼인 경우
-    if (this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)) {
-      relationOptions[dto.order as string] = true;
-    }
-
-    return relationOptions;
-  }
-
-  parseOrderOption(dto: GetMemberDto) {
-    const findOptionsOrder: FindOptionsOrder<MemberModel> = {};
-
-    if (
-      dto.order === GetMemberOrderEnum.group ||
-      dto.order === GetMemberOrderEnum.officer
-    ) {
-      findOptionsOrder[dto.order as string] = {
-        name: dto.orderDirection,
-      };
-      findOptionsOrder.registeredAt = 'asc';
-    } else {
-      findOptionsOrder[dto.order as string] = dto.orderDirection;
-      if (dto.order !== GetMemberOrderEnum.registeredAt) {
-        findOptionsOrder.registeredAt = 'asc';
-      } else {
-        findOptionsOrder.id = 'asc';
-      }
-    }
-
-    return findOptionsOrder;
-  }
-
-  parseSelectOption(dto: GetMemberDto) {
-    const selectOptions: FindOptionsSelect<MemberModel> = {};
-
-    let needDefaultSelectOptions = true;
-
-    // 컬럼 사용자화
-    Object.entries(dto).forEach(([key, value]) => {
-      // 페이징 관련 옵션 건너뛰기
-      if (this.PAGING_OPTIONS.includes(key)) return;
-
-      // 컬럼 사용자화
-      if (key.startsWith(this.SELECT_PREFIX)) {
-        const [, column] = key.split('__');
-
-        if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
-          // 사역, 직분, 그룹, 교육
-          if (column === 'educations') {
-            selectOptions[column] = {
-              id: true,
-              status: true,
-              educationTerm: {
-                id: true,
-                term: true,
-                educationName: true /*
-                education: {
-                  id: true,
-                  name: true,
-                },*/,
-              },
-            };
-          } else if (column === 'group') {
-            selectOptions[column] = {
-              id: true,
-              name: true,
-            };
-            selectOptions['groupRole'] = {
-              id: true,
-              role: true,
-            };
-          } else
-            selectOptions[column] = {
-              id: value,
-              name: value,
-            };
-          needDefaultSelectOptions = false;
-          return;
-        }
-
-        if (column === 'address') {
-          // 도로명 주소 선택 시 상제 주소 추가
-          selectOptions[column] = value;
-          selectOptions['detailAddress'] = value;
-
-          needDefaultSelectOptions = false;
-
-          return;
-        }
-        if (column === 'birth') {
-          // 생년월일 추가 시 음력여부 추가
-          selectOptions[column] = value;
-          selectOptions['isLunar'] = value;
-
-          needDefaultSelectOptions = false;
-
-          return;
-        }
-
-        selectOptions[column] = value;
-
-        needDefaultSelectOptions = false;
-      }
-    });
-
-    // 항상 들어가야할 컬럼
-    const result: FindOptionsSelect<MemberModel> = {
-      id: true,
-      registeredAt: true,
-      name: true,
-      [dto.order]: this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)
-        ? { id: true, name: true }
-        : true,
-    };
-
-    return needDefaultSelectOptions
-      ? { ...result, ...DefaultMembersSelectOption }
-      : { ...result, ...selectOptions };
-  }
-
-  async parseWhereOption(churchId: number, dto: GetMemberDto) {
-    const createDateFilter = (start?: Date, end?: Date) =>
-      start && end
-        ? Between(start, end)
-        : start
-          ? MoreThanOrEqual(start)
-          : end
-            ? LessThanOrEqual(end)
-            : undefined;
-
-    const findOptionsWhere: FindOptionsWhere<MemberModel> = {
-      churchId,
-      name: dto.name && ILike(`%${dto.name}%`),
-      mobilePhone: dto.mobilePhone && Like(`%${dto.mobilePhone}%`),
-      homePhone: dto.homePhone && Like(`%${dto.homePhone}%`),
-      address: dto.address && Like(`%${dto.address}%`),
-      birth: createDateFilter(dto.birthAfter, dto.birthBefore),
-      registeredAt: createDateFilter(dto.registerAfter, dto.registerBefore),
-      updatedAt: createDateFilter(dto.updateAfter, dto.updateBefore),
-      gender: dto.gender && In(dto.gender),
-      marriage: dto.marriage && In(dto.marriage),
-      school: dto.school && Like(`%${dto.school}%`),
-      occupation: dto.occupation && Like(`%${dto.occupation}%`),
-      vehicleNumber: dto.vehicleNumber && ArrayContains(dto.vehicleNumber),
-      baptism: dto.baptism && In(dto.baptism),
-      groupId: dto.group && In(dto.group),
-      officerId: dto.officer && In(dto.officer),
-      ministries: dto.ministries && { id: In(dto.ministries) },
-      educations: dto.educations && {
-        educationTerm: {
-          educationId: In(dto.educations),
-        },
-        status: dto.educationStatus && In(dto.educationStatus),
-        /*id: In(dto.educations)*/
-      },
-    };
-
-    return findOptionsWhere;
-  }
-
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const selectOptions = this.parseSelectOption(dto);
+    const selectOptions = this.searchMembersService.parseSelectOption(dto);
 
-    const relationOptions = this.parseRelationOption(dto);
+    const relationOptions = this.searchMembersService.parseRelationOption(dto);
 
-    const findOptionsWhere: FindOptionsWhere<MemberModel> =
-      await this.parseWhereOption(churchId, dto);
+    const whereOptions: FindOptionsWhere<MemberModel> =
+      this.searchMembersService.parseWhereOption(churchId, dto);
 
     const findOptionsOrder: FindOptionsOrder<MemberModel> =
-      this.parseOrderOption(dto);
+      this.searchMembersService.parseOrderOption(dto);
 
-    const totalCount = await membersRepository.count({
-      where: findOptionsWhere,
-    });
+    const [totalCount, result] = await Promise.all([
+      membersRepository.count({
+        where: whereOptions,
+      }),
+      membersRepository.find({
+        where: whereOptions,
+        order: findOptionsOrder,
+        relations: relationOptions,
+        select: selectOptions,
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+    ]);
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    const result = await membersRepository.find({
-      where: findOptionsWhere,
-      order: findOptionsOrder,
-      relations: relationOptions,
-      select: selectOptions,
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
-    });
-
-    // 현재 그룹만 필터링
+    /*// 현재 그룹만 필터링
     if (result.length > 0 && result[0].groupHistory) {
       result.forEach((member) => {
         member.groupHistory = member.groupHistory.filter(
           (group) => group.endDate === null,
         );
       });
-    }
+    }*/
 
     return new ResponsePaginationDto<MemberModel>(
       result,
@@ -383,8 +166,24 @@ export class MembersService {
     return member;
   }
 
+  createMemberModel(dto: CreateMemberDto & { churchId: number }) {
+    return this.membersRepository.create(dto);
+  }
+
+  async createMultipleMembers(
+    churchId: number,
+    members: MemberModel[],
+    qr?: QueryRunner,
+  ) {
+    await this.churchesService.getChurchById(churchId, qr);
+
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.save(members);
+  }
+
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.findChurchById(churchId, qr);
+    const church = await this.churchesService.getChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 

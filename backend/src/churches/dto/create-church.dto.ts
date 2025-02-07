@@ -1,6 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { ChurchModel } from '../entity/church.entity';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { MemberSize } from '../const/member-size.enum';
 
 export class CreateChurchDto extends PickType(ChurchModel, [
@@ -52,6 +52,7 @@ export class CreateChurchDto extends PickType(ChurchModel, [
   @ApiProperty({
     description: '교회 상세 주소',
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   override detailAddress: string;

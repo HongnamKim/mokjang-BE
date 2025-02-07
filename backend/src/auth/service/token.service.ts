@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
-import { AuthType } from '../enum/auth-type.enum';
+import { AuthType } from '../const/enum/auth-type.enum';
 import { JwtPayload, JwtRefreshPayload } from '../type/jwt';
 import { JwtExpiresConst } from '../const/jwt-expires.const';
 import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
-import { AuthException } from '../exception/exception.message';
+import { AuthException } from '../const/exception-message/exception.message';
 import { JWT } from '../const/env.const';
 
 @Injectable()

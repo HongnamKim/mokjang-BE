@@ -26,7 +26,7 @@ export class ChurchesService {
   }
 
   async isChurchAdmin(churchId: number, memberId: number, qr?: QueryRunner) {
-    const church = await this.findChurchById(churchId, qr);
+    const church = await this.getChurchById(churchId, qr);
 
     const subAdminIds = church.subAdmins.map((subAdmin) => subAdmin.id);
 
@@ -40,12 +40,12 @@ export class ChurchesService {
     memberId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.findChurchById(churchId, qr);
+    const church = await this.getChurchById(churchId, qr);
 
     return church.mainAdmin.id === memberId;
   }
 
-  async findChurchById(id: number, qr?: QueryRunner) {
+  async getChurchById(id: number, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
     const church = await churchRepository.findOne({
@@ -53,7 +53,7 @@ export class ChurchesService {
         id,
       },
       relations: {
-        requestInfos: true,
+        //requestInfos: true,
         mainAdmin: true,
         subAdmins: true,
       },
@@ -127,6 +127,8 @@ export class ChurchesService {
     if (result.affected === 0) {
       throw new NotFoundException('');
     }
+
+    return this.getChurchById(churchId);
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {
@@ -135,10 +137,10 @@ export class ChurchesService {
     const result = await churchRepository.softDelete({ id });
 
     if (result.affected === 0) {
-      throw new NotFoundException('찾을 수 없습니다.');
+      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
     }
 
-    return true;
+    return `churchId: ${id} deleted`;
   }
 
   /**

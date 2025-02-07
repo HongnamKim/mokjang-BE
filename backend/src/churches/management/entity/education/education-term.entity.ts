@@ -17,7 +17,7 @@ export class EducationTermModel extends BaseModel {
   @ManyToOne(() => EducationModel, (education) => education.educationTerms)
   education!: EducationModel;
 
-  @Column({ comment: '기수' })
+  @Column({ comment: '교육 기수' })
   @Index()
   term: number; // 기수
 
@@ -27,10 +27,10 @@ export class EducationTermModel extends BaseModel {
   @Column({ type: 'int', nullable: true, comment: '수료 기준 출석 횟수' })
   completionCriteria: number | null;
 
-  @Column({ type: 'timestamptz', comment: '회차 시작일' })
+  @Column({ type: 'timestamptz', comment: '기수 시작일' })
   startDate: Date;
 
-  @Column({ type: 'timestamptz', comment: '회차 종료일' })
+  @Column({ type: 'timestamptz', comment: '기수 종료일' })
   endDate: Date;
 
   @Column({ type: 'int', comment: '교육 진행자 ID', nullable: true })
@@ -41,6 +41,9 @@ export class EducationTermModel extends BaseModel {
 
   @OneToMany(() => EducationSessionModel, (session) => session.educationTerm)
   educationSessions: EducationSessionModel[];
+
+  @Column({ default: 0, comment: '진행 완료된 교육 회차의 수' })
+  isDoneCount: number;
 
   @Column({ default: 0, comment: '수강 대상 교인 수' })
   enrollmentCount: number;

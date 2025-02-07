@@ -1,7 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, Length } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, Length } from 'class-validator';
+import { TestEnvironment } from '../../const/enum/test-environment.enum';
 
 export class RequestVerificationCodeDto {
+  @ApiProperty({
+    description: '인증 문자 전송 환경 (기본값: internalTest)',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(TestEnvironment)
+  isTest: TestEnvironment = TestEnvironment.InternalTest;
+
   @ApiProperty({
     name: 'name',
     description: '이름',

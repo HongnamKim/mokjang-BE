@@ -13,7 +13,7 @@ import {
   Length,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
-import { GenderEnum } from '../../enum/gender.enum';
+import { GenderEnum } from '../const/enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../enum/baptism.enum';
 import { FamilyRelation } from '../const/family-relation.const';
