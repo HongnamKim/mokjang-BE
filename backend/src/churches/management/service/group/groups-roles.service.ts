@@ -121,10 +121,11 @@ export class GroupsRolesService {
     churchId: number,
     groupId: number,
     dto: CreateGroupRoleDto,
+    qr?: QueryRunner,
   ) {
     const group = await this.groupsService.getGroupModelById(churchId, groupId);
 
-    const groupRolesRepository = this.getGroupRolesRepository();
+    const groupRolesRepository = this.getGroupRolesRepository(qr);
 
     const isExist = !!(await groupRolesRepository.findOne({
       where: {
