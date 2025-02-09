@@ -108,6 +108,9 @@ export class GroupsRolesService {
         groupId,
         id: groupRoleId,
       },
+      relations: {
+        members: true,
+      },
     });
 
     if (!role) {
@@ -196,6 +199,22 @@ export class GroupsRolesService {
 
   async deleteGroupRole(churchId: number, groupId: number, roleId: number) {
     const groupRolesRepository = this.getGroupRolesRepository();
+
+    const targetGroupRole = await this.getGroupRoleById(
+      churchId,
+      groupId,
+      roleId,
+    );
+
+    if (targetGroupRole.members) {
+      const member = targetGroupRole.members
+        .map((member) => member.name)
+        .join(', ');
+
+      throw new BadRequestException(
+        `해당 그룹 역할을 가진 교인이 존재합니다.\n${member}`,
+      );
+    }
 
     const result = await groupRolesRepository.softDelete({
       id: roleId,
