@@ -232,6 +232,18 @@ export class MinistryService {
   async deleteMinistry(churchId: number, ministryId: number, qr?: QueryRunner) {
     const ministryRepository = this.getMinistryRepository(qr);
 
+    const targetMinistry = await this.getMinistryById(churchId, ministryId, qr);
+
+    if (targetMinistry.membersCount) {
+      const member = targetMinistry.members
+        .map((member) => member.name)
+        .join(' ');
+
+      throw new BadRequestException(
+        `해당 사역을 가진 교인이 존재합니다.\n(${member})`,
+      );
+    }
+
     const result = await ministryRepository.softDelete({
       id: ministryId,
       churchId,
