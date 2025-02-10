@@ -113,19 +113,26 @@ export class MinistryService {
   async createMinistry(
     churchId: number,
     dto: CreateMinistryDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const ministryRepository = this.getMinistryRepository(qr);
 
-    const isExistMinistry = await this.isExistMinistry(
-      churchId,
-      dto.ministryGroupId,
-      dto.name,
-      qr,
-    );
+    const existingMinistry = await ministryRepository.findOne({
+      where: {
+        churchId,
+        ministryGroupId: dto.ministryGroupId ? dto.ministryGroupId : IsNull(),
+        name: dto.name,
+      },
+      relations: { members: true },
+      withDeleted: true,
+    });
 
-    if (isExistMinistry) {
-      throw new BadRequestException(MinistryExceptionMessage.ALREADY_EXIST);
+    if (existingMinistry) {
+      if (!existingMinistry.deletedAt) {
+        throw new BadRequestException(MinistryExceptionMessage.ALREADY_EXIST);
+      }
+
+      await ministryRepository.remove(existingMinistry);
     }
 
     const ministryGroup = dto.ministryGroupId
@@ -136,7 +143,7 @@ export class MinistryService {
         )
       : undefined;
 
-    const newMinistry = await ministryRepository.save({
+    const result = await ministryRepository.insert({
       name: dto.name,
       churchId: churchId,
       ministryGroup,
@@ -144,7 +151,7 @@ export class MinistryService {
 
     return ministryRepository.findOne({
       where: {
-        id: newMinistry.id,
+        id: result.identifiers[0].id,
       },
       relations: {
         ministryGroup: true,
@@ -156,7 +163,7 @@ export class MinistryService {
     churchId: number,
     ministryId: number,
     dto: UpdateMinistryDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     /*
     이름만 변경하는 경우
@@ -229,30 +236,12 @@ export class MinistryService {
     });
   }
 
-  async deleteMinistry(churchId: number, ministryId: number, qr?: QueryRunner) {
+  async deleteMinistry(churchId: number, ministryId: number, qr: QueryRunner) {
     const ministryRepository = this.getMinistryRepository(qr);
 
     const targetMinistry = await this.getMinistryById(churchId, ministryId, qr);
 
-    if (targetMinistry.membersCount) {
-      const member = targetMinistry.members
-        .map((member) => member.name)
-        .join(' ');
-
-      throw new BadRequestException(
-        `해당 사역을 가진 교인이 존재합니다.\n(${member})`,
-      );
-    }
-
-    const result = await ministryRepository.softDelete({
-      id: ministryId,
-      churchId,
-      deletedAt: IsNull(),
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(MinistryExceptionMessage.NOT_FOUND);
-    }
+    await ministryRepository.softRemove(targetMinistry);
 
     return `ministryId ${ministryId} deleted`;
   }

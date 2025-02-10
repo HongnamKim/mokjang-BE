@@ -130,19 +130,27 @@ export class GroupsRolesService {
 
     const groupRolesRepository = this.getGroupRolesRepository(qr);
 
-    const isExist = !!(await groupRolesRepository.findOne({
+    const existingGroup = await groupRolesRepository.findOne({
       where: {
         churchId,
         groupId,
         role: dto.role,
       },
-    }));
+      withDeleted: true,
+      relations: {
+        members: true,
+      },
+    });
 
-    if (isExist) {
-      throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
+    if (existingGroup) {
+      if (!existingGroup.deletedAt) {
+        throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
+      }
+
+      await groupRolesRepository.remove(existingGroup);
     }
 
-    const newRole = await groupRolesRepository.save({
+    const result = await groupRolesRepository.insert({
       role: dto.role,
       church: {
         id: churchId,
@@ -150,7 +158,9 @@ export class GroupsRolesService {
       group,
     });
 
-    return groupRolesRepository.findOne({ where: { id: newRole.id } });
+    return groupRolesRepository.findOne({
+      where: { id: result.identifiers[0].id },
+    });
   }
 
   async updateGroupRole(
@@ -206,26 +216,8 @@ export class GroupsRolesService {
       roleId,
     );
 
-    if (targetGroupRole.members) {
-      const member = targetGroupRole.members
-        .map((member) => member.name)
-        .join(', ');
+    await groupRolesRepository.softRemove(targetGroupRole);
 
-      throw new BadRequestException(
-        `해당 그룹 역할을 가진 교인이 존재합니다.\n${member}`,
-      );
-    }
-
-    const result = await groupRolesRepository.softDelete({
-      id: roleId,
-      churchId,
-      groupId,
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');
-    }
-
-    return 'ok';
+    return `groupRoleId ${roleId} deleted`;
   }
 }

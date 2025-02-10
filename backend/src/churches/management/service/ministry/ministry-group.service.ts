@@ -178,18 +178,30 @@ export class MinistryGroupService {
   ) {
     await this.checkChurchExist(churchId, qr);
 
-    if (
-      await this.isExistMinistryGroup(
-        churchId,
-        dto.parentMinistryGroupId,
-        dto.name,
-        qr,
-      )
-    ) {
-      throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
-    }
-
     const ministryGroupRepository = this.getMinistryGroupRepository(qr);
+
+    const existingMinistryGroup = await ministryGroupRepository.findOne({
+      where: {
+        churchId,
+        parentMinistryGroupId: dto.parentMinistryGroupId
+          ? dto.parentMinistryGroupId
+          : IsNull(),
+        name: dto.name,
+      },
+      relations: {
+        childMinistryGroups: true,
+        ministries: true,
+      },
+      withDeleted: true,
+    });
+
+    if (existingMinistryGroup) {
+      if (!existingMinistryGroup.deletedAt) {
+        throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
+      }
+
+      await ministryGroupRepository.remove(existingMinistryGroup);
+    }
 
     // 상위 그룹 지정 시
     if (dto.parentMinistryGroupId) {
@@ -346,7 +358,7 @@ export class MinistryGroupService {
       { ministries: true },
     );
 
-    // 하위 그룹 or 사역이 있을 경우 Exception
+    /*// 하위 그룹 or 사역이 있을 경우 Exception
     if (
       deleteTarget.childMinistryGroupIds.length > 0 ||
       deleteTarget.ministries.length > 0
@@ -360,6 +372,9 @@ export class MinistryGroupService {
       id: ministryGroupId,
       churchId,
     });
+    */
+
+    await ministryGroupRepository.softRemove(deleteTarget);
 
     await this.removeChildMinistryGroupId(
       deleteTarget.parentMinistryGroupId,
