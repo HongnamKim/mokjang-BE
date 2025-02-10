@@ -8,7 +8,7 @@ export const MANAGEMENT_EXCEPTION = {
     NOT_FOUND: '해당 사역을 찾을 수 없습니다.',
   },
   GroupModel: {
-    ALREADY_EXIST: '이미 존재하는 소그룹입니다.',
+    ALREADY_EXIST: '이미 존재하는 그룹입니다.',
     PARENT_NOT_FOUND: '해당 상위 그룹을 찾을 수 없습니다.',
     NOT_FOUND: `해당 그룹을 찾을 수 없습니다.`,
   },
