@@ -11,7 +11,6 @@ import { GroupsService } from '../../management/service/group/groups.service';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
 import { AddMemberToGroupDto } from '../dto/group/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
-import { DefaultMemberRelationOption } from '../../members/const/default-find-options.const';
 import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
 
 @Injectable()
@@ -198,12 +197,7 @@ export class MemberGroupService {
       this.membersService.addMemberGroup(member, group, groupRole, qr),
     ]);
 
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-      qr,
-    );
+    return this.membersService.getMemberById(churchId, memberId, qr);
   }
 
   async endMemberGroup(
@@ -263,12 +257,7 @@ export class MemberGroupService {
       this.groupsService.decrementMembersCount(groupHistory.group.id, qr),
     ]);
 
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-      qr,
-    );
+    return this.membersService.getMemberById(churchId, memberId, qr);
   }
 
   private isValidUpdateDate(

@@ -10,7 +10,6 @@ import { OfficerHistoryModel } from '../entity/officer-history.entity';
 import { GetOfficerHistoryDto } from '../dto/officer/get-officer-history.dto';
 import { SetMemberOfficerDto } from '../dto/officer/set-member-officer.dto';
 import { OfficersService } from '../../management/service/officer/officers.service';
-import { DefaultMemberRelationOption } from '../../members/const/default-find-options.const';
 import { EndMemberOfficeDto } from '../dto/officer/end-member-officer.dto';
 import { UpdateOfficerHistoryDto } from '../dto/officer/update-officer-history.dto';
 
@@ -128,12 +127,7 @@ export class MemberOfficerService {
       ),
     ]);
 
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-      qr,
-    );
+    return this.membersService.getMemberById(churchId, memberId, qr);
   }
 
   async endMemberOfficer(
@@ -192,12 +186,7 @@ export class MemberOfficerService {
       ),
     ]);
 
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-      qr,
-    );
+    return this.membersService.getMemberById(churchId, memberId, qr);
   }
 
   private isValidUpdateDate(

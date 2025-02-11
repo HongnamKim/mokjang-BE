@@ -23,7 +23,10 @@ import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
 import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
-import { DefaultMemberSelectOption } from '../const/default-find-options.const';
+import {
+  DefaultMemberRelationOption,
+  DefaultMemberSelectOption,
+} from '../const/default-find-options.const';
 import { GroupModel } from '../../management/entity/group/group.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerModel } from '../../management/entity/officer/officer.entity';
@@ -76,15 +79,6 @@ export class MembersService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    /*// 현재 그룹만 필터링
-    if (result.length > 0 && result[0].groupHistory) {
-      result.forEach((member) => {
-        member.groupHistory = member.groupHistory.filter(
-          (group) => group.endDate === null,
-        );
-      });
-    }*/
-
     return new ResponsePaginationDto<MemberModel>(
       result,
       result.length,
@@ -94,12 +88,7 @@ export class MembersService {
     );
   }
 
-  async getMemberById(
-    churchId: number,
-    memberId: number,
-    relations?: FindOptionsRelations<MemberModel>,
-    qr?: QueryRunner,
-  ) {
+  async getMemberById(churchId: number, memberId: number, qr?: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
     const member = await membersRepository.findOne({
@@ -107,7 +96,7 @@ export class MembersService {
         id: memberId,
         churchId,
       },
-      relations,
+      relations: DefaultMemberRelationOption,
       select: DefaultMemberSelectOption,
     });
 
@@ -166,11 +155,11 @@ export class MembersService {
     return member;
   }
 
-  createMemberModel(dto: CreateMemberDto & { churchId: number }) {
+  createDummyMemberModel(dto: CreateMemberDto & { churchId: number }) {
     return this.membersRepository.create(dto);
   }
 
-  async createMultipleMembers(
+  async createDummyMembers(
     churchId: number,
     members: MemberModel[],
     qr?: QueryRunner,
@@ -183,7 +172,8 @@ export class MembersService {
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesService.getChurchById(churchId, qr);
+    //const church = await this.churchesService.getChurchById(churchId, qr);
+    const church = await this.churchesService.getChurchModelById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
@@ -197,6 +187,23 @@ export class MembersService {
     if (isExist) {
       throw new BadRequestException('이미 존재하는 교인입니다.');
     }
+
+    /*const existingMember = await membersRepository.findOne({
+      where: {
+        churchId,
+        name: dto.name,
+        mobilePhone: dto.mobilePhone,
+      },
+      withDeleted: true,
+    });
+
+    if (existingMember) {
+      if (!existingMember.deletedAt) {
+        throw new BadRequestException('이미 존재하는 교인입니다.');
+      }
+
+      await membersRepository.remove(existingMember);
+    }*/
 
     // 인도자 처리
     if (dto.guidedById) {
@@ -225,6 +232,8 @@ export class MembersService {
         qr,
       );
     }
+
+    //return this.getMemberById(churchId, newMember.id, qr);
 
     const result = await membersRepository.findOne({
       where: { id: newMember.id },
@@ -267,10 +276,16 @@ export class MembersService {
       throw new NotFoundException('존재하지 않는 교인입니다.');
     }
 
-    return membersRepository.findOne({
+    return this.getMemberModelById(
+      churchId,
+      memberId,
+      DefaultMemberRelationOption,
+      qr,
+    );
+    /*return membersRepository.findOne({
       where: { id: memberId },
       relations: { guiding: true, guidedBy: true },
-    });
+    });*/
   }
 
   async deleteMember(
@@ -299,7 +314,7 @@ export class MembersService {
     };
   }
 
-  async isExistMemberById(
+  private async isExistMemberById(
     churchId: number,
     memberId: number,
     qr?: QueryRunner,

@@ -11,6 +11,12 @@ import { GenderEnum } from '../const/enum/gender.enum';
 import { FamilyRelation } from '../const/family-relation.const';
 import { FamilyExceptionMessage } from '../exception-message/family-exception.message';
 
+type FamilyRelation = {
+  meId: number;
+  familyMemberId: number;
+  relation: string;
+};
+
 @Injectable()
 export class FamilyService {
   constructor(
@@ -59,6 +65,9 @@ export class FamilyService {
         where: {
           meId: memberId,
         },
+        select: {
+          familyMemberId: true,
+        },
       })
     ).map((relation) => relation.familyMemberId);
   }
@@ -85,7 +94,7 @@ export class FamilyService {
     newFamilyExistingFamilyMemberIds.push(newFamilyMember.id);
     myFamilyMemberIds.push(me.id);
 
-    //const myFamilyIds = await this.getFamilyIds(me.id, qr);
+    let familyRelations: FamilyRelation[] = [];
 
     for (const newFamilyExistingFamilyMemberId of newFamilyExistingFamilyMemberIds) {
       for (const myFamilyMemberId of myFamilyMemberIds) {
@@ -93,22 +102,24 @@ export class FamilyService {
           myFamilyMemberId === me.id &&
           newFamilyExistingFamilyMemberId === newFamilyMember.id;
 
-        await Promise.all([
-          familyRepository.save({
+        familyRelations.push(
+          {
             meId: myFamilyMemberId,
             familyMemberId: newFamilyExistingFamilyMemberId,
             relation: isRelationFixed ? relation : FamilyRelation.FAMILY,
-          }),
-          familyRepository.save({
+          },
+          {
             meId: newFamilyExistingFamilyMemberId,
             familyMemberId: myFamilyMemberId,
             relation: isRelationFixed
               ? this.getCounterRelation(relation, me)
               : FamilyRelation.FAMILY,
-          }),
-        ]);
+          },
+        );
       }
     }
+
+    return familyRepository.save(familyRelations);
   }
 
   async updateFamilyRelation(
@@ -122,9 +133,9 @@ export class FamilyService {
 
     const result = await familyRepository.update(
       {
-        me: { churchId },
+        //me: { churchId: churchId },
         meId: meId,
-        familyMember: { churchId },
+        //familyMember: { churchId },
         familyMemberId: familyMemberId,
         deletedAt: IsNull(),
       },
@@ -137,6 +148,9 @@ export class FamilyService {
 
     return familyRepository.findOne({
       where: { meId: meId, familyMemberId: familyMemberId },
+      relations: {
+        familyMember: true,
+      },
     });
   }
 
@@ -185,21 +199,38 @@ export class FamilyService {
       throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
     }
 
-    // 가족 관계 생성
-    await familyRepository.save({
-      meId: me.id,
-      familyMemberId: familyMember.id,
-      relation,
-    });
-
     // 반대 관계가 이미 있으면 생성 생략
     // 없으면 새로 생성
-
     const isExistingCounterRelation = await this.isExistFamilyRelation(
       familyMember.id,
       me.id,
       qr,
     );
+
+    let familyRelation: FamilyRelation[] = [];
+
+    familyRelation.push({
+      meId: me.id,
+      familyMemberId: familyMember.id,
+      relation,
+    });
+
+    if (!isExistingCounterRelation) {
+      familyRelation.push({
+        meId: familyMember.id,
+        familyMemberId: me.id,
+        relation: this.getCounterRelation(relation, me),
+      });
+    }
+
+    await familyRepository.save(familyRelation);
+
+    /*// 가족 관계 생성
+    await familyRepository.save({
+      meId: me.id,
+      familyMemberId: familyMember.id,
+      relation,
+    });
 
     if (!isExistingCounterRelation) {
       // 반대 관계가 없으면 새로 생성
@@ -208,7 +239,7 @@ export class FamilyService {
         familyMemberId: me.id,
         relation: this.getCounterRelation(relation, me),
       });
-    }
+    }*/
 
     return familyRepository.findOne({
       where: {
@@ -268,6 +299,8 @@ export class FamilyService {
       case FamilyRelation.WIFE_FATHER_IN_LAW: // 장인 장모 추가
       case FamilyRelation.WIFE_MOTHER_IN_LAW:
         return FamilyRelation.SON_IN_LAW;
+      default:
+        return FamilyRelation.FAMILY;
     }
   }
 }
