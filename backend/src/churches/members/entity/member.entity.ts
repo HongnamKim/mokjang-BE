@@ -24,9 +24,11 @@ import { GroupRoleModel } from '../../management/entity/group/group-role.entity'
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 
 @Entity()
+//@Unique(['name', 'mobilePhone', 'churchId'])
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
+  //@Exclude({ toPlainOnly: true })
   churchId: number;
 
   @ManyToOne(() => ChurchModel, (church) => church.members)
@@ -115,7 +117,7 @@ export class MemberModel extends BaseModel {
   ministryHistory: MinistryHistoryModel[];
 
   @Index()
-  @Column({ nullable: true, comment: '직분 ID' })
+  @Column({ nullable: true, comment: '현재 직분 ID' })
   officerId: number | null;
 
   @ManyToOne(() => OfficerModel, (officer) => officer.members)

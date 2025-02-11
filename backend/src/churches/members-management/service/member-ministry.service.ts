@@ -9,7 +9,6 @@ import { MinistryService } from '../../management/service/ministry/ministry.serv
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
 import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.dto';
-import { DefaultMemberRelationOption } from '../../members/const/default-find-options.const';
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { MinistryGroupService } from '../../management/service/ministry/ministry-group.service';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
@@ -190,12 +189,7 @@ export class MemberMinistryService {
       this.membersService.addMemberMinistry(member, ministry, qr),
     ]);
 
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-      qr,
-    );
+    return this.membersService.getMemberById(churchId, memberId, qr);
   }
 
   async endMemberMinistry(
@@ -260,12 +254,7 @@ export class MemberMinistryService {
       this.ministryService.decrementMembersCount(churchId, ministryId, qr),
     ]);
 
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-      qr,
-    );
+    return this.membersService.getMemberById(churchId, memberId, qr);
   }
 
   private isValidUpdateDate(

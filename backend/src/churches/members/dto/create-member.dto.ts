@@ -78,7 +78,7 @@ export class CreateMemberDto {
   @IsString()
   @IsIn(Object.values(FamilyRelation))
   @IsOptional()
-  relation?: string;
+  relation?: string = FamilyRelation.FAMILY;
 
   @ApiProperty({
     name: 'isLunar',

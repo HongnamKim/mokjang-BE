@@ -17,9 +17,7 @@ import { TransactionInterceptor } from '../../../common/interceptor/transaction.
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateMemberDto } from '../dto/update-member.dto';
-import { DefaultMemberRelationOption } from '../const/default-find-options.const';
 import { GetMemberDto } from '../dto/get-member.dto';
-import { FamilyRelationPipe } from '../pipe/family-relation.pipe';
 
 @ApiTags('Churches:Members')
 @Controller()
@@ -38,7 +36,7 @@ export class MembersController {
   @UseInterceptors(TransactionInterceptor)
   postMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Body(FamilyRelationPipe) dto: CreateMemberDto,
+    @Body(/*FamilyRelationPipe*/) dto: CreateMemberDto,
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.createMember(churchId, dto, qr);
@@ -49,11 +47,7 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
   ) {
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-    );
+    return this.membersService.getMemberById(churchId, memberId);
   }
 
   @Patch(':memberId')
