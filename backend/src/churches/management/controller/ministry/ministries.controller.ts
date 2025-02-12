@@ -8,12 +8,16 @@ import {
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MinistryService } from '../../service/ministry/ministry.service';
 import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
 import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
 import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
+import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
 
 @ApiTags('Management:Ministries')
 @Controller('ministries')
@@ -29,11 +33,13 @@ export class MinistriesController {
   }
 
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   postMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateMinistryDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.createMinistry(churchId, dto);
+    return this.ministryService.createMinistry(churchId, dto, qr);
   }
 
   @Get(':ministryId')
@@ -49,18 +55,18 @@ export class MinistriesController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
     @Body() dto: UpdateMinistryDto,
-    //@Query() ministryGroupId: MinistryGroupIdDto,
+    @QueryRunner() qr: QR,
   ) {
-    //return `${churchId} ${ministryGroupId.ministryGroupId} ${ministryId}`;
-
-    return this.ministryService.updateMinistry(churchId, ministryId, dto);
+    return this.ministryService.updateMinistry(churchId, ministryId, dto, qr);
   }
 
   @Delete(':ministryId')
+  @UseInterceptors(TransactionInterceptor)
   deleteMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.deleteMinistry(churchId, ministryId);
+    return this.ministryService.deleteMinistry(churchId, ministryId, qr);
   }
 }

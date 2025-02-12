@@ -48,9 +48,11 @@ export class GroupHistoryModel extends BaseModel {
   })
   groupRoleSnapShot: string | null;
 
+  @Index()
   @Column({ type: 'timestamptz' })
   startDate: Date;
 
+  @Index()
   @Column({ type: 'timestamptz', nullable: true })
   endDate: Date | null;
 }

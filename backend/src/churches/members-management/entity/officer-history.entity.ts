@@ -29,9 +29,11 @@ export class OfficerHistoryModel extends BaseModel {
   @Column({ length: 30, nullable: true })
   officerStartChurch: string;
 
+  @Index()
   @Column({ type: 'timestamptz' })
   startDate: Date;
 
+  @Index()
   @Column({ type: 'timestamptz', nullable: true })
   endDate: Date | null;
 }

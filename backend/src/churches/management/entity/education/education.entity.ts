@@ -1,5 +1,5 @@
 import { BaseModel } from '../../../../common/entity/base.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { EducationTermModel } from './education-term.entity';
 import { ChurchModel } from '../../../entity/church.entity';
 
@@ -16,6 +16,7 @@ export class EducationModel extends BaseModel {
   })
   description: string | null;
 
+  @Index()
   @Column({ comment: '교회 ID' })
   churchId: number;
 

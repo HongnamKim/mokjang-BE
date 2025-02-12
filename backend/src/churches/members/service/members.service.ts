@@ -399,10 +399,15 @@ export class MembersService {
     relation: string,
     qr: QueryRunner,
   ) {
+    const [me, family] = await Promise.all([
+      this.getMemberModelById(churchId, memberId, {}, qr),
+      this.getMemberModelById(churchId, familyMemberId, {}, qr),
+    ]);
+
     return this.familyService.updateFamilyRelation(
       churchId,
-      memberId,
-      familyMemberId,
+      me,
+      family,
       relation,
       qr,
     );
@@ -414,12 +419,12 @@ export class MembersService {
     familyMemberId: number,
     qr?: QueryRunner,
   ) {
-    return this.familyService.deleteFamilyRelation(
-      churchId,
-      memberId,
-      familyMemberId,
-      qr,
-    );
+    const [me, family] = await Promise.all([
+      this.getMemberModelById(churchId, memberId, {}, qr),
+      this.getMemberModelById(churchId, familyMemberId, {}, qr),
+    ]);
+
+    return this.familyService.deleteFamilyRelation(churchId, me, family, qr);
   }
 
   async setMemberOfficer(

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GetHandlerGuard } from './common/guard/get-handler.guard';
+import { TypeOrmExceptionFilter } from './common/filter/typeorm-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,8 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  app.useGlobalFilters(new TypeOrmExceptionFilter());
 
   app.useGlobalGuards(new GetHandlerGuard());
 

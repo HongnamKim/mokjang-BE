@@ -124,8 +124,8 @@ export class FamilyService {
 
   async updateFamilyRelation(
     churchId: number,
-    meId: number,
-    familyMemberId: number,
+    me: MemberModel,
+    family: MemberModel,
     relation: string,
     qr?: QueryRunner,
   ) {
@@ -133,10 +133,10 @@ export class FamilyService {
 
     const result = await familyRepository.update(
       {
-        //me: { churchId: churchId },
-        meId: meId,
+        //me: { churchId },
+        meId: me.id,
         //familyMember: { churchId },
-        familyMemberId: familyMemberId,
+        familyMemberId: family.id,
         deletedAt: IsNull(),
       },
       { relation },
@@ -147,30 +147,27 @@ export class FamilyService {
     }
 
     return familyRepository.findOne({
-      where: { meId: meId, familyMemberId: familyMemberId },
-      relations: {
-        familyMember: true,
-      },
+      where: { meId: me.id, familyMemberId: family.id },
     });
   }
 
   async deleteFamilyRelation(
     churchId: number,
-    meId: number,
-    familyMemberId: number,
+    me: MemberModel,
+    family: MemberModel,
     qr?: QueryRunner,
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.softDelete({
-      me: {
+      /*me: {
         churchId,
-      },
-      meId,
-      familyMember: {
+      },*/
+      meId: me.id,
+      /*familyMember: {
         churchId,
-      },
-      familyMemberId,
+      },*/
+      familyMemberId: family.id,
       deletedAt: IsNull(),
     });
 
