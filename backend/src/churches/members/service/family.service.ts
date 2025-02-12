@@ -133,9 +133,8 @@ export class FamilyService {
 
     const result = await familyRepository.update(
       {
-        //me: { churchId },
         meId: me.id,
-        //familyMember: { churchId },
+
         familyMemberId: family.id,
         deletedAt: IsNull(),
       },
@@ -160,13 +159,8 @@ export class FamilyService {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.softDelete({
-      /*me: {
-        churchId,
-      },*/
       meId: me.id,
-      /*familyMember: {
-        churchId,
-      },*/
+
       familyMemberId: family.id,
       deletedAt: IsNull(),
     });
@@ -222,22 +216,6 @@ export class FamilyService {
 
     await familyRepository.save(familyRelation);
 
-    /*// 가족 관계 생성
-    await familyRepository.save({
-      meId: me.id,
-      familyMemberId: familyMember.id,
-      relation,
-    });
-
-    if (!isExistingCounterRelation) {
-      // 반대 관계가 없으면 새로 생성
-      await familyRepository.save({
-        meId: familyMember.id,
-        familyMemberId: me.id,
-        relation: this.getCounterRelation(relation, me),
-      });
-    }*/
-
     return familyRepository.findOne({
       where: {
         meId: me.id,
@@ -247,6 +225,35 @@ export class FamilyService {
         familyMember: true,
       },
     });
+  }
+
+  async cascadeDeleteAllFamilyRelation(deletedId: number, qr: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const result = await familyRepository
+      .createQueryBuilder()
+      .softDelete()
+      .where('meId = :deletedId OR familyMemberId = :deletedId', { deletedId })
+      .execute();
+
+    return result.affected;
+  }
+
+  async cascadeRemoveAllFamilyRelations(deletedId: number, qr: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const deleteTargets = await familyRepository.find({
+      where: [
+        {
+          meId: deletedId,
+        },
+        {
+          familyMemberId: deletedId,
+        },
+      ],
+    });
+
+    return familyRepository.remove(deleteTargets);
   }
 
   private getCounterRelation(relation: string, me: MemberModel) {

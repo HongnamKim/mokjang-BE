@@ -94,7 +94,7 @@ export class MemberModel extends BaseModel {
   vehicleNumber: string[];
 
   @Column({ nullable: true })
-  guidedById: number;
+  guidedById: number | null;
 
   // 나를 인도한 사람
   @ManyToOne(() => MemberModel, (member) => member.guiding)

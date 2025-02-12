@@ -118,7 +118,7 @@ export class MemberOfficerService {
       this.officersService.incrementMembersCount(churchId, dto.officerId, qr),
 
       // 교인 - 직분 관계 설정
-      this.membersService.setMemberOfficer(
+      this.membersService.startMemberOfficer(
         member,
         officer,
         dto.startDate,

@@ -194,7 +194,7 @@ export class MemberGroupService {
       this.groupsService.incrementMembersCount(dto.groupId, qr),
 
       // 교인의 그룹 정보 업데이트
-      this.membersService.addMemberGroup(member, group, groupRole, qr),
+      this.membersService.startMemberGroup(member, group, groupRole, qr),
     ]);
 
     return this.membersService.getMemberById(churchId, memberId, qr);
@@ -252,7 +252,7 @@ export class MemberGroupService {
         },
       ),
       // MemberModel, GroupModel, GroupRoleModel relation 해제
-      this.membersService.removeMemberGroup(groupHistory.member, qr),
+      this.membersService.endMemberGroup(groupHistory.member, qr),
       // 그룹 인원수 감소
       this.groupsService.decrementMembersCount(groupHistory.group.id, qr),
     ]);

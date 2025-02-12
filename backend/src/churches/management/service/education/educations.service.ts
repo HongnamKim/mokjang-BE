@@ -1309,7 +1309,16 @@ export class EducationsService {
       qr,
     );
 
+    const member = await this.membersService.getMemberModelById(
+      churchId,
+      targetEnrollment.memberId,
+      {},
+      qr,
+    );
+
     await Promise.all([
+      // 교인 - 교육 관계 해제
+      this.membersService.endMemberEducation(member, educationEnrollmentId, qr),
       // 등록 인원 감소
       this.decrementEnrollmentCount(educationTermId, qr),
       // 상태별 카운트 감소

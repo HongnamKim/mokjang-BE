@@ -288,9 +288,40 @@ export class MembersService {
     });*/
   }
 
+  private async cascadeDeleteMember(
+    churchId: number,
+    deletedMember: MemberModel,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+    // 인도자 relation 끊기
+    // 삭제 대상에게 인도된 사람들
+    await membersRepository.update(
+      { guidedById: deletedMember.id, churchId },
+      { guidedById: null },
+    );
+
+    // 가족 관계 삭제
+    await this.familyService.cascadeRemoveAllFamilyRelations(
+      deletedMember.id,
+      qr,
+    );
+    // 사역 종료 + 삭제
+    await this.endAllMemberMinistry(deletedMember, qr);
+
+    // 직분 종료 + 삭제
+    await this.endMemberOfficer(deletedMember, qr);
+
+    // 교육 삭제
+
+    // 그룹 종료 + 삭제
+    await this.endMemberGroup(deletedMember, qr);
+  }
+
   async deleteMember(
     churchId: number,
     memberId: number,
+    qr: QueryRunner,
   ): Promise<ResponseDeleteDto> {
     const result = await this.membersRepository.softDelete({
       id: memberId,
@@ -302,6 +333,11 @@ export class MembersService {
       throw new NotFoundException('존재하지 않는 교인입니다.');
     }
 
+    // 가족 관계 모두 삭제
+    //await this.familyService.cascadeDeleteAllFamilyRelation(memberId, qr);
+
+    // 이벤트는 트랜잭션 처리 불가능 본 요청과 이벤트 요청은 서로 달라서 본 요청 응답이 나갈 때
+    // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음
     this.eventEmitter.emit(
       'member.deleted',
       new MemberDeletedEvent(churchId, memberId),
@@ -427,7 +463,7 @@ export class MembersService {
     return this.familyService.deleteFamilyRelation(churchId, me, family, qr);
   }
 
-  async setMemberOfficer(
+  async startMemberOfficer(
     member: MemberModel,
     officer: OfficerModel,
     officerStartDate: Date,
@@ -459,7 +495,7 @@ export class MembersService {
     );
   }
 
-  async addMemberMinistry(
+  async startMemberMinistry(
     member: MemberModel,
     ministry: MinistryModel,
     qr: QueryRunner,
@@ -473,7 +509,21 @@ export class MembersService {
     return membersRepository.save(member);
   }
 
-  async removeMemberMinistry(
+  async endMemberEducation(
+    member: MemberModel,
+    educationEnrollmentId: number,
+    qr: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    member.educations = member.educations.filter(
+      (educationEnrollment) => educationEnrollment.id !== educationEnrollmentId,
+    );
+
+    return membersRepository.save(member);
+  }
+
+  async endMemberMinistry(
     member: MemberModel,
     targetMinistry: MinistryModel,
     qr: QueryRunner,
@@ -487,7 +537,15 @@ export class MembersService {
     return membersRepository.save(member);
   }
 
-  async addMemberGroup(
+  async endAllMemberMinistry(member: MemberModel, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    member.ministries = [];
+
+    return membersRepository.save(member);
+  }
+
+  async startMemberGroup(
     member: MemberModel,
     group: GroupModel,
     groupRole: GroupRoleModel | undefined,
@@ -506,7 +564,7 @@ export class MembersService {
     );
   }
 
-  async removeMemberGroup(member: MemberModel, qr: QueryRunner) {
+  async endMemberGroup(member: MemberModel, qr: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
     return membersRepository.update(
