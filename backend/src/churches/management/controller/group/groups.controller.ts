@@ -34,7 +34,7 @@ export class GroupsController {
     @Body() dto: CreateGroupDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.groupsService.postGroup(churchId, dto, qr);
+    return this.groupsService.createGroup(churchId, dto, qr);
   }
 
   @Get(':groupId')

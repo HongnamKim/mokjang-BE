@@ -12,6 +12,7 @@ export class MinistryHistoryModel extends BaseModel {
   @ManyToOne(() => MemberModel, (member) => member.ministryHistory)
   member: MemberModel;
 
+  @Index()
   @Column({
     type: 'int',
     comment: '현재 사역 ID (현재 사역일 경우에만 값이 있음)',
@@ -32,9 +33,11 @@ export class MinistryHistoryModel extends BaseModel {
   })
   ministryGroupSnapShot: string | null;
 
+  @Index()
   @Column({ type: 'timestamptz', comment: '사역 시작일' })
   startDate: Date;
 
+  @Index()
   @Column({ type: 'timestamptz', comment: '사역 종료일', nullable: true })
   endDate: Date;
 }

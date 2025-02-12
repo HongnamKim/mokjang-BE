@@ -186,7 +186,7 @@ export class MemberMinistryService {
       // 인원 수 증가
       this.ministryService.incrementMembersCount(churchId, dto.ministryId, qr),
       // 사역 relation 추가
-      this.membersService.addMemberMinistry(member, ministry, qr),
+      this.membersService.startMemberMinistry(member, ministry, qr),
     ]);
 
     return this.membersService.getMemberById(churchId, memberId, qr);
@@ -245,7 +245,7 @@ export class MemberMinistryService {
         },
       ),
       // 교인 - 사역 관계 해제
-      this.membersService.removeMemberMinistry(
+      this.membersService.endMemberMinistry(
         ministryHistory.member,
         ministryHistory.ministry,
         qr,

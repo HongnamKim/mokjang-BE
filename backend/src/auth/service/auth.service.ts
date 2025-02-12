@@ -1,11 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { TempUserModel } from '../entity/temp-user.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { UserModel } from '../entity/user.entity';
 import { OauthDto } from '../dto/auth/oauth.dto';
 import { AuthType } from '../const/enum/auth-type.enum';
@@ -145,7 +140,7 @@ export class AuthService {
 
     const message =
       dto.isTest === TestEnvironment.BetaTest
-        ? BetaVerificationMessage(code, dto.mobilePhone)
+        ? BetaVerificationMessage(code, dto.name, dto.mobilePhone)
         : VerificationMessage(code);
 
     if (dto.isTest === TestEnvironment.Production) {
@@ -154,10 +149,18 @@ export class AuthService {
         message,
       );
     } else if (dto.isTest === TestEnvironment.BetaTest) {
-      return this.messagesService.sendVerificationCode(
-        this.configService.getOrThrow(MESSAGE_SERVICE.BETA_TEST_TO_NUMBER),
-        message,
-      );
+      return Promise.all([
+        // 관리자에게 전송
+        this.messagesService.sendVerificationCode(
+          this.configService.getOrThrow(MESSAGE_SERVICE.BETA_TEST_TO_NUMBER),
+          message,
+        ),
+        // 사용자에게 전송
+        this.messagesService.sendVerificationCode(
+          dto.mobilePhone,
+          VerificationMessage(code),
+        ),
+      ]);
     } else {
       return message;
     }

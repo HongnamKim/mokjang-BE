@@ -124,8 +124,8 @@ export class FamilyService {
 
   async updateFamilyRelation(
     churchId: number,
-    meId: number,
-    familyMemberId: number,
+    me: MemberModel,
+    family: MemberModel,
     relation: string,
     qr?: QueryRunner,
   ) {
@@ -133,10 +133,9 @@ export class FamilyService {
 
     const result = await familyRepository.update(
       {
-        //me: { churchId: churchId },
-        meId: meId,
-        //familyMember: { churchId },
-        familyMemberId: familyMemberId,
+        meId: me.id,
+
+        familyMemberId: family.id,
         deletedAt: IsNull(),
       },
       { relation },
@@ -147,30 +146,22 @@ export class FamilyService {
     }
 
     return familyRepository.findOne({
-      where: { meId: meId, familyMemberId: familyMemberId },
-      relations: {
-        familyMember: true,
-      },
+      where: { meId: me.id, familyMemberId: family.id },
     });
   }
 
   async deleteFamilyRelation(
     churchId: number,
-    meId: number,
-    familyMemberId: number,
+    me: MemberModel,
+    family: MemberModel,
     qr?: QueryRunner,
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.softDelete({
-      me: {
-        churchId,
-      },
-      meId,
-      familyMember: {
-        churchId,
-      },
-      familyMemberId,
+      meId: me.id,
+
+      familyMemberId: family.id,
       deletedAt: IsNull(),
     });
 
@@ -225,22 +216,6 @@ export class FamilyService {
 
     await familyRepository.save(familyRelation);
 
-    /*// 가족 관계 생성
-    await familyRepository.save({
-      meId: me.id,
-      familyMemberId: familyMember.id,
-      relation,
-    });
-
-    if (!isExistingCounterRelation) {
-      // 반대 관계가 없으면 새로 생성
-      await familyRepository.save({
-        meId: familyMember.id,
-        familyMemberId: me.id,
-        relation: this.getCounterRelation(relation, me),
-      });
-    }*/
-
     return familyRepository.findOne({
       where: {
         meId: me.id,
@@ -250,6 +225,35 @@ export class FamilyService {
         familyMember: true,
       },
     });
+  }
+
+  async cascadeDeleteAllFamilyRelation(deletedId: number, qr: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const result = await familyRepository
+      .createQueryBuilder()
+      .softDelete()
+      .where('meId = :deletedId OR familyMemberId = :deletedId', { deletedId })
+      .execute();
+
+    return result.affected;
+  }
+
+  async cascadeRemoveAllFamilyRelations(deletedId: number, qr: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const deleteTargets = await familyRepository.find({
+      where: [
+        {
+          meId: deletedId,
+        },
+        {
+          familyMemberId: deletedId,
+        },
+      ],
+    });
+
+    return familyRepository.remove(deleteTargets);
   }
 
   private getCounterRelation(relation: string, me: MemberModel) {

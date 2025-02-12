@@ -1,10 +1,11 @@
 import { BaseModel } from '../../../../common/entity/base.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { EducationTermModel } from './education-term.entity';
 import { SessionAttendanceModel } from './session-attendance.entity';
 
 @Entity()
 export class EducationSessionModel extends BaseModel {
+  @Index()
   @Column({ comment: '교육 기수 ID' })
   educationTermId: number;
 

@@ -60,10 +60,12 @@ export class MembersController {
   }
 
   @Delete(':memberId')
+  @UseInterceptors(TransactionInterceptor)
   deleteMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return this.membersService.deleteMember(churchId, memberId);
+    return this.membersService.deleteMember(churchId, memberId, qr);
   }
 }

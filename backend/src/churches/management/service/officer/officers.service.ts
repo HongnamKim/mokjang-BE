@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OfficerModel } from '../../entity/officer/officer.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../../churches.service';
 import { MANAGEMENT_EXCEPTION } from '../../exception-messages/exception-messages.const';
 import { CreateOfficerDto } from '../../dto/officer/create-officer.dto';
@@ -102,20 +102,48 @@ export class OfficersService {
     return officer;
   }
 
-  async postOfficer(churchId: number, dto: CreateOfficerDto, qr?: QueryRunner) {
+  async createOfficer(
+    churchId: number,
+    dto: CreateOfficerDto,
+    qr: QueryRunner,
+  ) {
     await this.checkChurchExist(churchId);
 
-    const isExist = await this.isExistOfficer(churchId, dto.name, qr);
+    const officersRepository = this.getOfficersRepository(qr);
+
+    const existingOfficer = await officersRepository.findOne({
+      where: {
+        churchId,
+        name: dto.name,
+      },
+      relations: { members: true },
+      withDeleted: true,
+    });
+
+    if (existingOfficer) {
+      if (!existingOfficer.deletedAt) {
+        throw new BadRequestException(
+          MANAGEMENT_EXCEPTION.OfficerModel.ALREADY_EXIST,
+        );
+      }
+
+      await officersRepository.remove(existingOfficer);
+    }
+
+    /*const isExist = await this.isExistOfficer(churchId, dto.name, qr);
 
     if (isExist) {
       throw new BadRequestException(
         MANAGEMENT_EXCEPTION.OfficerModel.ALREADY_EXIST,
       );
-    }
+    }*/
 
-    const officersRepository = this.getOfficersRepository(qr);
+    const result = await officersRepository.insert({
+      name: dto.name,
+      churchId,
+    });
 
-    return officersRepository.save({ name: dto.name, churchId });
+    return this.getOfficerModelById(churchId, result.identifiers[0].id, qr);
   }
 
   async updateOfficer(
@@ -157,24 +185,9 @@ export class OfficersService {
       { members: true },
     );
 
-    if (
-      targetOfficer.members.length !== 0 ||
-      targetOfficer.membersCount !== 0
-    ) {
-      throw new BadRequestException('해당 직분을 갖고 있는 교인이 존재합니다.');
-    }
-
     const officersRepository = this.getOfficersRepository(qr);
 
-    const result = await officersRepository.softDelete({
-      id: officerId,
-      churchId,
-      deletedAt: IsNull(),
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(MANAGEMENT_EXCEPTION.OfficerModel.NOT_FOUND);
-    }
+    await officersRepository.softRemove(targetOfficer);
 
     return 'officerId ${officerId} deleted';
   }

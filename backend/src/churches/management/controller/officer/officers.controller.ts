@@ -7,11 +7,15 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateOfficerDto } from '../../dto/officer/create-officer.dto';
 import { UpdateOfficerDto } from '../../dto/officer/update-officer.dto';
 import { OfficersService } from '../../service/officer/officers.service';
+import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
+import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';
 
 @ApiTags('Settings:Officers')
 @Controller('officers')
@@ -24,27 +28,33 @@ export class OfficersController {
   }
 
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   postOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateOfficerDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.officersService.postOfficer(churchId, dto);
+    return this.officersService.createOfficer(churchId, dto, qr);
   }
 
   @Patch(':officerId')
+  @UseInterceptors(TransactionInterceptor)
   patchOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
     @Body() dto: UpdateOfficerDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.officersService.updateOfficer(churchId, officerId, dto);
+    return this.officersService.updateOfficer(churchId, officerId, dto, qr);
   }
 
   @Delete(':officerId')
+  @UseInterceptors(TransactionInterceptor)
   deleteOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return this.officersService.deleteOfficer(churchId, officerId);
+    return this.officersService.deleteOfficer(churchId, officerId, qr);
   }
 }
