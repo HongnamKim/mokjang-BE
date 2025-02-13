@@ -6,6 +6,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  Unique,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
@@ -22,13 +23,14 @@ import { GroupModel } from '../../management/entity/group/group.entity';
 import { MinistryHistoryModel } from '../../members-management/entity/ministry-history.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
-//@Unique(['name', 'mobilePhone', 'churchId'])
+@Unique(['name', 'mobilePhone', 'churchId'])
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
-  //@Exclude({ toPlainOnly: true })
+  @Exclude({ toPlainOnly: true })
   churchId: number;
 
   @ManyToOne(() => ChurchModel, (church) => church.members)
@@ -94,6 +96,7 @@ export class MemberModel extends BaseModel {
   vehicleNumber: string[];
 
   @Column({ nullable: true })
+  @Exclude({ toPlainOnly: true })
   guidedById: number | null;
 
   // 나를 인도한 사람
@@ -127,6 +130,7 @@ export class MemberModel extends BaseModel {
 
   @Index()
   @Column({ nullable: true, comment: '현재 직분 ID' })
+  @Exclude({ toPlainOnly: true })
   officerId: number | null;
 
   @ManyToOne(() => OfficerModel, (officer) => officer.members)
@@ -155,6 +159,7 @@ export class MemberModel extends BaseModel {
 
   @Index()
   @Column({ comment: '그룹 ID', nullable: true })
+  @Exclude({ toPlainOnly: true })
   groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.members)
@@ -162,6 +167,7 @@ export class MemberModel extends BaseModel {
 
   @Index()
   @Column({ comment: '그룹 역할 ID', nullable: true })
+  @Exclude({ toPlainOnly: true })
   groupRoleId: number | null;
 
   @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)

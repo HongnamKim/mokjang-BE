@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -11,6 +12,7 @@ import {
   FindOptionsRelations,
   FindOptionsWhere,
   IsNull,
+  Not,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -177,7 +179,7 @@ export class MembersService {
 
     const membersRepository = this.getMembersRepository(qr);
 
-    const isExist = await this.isExistMemberByNameAndMobilePhone(
+    /*const isExist = await this.isExistMemberByNameAndMobilePhone(
       churchId,
       dto.name,
       dto.mobilePhone,
@@ -186,9 +188,9 @@ export class MembersService {
 
     if (isExist) {
       throw new BadRequestException('이미 존재하는 교인입니다.');
-    }
+    }*/
 
-    /*const existingMember = await membersRepository.findOne({
+    const existingMember = await membersRepository.findOne({
       where: {
         churchId,
         name: dto.name,
@@ -198,12 +200,14 @@ export class MembersService {
     });
 
     if (existingMember) {
-      if (!existingMember.deletedAt) {
+      if (existingMember.deletedAt) {
+        throw new ConflictException(
+          '동일한 이름, 전화번호의 교인 이력 존재합니다. 복구 또는 완전 삭제해주세요.',
+        );
+      } else {
         throw new BadRequestException('이미 존재하는 교인입니다.');
       }
-
-      await membersRepository.remove(existingMember);
-    }*/
+    }
 
     // 인도자 처리
     if (dto.guidedById) {
@@ -318,6 +322,8 @@ export class MembersService {
     await this.endMemberGroup(deletedMember, qr);
   }
 
+  // 교인 soft delete
+  // 교육 등록도 soft delete
   async deleteMember(
     churchId: number,
     memberId: number,
@@ -349,6 +355,32 @@ export class MembersService {
       resultId: memberId,
     };
   }
+
+  // soft delete 된 교인 복구
+  // 교인에 딸린 educationEnrollment 복구
+  async restoreMember(churchId: number, memberId: number, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const restoreTarget = await membersRepository.findOne({
+      where: {
+        churchId,
+        id: memberId,
+        deletedAt: Not(IsNull()),
+      },
+      withDeleted: true,
+    });
+
+    if (!restoreTarget) {
+      throw new NotFoundException('복구 대상을 찾을 수 없습니다.');
+    }
+
+    await membersRepository.restore({ id: restoreTarget.id });
+
+    return this.getMemberById(churchId, memberId, qr);
+  }
+
+  // 교인 완전 삭제
+  async hardDeleteMember(churchId: number, memberId: number, qr: QueryRunner) {}
 
   private async isExistMemberById(
     churchId: number,

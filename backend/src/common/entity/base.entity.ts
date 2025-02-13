@@ -5,7 +5,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
 
 export abstract class BaseModel {
   @PrimaryGeneratedColumn()
@@ -20,6 +19,5 @@ export abstract class BaseModel {
   updatedAt: Date;
 
   @DeleteDateColumn()
-  @Exclude()
   deletedAt: Date;
 }
