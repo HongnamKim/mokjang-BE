@@ -68,4 +68,14 @@ export class MembersController {
   ) {
     return this.membersService.deleteMember(churchId, memberId, qr);
   }
+
+  @Post(':memberId/restore')
+  @UseInterceptors(TransactionInterceptor)
+  restoreMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.membersService.restoreMember(churchId, memberId, qr);
+  }
 }
