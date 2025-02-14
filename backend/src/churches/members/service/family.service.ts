@@ -227,6 +227,13 @@ export class FamilyService {
     });
   }
 
+  async testDelete(meId: number, familyMemberId: number) {
+    return this.familyRepository.softDelete({
+      meId: meId,
+      familyMemberId: familyMemberId,
+    });
+  }
+
   async cascadeDeleteAllFamilyRelation(deletedId: number, qr: QueryRunner) {
     const familyRepository = this.getFamilyRepository(qr);
 
