@@ -28,6 +28,7 @@ import { MinistryModel } from '../../management/entity/ministry/ministry.entity'
 import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
+  HardDeleteMemberRelationOptions,
 } from '../const/default-find-options.const';
 import { GroupModel } from '../../management/entity/group/group.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
@@ -107,6 +108,30 @@ export class MembersService {
     }
 
     return new ResponseGetDto<MemberModel>(member);
+  }
+
+  async getDeleteMemberModelById(
+    churchId: number,
+    memberId: number,
+    relations?: FindOptionsRelations<MemberModel>,
+    qr?: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const member = await membersRepository.findOne({
+      where: {
+        id: memberId,
+        churchId,
+      },
+      relations,
+      withDeleted: true,
+    });
+
+    if (!member) {
+      throw new NotFoundException('존재하지 않는 교인입니다.');
+    }
+
+    return member;
   }
 
   async getMemberModelById(
@@ -324,7 +349,7 @@ export class MembersService {
 
   // 교인 soft delete
   // 교육 등록도 soft delete
-  async deleteMember(
+  async softDeleteMember(
     churchId: number,
     memberId: number,
     qr: QueryRunner,
@@ -380,7 +405,72 @@ export class MembersService {
   }
 
   // 교인 완전 삭제
-  async hardDeleteMember(churchId: number, memberId: number, qr: QueryRunner) {}
+  async hardDeleteMember(churchId: number, memberId: number, qr: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const hardDeleteTarget = await membersRepository.findOne({
+      where: {
+        churchId,
+        id: memberId,
+        deletedAt: Not(IsNull()),
+      },
+      relations: HardDeleteMemberRelationOptions,
+      withDeleted: true,
+    });
+
+    if (!hardDeleteTarget) {
+      throw new NotFoundException('삭제 대상을 찾을 수 없습니다.');
+    }
+
+    // 가족 삭제
+    const result = await this.familyService.cascadeRemoveAllFamilyRelations(
+      hardDeleteTarget.id,
+      qr,
+    );
+
+    // 인도자 삭제
+    await membersRepository.update(
+      {
+        guidedById: hardDeleteTarget.id,
+      },
+      {
+        guidedById: null,
+        //guidedBy: null,
+      },
+    );
+
+    hardDeleteTarget.guiding = [];
+
+    await membersRepository.save(hardDeleteTarget);
+
+    await this.endMemberOfficer(hardDeleteTarget, qr);
+    await Promise.all(
+      hardDeleteTarget.ministries.map((ministry) =>
+        this.endMemberMinistry(hardDeleteTarget, ministry, qr),
+      ),
+    );
+    await this.endMemberGroup(hardDeleteTarget, qr);
+
+    const targetMember = await membersRepository.findOne({
+      where: {
+        churchId,
+        id: memberId,
+        //deletedAt: Not(IsNull()),
+      },
+      relations: HardDeleteMemberRelationOptions,
+      withDeleted: true,
+    });
+
+    if (!targetMember) {
+      throw new NotFoundException();
+    }
+
+    console.log(targetMember);
+
+    await membersRepository.remove(targetMember);
+
+    return `memberId ${memberId} hard deleted`;
+  }
 
   private async isExistMemberById(
     churchId: number,

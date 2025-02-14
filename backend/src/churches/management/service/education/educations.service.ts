@@ -93,6 +93,7 @@ export class EducationsService {
             enrollment.educationTermId,
             enrollment.id,
             qr,
+            true,
           ),
         ),
       );
@@ -1297,6 +1298,7 @@ export class EducationsService {
     educationTermId: number,
     educationEnrollmentId: number,
     qr: QueryRunner,
+    memberDeleted: boolean = false,
   ) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
@@ -1309,12 +1311,19 @@ export class EducationsService {
       qr,
     );
 
-    const member = await this.membersService.getMemberModelById(
-      churchId,
-      targetEnrollment.memberId,
-      {},
-      qr,
-    );
+    const member = memberDeleted
+      ? await this.membersService.getDeleteMemberModelById(
+          churchId,
+          targetEnrollment.memberId,
+          { educations: true },
+          qr,
+        )
+      : await this.membersService.getMemberModelById(
+          churchId,
+          targetEnrollment.memberId,
+          { educations: true },
+          qr,
+        );
 
     await Promise.all([
       // 교인 - 교육 관계 해제

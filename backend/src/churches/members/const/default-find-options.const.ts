@@ -110,3 +110,13 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     name: true,
   },
 };
+
+export const HardDeleteMemberRelationOptions: FindOptionsRelations<MemberModel> =
+  {
+    ...DefaultMemberRelationOption,
+    guiding: true,
+    instructingEducation: true,
+    ministryHistory: true,
+    officerHistory: true,
+    groupHistory: true,
+  };
