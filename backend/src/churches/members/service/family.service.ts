@@ -123,7 +123,6 @@ export class FamilyService {
   }
 
   async updateFamilyRelation(
-    churchId: number,
     me: MemberModel,
     family: MemberModel,
     relation: string,
@@ -134,7 +133,6 @@ export class FamilyService {
     const result = await familyRepository.update(
       {
         meId: me.id,
-
         familyMemberId: family.id,
         deletedAt: IsNull(),
       },
@@ -151,7 +149,6 @@ export class FamilyService {
   }
 
   async deleteFamilyRelation(
-    churchId: number,
     me: MemberModel,
     family: MemberModel,
     qr?: QueryRunner,
@@ -178,6 +175,8 @@ export class FamilyService {
     relation: string,
     qr: QueryRunner,
   ) {
+    return this.getCounterRelation(relation, me);
+
     const familyRepository = this.getFamilyRepository(qr);
 
     const isExistRelation = await this.isExistFamilyRelation(
@@ -234,6 +233,11 @@ export class FamilyService {
     });
   }
 
+  /**
+   * 가족 관계 soft delete - 복구 가능
+   * @param deletedId
+   * @param qr
+   */
   async cascadeDeleteAllFamilyRelation(deletedId: number, qr: QueryRunner) {
     const familyRepository = this.getFamilyRepository(qr);
 
@@ -246,6 +250,11 @@ export class FamilyService {
     return result.affected;
   }
 
+  /**
+   * 가족 관계 완전 삭제 - 복구되지 않음
+   * @param deletedId
+   * @param qr
+   */
   async cascadeRemoveAllFamilyRelations(deletedId: number, qr: QueryRunner) {
     const familyRepository = this.getFamilyRepository(qr);
 
@@ -262,9 +271,51 @@ export class FamilyService {
 
     return familyRepository.remove(deleteTargets);
   }
+  private neutralRelations = new Set([
+    FamilyRelation.BROTHER,
+    FamilyRelation.SISTER,
+    FamilyRelation.SIBLING,
+    FamilyRelation.RELATIVE,
+    FamilyRelation.FAMILY,
+  ]);
+
+  private genderBasedRelations = {
+    [FamilyRelation.GRANDFATHER]: [
+      FamilyRelation.GRANDSON,
+      FamilyRelation.GRANDDAUGHTER,
+    ],
+    [FamilyRelation.GRANDMOTHER]: [
+      FamilyRelation.GRANDSON,
+      FamilyRelation.GRANDDAUGHTER,
+    ],
+    [FamilyRelation.GRANDSON]: [
+      FamilyRelation.GRANDFATHER,
+      FamilyRelation.GRANDMOTHER,
+    ],
+    [FamilyRelation.GRANDDAUGHTER]: [
+      FamilyRelation.GRANDFATHER,
+      FamilyRelation.GRANDMOTHER,
+    ],
+    [FamilyRelation.FATHER]: [FamilyRelation.SON, FamilyRelation.DAUGHTER],
+    [FamilyRelation.MOTHER]: [FamilyRelation.SON, FamilyRelation.DAUGHTER],
+    [FamilyRelation.SON]: [FamilyRelation.FATHER, FamilyRelation.MOTHER],
+    [FamilyRelation.DAUGHTER]: [FamilyRelation.FATHER, FamilyRelation.MOTHER],
+    [FamilyRelation.SON_IN_LAW]: [
+      FamilyRelation.WIFE_FATHER_IN_LAW,
+      FamilyRelation.WIFE_MOTHER_IN_LAW,
+    ],
+    [FamilyRelation.DAUGHTER_IN_LAW]: [
+      FamilyRelation.HUSBAND_FATHER_IN_LAW,
+      FamilyRelation.HUSBAND_MOTHER_IN_LAW,
+    ],
+    [FamilyRelation.HUSBAND_FATHER_IN_LAW]: FamilyRelation.DAUGHTER_IN_LAW,
+    [FamilyRelation.HUSBAND_MOTHER_IN_LAW]: FamilyRelation.DAUGHTER_IN_LAW,
+    [FamilyRelation.WIFE_FATHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
+    [FamilyRelation.WIFE_MOTHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
+  };
 
   private getCounterRelation(relation: string, me: MemberModel) {
-    switch (relation) {
+    /*switch (relation) {
       // 조부모 - 손자/손녀
       case FamilyRelation.GRANDFATHER:
       case FamilyRelation.GRANDMOTHER:
@@ -312,6 +363,18 @@ export class FamilyService {
         return FamilyRelation.SON_IN_LAW;
       default:
         return FamilyRelation.FAMILY;
+    }*/
+
+    if (this.neutralRelations.has(relation)) {
+      return relation;
     }
+
+    if (this.genderBasedRelations[relation]) {
+      return me.gender === GenderEnum.male
+        ? this.genderBasedRelations[relation][0]
+        : this.genderBasedRelations[relation][1];
+    }
+
+    return FamilyRelation.FAMILY;
   }
 }

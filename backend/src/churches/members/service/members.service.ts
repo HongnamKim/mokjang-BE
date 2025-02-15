@@ -331,10 +331,10 @@ export class MembersService {
     );
 
     // 가족 관계 삭제
-    await this.familyService.cascadeRemoveAllFamilyRelations(
+    /*await this.familyService.cascadeRemoveAllFamilyRelations(
       deletedMember.id,
       qr,
-    );
+    );*/
     // 사역 종료 + 삭제
     await this.endAllMemberMinistry(deletedMember, qr);
 
@@ -365,7 +365,7 @@ export class MembersService {
     }
 
     // 가족 관계 모두 삭제
-    //await this.familyService.cascadeDeleteAllFamilyRelation(memberId, qr);
+    await this.familyService.cascadeDeleteAllFamilyRelation(memberId, qr);
 
     // 이벤트는 트랜잭션 처리 불가능 본 요청과 이벤트 요청은 서로 달라서 본 요청 응답이 나갈 때
     // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음
@@ -405,6 +405,8 @@ export class MembersService {
   }
 
   // 교인 완전 삭제
+  // TODO member 와 연관된 history 삭제 + educationEnrollment 삭제
+  // TODO 삭제가 빈번하게 일어날지 체크 필요
   async hardDeleteMember(churchId: number, memberId: number, qr: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
@@ -562,13 +564,7 @@ export class MembersService {
       this.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
-    return this.familyService.updateFamilyRelation(
-      churchId,
-      me,
-      family,
-      relation,
-      qr,
-    );
+    return this.familyService.updateFamilyRelation(me, family, relation, qr);
   }
 
   async deleteFamilyRelation(
@@ -582,7 +578,7 @@ export class MembersService {
       this.getMemberModelById(churchId, familyMemberId, {}, qr),
     ]);
 
-    return this.familyService.deleteFamilyRelation(churchId, me, family, qr);
+    return this.familyService.deleteFamilyRelation(me, family, qr);
   }
 
   async startMemberOfficer(
