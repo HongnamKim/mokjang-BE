@@ -26,7 +26,7 @@ export class FamilyModel {
   @ManyToOne(() => MemberModel, (member) => member.counterFamily)
   familyMember: MemberModel;
 
-  @Column({ default: '가족' })
+  @Column({ default: '가족 관계' })
   relation: string;
 
   @CreateDateColumn()
