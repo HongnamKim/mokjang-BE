@@ -42,33 +42,33 @@ export class MemberModel extends BaseModel {
   @Column({ default: new Date() })
   registeredAt: Date;
 
-  @Column()
+  @Column({ length: 30, comment: '교인 이름' })
   @Index()
   name: string;
 
-  @Column()
+  @Column({ length: 15, comment: '휴대폰 전화 번호' })
   @Index()
   mobilePhone: string;
 
-  @Column({ default: false })
+  @Column({ default: false, comment: '생일 음력 여부' })
   isLunar: boolean;
 
   @Index()
-  @Column({ nullable: true })
+  @Column({ nullable: true, comment: '생년 월일' })
   birth: Date;
 
   @Index()
-  @Column({ enum: GenderEnum, nullable: true })
+  @Column({ enum: GenderEnum, nullable: true, comment: '성별' })
   gender: GenderEnum;
 
-  @Column({ nullable: true })
+  @Column({ length: 50, nullable: true, comment: '도로명 주소' })
   address: string;
 
-  @Column({ nullable: true })
+  @Column({ length: 50, nullable: true, comment: '상세 주소' })
   detailAddress: string;
 
   @Index()
-  @Column({ nullable: true })
+  @Column({ length: 15, nullable: true, comment: '집 전화 번호' })
   homePhone: string;
 
   // 가족 관계
@@ -79,22 +79,22 @@ export class MemberModel extends BaseModel {
   counterFamily: FamilyModel[];
 
   @Index()
-  @Column({ nullable: true })
+  @Column({ length: 30, nullable: true, comment: '직업' })
   occupation: string;
 
   @Index()
-  @Column({ nullable: true })
+  @Column({ length: 30, nullable: true, comment: '학교' })
   school: string;
 
   @Index()
-  @Column({ enum: MarriageOptions, nullable: true })
+  @Column({ enum: MarriageOptions, nullable: true, comment: '결혼 정보' })
   marriage: MarriageOptions;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, comment: '세부 결혼 정보' })
   marriageDetail: string;
 
   @Index()
-  @Column('text', { array: true, default: [] })
+  @Column('text', { array: true, default: [], comment: '차량 번호 4자리' })
   vehicleNumber: string[];
 
   @Column({ nullable: true })
@@ -109,7 +109,7 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => MemberModel, (member) => member.guidedBy)
   guiding: MemberModel[];
 
-  @Column({ nullable: true, comment: '이전교회 이름' })
+  @Column({ length: 30, nullable: true, comment: '이전교회 이름' })
   previousChurch: string;
 
   @Index()
