@@ -11,6 +11,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  MaxLength,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../const/enum/gender.enum';
@@ -37,6 +38,7 @@ export class CreateMemberDto {
   @IsString()
   @TransformName()
   @IsNotEmpty()
+  @MaxLength(30)
   name: string;
 
   @ApiProperty({
@@ -121,6 +123,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(50)
   address?: string;
 
   @ApiProperty({
@@ -132,6 +135,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(50)
   detailAddress?: string;
 
   @ApiProperty({
@@ -143,6 +147,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(15)
   homePhone?: string;
 
   @ApiProperty({
@@ -154,6 +159,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(30)
   occupation?: string;
 
   @ApiProperty({
@@ -165,6 +171,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(30)
   school?: string;
 
   @ApiProperty({
@@ -216,5 +223,6 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(30)
   previousChurch?: string;
 }

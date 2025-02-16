@@ -175,8 +175,6 @@ export class FamilyService {
     relation: string,
     qr: QueryRunner,
   ) {
-    return this.getCounterRelation(relation, me);
-
     const familyRepository = this.getFamilyRepository(qr);
 
     const isExistRelation = await this.isExistFamilyRelation(
@@ -271,6 +269,21 @@ export class FamilyService {
 
     return familyRepository.remove(deleteTargets);
   }
+
+  private getCounterRelation(relation: string, me: MemberModel) {
+    if (this.neutralRelations.has(relation)) {
+      return relation;
+    }
+
+    if (this.genderBasedRelations[relation]) {
+      return me.gender === GenderEnum.male
+        ? this.genderBasedRelations[relation][0]
+        : this.genderBasedRelations[relation][1];
+    }
+
+    return FamilyRelation.FAMILY;
+  }
+
   private neutralRelations = new Set([
     FamilyRelation.BROTHER,
     FamilyRelation.SISTER,
@@ -314,8 +327,7 @@ export class FamilyService {
     [FamilyRelation.WIFE_MOTHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
   };
 
-  private getCounterRelation(relation: string, me: MemberModel) {
-    /*switch (relation) {
+  /*switch (relation) {
       // 조부모 - 손자/손녀
       case FamilyRelation.GRANDFATHER:
       case FamilyRelation.GRANDMOTHER:
@@ -364,17 +376,4 @@ export class FamilyService {
       default:
         return FamilyRelation.FAMILY;
     }*/
-
-    if (this.neutralRelations.has(relation)) {
-      return relation;
-    }
-
-    if (this.genderBasedRelations[relation]) {
-      return me.gender === GenderEnum.male
-        ? this.genderBasedRelations[relation][0]
-        : this.genderBasedRelations[relation][1];
-    }
-
-    return FamilyRelation.FAMILY;
-  }
 }
