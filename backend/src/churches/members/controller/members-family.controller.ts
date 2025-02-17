@@ -24,15 +24,11 @@ import {
   ApiPatchFamilyMember,
   ApiPostFamilyMember,
 } from '../const/swagger/member-family/controller.swagger';
-import { FamilyService } from '../service/family.service';
 
 @ApiTags('Churches:Members:Family')
 @Controller(':memberId/family')
 export class MembersFamilyController {
-  constructor(
-    private readonly memberService: MembersService,
-    private readonly familyService: FamilyService,
-  ) {}
+  constructor(private readonly memberService: MembersService) {}
 
   @ApiGetFamilyMember()
   @Get()
@@ -111,14 +107,5 @@ export class MembersFamilyController {
       memberId,
       familyMemberId,
     );
-  }
-
-  @Delete(':familyMemberId/test')
-  testDelete(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
-  ) {
-    return this.familyService.testDelete(memberId, familyMemberId);
   }
 }
