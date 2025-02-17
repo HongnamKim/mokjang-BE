@@ -1,5 +1,4 @@
 import {
-  BeforeRemove,
   Column,
   Entity,
   Index,
@@ -7,7 +6,6 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  Unique,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
@@ -25,10 +23,9 @@ import { MinistryHistoryModel } from '../../members-management/entity/ministry-h
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 import { Exclude } from 'class-transformer';
-import { InternalServerErrorException } from '@nestjs/common';
 
 @Entity()
-@Unique(['name', 'mobilePhone', 'churchId'])
+//@Unique(['name', 'mobilePhone', 'churchId'])
 export class MemberModel extends BaseModel {
   @Column()
   @Index()
@@ -177,8 +174,10 @@ export class MemberModel extends BaseModel {
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];
+}
 
-  @BeforeRemove()
+/*
+@BeforeRemove()
   preventIfHasRelations() {
     if (this.family.length > 0) {
       // 가족 relation 확인
@@ -222,4 +221,4 @@ export class MemberModel extends BaseModel {
       );
     }
   }
-}
+ */

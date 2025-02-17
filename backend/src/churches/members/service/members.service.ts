@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,7 +11,6 @@ import {
   FindOptionsRelations,
   FindOptionsWhere,
   IsNull,
-  Not,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -28,7 +26,6 @@ import { MinistryModel } from '../../management/entity/ministry/ministry.entity'
 import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
-  HardDeleteMemberRelationOptions,
 } from '../const/default-find-options.const';
 import { GroupModel } from '../../management/entity/group/group.entity';
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
@@ -204,7 +201,7 @@ export class MembersService {
 
     const membersRepository = this.getMembersRepository(qr);
 
-    /*const isExist = await this.isExistMemberByNameAndMobilePhone(
+    const isExist = await this.isExistMemberByNameAndMobilePhone(
       churchId,
       dto.name,
       dto.mobilePhone,
@@ -213,9 +210,9 @@ export class MembersService {
 
     if (isExist) {
       throw new BadRequestException('이미 존재하는 교인입니다.');
-    }*/
+    }
 
-    const existingMember = await membersRepository.findOne({
+    /*const existingMember = await membersRepository.findOne({
       where: {
         churchId,
         name: dto.name,
@@ -232,7 +229,7 @@ export class MembersService {
       } else {
         throw new BadRequestException('이미 존재하는 교인입니다.');
       }
-    }
+    }*/
 
     // 인도자 처리
     if (dto.guidedById) {
@@ -317,36 +314,6 @@ export class MembersService {
     });*/
   }
 
-  private async cascadeDeleteMember(
-    churchId: number,
-    deletedMember: MemberModel,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-    // 인도자 relation 끊기
-    // 삭제 대상에게 인도된 사람들
-    await membersRepository.update(
-      { guidedById: deletedMember.id, churchId },
-      { guidedById: null },
-    );
-
-    // 가족 관계 삭제
-    /*await this.familyService.cascadeRemoveAllFamilyRelations(
-      deletedMember.id,
-      qr,
-    );*/
-    // 사역 종료 + 삭제
-    await this.endAllMemberMinistry(deletedMember, qr);
-
-    // 직분 종료 + 삭제
-    await this.endMemberOfficer(deletedMember, qr);
-
-    // 교육 삭제
-
-    // 그룹 종료 + 삭제
-    await this.endMemberGroup(deletedMember, qr);
-  }
-
   // 교인 soft delete
   // 교육 등록도 soft delete
   async softDeleteMember(
@@ -383,7 +350,7 @@ export class MembersService {
 
   // soft delete 된 교인 복구
   // 교인에 딸린 educationEnrollment 복구
-  async restoreMember(churchId: number, memberId: number, qr: QueryRunner) {
+  /*async restoreMember(churchId: number, memberId: number, qr: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
     const restoreTarget = await membersRepository.findOne({
@@ -402,12 +369,12 @@ export class MembersService {
     await membersRepository.restore({ id: restoreTarget.id });
 
     return this.getMemberById(churchId, memberId, qr);
-  }
+  }*/
 
   // 교인 완전 삭제
   // TODO member 와 연관된 history 삭제 + educationEnrollment 삭제
   // TODO 삭제가 빈번하게 일어날지 체크 필요
-  async hardDeleteMember(churchId: number, memberId: number, qr: QueryRunner) {
+  /*async hardDeleteMember(churchId: number, memberId: number, qr: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
     const hardDeleteTarget = await membersRepository.findOne({
@@ -467,12 +434,12 @@ export class MembersService {
       throw new NotFoundException();
     }
 
-    console.log(targetMember);
+    //console.log(targetMember);
 
     await membersRepository.remove(targetMember);
 
     return `memberId ${memberId} hard deleted`;
-  }
+  }*/
 
   private async isExistMemberById(
     churchId: number,

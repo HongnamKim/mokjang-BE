@@ -18,7 +18,6 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
-import { HardDeleteMemberRelationOptions } from '../const/default-find-options.const';
 
 @ApiTags('Churches:Members')
 @Controller()
@@ -70,7 +69,7 @@ export class MembersController {
     return this.membersService.softDeleteMember(churchId, memberId, qr);
   }
 
-  @Get(':memberId/deleted')
+  /*@Get(':memberId/deleted')
   getDeletedMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -98,5 +97,5 @@ export class MembersController {
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.hardDeleteMember(churchId, memberId, qr);
-  }
+  }*/
 }

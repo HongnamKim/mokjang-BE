@@ -11,6 +11,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
   MaxLength,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
@@ -38,6 +39,9 @@ export class CreateMemberDto {
   @IsString()
   @TransformName()
   @IsNotEmpty()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
   @MaxLength(30)
   name: string;
 
@@ -159,6 +163,9 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
   @MaxLength(30)
   occupation?: string;
 
@@ -171,6 +178,9 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
   @MaxLength(30)
   school?: string;
 
