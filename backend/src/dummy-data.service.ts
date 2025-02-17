@@ -36,7 +36,7 @@ export class DummyDataService {
       const vehicleNumber = this.generateRandomVehicleNumbers();
       const previousChurch = this.generatePreviousChurchName();
 
-      return this.membersService.createMemberModel({
+      return this.membersService.createDummyMemberModel({
         churchId,
         registeredAt,
         name,
@@ -55,7 +55,7 @@ export class DummyDataService {
     });
 
     try {
-      return this.membersService.createMultipleMembers(churchId, members);
+      return this.membersService.createDummyMembers(churchId, members);
     } catch (e) {
       throw new InternalServerErrorException(
         '더미 데이터 생성 중 문제가 발생했습니다.',

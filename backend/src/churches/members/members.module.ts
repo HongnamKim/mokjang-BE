@@ -8,6 +8,7 @@ import { FamilyModel } from './entity/family.entity';
 import { FamilyService } from './service/family.service';
 import { RouterModule } from '@nestjs/core';
 import { MembersFamilyController } from './controller/members-family.controller';
+import { SearchMembersService } from './service/search-members.service';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { MembersFamilyController } from './controller/members-family.controller'
   ],
   exports: [MembersService, FamilyService],
   controllers: [MembersController, MembersFamilyController],
-  providers: [MembersService, FamilyService],
+  providers: [MembersService, FamilyService, SearchMembersService],
 })
 export class MembersModule {}

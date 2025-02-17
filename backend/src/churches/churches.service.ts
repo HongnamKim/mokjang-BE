@@ -66,6 +66,22 @@ export class ChurchesService {
     return church;
   }
 
+  async getChurchModelById(churchId: number, qr?: QueryRunner) {
+    const churchRepository = this.getChurchRepository(qr);
+
+    const church = await churchRepository.findOne({
+      where: {
+        id: churchId,
+      },
+    });
+
+    if (!church) {
+      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+    }
+
+    return church;
+  }
+
   async isExistChurch(id: number, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 

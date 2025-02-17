@@ -93,6 +93,7 @@ export class EducationsService {
             enrollment.educationTermId,
             enrollment.id,
             qr,
+            true,
           ),
         ),
       );
@@ -1297,6 +1298,7 @@ export class EducationsService {
     educationTermId: number,
     educationEnrollmentId: number,
     qr: QueryRunner,
+    memberDeleted: boolean = false,
   ) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
@@ -1309,7 +1311,23 @@ export class EducationsService {
       qr,
     );
 
+    const member = memberDeleted
+      ? await this.membersService.getDeleteMemberModelById(
+          churchId,
+          targetEnrollment.memberId,
+          { educations: true },
+          qr,
+        )
+      : await this.membersService.getMemberModelById(
+          churchId,
+          targetEnrollment.memberId,
+          { educations: true },
+          qr,
+        );
+
     await Promise.all([
+      // 교인 - 교육 관계 해제
+      this.membersService.endMemberEducation(member, educationEnrollmentId, qr),
       // 등록 인원 감소
       this.decrementEnrollmentCount(educationTermId, qr),
       // 상태별 카운트 감소
