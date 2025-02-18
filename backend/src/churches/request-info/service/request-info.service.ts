@@ -23,6 +23,7 @@ import { RequestLimitValidatorService } from './request-limit-validator.service'
 import { DateUtils } from '../utils/date-utils.util';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
+import { RequestLimitValidationType } from '../types/request-limit-validation-result';
 
 @Injectable()
 export class RequestInfoService {
@@ -69,40 +70,44 @@ export class RequestInfoService {
     const repository = this.getRequestInfosRepository(qr);
 
     // 이미 존재하는 요청에 대해 재요청이 가능한지
-    const validationResult = await this.requestLimitValidator.validateRetry(
-      requestInfo,
-      qr,
-      this,
-    );
+    const validationResult =
+      this.requestLimitValidator.validateRetry(requestInfo);
 
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.error);
     }
 
     // 날짜가 변경되어 재시도 횟수가 초기화 --> 새로운 요청으로 간주
-    if (requestInfo.requestInfoAttempts === 0) {
+    if (validationResult.type === RequestLimitValidationType.INIT) {
       // 교회가 요청을 보낼 수 있는지?
+
       const churchValidation =
-        await this.requestLimitValidator.validateNewRequest(
-          church,
-          qr,
-          this.churchesService,
-        );
+        this.requestLimitValidator.validateNewRequest(church);
 
       // 하루 최대 요청에 도달한 경우 Exception
-      if (!churchValidation.isValid) {
+      if (
+        !churchValidation.isValid ||
+        churchValidation.type === RequestLimitValidationType.ERROR
+      ) {
         throw new BadRequestException(churchValidation.error);
       }
 
       // 요청 가능한 경우 요청 횟수 증가
-      await this.churchesService.increaseRequestAttempts(church, qr);
+      await this.churchesService.updateRequestAttempts(
+        church,
+        churchValidation.type,
+        qr,
+      );
     }
 
     // 요청 횟수 업데이트
     await repository.update(
       { id: requestInfo.id },
       {
-        requestInfoAttempts: requestInfo.requestInfoAttempts + 1,
+        requestInfoAttempts:
+          validationResult.type === RequestLimitValidationType.INCREASE
+            ? () => 'requestInfoAttempts + 1'
+            : 1,
         requestInfoExpiresAt: DateUtils.calculateExpiryDate(
           this.REQUEST_EXPIRE_DAYS,
         ),
@@ -121,17 +126,20 @@ export class RequestInfoService {
     qr: QueryRunner,
   ) {
     const validationResult =
-      await this.requestLimitValidator.validateNewRequest(
-        church,
-        qr,
-        this.churchesService,
-      );
+      this.requestLimitValidator.validateNewRequest(church);
 
-    if (!validationResult.isValid) {
+    if (
+      !validationResult.isValid ||
+      validationResult.type === RequestLimitValidationType.ERROR
+    ) {
       throw new BadRequestException(validationResult.error);
     }
 
-    await this.churchesService.increaseRequestAttempts(church, qr);
+    await this.churchesService.updateRequestAttempts(
+      church,
+      validationResult.type,
+      qr,
+    );
 
     const isExistMember =
       await this.membersService.isExistMemberByNameAndMobilePhone(
@@ -199,6 +207,9 @@ export class RequestInfoService {
      * 다른 날의 재요청의 경우 새로운 요청으로 간주 -> 요청 횟수 증가
      */
 
+    // 교회 존재 여부 확인 && 교회 데이터 불러오기
+    const church = await this.churchesService.getChurchModelById(churchId, qr); //getChurchById(churchId, qr);
+
     const repository = this.getRequestInfosRepository(qr);
     const existingRequest = await repository.findOne({
       where: {
@@ -207,9 +218,6 @@ export class RequestInfoService {
         mobilePhone: dto.mobilePhone,
       },
     });
-
-    // 교회 존재 여부 확인 && 교회 데이터 불러오기
-    const church = await this.churchesService.getChurchById(churchId, qr);
 
     return existingRequest
       ? this.handleExistingRequest(existingRequest, church, qr)
