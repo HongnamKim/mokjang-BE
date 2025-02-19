@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import * as dotenv from 'dotenv';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
 import { ChurchModel } from '../../entity/church.entity';
 import {
@@ -9,8 +8,6 @@ import {
 import { DateUtils } from '../utils/date-utils.util';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import { ConfigService } from '@nestjs/config';
-
-dotenv.config();
 
 @Injectable()
 export class RequestLimitValidatorService {
@@ -48,14 +45,11 @@ export class RequestLimitValidatorService {
     if (
       requestInfo.requestInfoAttempts < this.DAILY_REQUEST_INFO_RETRY_LIMITS
     ) {
-      //await requestService.increaseRequestAttempts(requestInfo, qr);
       return { isValid: true, type: RequestLimitValidationType.INCREASE };
     }
 
     // 날짜 변경 시 초대 횟수 초기화
     if (DateUtils.isNewDay(new Date(), requestInfo.updatedAt)) {
-      //await requestService.initRequestInfoAttempts(requestInfo, qr);
-      //requestInfo.requestInfoAttempts = 0;
       return { isValid: true, type: RequestLimitValidationType.INIT };
     }
 

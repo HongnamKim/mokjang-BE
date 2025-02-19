@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
 import { FamilyRelation } from '../../members/const/family-relation.const';
@@ -14,8 +15,6 @@ import { FamilyRelation } from '../../members/const/family-relation.const';
 export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',
   'mobilePhone',
-  /*'guidedById',
-  'familyId',*/
 ]) {
   @ApiProperty({
     name: 'name',
@@ -25,6 +24,9 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   @IsString()
   @IsNotEmpty()
   @TransformName()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
   override name: string;
 
   @ApiProperty({
@@ -35,6 +37,7 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   @IsString()
   @IsNotEmpty()
   @Length(10, 11)
+  @Matches(/^[0-9]+$/, { message: '숫자만 입력 가능합니다' })
   override mobilePhone: string;
 
   @ApiProperty({
@@ -46,7 +49,6 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   @IsNumber()
   @IsOptional()
   guidedById?: number;
-  //override guidedById?: number;
 
   @ApiProperty({
     name: 'familyMemberId',
@@ -57,7 +59,6 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   @IsNumber()
   @IsOptional()
   familyMemberId?: number;
-  //override familyId?: number;
 
   @ApiProperty({
     name: 'relation',
