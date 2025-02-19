@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../entity/request-info.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { ChurchesService } from '../../churches.service';
 import { CreateRequestInfoDto } from '../dto/create-request-info.dto';
 import { ValidateRequestInfoDto } from '../dto/validate-request-info.dto';
@@ -50,15 +50,26 @@ export class RequestInfoService {
       : this.requestInfosRepository;
   }
 
-  async initRequestInfoAttempts(
-    requestInfo: RequestInfoModel,
-    qr: QueryRunner,
-  ) {
-    const requestInfosRepository = this.getRequestInfosRepository(qr);
+  async findAllRequestInfos(churchId: number, dto: GetRequestInfoDto) {
+    const totalCount = await this.requestInfosRepository.count({
+      where: { churchId: churchId },
+    });
 
-    await requestInfosRepository.update(
-      { id: requestInfo.id },
-      { requestInfoAttempts: 0 },
+    const totalPage = Math.ceil(totalCount / dto.page);
+
+    const result = await this.requestInfosRepository.find({
+      where: { churchId: churchId },
+      order: { createdAt: 'desc' },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    return new ResponsePaginationDto<RequestInfoModel>(
+      result,
+      result.length,
+      dto.page,
+      totalCount,
+      totalPage,
     );
   }
 
@@ -73,7 +84,10 @@ export class RequestInfoService {
     const validationResult =
       this.requestLimitValidator.validateRetry(requestInfo);
 
-    if (!validationResult.isValid) {
+    if (
+      !validationResult.isValid ||
+      validationResult.type === RequestLimitValidationType.ERROR
+    ) {
       throw new BadRequestException(validationResult.error);
     }
 
@@ -100,12 +114,31 @@ export class RequestInfoService {
       );
     }
 
-    // 요청 횟수 업데이트
-    await repository.update(
-      { id: requestInfo.id },
+    // 요청 횟수 업데이트 (초기화 or 증가)
+    await this.updateRequestAttempts(requestInfo, validationResult.type, qr);
+
+    return repository.findOne({
+      where: { id: requestInfo.id },
+      relations: { church: true },
+    });
+  }
+
+  private async updateRequestAttempts(
+    requestInfo: RequestInfoModel,
+    validationResultType:
+      | RequestLimitValidationType.INIT
+      | RequestLimitValidationType.INCREASE,
+    qr: QueryRunner,
+  ) {
+    const requestInfosRepository = this.getRequestInfosRepository(qr);
+
+    return requestInfosRepository.update(
+      {
+        id: requestInfo.id,
+      },
       {
         requestInfoAttempts:
-          validationResult.type === RequestLimitValidationType.INCREASE
+          validationResultType === RequestLimitValidationType.INCREASE
             ? () => 'requestInfoAttempts + 1'
             : 1,
         requestInfoExpiresAt: DateUtils.calculateExpiryDate(
@@ -113,11 +146,6 @@ export class RequestInfoService {
         ),
       },
     );
-
-    return repository.findOne({
-      where: { id: requestInfo.id },
-      relations: { church: true },
-    });
   }
 
   private async handleNewRequest(
@@ -232,9 +260,10 @@ export class RequestInfoService {
       ? requestInfo.church.name
       : `${requestInfo.church.name} 교회`;
 
+    // url 생성
     const protocol = this.configService.getOrThrow('PROTOCOL');
-    const host = this.configService.getOrThrow('HOST');
-    const port = this.configService.getOrThrow('PORT');
+    const host = this.configService.getOrThrow('CLIENT_HOST'); //this.configService.getOrThrow('HOST');
+    const port = this.configService.getOrThrow('CLIENT_PORT'); //this.configService.getOrThrow('PORT');
 
     const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${protocol}://${host}:${port}/church/${requestInfo.churchId}/request/${requestInfo.id}`;
 
@@ -311,29 +340,6 @@ export class RequestInfoService {
     return new ResponseValidateRequestInfoDto(true);
   }
 
-  async findAllRequestInfos(churchId: number, dto: GetRequestInfoDto) {
-    const totalCount = await this.requestInfosRepository.count({
-      where: { churchId: churchId },
-    });
-
-    const totalPage = Math.ceil(totalCount / dto.page);
-
-    const result = await this.requestInfosRepository.find({
-      where: { churchId: churchId },
-      order: { createdAt: 'desc' },
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
-    });
-
-    return new ResponsePaginationDto<RequestInfoModel>(
-      result,
-      result.length,
-      dto.page,
-      totalCount,
-      totalPage,
-    );
-  }
-
   async deleteRequestInfoById(
     churchId: number,
     requestInfoId: number,
@@ -344,7 +350,6 @@ export class RequestInfoService {
     const result = await requestInfosRepository.delete({
       id: requestInfoId,
       churchId: churchId,
-      deletedAt: IsNull(),
     });
 
     if (result.affected === 0) {
@@ -391,12 +396,7 @@ export class RequestInfoService {
       qr,
     );
 
-    const result = await requestInfosRepository.delete({ id: requestInfo.id });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
-    }
-    //await this.deleteRequestInfoById(churchId, requestInfoId, qr);
+    await this.deleteRequestInfoById(churchId, requestInfoId, qr);
 
     return updated;
   }
