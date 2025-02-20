@@ -56,6 +56,8 @@ import { DummyDataService } from './dummy-data.service';
         PROTOCOL: Joi.string().required(),
         HOST: Joi.string().required(),
         PORT: Joi.number().required(),
+        CLIENT_HOST: Joi.string().required(),
+        CLIENT_PORT: Joi.number().required(),
         // 메시지 API
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),

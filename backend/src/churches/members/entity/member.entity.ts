@@ -2,10 +2,12 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
@@ -23,6 +25,7 @@ import { MinistryHistoryModel } from '../../members-management/entity/ministry-h
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 import { Exclude } from 'class-transformer';
+import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 
 @Entity()
 //@Unique(['name', 'mobilePhone', 'churchId'])
@@ -33,7 +36,11 @@ export class MemberModel extends BaseModel {
   churchId: number;
 
   @ManyToOne(() => ChurchModel, (church) => church.members)
+  @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
+
+  @OneToOne(() => RequestInfoModel, (requestInfo) => requestInfo.member)
+  requestInfo: RequestInfoModel;
 
   @Index()
   @Column({ default: new Date() })
@@ -100,6 +107,7 @@ export class MemberModel extends BaseModel {
 
   // 나를 인도한 사람
   @ManyToOne(() => MemberModel, (member) => member.guiding)
+  @JoinColumn({ name: 'guidedById' })
   guidedBy: MemberModel;
 
   // 내가 인도한 사람
@@ -133,6 +141,7 @@ export class MemberModel extends BaseModel {
   officerId: number | null;
 
   @ManyToOne(() => OfficerModel, (officer) => officer.members)
+  @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
 
   @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
@@ -162,6 +171,7 @@ export class MemberModel extends BaseModel {
   groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.members)
+  @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 
   @Index()
@@ -170,6 +180,7 @@ export class MemberModel extends BaseModel {
   groupRoleId: number | null;
 
   @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)
+  @JoinColumn({ name: 'groupRoleId' })
   groupRole: GroupRoleModel;
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
