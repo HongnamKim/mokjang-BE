@@ -1,10 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import * as dotenv from 'dotenv';
 import { COOLSMS_CLIENT } from '../provider/coolsms.provider';
 import { ICoolSMS } from '../provider/coolsms.interface';
 import { ConfigService } from '@nestjs/config';
-
-dotenv.config();
 
 @Injectable()
 export class MessagesService {

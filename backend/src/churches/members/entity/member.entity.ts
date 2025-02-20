@@ -6,6 +6,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
@@ -23,6 +24,7 @@ import { MinistryHistoryModel } from '../../members-management/entity/ministry-h
 import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 import { Exclude } from 'class-transformer';
+import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 
 @Entity()
 //@Unique(['name', 'mobilePhone', 'churchId'])
@@ -34,6 +36,9 @@ export class MemberModel extends BaseModel {
 
   @ManyToOne(() => ChurchModel, (church) => church.members)
   church: ChurchModel;
+
+  @OneToOne(() => RequestInfoModel, (requestInfo) => requestInfo.member)
+  requestInfo: RequestInfoModel;
 
   @Index()
   @Column({ default: new Date() })
