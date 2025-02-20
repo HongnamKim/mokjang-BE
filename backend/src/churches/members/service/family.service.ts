@@ -11,6 +11,12 @@ import { GenderEnum } from '../const/enum/gender.enum';
 import { FamilyRelation } from '../const/family-relation.const';
 import { FamilyExceptionMessage } from '../exception-message/family-exception.message';
 
+type FamilyRelation = {
+  meId: number;
+  familyMemberId: number;
+  relation: string;
+};
+
 @Injectable()
 export class FamilyService {
   constructor(
@@ -59,6 +65,9 @@ export class FamilyService {
         where: {
           meId: memberId,
         },
+        select: {
+          familyMemberId: true,
+        },
       })
     ).map((relation) => relation.familyMemberId);
   }
@@ -85,7 +94,7 @@ export class FamilyService {
     newFamilyExistingFamilyMemberIds.push(newFamilyMember.id);
     myFamilyMemberIds.push(me.id);
 
-    //const myFamilyIds = await this.getFamilyIds(me.id, qr);
+    let familyRelations: FamilyRelation[] = [];
 
     for (const newFamilyExistingFamilyMemberId of newFamilyExistingFamilyMemberIds) {
       for (const myFamilyMemberId of myFamilyMemberIds) {
@@ -93,28 +102,29 @@ export class FamilyService {
           myFamilyMemberId === me.id &&
           newFamilyExistingFamilyMemberId === newFamilyMember.id;
 
-        await Promise.all([
-          familyRepository.save({
+        familyRelations.push(
+          {
             meId: myFamilyMemberId,
             familyMemberId: newFamilyExistingFamilyMemberId,
             relation: isRelationFixed ? relation : FamilyRelation.FAMILY,
-          }),
-          familyRepository.save({
+          },
+          {
             meId: newFamilyExistingFamilyMemberId,
             familyMemberId: myFamilyMemberId,
             relation: isRelationFixed
               ? this.getCounterRelation(relation, me)
               : FamilyRelation.FAMILY,
-          }),
-        ]);
+          },
+        );
       }
     }
+
+    return familyRepository.save(familyRelations);
   }
 
   async updateFamilyRelation(
-    churchId: number,
-    meId: number,
-    familyMemberId: number,
+    me: MemberModel,
+    family: MemberModel,
     relation: string,
     qr?: QueryRunner,
   ) {
@@ -122,10 +132,8 @@ export class FamilyService {
 
     const result = await familyRepository.update(
       {
-        me: { churchId },
-        meId: meId,
-        familyMember: { churchId },
-        familyMemberId: familyMemberId,
+        meId: me.id,
+        familyMemberId: family.id,
         deletedAt: IsNull(),
       },
       { relation },
@@ -136,27 +144,21 @@ export class FamilyService {
     }
 
     return familyRepository.findOne({
-      where: { meId: meId, familyMemberId: familyMemberId },
+      where: { meId: me.id, familyMemberId: family.id },
     });
   }
 
   async deleteFamilyRelation(
-    churchId: number,
-    meId: number,
-    familyMemberId: number,
+    me: MemberModel,
+    family: MemberModel,
     qr?: QueryRunner,
   ) {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository.softDelete({
-      me: {
-        churchId,
-      },
-      meId,
-      familyMember: {
-        churchId,
-      },
-      familyMemberId,
+      meId: me.id,
+
+      familyMemberId: family.id,
       deletedAt: IsNull(),
     });
 
@@ -185,30 +187,31 @@ export class FamilyService {
       throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
     }
 
-    // 가족 관계 생성
-    await familyRepository.save({
-      meId: me.id,
-      familyMemberId: familyMember.id,
-      relation,
-    });
-
     // 반대 관계가 이미 있으면 생성 생략
     // 없으면 새로 생성
-
     const isExistingCounterRelation = await this.isExistFamilyRelation(
       familyMember.id,
       me.id,
       qr,
     );
 
+    let familyRelation: FamilyRelation[] = [];
+
+    familyRelation.push({
+      meId: me.id,
+      familyMemberId: familyMember.id,
+      relation,
+    });
+
     if (!isExistingCounterRelation) {
-      // 반대 관계가 없으면 새로 생성
-      await familyRepository.save({
+      familyRelation.push({
         meId: familyMember.id,
         familyMemberId: me.id,
         relation: this.getCounterRelation(relation, me),
       });
     }
+
+    await familyRepository.save(familyRelation);
 
     return familyRepository.findOne({
       where: {
@@ -221,8 +224,110 @@ export class FamilyService {
     });
   }
 
+  async testDelete(meId: number, familyMemberId: number) {
+    return this.familyRepository.softDelete({
+      meId: meId,
+      familyMemberId: familyMemberId,
+    });
+  }
+
+  /**
+   * 가족 관계 soft delete - 복구 가능
+   * @param deletedId
+   * @param qr
+   */
+  async cascadeDeleteAllFamilyRelation(deletedId: number, qr: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const result = await familyRepository
+      .createQueryBuilder()
+      .softDelete()
+      .where('meId = :deletedId OR familyMemberId = :deletedId', { deletedId })
+      .execute();
+
+    return result.affected;
+  }
+
+  /**
+   * 가족 관계 완전 삭제 - 복구되지 않음
+   * @param deletedId
+   * @param qr
+   */
+  async cascadeRemoveAllFamilyRelations(deletedId: number, qr: QueryRunner) {
+    const familyRepository = this.getFamilyRepository(qr);
+
+    const deleteTargets = await familyRepository.find({
+      where: [
+        {
+          meId: deletedId,
+        },
+        {
+          familyMemberId: deletedId,
+        },
+      ],
+    });
+
+    return familyRepository.remove(deleteTargets);
+  }
+
   private getCounterRelation(relation: string, me: MemberModel) {
-    switch (relation) {
+    if (this.neutralRelations.has(relation)) {
+      return relation;
+    }
+
+    if (this.genderBasedRelations[relation]) {
+      return me.gender === GenderEnum.male
+        ? this.genderBasedRelations[relation][0]
+        : this.genderBasedRelations[relation][1];
+    }
+
+    return FamilyRelation.FAMILY;
+  }
+
+  private neutralRelations = new Set([
+    FamilyRelation.BROTHER,
+    FamilyRelation.SISTER,
+    FamilyRelation.SIBLING,
+    FamilyRelation.RELATIVE,
+    FamilyRelation.FAMILY,
+  ]);
+
+  private genderBasedRelations = {
+    [FamilyRelation.GRANDFATHER]: [
+      FamilyRelation.GRANDSON,
+      FamilyRelation.GRANDDAUGHTER,
+    ],
+    [FamilyRelation.GRANDMOTHER]: [
+      FamilyRelation.GRANDSON,
+      FamilyRelation.GRANDDAUGHTER,
+    ],
+    [FamilyRelation.GRANDSON]: [
+      FamilyRelation.GRANDFATHER,
+      FamilyRelation.GRANDMOTHER,
+    ],
+    [FamilyRelation.GRANDDAUGHTER]: [
+      FamilyRelation.GRANDFATHER,
+      FamilyRelation.GRANDMOTHER,
+    ],
+    [FamilyRelation.FATHER]: [FamilyRelation.SON, FamilyRelation.DAUGHTER],
+    [FamilyRelation.MOTHER]: [FamilyRelation.SON, FamilyRelation.DAUGHTER],
+    [FamilyRelation.SON]: [FamilyRelation.FATHER, FamilyRelation.MOTHER],
+    [FamilyRelation.DAUGHTER]: [FamilyRelation.FATHER, FamilyRelation.MOTHER],
+    [FamilyRelation.SON_IN_LAW]: [
+      FamilyRelation.WIFE_FATHER_IN_LAW,
+      FamilyRelation.WIFE_MOTHER_IN_LAW,
+    ],
+    [FamilyRelation.DAUGHTER_IN_LAW]: [
+      FamilyRelation.HUSBAND_FATHER_IN_LAW,
+      FamilyRelation.HUSBAND_MOTHER_IN_LAW,
+    ],
+    [FamilyRelation.HUSBAND_FATHER_IN_LAW]: FamilyRelation.DAUGHTER_IN_LAW,
+    [FamilyRelation.HUSBAND_MOTHER_IN_LAW]: FamilyRelation.DAUGHTER_IN_LAW,
+    [FamilyRelation.WIFE_FATHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
+    [FamilyRelation.WIFE_MOTHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
+  };
+
+  /*switch (relation) {
       // 조부모 - 손자/손녀
       case FamilyRelation.GRANDFATHER:
       case FamilyRelation.GRANDMOTHER:
@@ -268,6 +373,7 @@ export class FamilyService {
       case FamilyRelation.WIFE_FATHER_IN_LAW: // 장인 장모 추가
       case FamilyRelation.WIFE_MOTHER_IN_LAW:
         return FamilyRelation.SON_IN_LAW;
-    }
-  }
+      default:
+        return FamilyRelation.FAMILY;
+    }*/
 }

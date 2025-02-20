@@ -17,9 +17,7 @@ import { TransactionInterceptor } from '../../../common/interceptor/transaction.
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateMemberDto } from '../dto/update-member.dto';
-import { DefaultMemberRelationOption } from '../const/default-find-options.const';
 import { GetMemberDto } from '../dto/get-member.dto';
-import { FamilyRelationPipe } from '../pipe/family-relation.pipe';
 
 @ApiTags('Churches:Members')
 @Controller()
@@ -31,7 +29,6 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMemberDto,
   ) {
-    //console.log(dto);
     return this.membersService.getMembers(churchId, dto);
   }
 
@@ -39,7 +36,7 @@ export class MembersController {
   @UseInterceptors(TransactionInterceptor)
   postMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Body(FamilyRelationPipe) dto: CreateMemberDto,
+    @Body(/*FamilyRelationPipe*/) dto: CreateMemberDto,
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.createMember(churchId, dto, qr);
@@ -50,11 +47,7 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
   ) {
-    return this.membersService.getMemberById(
-      churchId,
-      memberId,
-      DefaultMemberRelationOption,
-    );
+    return this.membersService.getMemberById(churchId, memberId);
   }
 
   @Patch(':memberId')
@@ -67,10 +60,42 @@ export class MembersController {
   }
 
   @Delete(':memberId')
+  @UseInterceptors(TransactionInterceptor)
   deleteMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return this.membersService.deleteMember(churchId, memberId);
+    return this.membersService.softDeleteMember(churchId, memberId, qr);
   }
+
+  /*@Get(':memberId/deleted')
+  getDeletedMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+  ) {
+    return this.membersService.getDeleteMemberModelById(churchId, memberId, {
+      ...HardDeleteMemberRelationOptions,
+    });
+  }
+
+  @Post(':memberId/restore')
+  @UseInterceptors(TransactionInterceptor)
+  restoreMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.membersService.restoreMember(churchId, memberId, qr);
+  }
+
+  @Delete(':memberId/hard-delete')
+  @UseInterceptors(TransactionInterceptor)
+  hardDeleteMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.membersService.hardDeleteMember(churchId, memberId, qr);
+  }*/
 }

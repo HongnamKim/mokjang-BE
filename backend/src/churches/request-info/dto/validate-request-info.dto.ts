@@ -1,6 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { RequestInfoModel } from '../entity/request-info.entity';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
 
 export class ValidateRequestInfoDto extends PickType(RequestInfoModel, [
@@ -15,6 +15,9 @@ export class ValidateRequestInfoDto extends PickType(RequestInfoModel, [
   @IsString()
   @IsNotEmpty()
   @TransformName()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
   override name: string;
 
   @ApiProperty({
@@ -25,5 +28,6 @@ export class ValidateRequestInfoDto extends PickType(RequestInfoModel, [
   @IsString()
   @IsNotEmpty()
   @Length(10, 11)
+  @Matches(/^[0-9]+$/, { message: '숫자만 입력 가능합니다' })
   override mobilePhone: string;
 }

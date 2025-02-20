@@ -6,6 +6,10 @@ import {
 } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 
+const ErrorType = {
+  BAD_REQUEST: 'Bad Request',
+};
+
 @Catch(QueryFailedError)
 export class TypeOrmExceptionFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost): any {
@@ -20,12 +24,16 @@ export class TypeOrmExceptionFilter implements ExceptionFilter {
 
     if (error.code === '23505') {
       statusCode = HttpStatus.BAD_REQUEST;
-      errorType = 'Bad Request';
+      errorType = ErrorType.BAD_REQUEST;
       message = '이미 존재하는 데이터입니다. 다른 값을 입력해주세요.';
     } else if (error.code === '23503') {
       statusCode = HttpStatus.BAD_REQUEST;
-      errorType = 'Bad Request';
+      errorType = ErrorType.BAD_REQUEST;
       message = '연관된 데이터가 존재하여 삭제할 수 없습니다.';
+    } else if (error.code === '22001') {
+      statusCode = HttpStatus.BAD_REQUEST;
+      errorType = ErrorType.BAD_REQUEST;
+      message = '허용된 데이터 길이를 초과하였습니다.';
     }
 
     response.status(HttpStatus.BAD_REQUEST).json({
