@@ -2,6 +2,7 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
@@ -35,6 +36,7 @@ export class MemberModel extends BaseModel {
   churchId: number;
 
   @ManyToOne(() => ChurchModel, (church) => church.members)
+  @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
   @OneToOne(() => RequestInfoModel, (requestInfo) => requestInfo.member)
@@ -105,6 +107,7 @@ export class MemberModel extends BaseModel {
 
   // 나를 인도한 사람
   @ManyToOne(() => MemberModel, (member) => member.guiding)
+  @JoinColumn({ name: 'guidedById' })
   guidedBy: MemberModel;
 
   // 내가 인도한 사람
@@ -138,6 +141,7 @@ export class MemberModel extends BaseModel {
   officerId: number | null;
 
   @ManyToOne(() => OfficerModel, (officer) => officer.members)
+  @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
 
   @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
@@ -167,6 +171,7 @@ export class MemberModel extends BaseModel {
   groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.members)
+  @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 
   @Index()
@@ -175,6 +180,7 @@ export class MemberModel extends BaseModel {
   groupRoleId: number | null;
 
   @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)
+  @JoinColumn({ name: 'groupRoleId' })
   groupRole: GroupRoleModel;
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
