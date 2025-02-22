@@ -35,6 +35,7 @@ import {
   ApiVerifyVerificationCode,
 } from '../const/swagger/auth/controller.swagger';
 import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -42,6 +43,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
+    private readonly configService: ConfigService,
   ) {}
 
   @ApiTestAuth()
@@ -69,21 +71,18 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
-    console.log(Object.keys(loginResult));
+    const clientHost = this.configService.getOrThrow('CLIENT_HOST');
+    const clientPort = this.configService.getOrThrow('CLIENT_PORT');
 
     if (Object.keys(loginResult).includes('temporal')) {
       res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
 
-      res.redirect(`http://localhost:3001/login/register`);
+      res.redirect(`http://${clientHost}:${clientPort}/login/register`);
     } else {
       res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
 
-      res.redirect(`http://localhost:3001`);
+      res.redirect(`http://${clientHost}:${clientPort}`);
     }
-
-    //res.cookie('JWT', loginResult, { httpOnly: true });
-
-    //res.redirect('http://localhost:3000');
   }
 
   @ApiSSO('네이버')
