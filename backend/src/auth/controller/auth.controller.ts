@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Query,
+  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -33,6 +34,8 @@ import {
   ApiTestAuth,
   ApiVerifyVerificationCode,
 } from '../const/swagger/auth/controller.swagger';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -40,6 +43,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
+    private readonly configService: ConfigService,
   ) {}
 
   @ApiTestAuth()
@@ -60,8 +64,25 @@ export class AuthController {
   }
 
   @OAuthRedirect('google')
-  redirectGoogle(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
-    return this.authService.loginUser(oauthDto, qr);
+  async redirectGoogle(
+    @OAuthUser() oauthDto: OauthDto,
+    @QueryRunner() qr: QR,
+    @Res() res: Response,
+  ) {
+    const loginResult = await this.authService.loginUser(oauthDto, qr);
+
+    const clientHost = this.configService.getOrThrow('CLIENT_HOST');
+    const clientPort = this.configService.getOrThrow('CLIENT_PORT');
+
+    if (Object.keys(loginResult).includes('temporal')) {
+      res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
+
+      res.redirect(`http://${clientHost}:${clientPort}/login/register`);
+    } else {
+      res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
+
+      res.redirect(`http://${clientHost}:${clientPort}`);
+    }
   }
 
   @ApiSSO('네이버')
