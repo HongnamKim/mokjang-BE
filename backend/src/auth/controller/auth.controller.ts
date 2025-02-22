@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Query,
+  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -33,6 +34,7 @@ import {
   ApiTestAuth,
   ApiVerifyVerificationCode,
 } from '../const/swagger/auth/controller.swagger';
+import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -60,8 +62,22 @@ export class AuthController {
   }
 
   @OAuthRedirect('google')
-  redirectGoogle(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
-    return this.authService.loginUser(oauthDto, qr);
+  async redirectGoogle(
+    @OAuthUser() oauthDto: OauthDto,
+    @QueryRunner() qr: QR,
+    @Res() res: Response,
+  ) {
+    const loginResult = await this.authService.loginUser(oauthDto, qr);
+
+    if (Object.keys(loginResult).includes('temporal')) {
+      res.redirect(`localhost:3001/login/register?token=${loginResult}`);
+    } else {
+      res.redirect(`localhost:3001?token=${loginResult}`);
+    }
+
+    //res.cookie('JWT', loginResult, { httpOnly: true });
+
+    //res.redirect('http://localhost:3000');
   }
 
   @ApiSSO('네이버')
