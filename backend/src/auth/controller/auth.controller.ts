@@ -69,10 +69,16 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
+    console.log(Object.keys(loginResult));
+
     if (Object.keys(loginResult).includes('temporal')) {
-      res.redirect(`localhost:3001/login/register?token=${loginResult}`);
+      res.cookie('jwt', loginResult, {});
+
+      res.redirect(`http://localhost:3001/login/register`);
     } else {
-      res.redirect(`localhost:3001?token=${loginResult}`);
+      res.cookie('jwt', loginResult, {});
+
+      res.redirect(`http://localhost:3001`);
     }
 
     //res.cookie('JWT', loginResult, { httpOnly: true });
