@@ -72,11 +72,11 @@ export class AuthController {
     console.log(Object.keys(loginResult));
 
     if (Object.keys(loginResult).includes('temporal')) {
-      res.cookie('jwt', loginResult, {});
+      res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
 
       res.redirect(`http://localhost:3001/login/register`);
     } else {
-      res.cookie('jwt', loginResult, {});
+      res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
 
       res.redirect(`http://localhost:3001`);
     }
