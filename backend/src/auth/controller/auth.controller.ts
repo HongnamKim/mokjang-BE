@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Query,
+  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -34,7 +35,7 @@ import {
   ApiTestAuth,
   ApiVerifyVerificationCode,
 } from '../const/swagger/auth/controller.swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Auth')
@@ -49,12 +50,37 @@ export class AuthController {
   @ApiTestAuth()
   @Get('test/sign-in')
   @UseInterceptors(TransactionInterceptor)
-  loginTestAuth(
+  async loginTestAuth(
     @Query('provider') provider: string,
     @Query('providerId') providerId: string,
     @QueryRunner() qr: QR,
+    @Res() res: Response,
   ) {
-    return this.authService.loginUser(new OauthDto(provider, providerId), qr);
+    const loginResult = await this.authService.loginUser(
+      new OauthDto(provider, providerId),
+      qr,
+    );
+
+    const jsonString = JSON.stringify(loginResult);
+    console.log(jsonString);
+
+    res.cookie('jwt', jsonString, {
+      httpOnly: true,
+      secure: false,
+      sameSite: undefined,
+    });
+
+    res.status(200).send('login success');
+  }
+
+  @Get('cookie-test')
+  cookieTest(@Req() req: Request) {
+    const jwt = req.cookies['jwt'];
+
+    console.log(jwt.jwt);
+    //console.log(JSON.parse(decodeURIComponent(jwt)));
+
+    return jwt;
   }
 
   @ApiSSO('구글')
