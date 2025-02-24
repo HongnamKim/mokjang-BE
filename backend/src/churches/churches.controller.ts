@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ChurchesService } from './churches.service';
 import { CreateChurchDto } from './dto/create-church.dto';
-import { AccessTokenGuard } from '../auth/guard/jwt.guard';
+import { AccessTokenGuardV2 } from '../auth/guard/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AccessToken } from '../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../auth/type/jwt';
@@ -41,7 +41,7 @@ export class ChurchesController {
   @ApiPostChurch()
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuardV2)
   postChurch(
     @AccessToken() accessToken: JwtAccessPayload,
     @Body() dto: CreateChurchDto,
@@ -52,7 +52,7 @@ export class ChurchesController {
   @ApiGetChurchById()
   @Get(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchAdminGuard)
+  @UseGuards(AccessTokenGuardV2, ChurchAdminGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.getChurchById(churchId);
   }
@@ -60,7 +60,7 @@ export class ChurchesController {
   @ApiPatchChurch()
   @Patch(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuardV2, ChurchMainAdminGuard)
   patchChurch(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: UpdateChurchDto,
@@ -71,7 +71,7 @@ export class ChurchesController {
   @ApiDeleteChurch()
   @Delete(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuardV2, ChurchMainAdminGuard)
   deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.deleteChurchById(churchId);
   }

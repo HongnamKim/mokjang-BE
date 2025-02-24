@@ -14,6 +14,7 @@ import { KakaoStrategy } from './strategy/kakao.strategy';
 import { UserService } from './service/user.service';
 import { UserController } from './controller/user.controller';
 import { TempUserService } from './service/temp-user.service';
+import { AuthCookieHelper } from './helper/auth-cookie.helper';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TempUserService } from './service/temp-user.service';
     KakaoStrategy,
     UserService,
     TempUserService,
+    AuthCookieHelper,
   ],
   exports: [TokenService],
 })

@@ -10,12 +10,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { OauthDto } from '../dto/auth/oauth.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { RefreshTokenGuard, TemporalTokenGuard } from '../guard/jwt.guard';
+import { RefreshTokenGuardV2, TemporalTokenGuardV2 } from '../guard/jwt.guard';
 import { RefreshToken, TemporalToken } from '../decorator/jwt.decorator';
 import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
 import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
@@ -37,6 +37,10 @@ import {
 } from '../const/swagger/auth/controller.swagger';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { JWT_COOKIE_KEY, NODE_ENV } from '../const/env.const';
+import { TOKEN_COOKIE_OPTIONS } from '../const/token-cookie-option.const';
+import { AuthType } from '../const/enum/auth-type.enum';
+import { AuthCookieHelper } from '../helper/auth-cookie.helper';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -45,7 +49,10 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
     private readonly configService: ConfigService,
+    private readonly authCookieHelper: AuthCookieHelper,
   ) {}
+
+  private NODE_ENV = this.configService.getOrThrow(NODE_ENV);
 
   @ApiTestAuth()
   @Get('test/sign-in')
@@ -54,33 +61,18 @@ export class AuthController {
     @Query('provider') provider: string,
     @Query('providerId') providerId: string,
     @QueryRunner() qr: QR,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const loginResult = await this.authService.loginUser(
       new OauthDto(provider, providerId),
       qr,
     );
-
-    const jsonString = JSON.stringify(loginResult);
-    console.log(jsonString);
-
-    res.cookie('jwt', jsonString, {
-      httpOnly: true,
-      secure: false,
-      sameSite: undefined,
-    });
-
-    res.status(200).send('login success');
+    return this.authCookieHelper.handleLoginResult(loginResult, res, true);
   }
 
   @Get('cookie-test')
   cookieTest(@Req() req: Request) {
-    const jwt = req.cookies['jwt'];
-
-    console.log(jwt.jwt);
-    //console.log(JSON.parse(decodeURIComponent(jwt)));
-
-    return jwt;
+    return req.cookies;
   }
 
   @ApiSSO('구글')
@@ -97,18 +89,7 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
-    const clientHost = this.configService.getOrThrow('CLIENT_HOST');
-    const clientPort = this.configService.getOrThrow('CLIENT_PORT');
-
-    if (Object.keys(loginResult).includes('temporal')) {
-      res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
-
-      res.redirect(`http://${clientHost}:${clientPort}/login/register`);
-    } else {
-      res.cookie('jwt', loginResult, { httpOnly: true, sameSite: 'none' });
-
-      res.redirect(`http://${clientHost}:${clientPort}`);
-    }
+    return this.authCookieHelper.handleLoginResult(loginResult, res, false);
   }
 
   @ApiSSO('네이버')
@@ -118,8 +99,14 @@ export class AuthController {
   }
 
   @OAuthRedirect('naver')
-  redirectNaver(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
-    return this.authService.loginUser(oauthDto, qr);
+  async redirectNaver(
+    @OAuthUser() oauthDto: OauthDto,
+    @QueryRunner() qr: QR,
+    @Res() res: Response,
+  ) {
+    const loginResult = await this.authService.loginUser(oauthDto, qr);
+
+    return this.authCookieHelper.handleLoginResult(loginResult, res, false);
   }
 
   @ApiSSO('카카오')
@@ -129,15 +116,21 @@ export class AuthController {
   }
 
   @OAuthRedirect('kakao')
-  redirectKakao(@OAuthUser() oauthDto: OauthDto, @QueryRunner() qr: QR) {
-    return this.authService.loginUser(oauthDto, qr);
+  async redirectKakao(
+    @OAuthUser() oauthDto: OauthDto,
+    @QueryRunner() qr: QR,
+    @Res() res: Response,
+  ) {
+    const loginResult = await this.authService.loginUser(oauthDto, qr);
+
+    return this.authCookieHelper.handleLoginResult(loginResult, res, false);
   }
 
   @ApiRequestVerificationCode()
-  @ApiBearerAuth()
+  //@ApiBearerAuth()
   @Post('verification/request')
   @UseInterceptors(TransactionInterceptor)
-  @UseGuards(TemporalTokenGuard)
+  @UseGuards(TemporalTokenGuardV2)
   requestVerificationCode(
     @TemporalToken() temporalToken: JwtTemporalPayload,
     @Body() dto: RequestVerificationCodeDto,
@@ -147,9 +140,9 @@ export class AuthController {
   }
 
   @ApiVerifyVerificationCode()
-  @ApiBearerAuth()
+  //@ApiBearerAuth()
   @Post('verification/verify')
-  @UseGuards(TemporalTokenGuard)
+  @UseGuards(TemporalTokenGuardV2)
   verifyCode(
     @TemporalToken() temporalToken: JwtTemporalPayload,
     @Body() dto: VerifyCodeDto,
@@ -158,23 +151,54 @@ export class AuthController {
   }
 
   @ApiSignIn()
-  @ApiBearerAuth()
+  //@ApiBearerAuth()
   @Post('sign-in')
-  @UseGuards(TemporalTokenGuard)
+  @UseGuards(TemporalTokenGuardV2)
   @UseInterceptors(TransactionInterceptor)
   async signIn(
     @TemporalToken() temporalToken: JwtTemporalPayload,
     @Body() dto: RegisterUserDto,
     @QueryRunner() qr: QR,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.signIn(temporalToken, dto, qr);
+    const signInResult = await this.authService.signIn(temporalToken, dto, qr);
+
+    res.clearCookie(
+      this.configService.getOrThrow(JWT_COOKIE_KEY.TEMPORAL_TOKEN_KEY),
+      TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.TEMP, true),
+    );
+
+    this.authCookieHelper.setTokenCookie(signInResult, res);
+
+    return 'sign-in success';
   }
 
   @ApiRotateToken()
-  @ApiBearerAuth()
+  //@ApiBearerAuth()
   @Post('token/rotate')
-  @UseGuards(RefreshTokenGuard)
-  rotateToken(@RefreshToken() payload: JwtRefreshPayload) {
-    return this.tokenService.rotateToken(payload);
+  @UseGuards(RefreshTokenGuardV2)
+  rotateToken(
+    @RefreshToken() payload: JwtRefreshPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const token = this.tokenService.rotateToken(payload);
+
+    this.authCookieHelper.setTokenCookie(token, res);
+
+    return 'refresh access_token success';
+  }
+
+  @Post('logout')
+  logOut(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie(
+      this.configService.getOrThrow(JWT_COOKIE_KEY.ACCESS_TOKEN_KEY),
+      TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.ACCESS, true),
+    );
+    res.clearCookie(
+      this.configService.getOrThrow(JWT_COOKIE_KEY.REFRESH_TOKEN_KEY),
+      TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.REFRESH, true),
+    );
+
+    return 'logout success';
   }
 }
