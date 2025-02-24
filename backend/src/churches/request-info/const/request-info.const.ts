@@ -1,7 +1,3 @@
-import * as dotenv from 'dotenv';
-
-dotenv.config();
-
 export const REQUEST_CONSTANTS = {
   // DAILY_REQUEST_LIMITS: 20, //+process.env.DAILY_REQUEST_INFO_LIMITS, // 하루 초대 횟수
   // DAILY_RETRY_LIMITS: 3, //+process.env.DAILY_REQUEST_INFO_RETRY_LIMITS, // 재초대 횟수
