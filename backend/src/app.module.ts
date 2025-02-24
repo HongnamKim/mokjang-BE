@@ -40,6 +40,8 @@ import { DummyDataService } from './dummy-data.service';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
+        // 배포환경
+        NODE_ENV: Joi.string().required(),
         // DB
         DB_TYPE: Joi.string().valid('postgres').required(),
         DB_HOST: Joi.string().required(),
