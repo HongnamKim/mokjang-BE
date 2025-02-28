@@ -29,6 +29,10 @@ import { MinistryService } from './service/ministry/ministry.service';
 import { MinistryGroupService } from './service/ministry/ministry-group.service';
 import { MinistryGroupsController } from './controller/ministry/ministry-groups.controller';
 import { OfficersService } from './service/officer/officers.service';
+import { EducationSessionService } from './service/education/educaiton-session.service';
+import { EducationEnrollmentService } from './service/education/education-enrollment.service';
+import { EducationTermService } from './service/education/education-term.service';
+import { SessionAttendanceService } from './service/education/session-attendance.service';
 
 @Module({
   imports: [
@@ -73,6 +77,10 @@ import { OfficersService } from './service/officer/officers.service';
     GroupsService,
     GroupsRolesService,
     EducationsService,
+    EducationSessionService,
+    EducationEnrollmentService,
+    EducationTermService,
+    SessionAttendanceService,
     MinistryService,
     MinistryGroupService,
   ],

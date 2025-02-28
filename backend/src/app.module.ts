@@ -32,6 +32,7 @@ import { MinistryGroupModel } from './churches/management/entity/ministry/minist
 import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { DummyDataService } from './dummy-data.service';
 
 @Module({
   imports: [
@@ -39,6 +40,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
+        // 배포환경
+        NODE_ENV: Joi.string().required(),
         // DB
         DB_TYPE: Joi.string().valid('postgres').required(),
         DB_HOST: Joi.string().required(),
@@ -55,10 +58,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         PROTOCOL: Joi.string().required(),
         HOST: Joi.string().required(),
         PORT: Joi.number().required(),
+        CLIENT_HOST: Joi.string().required(),
+        CLIENT_PORT: Joi.number().required(),
         // 메시지 API
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
         FROM_NUMBER: Joi.string().required(),
+        BETA_TEST_TO_NUMBER: Joi.string().required(),
         //JWT
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_TEMP: Joi.string().required(),
@@ -139,6 +145,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    DummyDataService,
   ],
 })
 export class AppModule {}

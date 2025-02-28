@@ -3,9 +3,12 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GetHandlerGuard } from './common/guard/get-handler.guard';
+import { TypeOrmExceptionFilter } from './common/filter/typeorm-exception.filter';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser.default());
 
   // CORS 설정
   app.enableCors({
@@ -26,6 +29,8 @@ async function bootstrap() {
     }),
   );
 
+  app.useGlobalFilters(new TypeOrmExceptionFilter());
+
   app.useGlobalGuards(new GetHandlerGuard());
 
   // swagger 설정
@@ -33,8 +38,23 @@ async function bootstrap() {
     .setTitle('프로젝트 제목')
     .setDescription('프로젝트 설명')
     .setVersion('0.1')
-    .addBearerAuth()
+    /*.addSecurity('Temporal Token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'MJTT',
+    })
+    .addSecurity('Access Token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'MJAT',
+    })
+    .addSecurity('Refresh Token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'MJRT',
+    })*/
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 

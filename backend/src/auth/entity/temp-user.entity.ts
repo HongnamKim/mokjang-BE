@@ -1,8 +1,9 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Index } from 'typeorm';
 
 @Entity()
 export class TempUserModel extends BaseModel {
+  @Index()
   @Column()
   provider: string;
 

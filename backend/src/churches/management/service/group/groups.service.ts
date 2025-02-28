@@ -36,12 +36,18 @@ export class GroupsService {
     }
   }
 
-  private async isExistGroup(churchId: number, name: string, qr?: QueryRunner) {
+  private async isExistGroup(
+    churchId: number,
+    parentGroupId: number | undefined,
+    name: string,
+    qr?: QueryRunner,
+  ) {
     const groupsRepository = this.getGroupRepository(qr);
 
     const group = await groupsRepository.findOne({
       where: {
         churchId,
+        parentGroupId: parentGroupId ? parentGroupId : IsNull(),
         name,
       },
     });
@@ -157,14 +163,31 @@ export class GroupsService {
     return result;
   }
 
-  async postGroup(churchId: number, dto: CreateGroupDto, qr?: QueryRunner) {
+  async createGroup(churchId: number, dto: CreateGroupDto, qr: QueryRunner) {
     await this.checkChurchExist(churchId, qr);
 
-    if (await this.isExistGroup(churchId, dto.name, qr)) {
-      throw new BadRequestException(GroupExceptionMessage.ALREADY_EXIST);
-    }
-
     const groupsRepository = this.getGroupRepository(qr);
+
+    const existingGroup = await groupsRepository.findOne({
+      where: {
+        churchId,
+        parentGroupId: dto.parentGroupId ? dto.parentGroupId : IsNull(),
+        name: dto.name,
+      },
+      relations: {
+        members: true,
+        childGroups: true,
+      },
+      withDeleted: true,
+    });
+
+    if (existingGroup) {
+      if (!existingGroup.deletedAt) {
+        throw new BadRequestException(GroupExceptionMessage.ALREADY_EXIST);
+      }
+
+      await groupsRepository.remove(existingGroup);
+    }
 
     // 상위 그룹 지정 시
     if (dto.parentGroupId) {
@@ -216,12 +239,15 @@ export class GroupsService {
     churchId: number,
     groupId: number,
     dto: UpdateGroupDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     await this.checkChurchExist(churchId, qr);
 
     // 그룹 이름을 변경하는 경우 중복 확인
-    if (dto.name && (await this.isExistGroup(churchId, dto.name, qr))) {
+    if (
+      dto.name &&
+      (await this.isExistGroup(churchId, dto.parentGroupId, dto.name, qr))
+    ) {
       throw new BadRequestException(
         MANAGEMENT_EXCEPTION.GroupModel.ALREADY_EXIST,
       );
@@ -305,42 +331,14 @@ export class GroupsService {
     return await groupRepository.findOne({ where: { id: groupId } });
   }
 
-  async deleteGroup(
-    churchId: number,
-    groupId: number,
-    //cascade: boolean,
-    qr?: QueryRunner,
-  ) {
+  async deleteGroup(churchId: number, groupId: number, qr: QueryRunner) {
     await this.checkChurchExist(churchId);
 
     const groupsRepository = this.getGroupRepository(qr);
 
-    const deleteTarget = await groupsRepository.findOne({
-      where: { id: groupId },
-    });
+    const deleteTarget = await this.getGroupModelById(churchId, groupId, qr);
 
-    if (!deleteTarget) {
-      throw new NotFoundException(MANAGEMENT_EXCEPTION.GroupModel.NOT_FOUND);
-    }
-
-    if (
-      deleteTarget.childGroupIds.length > 0 ||
-      deleteTarget.membersCount !== 0
-    ) {
-      throw new BadRequestException(
-        GroupExceptionMessage.GROUP_HAS_DEPENDENCIES,
-      );
-    }
-
-    const result = await groupsRepository.softDelete({
-      id: groupId,
-      churchId,
-      deletedAt: IsNull(),
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(MANAGEMENT_EXCEPTION.GroupModel.NOT_FOUND);
-    }
+    await groupsRepository.softRemove(deleteTarget);
 
     await this.groupsRepository
       .createQueryBuilder(undefined, qr)
@@ -354,7 +352,7 @@ export class GroupsService {
       })
       .execute();
 
-    return 'ok';
+    return `groupId ${groupId} deleted`;
   }
 
   async getGroupsCascade(groupId: number, qr?: QueryRunner) {

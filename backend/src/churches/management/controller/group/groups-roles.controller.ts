@@ -7,14 +7,17 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CreateGroupRoleDto } from '../../dto/group/create-group-role.dto';
 import { UpdateGroupRoleDto } from '../../dto/group/update-group-role.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { GroupsRolesService } from '../../service/group/groups-roles.service';
+import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
 
 @ApiTags('Settings:Groups:Roles')
-// churches/{churchId}/settings
 @Controller('groups')
 export class GroupsRolesController {
   constructor(private readonly groupsRolesService: GroupsRolesService) {}
@@ -36,12 +39,14 @@ export class GroupsRolesController {
   }
 
   @Post(':groupId/role')
+  @UseInterceptors(TransactionInterceptor)
   postGroupRole(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
     @Body() dto: CreateGroupRoleDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.groupsRolesService.createGroupRole(churchId, groupId, dto);
+    return this.groupsRolesService.createGroupRole(churchId, groupId, dto, qr);
   }
 
   @Patch(':groupId/role/:roleId')

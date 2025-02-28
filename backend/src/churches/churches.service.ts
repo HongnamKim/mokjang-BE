@@ -9,6 +9,7 @@ import { QueryRunner, Repository } from 'typeorm';
 import { CreateChurchDto } from './dto/create-church.dto';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import { UpdateChurchDto } from './dto/update-church.dto';
+import { RequestLimitValidationType } from './request-info/types/request-limit-validation-result';
 
 @Injectable()
 export class ChurchesService {
@@ -26,7 +27,7 @@ export class ChurchesService {
   }
 
   async isChurchAdmin(churchId: number, memberId: number, qr?: QueryRunner) {
-    const church = await this.findChurchById(churchId, qr);
+    const church = await this.getChurchById(churchId, qr);
 
     const subAdminIds = church.subAdmins.map((subAdmin) => subAdmin.id);
 
@@ -40,12 +41,12 @@ export class ChurchesService {
     memberId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.findChurchById(churchId, qr);
+    const church = await this.getChurchById(churchId, qr);
 
     return church.mainAdmin.id === memberId;
   }
 
-  async findChurchById(id: number, qr?: QueryRunner) {
+  async getChurchById(id: number, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
 
     const church = await churchRepository.findOne({
@@ -53,9 +54,25 @@ export class ChurchesService {
         id,
       },
       relations: {
-        requestInfos: true,
+        //requestInfos: true,
         mainAdmin: true,
         subAdmins: true,
+      },
+    });
+
+    if (!church) {
+      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+    }
+
+    return church;
+  }
+
+  async getChurchModelById(churchId: number, qr?: QueryRunner) {
+    const churchRepository = this.getChurchRepository(qr);
+
+    const church = await churchRepository.findOne({
+      where: {
+        id: churchId,
       },
     });
 
@@ -127,6 +144,8 @@ export class ChurchesService {
     if (result.affected === 0) {
       throw new NotFoundException('');
     }
+
+    return this.getChurchById(churchId);
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {
@@ -135,10 +154,10 @@ export class ChurchesService {
     const result = await churchRepository.softDelete({ id });
 
     if (result.affected === 0) {
-      throw new NotFoundException('찾을 수 없습니다.');
+      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
     }
 
-    return true;
+    return `churchId: ${id} deleted`;
   }
 
   /**
@@ -151,7 +170,7 @@ export class ChurchesService {
 
     return churchRepository.update(
       { id: church.id },
-      { dailyRequestAttempts: 0 },
+      { dailyRequestAttempts: 1, lastRequestDate: new Date() },
     );
   }
 
@@ -162,7 +181,28 @@ export class ChurchesService {
       { id: church.id },
       {
         lastRequestDate: new Date(),
-        dailyRequestAttempts: church.dailyRequestAttempts + 1,
+        dailyRequestAttempts: () => 'dailyRequestAttempts + 1',
+      },
+    );
+  }
+
+  updateRequestAttempts(
+    church: ChurchModel,
+    validationResultType:
+      | RequestLimitValidationType.INIT
+      | RequestLimitValidationType.INCREASE,
+    qr: QueryRunner,
+  ) {
+    const churchRepository = this.getChurchRepository(qr);
+
+    return churchRepository.update(
+      { id: church.id },
+      {
+        lastRequestDate: new Date(),
+        dailyRequestAttempts:
+          validationResultType === RequestLimitValidationType.INCREASE
+            ? () => 'dailyRequestAttempts + 1'
+            : 1,
       },
     );
   }

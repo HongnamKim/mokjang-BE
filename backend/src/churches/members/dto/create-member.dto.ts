@@ -11,9 +11,11 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
+  MaxLength,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
-import { GenderEnum } from '../../enum/gender.enum';
+import { GenderEnum } from '../const/enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../enum/baptism.enum';
 import { FamilyRelation } from '../const/family-relation.const';
@@ -37,6 +39,10 @@ export class CreateMemberDto {
   @IsString()
   @TransformName()
   @IsNotEmpty()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
+  @MaxLength(30)
   name: string;
 
   @ApiProperty({
@@ -78,7 +84,7 @@ export class CreateMemberDto {
   @IsString()
   @IsIn(Object.values(FamilyRelation))
   @IsOptional()
-  relation?: string;
+  relation?: string = FamilyRelation.FAMILY;
 
   @ApiProperty({
     name: 'isLunar',
@@ -121,6 +127,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(50)
   address?: string;
 
   @ApiProperty({
@@ -132,6 +139,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(50)
   detailAddress?: string;
 
   @ApiProperty({
@@ -143,6 +151,7 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(15)
   homePhone?: string;
 
   @ApiProperty({
@@ -154,6 +163,10 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
+  @MaxLength(30)
   occupation?: string;
 
   @ApiProperty({
@@ -165,6 +178,10 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
+    message: '특수문자는 사용할 수 없습니다.',
+  })
+  @MaxLength(30)
   school?: string;
 
   @ApiProperty({
@@ -216,5 +233,6 @@ export class CreateMemberDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
+  @MaxLength(30)
   previousChurch?: string;
 }
