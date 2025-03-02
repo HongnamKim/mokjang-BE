@@ -16,8 +16,6 @@ import { EducationOrderEnum } from '../../const/education/order.enum';
 import { MembersService } from '../../../members/service/members.service';
 import { EducationEnrollmentModel } from '../../entity/education/education-enrollment.entity';
 import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
-import { UpdateAttendanceDto } from '../../dto/education/attendance/update-attendance.dto';
-import { GetAttendanceDto } from '../../dto/education/attendance/get-attendance.dto';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../../../members/events/member.event';
 
@@ -468,54 +466,6 @@ export class EducationsService {
     return `educationEnrollment: ${educationEnrollmentId} deleted`;
   }
 
-  async incrementIsDoneCount(educationTermId: number, qr: QueryRunner) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.increment(
-      { id: educationTermId },
-      'isDoneCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
-  }
-
-  async decrementIsDoneCount(educationTermId: number, qr: QueryRunner) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.decrement(
-      { id: educationTermId },
-      'isDoneCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
-  }
-
-  async incrementEnrollmentCount(educationTermId: number, qr: QueryRunner) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.increment(
-      { id: educationTermId },
-      'enrollmentCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
-  }
-
   async decrementEnrollmentCount(educationTermId: number, qr: QueryRunner) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
@@ -532,7 +482,55 @@ export class EducationsService {
     return result;
   }
 
-  async incrementEducationStatusCount(
+  /*async incrementIsDoneCount(educationTermId: number, qr: QueryRunner) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.increment(
+      { id: educationTermId },
+      'isDoneCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }*/
+
+  /*async decrementIsDoneCount(educationTermId: number, qr: QueryRunner) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.decrement(
+      { id: educationTermId },
+      'isDoneCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }*/
+
+  /*async incrementEnrollmentCount(educationTermId: number, qr: QueryRunner) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.increment(
+      { id: educationTermId },
+      'enrollmentCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }*/
+
+  /*async incrementEducationStatusCount(
     educationTermId: number,
     status: EducationStatus,
     qr: QueryRunner,
@@ -552,7 +550,7 @@ export class EducationsService {
     }
 
     return result;
-  }
+  }*/
 
   async decrementEducationStatusCount(
     educationTermId: number,
@@ -582,7 +580,7 @@ export class EducationsService {
       : this.sessionAttendanceRepository;
   }
 
-  async getSessionAttendance(
+  /*async getSessionAttendance(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -633,9 +631,9 @@ export class EducationsService {
       count: result.length,
       page: dto.page,
     };
-  }
+  }*/
 
-  async getSessionAttendanceModelById(
+  /*async getSessionAttendanceModelById(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -666,9 +664,9 @@ export class EducationsService {
     }
 
     return sessionAttendance;
-  }
+  }*/
 
-  async updateSessionAttendance(
+  /*async updateSessionAttendance(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -680,11 +678,11 @@ export class EducationsService {
     // 출석 업데이트 시 Enrollment 의 출석 횟수 변경
     // sessionAttendance, educationEnrollment 필요
 
-    /**
+    /!**
      * 업데이트 대상
      *  1. 출석 --> sessionAttendance, educationEnrollment 수정
      *  2. 비고 --> sessionAttendance 만 수정
-     */
+     *!/
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
     const sessionAttendance = await this.getSessionAttendanceModelById(
@@ -717,9 +715,9 @@ export class EducationsService {
         id: sessionAttendanceId,
       },
     });
-  }
+  }*/
 
-  private async updateAttendanceCount(
+  /*private async updateAttendanceCount(
     sessionAttendance: SessionAttendanceModel,
     qr: QueryRunner,
   ) {
@@ -748,7 +746,7 @@ export class EducationsService {
         attendanceCount: attendanceCount,
       },
     );
-  }
+  }*/
 
   /*async getEducationTerms(
     churchId: number,

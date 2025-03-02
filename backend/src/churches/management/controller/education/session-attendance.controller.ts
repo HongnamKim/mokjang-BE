@@ -22,13 +22,17 @@ import {
   ApiLoadSessionAttendance,
   ApiPatchSessionAttendance,
 } from '../../const/swagger/session-attendance/controller.swagger';
+import { SessionAttendanceService } from '../../service/education/session-attendance.service';
 
 @ApiTags('Management:Educations:Attendance')
 @Controller(
   'educations/:educationId/terms/:educationTermId/sessions/:sessionId/attendance',
 )
 export class SessionAttendanceController {
-  constructor(private readonly educationsService: EducationsService) {}
+  constructor(
+    private readonly educationsService: EducationsService,
+    private readonly sessionAttendanceService: SessionAttendanceService,
+  ) {}
 
   @ApiGetSessionAttendance()
   @Get()
@@ -39,13 +43,20 @@ export class SessionAttendanceController {
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Query() dto: GetAttendanceDto,
   ) {
-    return this.educationsService.getSessionAttendance(
+    return this.sessionAttendanceService.getSessionAttendance(
       churchId,
       educationId,
       educationTermId,
       sessionId,
       dto,
     );
+    /*return this.educationsService.getSessionAttendance(
+      churchId,
+      educationId,
+      educationTermId,
+      sessionId,
+      dto,
+    );*/
   }
 
   @ApiLoadSessionAttendance()
@@ -78,7 +89,7 @@ export class SessionAttendanceController {
     @Body() dto: UpdateAttendanceDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.updateSessionAttendance(
+    return this.sessionAttendanceService.updateSessionAttendance(
       churchId,
       educationId,
       educationTermId,
@@ -87,5 +98,14 @@ export class SessionAttendanceController {
       dto,
       qr,
     );
+    /*return this.educationsService.updateSessionAttendance(
+      churchId,
+      educationId,
+      educationTermId,
+      sessionId,
+      attendanceId,
+      dto,
+      qr,
+    );*/
   }
 }
