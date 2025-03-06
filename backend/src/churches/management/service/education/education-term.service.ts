@@ -9,70 +9,28 @@ import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
 import { GetEducationTermDto } from '../../dto/education/terms/get-education-term.dto';
 import { EducationTermOrderEnum } from '../../const/education/order.enum';
 import { CreateEducationTermDto } from '../../dto/education/terms/create-education-term.dto';
-import { EducationException } from '../../const/exception/education/education.exception';
-import { EducationModel } from '../../entity/education/education.entity';
 import { MembersService } from '../../../members/service/members.service';
 import { UpdateEducationTermDto } from '../../dto/education/terms/update-education-term.dto';
-import { EducationSessionModel } from '../../entity/education/education-session.entity';
-import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
+import { EducationTermSyncService } from '../education-sync/education-term-sync.service';
+import { EducationTermSessionSyncService } from '../education-sync/education-term-session-sync.service';
+import { EducationTermAttendanceSyncService } from '../education-sync/education-term-attendance-sync.service';
 
 @Injectable()
 export class EducationTermService {
   constructor(
     private readonly membersService: MembersService,
-    @InjectRepository(EducationModel)
-    private readonly educationsRepository: Repository<EducationModel>,
+    private readonly educationTermSyncService: EducationTermSyncService,
+    private readonly educationTermSessionSyncService: EducationTermSessionSyncService,
+    private readonly educationTermAttendanceSyncService: EducationTermAttendanceSyncService,
+
     @InjectRepository(EducationTermModel)
     private readonly educationTermsRepository: Repository<EducationTermModel>,
-    @InjectRepository(EducationSessionModel)
-    private readonly educationSessionsRepository: Repository<EducationSessionModel>,
-    @InjectRepository(SessionAttendanceModel)
-    private readonly sessionAttendanceRepository: Repository<SessionAttendanceModel>,
   ) {}
-
-  private getEducationsRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(EducationModel)
-      : this.educationsRepository;
-  }
 
   private getEducationTermsRepository(qr?: QueryRunner) {
     return qr
       ? qr.manager.getRepository(EducationTermModel)
       : this.educationTermsRepository;
-  }
-
-  private getEducationSessionsRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(EducationSessionModel)
-      : this.educationSessionsRepository;
-  }
-
-  private getSessionAttendanceRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(SessionAttendanceModel)
-      : this.sessionAttendanceRepository;
-  }
-
-  private async getEducationModelById(
-    churchId: number,
-    educationId: number,
-    qr?: QueryRunner,
-  ) {
-    const educationsRepository = this.getEducationsRepository(qr);
-
-    const education = await educationsRepository.findOne({
-      where: {
-        id: educationId,
-        churchId,
-      },
-    });
-
-    if (!education) {
-      throw new NotFoundException(EducationException.NOT_FOUND);
-    }
-
-    return education;
   }
 
   async getEducationTerms(
@@ -212,21 +170,6 @@ export class EducationTermService {
     return !!educationTerm;
   }
 
-  async createEducationSessions(
-    educationTermId: number,
-    numberOfSessions: number,
-    qr: QueryRunner,
-  ) {
-    const educationSessionsRepository = this.getEducationSessionsRepository(qr);
-
-    await educationSessionsRepository.save(
-      Array.from({ length: numberOfSessions }, (_, i) => ({
-        session: i + 1,
-        educationTermId: educationTermId,
-      })),
-    );
-  }
-
   async createEducationTerm(
     churchId: number,
     educationId: number,
@@ -235,7 +178,7 @@ export class EducationTermService {
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
-    const education = await this.getEducationModelById(
+    const education = await this.educationTermSyncService.getEducationModelById(
       churchId,
       educationId,
       qr,
@@ -272,7 +215,7 @@ export class EducationTermService {
     });
 
     // 회차에 맞게 EducationSession 생성
-    await this.createEducationSessions(
+    await this.educationTermSessionSyncService.createEducationSessions(
       educationTerm.id,
       educationTerm.numberOfSessions,
       qr,
@@ -403,22 +346,13 @@ export class EducationTermService {
       dto.numberOfSessions &&
       dto.numberOfSessions > educationTerm.educationSessions.length
     ) {
-      const educationSessionsRepository =
-        this.getEducationSessionsRepository(qr);
-
       // dto: 8, term: 5 --> session 6, 7, 8 생성
-      const newSessions = await educationSessionsRepository.save(
-        Array.from(
-          {
-            length:
-              dto.numberOfSessions - educationTerm.educationSessions.length,
-          },
-          (_, index) => ({
-            educationTermId,
-            session: educationTerm.educationSessions.length + index + 1,
-          }),
-        ),
-      );
+      const newSessions =
+        await this.educationTermSessionSyncService.createAdditionalSessions(
+          educationTerm,
+          dto,
+          qr,
+        );
 
       // 증가된 세션에 대한 출석 정보 생성
       const newSessionIds = newSessions.map((newSession) => newSession.id);
@@ -426,17 +360,11 @@ export class EducationTermService {
         (enrollment) => enrollment.id,
       );
 
-      const sessionAttendanceRepository =
-        this.getSessionAttendanceRepository(qr);
-
-      const attendances = newSessionIds.flatMap((sessionId) =>
-        enrollmentIds.map((enrollmentId) => ({
-          educationSessionId: sessionId,
-          educationEnrollmentId: enrollmentId,
-        })),
+      await this.educationTermAttendanceSyncService.createAdditionalSessionAttendance(
+        newSessionIds,
+        enrollmentIds,
+        qr,
       );
-
-      await sessionAttendanceRepository.save(attendances);
     }
 
     await educationTermsRepository.update(
@@ -477,89 +405,11 @@ export class EducationTermService {
     educationTermId: number,
     qr: QueryRunner,
   ) {
-    type AttendanceKey = {
-      educationSessionId: number;
-      educationEnrollmentId: number;
-    };
-
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const [currentSessionAttendances, educationTerm] = await Promise.all([
-      sessionAttendanceRepository.find({
-        where: {
-          educationSession: {
-            educationTermId,
-          },
-        },
-        order: {
-          educationEnrollmentId: 'asc',
-          educationSessionId: 'asc',
-        },
-        select: {
-          educationSessionId: true,
-          educationEnrollmentId: true,
-        },
-      }),
-
-      educationTermsRepository.findOne({
-        where: {
-          id: educationTermId,
-          educationId,
-          education: {
-            churchId,
-          },
-        },
-        relations: {
-          educationSessions: true,
-          educationEnrollments: true,
-        },
-        select: {
-          educationSessions: {
-            id: true,
-          },
-          educationEnrollments: {
-            id: true,
-          },
-        },
-      }),
-    ]);
-
-    if (!educationTerm) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    const totalExpectedAttendances =
-      educationTerm.educationEnrollments.length *
-      educationTerm.educationSessions.length;
-
-    if (currentSessionAttendances.length === totalExpectedAttendances) {
-      throw new BadRequestException('모든 출석 정보가 이미 존재합니다.');
-    }
-
-    const createAttendanceKey = (attendance: AttendanceKey) =>
-      `${attendance.educationSessionId}-${attendance.educationEnrollmentId}`;
-
-    const currentAttendancesMap = new Set(
-      currentSessionAttendances.map(createAttendanceKey),
+    return this.educationTermAttendanceSyncService.syncSessionAttendances(
+      churchId,
+      educationId,
+      educationTermId,
+      qr,
     );
-
-    const missingAttendances = educationTerm.educationEnrollments
-      .flatMap((enrollment) =>
-        educationTerm.educationSessions.map((session) => ({
-          educationSessionId: session.id,
-          educationEnrollmentId: enrollment.id,
-        })),
-      )
-      .filter(
-        (attendance) =>
-          !currentAttendancesMap.has(createAttendanceKey(attendance)),
-      );
-
-    if (missingAttendances.length > 0) {
-      return sessionAttendanceRepository.save(missingAttendances);
-    }
-
-    return [];
   }
 }

@@ -11,44 +11,24 @@ import { EducationEnrollmentOrderEnum } from '../../const/education/order.enum';
 import { CreateEducationEnrollmentDto } from '../../dto/education/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../../dto/education/enrollments/update-education-enrollment.dto';
 import { MembersService } from '../../../members/service/members.service';
-import { EducationTermModel } from '../../entity/education/education-term.entity';
-import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
-import { EducationStatus } from '../../const/education/education-status.enum';
+import { EducationTermEnrollmentSyncService } from '../education-sync/education-term-enrollment-sync.service';
+import { EducationEnrollmentAttendanceSyncService } from '../education-sync/education-enrollment-attendance-sync.service';
 
 @Injectable()
 export class EducationEnrollmentService {
   constructor(
-    @InjectRepository(EducationTermModel)
-    private readonly educationTermsRepository: Repository<EducationTermModel>,
     @InjectRepository(EducationEnrollmentModel)
     private readonly educationEnrollmentsRepository: Repository<EducationEnrollmentModel>,
-    @InjectRepository(SessionAttendanceModel)
-    private readonly sessionAttendancesRepository: Repository<SessionAttendanceModel>,
-    private readonly membersService: MembersService,
-  ) {}
 
-  private CountColumnMap = {
-    [EducationStatus.IN_PROGRESS]: 'inProgressCount',
-    [EducationStatus.COMPLETED]: 'completedCount',
-    [EducationStatus.INCOMPLETE]: 'incompleteCount',
-  };
+    private readonly membersService: MembersService,
+    private readonly educationTermEnrollmentSyncService: EducationTermEnrollmentSyncService,
+    private readonly educationEnrollmentAttendanceSyncService: EducationEnrollmentAttendanceSyncService,
+  ) {}
 
   private getEducationEnrollmentsRepository(qr?: QueryRunner) {
     return qr
       ? qr.manager.getRepository(EducationEnrollmentModel)
       : this.educationEnrollmentsRepository;
-  }
-
-  private getSessionAttendanceRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(SessionAttendanceModel)
-      : this.sessionAttendancesRepository;
-  }
-
-  private getEducationTermsRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(EducationTermModel)
-      : this.educationTermsRepository;
   }
 
   async getEducationEnrollments(
@@ -108,6 +88,31 @@ export class EducationEnrollmentService {
       count: result.length,
       page: dto.page,
     };
+  }
+
+  async getMemberEducationEnrollments(
+    memberId: number,
+    churchId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    const enrollments = await educationEnrollmentsRepository.find({
+      where: {
+        memberId,
+        educationTerm: {
+          education: {
+            churchId,
+          },
+        },
+      },
+      relations: {
+        educationTerm: true,
+      },
+    });
+
+    return enrollments;
   }
 
   async getEducationEnrollmentModelById(
@@ -196,31 +201,15 @@ export class EducationEnrollmentService {
     );
 
     const [educationTerm, isExistEnrollment] = await Promise.all([
-      this.educationTermsRepository.findOne({
-        where: {
-          id: educationTermId,
-          educationId,
-          education: {
-            churchId,
-          },
-        },
-        relations: {
-          //instructor: true,
-          educationSessions: true,
-        },
-      }),
-      /*this.getEducationTermModelById(
+      this.educationTermEnrollmentSyncService.getEducationTermModelById(
         churchId,
         educationId,
         educationTermId,
         qr,
-      ),*/
+      ),
+
       this.isExistEnrollment(educationTermId, member.id, qr),
     ]);
-
-    if (!educationTerm) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
 
     if (isExistEnrollment) {
       throw new BadRequestException('이미 교육 대상자로 등록된 교인입니다.');
@@ -239,19 +228,24 @@ export class EducationEnrollmentService {
       (session) => session.id,
     );
 
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
-
     // 수강 대상 교인 수 증가 + 세션의 출석 정보 생성
     await Promise.all([
-      this.incrementEnrollmentCount(educationTermId, qr),
-      this.incrementEducationStatusCount(educationTermId, dto.status, qr),
-      sessionAttendanceRepository.save(
-        educationSessionIds.map((sessionSessionId) => {
-          return {
-            educationSessionId: sessionSessionId,
-            educationEnrollmentId: enrollment.id,
-          };
-        }),
+      // 교육 수강자 수 증가
+      this.educationTermEnrollmentSyncService.incrementEnrollmentCount(
+        educationTermId,
+        qr,
+      ),
+      // 교육 수강자 상태 통계값 업데이트
+      this.educationTermEnrollmentSyncService.incrementEducationStatusCount(
+        educationTermId,
+        dto.status,
+        qr,
+      ),
+      // 수강자의 출석 정보 생성
+      this.educationEnrollmentAttendanceSyncService.createSessionAttendanceForNewEnrollment(
+        enrollment,
+        educationSessionIds,
+        qr,
       ),
     ]);
 
@@ -267,44 +261,6 @@ export class EducationEnrollmentService {
         },
       },
     });
-  }
-
-  async incrementEnrollmentCount(educationTermId: number, qr: QueryRunner) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.increment(
-      { id: educationTermId },
-      'enrollmentCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
-  }
-
-  async incrementEducationStatusCount(
-    educationTermId: number,
-    status: EducationStatus,
-    qr: QueryRunner,
-  ) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.increment(
-      {
-        id: educationTermId,
-      },
-      this.CountColumnMap[status],
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
   }
 
   async updateEducationEnrollment(
@@ -331,13 +287,17 @@ export class EducationEnrollmentService {
     if (dto.status && dto.status !== targetEducationEnrollment.status) {
       await Promise.all([
         // 기존 status 감소
-        this.decrementEducationStatusCount(
+        this.educationTermEnrollmentSyncService.decrementEducationStatusCount(
           educationTermId,
           targetEducationEnrollment.status,
           qr,
         ),
         // 새 status 증가
-        this.incrementEducationStatusCount(educationTermId, dto.status, qr),
+        this.educationTermEnrollmentSyncService.incrementEducationStatusCount(
+          educationTermId,
+          dto.status,
+          qr,
+        ),
       ]);
     }
 
@@ -365,28 +325,6 @@ export class EducationEnrollmentService {
         },
       },
     });
-  }
-
-  async decrementEducationStatusCount(
-    educationTermId: number,
-    status: EducationStatus,
-    qr: QueryRunner,
-  ) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.decrement(
-      {
-        id: educationTermId,
-      },
-      this.CountColumnMap[status],
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
   }
 
   async deleteEducationEnrollment(
@@ -426,9 +364,12 @@ export class EducationEnrollmentService {
       // 교인 - 교육 관계 해제
       this.membersService.endMemberEducation(member, educationEnrollmentId, qr),
       // 등록 인원 감소
-      this.decrementEnrollmentCount(educationTermId, qr),
+      this.educationTermEnrollmentSyncService.decrementEnrollmentCount(
+        educationTermId,
+        qr,
+      ),
       // 상태별 카운트 감소
-      this.decrementEducationStatusCount(
+      this.educationTermEnrollmentSyncService.decrementEducationStatusCount(
         educationTermId,
         targetEnrollment.status,
         qr,
@@ -439,27 +380,12 @@ export class EducationEnrollmentService {
         educationTermId,
       }),
       // 출석 정보 삭제
-      this.getSessionAttendanceRepository(qr).softDelete({
+      this.educationEnrollmentAttendanceSyncService.deleteSessionAttendanceByEnrollmentDeletion(
         educationEnrollmentId,
-      }),
+        qr,
+      ),
     ]);
 
     return `educationEnrollment: ${educationEnrollmentId} deleted`;
-  }
-
-  async decrementEnrollmentCount(educationTermId: number, qr: QueryRunner) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
-
-    const result = await educationTermsRepository.decrement(
-      { id: educationTermId },
-      'enrollmentCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
-
-    return result;
   }
 }

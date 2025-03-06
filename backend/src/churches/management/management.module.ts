@@ -33,6 +33,12 @@ import { EducationSessionService } from './service/education/educaiton-session.s
 import { EducationEnrollmentService } from './service/education/education-enrollment.service';
 import { EducationTermService } from './service/education/education-term.service';
 import { SessionAttendanceService } from './service/education/session-attendance.service';
+import { EducationTermSyncService } from './service/education-sync/education-term-sync.service';
+import { EducationTermSessionSyncService } from './service/education-sync/education-term-session-sync.service';
+import { EducationTermAttendanceSyncService } from './service/education-sync/education-term-attendance-sync.service';
+import { EducationTermEnrollmentSyncService } from './service/education-sync/education-term-enrollment-sync.service';
+import { EducationEnrollmentAttendanceSyncService } from './service/education-sync/education-enrollment-attendance-sync.service';
+import { EducationEnrollmentSessionSyncService } from './service/education-sync/education-enrollment-session-sync.service';
 
 @Module({
   imports: [
@@ -81,6 +87,12 @@ import { SessionAttendanceService } from './service/education/session-attendance
     EducationEnrollmentService,
     EducationTermService,
     SessionAttendanceService,
+    EducationTermSyncService,
+    EducationTermSessionSyncService,
+    EducationTermAttendanceSyncService,
+    EducationTermEnrollmentSyncService,
+    EducationEnrollmentAttendanceSyncService,
+    EducationEnrollmentSessionSyncService,
     MinistryService,
     MinistryGroupService,
   ],
@@ -90,6 +102,10 @@ import { SessionAttendanceService } from './service/education/session-attendance
     GroupsService,
     GroupsRolesService,
     EducationsService,
+    //EducationSessionService,
+    EducationEnrollmentService,
+    //EducationTermService,
+    //SessionAttendanceService,
     OfficersService,
   ],
 })

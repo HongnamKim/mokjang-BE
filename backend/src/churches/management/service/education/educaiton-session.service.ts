@@ -1,23 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationSessionModel } from '../../entity/education/education-session.entity';
-import { In, MoreThan, QueryRunner, Repository } from 'typeorm';
-import { EducationTermModel } from '../../entity/education/education-term.entity';
-import { EducationEnrollmentModel } from '../../entity/education/education-enrollment.entity';
+import { MoreThan, QueryRunner, Repository } from 'typeorm';
 import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
 import { UpdateEducationSessionDto } from '../../dto/education/sessions/update-education-session.dto';
+import { EducationTermSessionSyncService } from '../education-sync/education-term-session-sync.service';
+import { EducationEnrollmentSessionSyncService } from '../education-sync/education-enrollment-session-sync.service';
 
 @Injectable()
 export class EducationSessionService {
   constructor(
     @InjectRepository(EducationSessionModel)
     private readonly educationSessionsRepository: Repository<EducationSessionModel>,
-    @InjectRepository(EducationTermModel)
-    private readonly educationTermsRepository: Repository<EducationTermModel>,
-    @InjectRepository(EducationEnrollmentModel)
-    private readonly educationEnrollmentsRepository: Repository<EducationEnrollmentModel>,
+    /*@InjectRepository(EducationTermModel)
+    private readonly educationTermsRepository: Repository<EducationTermModel>,*/
+    /*@InjectRepository(EducationEnrollmentModel)
+    private readonly educationEnrollmentsRepository: Repository<EducationEnrollmentModel>,*/
     @InjectRepository(SessionAttendanceModel)
     private readonly sessionAttendanceRepository: Repository<SessionAttendanceModel>,
+
+    private readonly educationTermSessionSyncService: EducationTermSessionSyncService,
+    private readonly educationEnrollmentSessionSyncService: EducationEnrollmentSessionSyncService,
   ) {}
 
   private getEducationSessionsRepository(qr?: QueryRunner) {
@@ -26,17 +29,17 @@ export class EducationSessionService {
       : this.educationSessionsRepository;
   }
 
-  private getEducationTermsRepository(qr?: QueryRunner) {
+  /*private getEducationTermsRepository(qr?: QueryRunner) {
     return qr
       ? qr.manager.getRepository(EducationTermModel)
       : this.educationTermsRepository;
-  }
+  }*/
 
-  private getEducationEnrollmentsRepository(qr?: QueryRunner) {
+  /*private getEducationEnrollmentsRepository(qr?: QueryRunner) {
     return qr
       ? qr.manager.getRepository(EducationEnrollmentModel)
       : this.educationEnrollmentsRepository;
-  }
+  }*/
 
   private getSessionAttendanceRepository(qr?: QueryRunner) {
     return qr
@@ -102,10 +105,17 @@ export class EducationSessionService {
     educationTermId: number,
     qr: QueryRunner,
   ) {
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    //const educationTermsRepository = this.getEducationTermsRepository(qr);
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
 
-    const educationTerm = await educationTermsRepository.findOne({
+    const educationTerm =
+      await this.educationTermSessionSyncService.getEducationTermModelById(
+        educationId,
+        educationTermId,
+        qr,
+      );
+
+    /*const educationTerm = await educationTermsRepository.findOne({
       where: {
         id: educationTermId,
         educationId,
@@ -117,7 +127,7 @@ export class EducationSessionService {
 
     if (!educationTerm) {
       throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
-    }
+    }*/
 
     const lastSession = await educationSessionsRepository.findOne({
       where: {
@@ -138,11 +148,15 @@ export class EducationSessionService {
 
     await Promise.all([
       // 교육 세션 개수 업데이트
-      educationTermsRepository.increment(
+      this.educationTermSessionSyncService.incrementNumberOfSessions(
+        educationTermId,
+        qr,
+      ),
+      /*educationTermsRepository.increment(
         { id: educationTermId },
         'numberOfSessions',
         1,
-      ),
+      ),*/
       // 세션 출석 정보 생성
       this.getSessionAttendanceRepository(qr).save(
         educationTerm.educationEnrollments.map((enrollment) => ({
@@ -170,7 +184,7 @@ export class EducationSessionService {
     qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    //const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const targetSession = await this.getEducationSessionById(
       churchId,
@@ -189,18 +203,26 @@ export class EducationSessionService {
       if (dto.isDone) {
         //console.log('isDoneCount 증가');
         //await this.incrementIsDoneCount(educationTermId, qr);
-        await educationTermsRepository.increment(
+        /*await educationTermsRepository.increment(
           { id: educationTermId },
           'isDoneCount',
           1,
+        );*/
+        await this.educationTermSessionSyncService.increaseDoneCount(
+          educationTermId,
+          qr,
         );
       } else if (!dto.isDone) {
         //console.log('isDoneCount 감소');
         //await this.decrementIsDoneCount(educationTermId, qr);
-        await educationTermsRepository.decrement(
+        /*await educationTermsRepository.decrement(
           { id: educationTermId },
           'isDoneCount',
           1,
+        );*/
+        await this.educationTermSessionSyncService.decreaseDoneCount(
+          educationTermId,
+          qr,
         );
       }
     }
@@ -254,7 +276,7 @@ export class EducationSessionService {
       educationTermId,
     });
 
-    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    //const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     // 다른 회차들 session 번호 수정
     await educationSessionsRepository.decrement(
@@ -264,18 +286,26 @@ export class EducationSessionService {
     );
 
     // 해당 기수의 세션 개수 업데이트
-    await educationTermsRepository.decrement(
+    await this.educationTermSessionSyncService.decreaseSessionCount(
+      educationTermId,
+      qr,
+    );
+    /*await educationTermsRepository.decrement(
       { id: educationTermId },
       'numberOfSessions',
       1,
-    );
+    );*/
 
     if (targetSession.isDone) {
-      await educationTermsRepository.decrement(
+      await this.educationTermSessionSyncService.decreaseDoneCount(
+        educationTermId,
+        qr,
+      );
+      /*await educationTermsRepository.decrement(
         { id: educationTermId },
         'isDoneCount',
         1,
-      );
+      );*/
       //await this.decrementIsDoneCount(educationTermId, qr);
     }
 
@@ -298,6 +328,12 @@ export class EducationSessionService {
       educationSessionId: educationSessionId,
     });
 
+    await this.educationEnrollmentSessionSyncService.decreaseAttendanceCount(
+      attendedEnrollmentIds,
+      qr,
+    );
+
+    /*
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
@@ -305,7 +341,7 @@ export class EducationSessionService {
       { id: In(attendedEnrollmentIds) },
       'attendanceCount',
       1,
-    );
+    );*/
 
     return `educationSessionId: ${educationSessionId} deleted`;
   }
