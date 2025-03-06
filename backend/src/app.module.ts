@@ -33,6 +33,7 @@ import { MinistryHistoryModel } from './churches/members-management/entity/minis
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
+import { MemberEventHandler } from './member-event.handler';
 
 @Module({
   imports: [
@@ -140,6 +141,7 @@ import { DummyDataService } from './dummy-data.service';
   ],
   controllers: [AppController],
   providers: [
+    MemberEventHandler,
     AppService,
     {
       provide: APP_INTERCEPTOR,
