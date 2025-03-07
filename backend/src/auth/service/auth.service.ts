@@ -16,7 +16,7 @@ import {
   SignInException,
   VerifyException,
 } from '../const/exception-message/exception.message';
-import { MESSAGE_SERVICE, VERIFICATION } from '../const/env.const';
+//import { VERIFICATION } from '../const/env.const';
 import { JwtTemporalPayload } from '../type/jwt';
 import { TestEnvironment } from '../const/enum/test-environment.enum';
 import {
@@ -27,6 +27,7 @@ import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UserService } from './user.service';
 import { TempUserService } from './temp-user.service';
 import { UpdateTempUserDto } from '../dto/user/update-temp-user.dto';
+import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 
 @Injectable()
 export class AuthService {
@@ -98,7 +99,7 @@ export class AuthService {
 
     // 하루 요청 횟수 제한 검증
     const requestLimits = this.configService.getOrThrow<number>(
-      VERIFICATION.DAILY_VERIFY_REQUEST_LIMITS,
+      ENV_VARIABLE_KEY.DAILY_VERIFY_REQUEST_LIMITS,
     );
 
     // 마지막 요청 날짜가 지난 경우, 요청 횟수 초기화
@@ -118,7 +119,7 @@ export class AuthService {
     }
 
     const digit = this.configService.getOrThrow<number>(
-      VERIFICATION.VERIFY_CODE_LENGTH,
+      ENV_VARIABLE_KEY.VERIFY_CODE_LENGTH,
     );
 
     const code = Math.floor(Math.random() * 10 ** digit)
@@ -152,7 +153,7 @@ export class AuthService {
       return Promise.all([
         // 관리자에게 전송
         this.messagesService.sendVerificationCode(
-          this.configService.getOrThrow(MESSAGE_SERVICE.BETA_TEST_TO_NUMBER),
+          this.configService.getOrThrow(ENV_VARIABLE_KEY.BETA_TEST_TO_NUMBER),
           message,
         ),
         // 사용자에게 전송
@@ -168,7 +169,7 @@ export class AuthService {
 
   private getCodeExpiresAt() {
     const expiresMinutes = this.configService.getOrThrow<number>(
-      VERIFICATION.VERIFY_EXPIRES_MINUTES,
+      ENV_VARIABLE_KEY.VERIFY_EXPIRES_MINUTES,
     );
 
     const now = new Date();
@@ -200,7 +201,7 @@ export class AuthService {
 
   private validateVerificationAttempts(tempUser: TempUserModel) {
     const verificationLimits = this.configService.getOrThrow<number>(
-      VERIFICATION.VERIFY_LIMITS,
+      ENV_VARIABLE_KEY.VERIFY_LIMITS,
     );
 
     if (tempUser.isVerified) {

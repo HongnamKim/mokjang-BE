@@ -1,4 +1,9 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -33,6 +38,7 @@ import { MinistryHistoryModel } from './churches/members-management/entity/minis
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
+import { AccessTokenMiddleware } from './auth/middleware/access-token-middleware.service';
 
 @Module({
   imports: [
@@ -148,4 +154,8 @@ import { DummyDataService } from './dummy-data.service';
     DummyDataService,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): any {
+    consumer.apply(AccessTokenMiddleware).exclude('/auth/*').forRoutes('*');
+  }
+}

@@ -34,6 +34,6 @@ import { AuthCookieHelper } from './helper/auth-cookie.helper';
     TempUserService,
     AuthCookieHelper,
   ],
-  exports: [TokenService],
+  exports: [TokenService, JwtModule],
 })
 export class AuthModule {}

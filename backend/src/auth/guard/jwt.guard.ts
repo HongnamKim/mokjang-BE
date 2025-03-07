@@ -7,33 +7,9 @@ import {
 import { AuthType } from '../const/enum/auth-type.enum';
 import { TokenService } from '../service/token.service';
 import { AuthException } from '../const/exception-message/exception.message';
-import { TOKEN_HEADER } from '../const/token-header.const';
 import { Observable } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { JWT_COOKIE_KEY } from '../const/env.const';
-
-export class JwtGuard implements CanActivate {
-  constructor(
-    protected readonly tokenService: TokenService,
-    protected configService: ConfigService,
-  ) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest();
-
-    const rawToken = req.headers[TOKEN_HEADER];
-
-    if (!rawToken) {
-      throw new UnauthorizedException(AuthException.TOKEN_REQUIRED);
-    }
-
-    const token = this.tokenService.extractToken(rawToken);
-
-    req.tokenPayload = this.tokenService.verifyToken(token);
-
-    return true;
-  }
-}
+import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 
 @Injectable()
 export class TemporalTokenGuardV2 implements CanActivate {
@@ -46,7 +22,7 @@ export class TemporalTokenGuardV2 implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const req = context.switchToHttp().getRequest();
     const tokenCookieKey = this.configService.getOrThrow(
-      JWT_COOKIE_KEY.TEMPORAL_TOKEN_KEY,
+      ENV_VARIABLE_KEY.TEMPORAL_TOKEN_KEY,
     );
 
     const rawTemporalToken = req.cookies[tokenCookieKey];
@@ -83,7 +59,7 @@ export class AccessTokenGuardV2 implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const req = context.switchToHttp().getRequest();
     const tokenCookieKey = this.configService.getOrThrow(
-      JWT_COOKIE_KEY.ACCESS_TOKEN_KEY,
+      ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY,
     );
     const rawAccessToken = req.cookies[tokenCookieKey];
 
@@ -119,7 +95,7 @@ export class RefreshTokenGuardV2 implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const req = context.switchToHttp().getRequest();
     const tokenCookieKey = this.configService.getOrThrow(
-      JWT_COOKIE_KEY.REFRESH_TOKEN_KEY,
+      ENV_VARIABLE_KEY.REFRESH_TOKEN_KEY,
     );
     const rawRefreshToken = req.cookies[tokenCookieKey];
 
