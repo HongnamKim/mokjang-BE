@@ -29,7 +29,7 @@ export const OAuthRedirect = (provider: string) => {
 };
 
 export const OAuthUser = createParamDecorator(
-  (data, context: ExecutionContext) => {
+  (_, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();
 
     if (!req.user) {

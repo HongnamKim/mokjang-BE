@@ -6,7 +6,8 @@ import { JwtExpiresConst } from '../const/jwt-expires.const';
 import { ConfigService } from '@nestjs/config';
 import ms from 'ms';
 import { AuthException } from '../const/exception-message/exception.message';
-import { JWT } from '../const/env.const';
+import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
+//import { JWT } from '../const/env.const';
 
 @Injectable()
 export class TokenService {
@@ -26,7 +27,9 @@ export class TokenService {
       1000;
 
     return this.jwtService.sign(payload, {
-      secret: this.configService.getOrThrow<string>(JWT.JWT_SECRET),
+      secret: this.configService.getOrThrow<string>(
+        ENV_VARIABLE_KEY.JWT_SECRET,
+      ),
       expiresIn,
     });
   }
@@ -53,7 +56,9 @@ export class TokenService {
   verifyToken(token: string) {
     try {
       return this.jwtService.verify(token, {
-        secret: this.configService.getOrThrow<string>(JWT.JWT_SECRET),
+        secret: this.configService.getOrThrow<string>(
+          ENV_VARIABLE_KEY.JWT_SECRET,
+        ),
       });
     } catch (error) {
       if (error instanceof TokenExpiredError) {

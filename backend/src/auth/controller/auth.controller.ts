@@ -26,7 +26,7 @@ import {
   OAuthLogin,
   OAuthRedirect,
   OAuthUser,
-} from '../decorator/auth.decorator';
+} from '../decorator/oauth.decorator';
 import {
   ApiRequestVerificationCode,
   ApiRotateToken,
@@ -37,10 +37,10 @@ import {
 } from '../const/swagger/auth/controller.swagger';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { JWT_COOKIE_KEY, NODE_ENV } from '../const/env.const';
 import { TOKEN_COOKIE_OPTIONS } from '../const/token-cookie-option.const';
 import { AuthType } from '../const/enum/auth-type.enum';
 import { AuthCookieHelper } from '../helper/auth-cookie.helper';
+import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -52,7 +52,7 @@ export class AuthController {
     private readonly authCookieHelper: AuthCookieHelper,
   ) {}
 
-  private NODE_ENV = this.configService.getOrThrow(NODE_ENV);
+  private NODE_ENV = this.configService.getOrThrow(ENV_VARIABLE_KEY.NODE_ENV);
 
   @ApiTestAuth()
   @Get('test/sign-in')
@@ -72,6 +72,8 @@ export class AuthController {
 
   @Get('cookie-test')
   cookieTest(@Req() req: Request) {
+    console.log(req.user);
+
     return req.cookies;
   }
 
@@ -89,7 +91,7 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
-    return this.authCookieHelper.handleLoginResult(loginResult, res, false);
+    return this.authCookieHelper.handleLoginResult(loginResult, res);
   }
 
   @ApiSSO('네이버')
@@ -106,7 +108,7 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
-    return this.authCookieHelper.handleLoginResult(loginResult, res, false);
+    return this.authCookieHelper.handleLoginResult(loginResult, res);
   }
 
   @ApiSSO('카카오')
@@ -123,7 +125,7 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
-    return this.authCookieHelper.handleLoginResult(loginResult, res, false);
+    return this.authCookieHelper.handleLoginResult(loginResult, res);
   }
 
   @ApiRequestVerificationCode()
@@ -164,7 +166,7 @@ export class AuthController {
     const signInResult = await this.authService.signIn(temporalToken, dto, qr);
 
     res.clearCookie(
-      this.configService.getOrThrow(JWT_COOKIE_KEY.TEMPORAL_TOKEN_KEY),
+      this.configService.getOrThrow(ENV_VARIABLE_KEY.TEMPORAL_TOKEN_KEY),
       TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.TEMP, true),
     );
 
@@ -191,12 +193,16 @@ export class AuthController {
   @Post('logout')
   logOut(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(
-      this.configService.getOrThrow(JWT_COOKIE_KEY.ACCESS_TOKEN_KEY),
+      this.configService.getOrThrow(ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY),
       TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.ACCESS, true),
     );
     res.clearCookie(
-      this.configService.getOrThrow(JWT_COOKIE_KEY.REFRESH_TOKEN_KEY),
+      this.configService.getOrThrow(ENV_VARIABLE_KEY.REFRESH_TOKEN_KEY),
       TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.REFRESH, true),
+    );
+    res.clearCookie(
+      this.configService.getOrThrow(ENV_VARIABLE_KEY.TEMPORAL_TOKEN_KEY),
+      TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.TEMP, true),
     );
 
     return 'logout success';
