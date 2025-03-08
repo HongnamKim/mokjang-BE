@@ -38,7 +38,7 @@ import { MinistryHistoryModel } from './churches/members-management/entity/minis
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
-import { AccessTokenMiddleware } from './auth/middleware/access-token-middleware.service';
+import { AccessTokenMiddleware } from './auth/middleware/access-token.middleware';
 
 @Module({
   imports: [

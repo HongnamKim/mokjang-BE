@@ -22,7 +22,7 @@ export class AccessTokenMiddleware implements NestMiddleware {
   private readonly secretKey: string;
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const accessTokenCookie = req.cookies[ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY];
+    const accessTokenCookie = req.cookies['MJAT'];
 
     // AccessToken 쿠키가 없으면 통과
     if (!accessTokenCookie) {
