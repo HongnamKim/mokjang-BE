@@ -72,8 +72,6 @@ export class AuthController {
 
   @Get('cookie-test')
   cookieTest(@Req() req: Request) {
-    console.log(req.user);
-
     return req.cookies;
   }
 
