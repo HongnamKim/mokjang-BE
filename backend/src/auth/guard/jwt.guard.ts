@@ -17,6 +17,7 @@ export class TemporalTokenGuardV2 implements CanActivate {
     private readonly tokenService: TokenService,
     private readonly configService: ConfigService,
   ) {}
+
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {

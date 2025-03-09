@@ -156,6 +156,7 @@ import { AccessTokenMiddleware } from './auth/middleware/access-token.middleware
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
-    consumer.apply(AccessTokenMiddleware).exclude('/auth/*').forRoutes('*');
+    consumer.apply(AccessTokenMiddleware).exclude('/auth/(.*)').forRoutes('*');
+    consumer.apply(AccessTokenMiddleware).forRoutes('/auth/user');
   }
 }

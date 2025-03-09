@@ -14,7 +14,7 @@ export class AuthCookieHelper {
 
   private readonly ACCESS_TOKEN: 'accessToken' = 'accessToken';
   private readonly REFRESH_TOKEN: 'refreshToken' = 'refreshToken';
-  private readonly TEMPORAL_TOKEN: 'temporalToken' = 'temporalToken';
+  private readonly TEMPORAL_TOKEN: 'temporal' = 'temporal';
 
   private encodeBase64(token: string) {
     return Buffer.from(token).toString('base64');
