@@ -1,7 +1,7 @@
 export class OauthDto {
   constructor(
-    private readonly _provider,
-    private readonly _providerId,
+    private readonly _provider: string,
+    private readonly _providerId: string,
   ) {}
 
   get providerId() {
@@ -11,8 +11,4 @@ export class OauthDto {
   get provider() {
     return this._provider;
   }
-
-  //provider: string;
-
-  //providerId: string;
 }
