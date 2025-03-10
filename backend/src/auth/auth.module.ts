@@ -7,26 +7,24 @@ import { UserModel } from './entity/user.entity';
 import { TempUserModel } from './entity/temp-user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { TokenService } from './service/token.service';
-import { MessagesService } from './service/messages.service';
-import { CoolSMSProvider } from './provider/coolsms.provider';
 import { NaverStrategy } from './strategy/naver.strategy';
 import { KakaoStrategy } from './strategy/kakao.strategy';
 import { UserService } from './service/user.service';
 import { UserController } from './controller/user.controller';
 import { TempUserService } from './service/temp-user.service';
 import { AuthCookieHelper } from './helper/auth-cookie.helper';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserModel, TempUserModel]),
     JwtModule.register({}),
+    CommonModule,
   ],
   controllers: [AuthController, UserController],
   providers: [
     AuthService,
     TokenService,
-    MessagesService,
-    CoolSMSProvider,
     GoogleStrategy,
     NaverStrategy,
     KakaoStrategy,
@@ -34,6 +32,6 @@ import { AuthCookieHelper } from './helper/auth-cookie.helper';
     TempUserService,
     AuthCookieHelper,
   ],
-  exports: [TokenService, JwtModule],
+  exports: [JwtModule],
 })
 export class AuthModule {}

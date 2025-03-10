@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { CommonService } from './common.service';
-import { CommonController } from './common.controller';
+import { ConfigModule } from '@nestjs/config';
+import { MessageService } from './service/message.service';
+import { CoolSMSProvider } from './provider/coolsms.provider';
 
 @Module({
-  exports: [CommonService],
-  controllers: [CommonController],
-  providers: [CommonService],
+  imports: [ConfigModule],
+  providers: [CommonService, MessageService, CoolSMSProvider],
+  exports: [CommonService, MessageService, CoolSMSProvider],
 })
 export class CommonModule {}

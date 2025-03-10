@@ -7,7 +7,6 @@ import { AuthType } from '../const/enum/auth-type.enum';
 import { TokenService } from './token.service';
 import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
 import { ConfigService } from '@nestjs/config';
-import { MessagesService } from './messages.service';
 import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
 import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
 import { RegisterUserDto } from '../dto/user/register-user.dto';
@@ -16,7 +15,6 @@ import {
   SignInException,
   VerifyException,
 } from '../const/exception-message/exception.message';
-//import { VERIFICATION } from '../const/env.const';
 import { JwtTemporalPayload } from '../type/jwt';
 import { TestEnvironment } from '../const/enum/test-environment.enum';
 import {
@@ -28,6 +26,7 @@ import { UserService } from './user.service';
 import { TempUserService } from './temp-user.service';
 import { UpdateTempUserDto } from '../dto/user/update-temp-user.dto';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
+import { MessageService } from '../../common/service/message.service';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +35,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly tokenService: TokenService,
-    private readonly messagesService: MessagesService,
+    private readonly messagesService: MessageService,
   ) {}
 
   async loginUser(oauthDto: OauthDto, qr: QueryRunner) {
@@ -145,19 +144,16 @@ export class AuthService {
         : VerificationMessage(code);
 
     if (dto.isTest === TestEnvironment.Production) {
-      return this.messagesService.sendVerificationCode(
-        dto.mobilePhone,
-        message,
-      );
+      return this.messagesService.sendMessage(dto.mobilePhone, message);
     } else if (dto.isTest === TestEnvironment.BetaTest) {
       return Promise.all([
         // 관리자에게 전송
-        this.messagesService.sendVerificationCode(
+        this.messagesService.sendMessage(
           this.configService.getOrThrow(ENV_VARIABLE_KEY.BETA_TEST_TO_NUMBER),
           message,
         ),
         // 사용자에게 전송
-        this.messagesService.sendVerificationCode(
+        this.messagesService.sendMessage(
           dto.mobilePhone,
           VerificationMessage(code),
         ),

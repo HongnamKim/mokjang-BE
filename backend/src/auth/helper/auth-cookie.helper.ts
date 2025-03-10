@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { TOKEN_COOKIE_OPTIONS } from '../const/token-cookie-option.const';
 import { AuthType } from '../const/enum/auth-type.enum';
-//import { JWT_COOKIE_KEY } from '../const/env.const';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 
 @Injectable()

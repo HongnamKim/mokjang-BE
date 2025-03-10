@@ -2,11 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { AuthType } from '../const/enum/auth-type.enum';
 import { JwtPayload, JwtRefreshPayload } from '../type/jwt';
-import { JwtExpiresConst } from '../const/jwt-expires.const';
 import { ConfigService } from '@nestjs/config';
-import ms from 'ms';
 import { AuthException } from '../const/exception-message/exception.message';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
+
 //import { JWT } from '../const/env.const';
 
 @Injectable()
@@ -16,15 +15,21 @@ export class TokenService {
     private readonly configService: ConfigService,
   ) {}
 
+  private readonly JwtExpiresConst = {
+    [AuthType.TEMP]: ENV_VARIABLE_KEY.JWT_EXPIRES_TEMP,
+    [AuthType.ACCESS]: ENV_VARIABLE_KEY.JWT_EXPIRES_ACCESS,
+    [AuthType.REFRESH]: ENV_VARIABLE_KEY.JWT_EXPIRES_REFRESH,
+  };
+
   signToken(userId: number, authType: AuthType) {
     const payload: JwtPayload = {
       id: userId,
       type: authType,
     };
 
-    const expiresIn =
-      ms(this.configService.getOrThrow<string>(JwtExpiresConst[authType])) /
-      1000;
+    const expiresIn = this.configService.getOrThrow(
+      this.JwtExpiresConst[authType],
+    );
 
     return this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>(

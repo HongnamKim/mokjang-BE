@@ -15,8 +15,8 @@ import { OauthDto } from '../dto/auth/oauth.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { RefreshTokenGuardV2, TemporalTokenGuardV2 } from '../guard/jwt.guard';
-import { RefreshToken, TemporalToken } from '../decorator/jwt.decorator';
+import { RefreshTokenGuard, TemporalTokenGuard } from '../guard/jwt.guard';
+import { Token } from '../decorator/jwt.decorator';
 import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
 import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
 import { RegisterUserDto } from '../dto/user/register-user.dto';
@@ -67,12 +67,21 @@ export class AuthController {
       new OauthDto(provider, providerId),
       qr,
     );
+
+    this.clearCookie(res);
+
     return this.authCookieHelper.handleLoginResult(loginResult, res, true);
   }
 
   @Get('cookie-test')
   cookieTest(@Req() req: Request) {
     return req.cookies;
+  }
+
+  @Get('temporal-token')
+  @UseGuards(TemporalTokenGuard)
+  temporalToken(@Token(AuthType.TEMP) temp: JwtTemporalPayload) {
+    return !!temp;
   }
 
   @ApiSSO('구글')
@@ -88,6 +97,8 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
+
+    this.clearCookie(res);
 
     return this.authCookieHelper.handleLoginResult(loginResult, res);
   }
@@ -106,6 +117,8 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
+    this.clearCookie(res);
+
     return this.authCookieHelper.handleLoginResult(loginResult, res);
   }
 
@@ -123,16 +136,17 @@ export class AuthController {
   ) {
     const loginResult = await this.authService.loginUser(oauthDto, qr);
 
+    this.clearCookie(res);
+
     return this.authCookieHelper.handleLoginResult(loginResult, res);
   }
 
   @ApiRequestVerificationCode()
-  //@ApiBearerAuth()
   @Post('verification/request')
   @UseInterceptors(TransactionInterceptor)
-  @UseGuards(TemporalTokenGuardV2)
+  @UseGuards(TemporalTokenGuard)
   requestVerificationCode(
-    @TemporalToken() temporalToken: JwtTemporalPayload,
+    @Token(AuthType.TEMP) temporalToken: JwtTemporalPayload,
     @Body() dto: RequestVerificationCodeDto,
     @QueryRunner() qr: QR,
   ) {
@@ -140,28 +154,28 @@ export class AuthController {
   }
 
   @ApiVerifyVerificationCode()
-  //@ApiBearerAuth()
   @Post('verification/verify')
-  @UseGuards(TemporalTokenGuardV2)
+  @UseGuards(TemporalTokenGuard)
   verifyCode(
-    @TemporalToken() temporalToken: JwtTemporalPayload,
+    @Token(AuthType.TEMP) temporalToken: JwtTemporalPayload,
     @Body() dto: VerifyCodeDto,
   ) {
     return this.authService.verifyCode(temporalToken, dto);
   }
 
   @ApiSignIn()
-  //@ApiBearerAuth()
   @Post('sign-in')
-  @UseGuards(TemporalTokenGuardV2)
+  @UseGuards(TemporalTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   async signIn(
-    @TemporalToken() temporalToken: JwtTemporalPayload,
+    @Token(AuthType.TEMP) temporalToken: JwtTemporalPayload,
     @Body() dto: RegisterUserDto,
     @QueryRunner() qr: QR,
     @Res({ passthrough: true }) res: Response,
   ) {
     const signInResult = await this.authService.signIn(temporalToken, dto, qr);
+
+    this.clearCookie(res);
 
     res.clearCookie(
       this.configService.getOrThrow(ENV_VARIABLE_KEY.TEMPORAL_TOKEN_KEY),
@@ -174,11 +188,10 @@ export class AuthController {
   }
 
   @ApiRotateToken()
-  //@ApiBearerAuth()
   @Post('token/rotate')
-  @UseGuards(RefreshTokenGuardV2)
+  @UseGuards(RefreshTokenGuard)
   rotateToken(
-    @RefreshToken() payload: JwtRefreshPayload,
+    @Token(AuthType.REFRESH) payload: JwtRefreshPayload,
     @Res({ passthrough: true }) res: Response,
   ) {
     const token = this.tokenService.rotateToken(payload);
@@ -190,6 +203,12 @@ export class AuthController {
 
   @Post('logout')
   logOut(@Res({ passthrough: true }) res: Response) {
+    this.clearCookie(res);
+
+    return 'logout success';
+  }
+
+  private clearCookie(res: Response) {
     res.clearCookie(
       this.configService.getOrThrow(ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY),
       TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.ACCESS, true),
@@ -202,7 +221,5 @@ export class AuthController {
       this.configService.getOrThrow(ENV_VARIABLE_KEY.TEMPORAL_TOKEN_KEY),
       TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.TEMP, true),
     );
-
-    return 'logout success';
   }
 }
