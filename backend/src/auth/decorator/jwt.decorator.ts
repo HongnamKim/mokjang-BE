@@ -7,7 +7,26 @@ import {
 import { AuthType } from '../const/enum/auth-type.enum';
 import { AuthException } from '../const/exception-message/exception.message';
 
-export const TemporalToken = createParamDecorator(
+export const Token: (data: AuthType) => ParameterDecorator =
+  createParamDecorator(
+    (data: AuthType = undefined as never, context: ExecutionContext) => {
+      const token = context.switchToHttp().getRequest().tokenPayload;
+
+      if (!token) {
+        throw new InternalServerErrorException(
+          AuthException.TOKEN_PROCESS_ERROR,
+        );
+      }
+
+      if (token.type !== data) {
+        throw new UnauthorizedException(AuthException.TOKEN_TYPE_ERROR);
+      }
+
+      return token;
+    },
+  );
+
+/*export const TemporalToken = createParamDecorator(
   (data, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();
 
@@ -21,9 +40,9 @@ export const TemporalToken = createParamDecorator(
 
     return req.tokenPayload;
   },
-);
+);*/
 
-export const AccessToken = createParamDecorator(
+/*export const AccessToken = createParamDecorator(
   (data, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();
 
@@ -37,9 +56,9 @@ export const AccessToken = createParamDecorator(
 
     return req.tokenPayload;
   },
-);
+);*/
 
-export const RefreshToken = createParamDecorator(
+/*export const RefreshToken = createParamDecorator(
   (data, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();
 
@@ -53,4 +72,4 @@ export const RefreshToken = createParamDecorator(
 
     return req.tokenPayload;
   },
-);
+);*/

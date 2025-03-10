@@ -11,9 +11,9 @@ import {
 } from '@nestjs/common';
 import { ChurchesService } from './churches.service';
 import { CreateChurchDto } from './dto/create-church.dto';
-import { AccessTokenGuardV2 } from '../auth/guard/jwt.guard';
+import { AccessTokenGuard } from '../auth/guard/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { AccessToken } from '../auth/decorator/jwt.decorator';
+import { Token } from '../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import {
   ChurchAdminGuard,
@@ -27,6 +27,7 @@ import {
   ApiPatchChurch,
   ApiPostChurch,
 } from './const/swagger/churches/controller.swagger';
+import { AuthType } from '../auth/const/enum/auth-type.enum';
 
 @Controller('churches')
 export class ChurchesController {
@@ -41,9 +42,9 @@ export class ChurchesController {
   @ApiPostChurch()
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuardV2)
+  @UseGuards(AccessTokenGuard)
   postChurch(
-    @AccessToken() accessToken: JwtAccessPayload,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Body() dto: CreateChurchDto,
   ) {
     return this.churchesService.createChurch(accessToken, dto);
@@ -52,7 +53,7 @@ export class ChurchesController {
   @ApiGetChurchById()
   @Get(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuardV2, ChurchAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchAdminGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.getChurchById(churchId);
   }
@@ -60,7 +61,7 @@ export class ChurchesController {
   @ApiPatchChurch()
   @Patch(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuardV2, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   patchChurch(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: UpdateChurchDto,
@@ -71,7 +72,7 @@ export class ChurchesController {
   @ApiDeleteChurch()
   @Delete(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuardV2, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.deleteChurchById(churchId);
   }
