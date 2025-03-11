@@ -17,13 +17,14 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { MembersService } from '../../members/service/members.service';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
-import { MessagesService } from './messages.service';
+//import { MessagesService } from './messages.service';
 import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
 import { RequestLimitValidationType } from '../types/request-limit-validation-result';
+import { MessageService } from '../../../common/service/message.service';
 
 @Injectable()
 export class RequestInfoService {
@@ -33,7 +34,7 @@ export class RequestInfoService {
     private readonly churchesService: ChurchesService,
     private readonly membersService: MembersService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
-    private readonly messagesService: MessagesService,
+    private readonly messagesService: MessageService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -269,10 +270,7 @@ export class RequestInfoService {
 
     return isTest
       ? url
-      : this.messagesService.sendRequestInfoMessage(
-          requestInfo.mobilePhone,
-          url,
-        );
+      : this.messagesService.sendMessage(requestInfo.mobilePhone, url);
   }
 
   async validateRequestInfo(

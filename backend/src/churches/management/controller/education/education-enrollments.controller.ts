@@ -18,11 +18,15 @@ import { TransactionInterceptor } from '../../../../common/interceptor/transacti
 import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateEducationEnrollmentDto } from '../../dto/education/enrollments/update-education-enrollment.dto';
+import { EducationEnrollmentService } from '../../service/education/education-enrollment.service';
 
 @ApiTags('Management:Educations:Enrollments')
 @Controller('educations/:educationId/terms/:educationTermId/enrollments')
 export class EducationEnrollmentsController {
-  constructor(private readonly educationsService: EducationsService) {}
+  constructor(
+    private readonly educationsService: EducationsService,
+    private readonly educationEnrollmentsService: EducationEnrollmentService,
+  ) {}
 
   @Get()
   getEducationEnrollments(
@@ -31,12 +35,19 @@ export class EducationEnrollmentsController {
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Query() dto: GetEducationEnrollmentDto,
   ) {
-    return this.educationsService.getEducationEnrollments(
+    return this.educationEnrollmentsService.getEducationEnrollments(
       churchId,
       educationId,
       educationTermId,
       dto,
     );
+
+    /*return this.educationsService.getEducationEnrollments(
+      churchId,
+      educationId,
+      educationTermId,
+      dto,
+    );*/
   }
 
   @Post()
@@ -48,7 +59,7 @@ export class EducationEnrollmentsController {
     @Body() dto: CreateEducationEnrollmentDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.createEducationEnrollment(
+    return this.educationEnrollmentsService.createEducationEnrollment(
       churchId,
       educationId,
       educationTermId,
@@ -67,7 +78,7 @@ export class EducationEnrollmentsController {
     @Body() dto: UpdateEducationEnrollmentDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.updateEducationEnrollment(
+    return this.educationEnrollmentsService.updateEducationEnrollment(
       churchId,
       educationId,
       educationTermId,
@@ -86,7 +97,7 @@ export class EducationEnrollmentsController {
     @Param('educationEnrollmentId', ParseIntPipe) educationEnrollmentId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.deleteEducationEnrollment(
+    return this.educationEnrollmentsService.deleteEducationEnrollment(
       churchId,
       educationId,
       educationTermId,

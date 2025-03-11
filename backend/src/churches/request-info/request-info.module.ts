@@ -6,22 +6,24 @@ import { RequestInfoModel } from './entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { ChurchesModule } from '../churches.module';
 import { MembersModule } from '../members/members.module';
-import { MessagesService } from './service/messages.service';
+//import { MessagesService } from './service/messages.service';
 import { RequestLimitValidatorService } from './service/request-limit-validator.service';
-import { CoolSMSProvider } from './provider/coolsms.provider';
+//import { CoolSMSProvider } from './provider/coolsms.provider';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([RequestInfoModel, MemberModel]),
     ChurchesModule,
     MembersModule,
+    CommonModule,
   ],
   controllers: [RequestInfoController],
   providers: [
     RequestInfoService,
-    MessagesService,
+    //MessagesService,
     RequestLimitValidatorService,
-    CoolSMSProvider,
+    //CoolSMSProvider,
   ],
 })
 export class RequestInfoModule {}

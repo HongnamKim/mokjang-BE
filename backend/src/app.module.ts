@@ -2,7 +2,6 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
@@ -33,6 +32,8 @@ import { MinistryHistoryModel } from './churches/members-management/entity/minis
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
+import { MemberEventHandler } from './member-event.handler';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -131,6 +132,7 @@ import { DummyDataService } from './dummy-data.service';
       }),
       inject: [ConfigService],
     }),
+    CommonModule,
     AuthModule,
     ChurchesModule,
     RequestInfoModule,
@@ -140,6 +142,7 @@ import { DummyDataService } from './dummy-data.service';
   ],
   controllers: [AppController],
   providers: [
+    MemberEventHandler,
     AppService,
     {
       provide: APP_INTERCEPTOR,
