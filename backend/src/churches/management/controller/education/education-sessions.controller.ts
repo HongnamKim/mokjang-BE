@@ -9,17 +9,20 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
-import { EducationsService } from '../../service/education/educations.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TransactionInterceptor } from '../../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { UpdateEducationSessionDto } from '../../dto/education/sessions/update-education-session.dto';
+import { EducationSessionService } from '../../service/education/educaiton-session.service';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
 export class EducationSessionsController {
-  constructor(private readonly educationsService: EducationsService) {}
+  constructor(
+    //private readonly educationsService: EducationsService
+    private readonly educationSessionsService: EducationSessionService,
+  ) {}
 
   @ApiOperation({ summary: '교육 회차 조회' })
   @Get()
@@ -28,11 +31,16 @@ export class EducationSessionsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
   ) {
-    return this.educationsService.getEducationSessions(
+    return this.educationSessionsService.getEducationSessions(
       churchId,
       educationId,
       educationTermId,
     );
+    /*return this.educationsService.getEducationSessions(
+      churchId,
+      educationId,
+      educationTermId,
+    );*/
   }
 
   @ApiOperation({ summary: '교육 회차 생성' })
@@ -44,12 +52,18 @@ export class EducationSessionsController {
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.createSingleEducationSession(
+    return this.educationSessionsService.createSingleEducationSession(
       churchId,
       educationId,
       educationTermId,
       qr,
     );
+    /*return this.educationsService.createSingleEducationSession(
+      churchId,
+      educationId,
+      educationTermId,
+      qr,
+    );*/
   }
 
   @ApiOperation({ summary: '특정 교육 회차 조회' })
@@ -60,12 +74,18 @@ export class EducationSessionsController {
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
   ) {
-    return this.educationsService.getEducationSessionById(
+    return this.educationSessionsService.getEducationSessionById(
       churchId,
       educationId,
       educationTermId,
       educationSessionId,
     );
+    /*return this.educationsService.getEducationSessionById(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+    );*/
   }
 
   @ApiOperation({ summary: '교육 진행 내용 업데이트' })
@@ -79,7 +99,7 @@ export class EducationSessionsController {
     @Body() dto: UpdateEducationSessionDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.updateEducationSession(
+    return this.educationSessionsService.updateEducationSession(
       churchId,
       educationId,
       educationTermId,
@@ -87,6 +107,14 @@ export class EducationSessionsController {
       dto,
       qr,
     );
+    /*return this.educationsService.updateEducationSession(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      dto,
+      qr,
+    );*/
   }
 
   @ApiOperation({
@@ -103,12 +131,20 @@ export class EducationSessionsController {
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.deleteEducationSessions(
+    return this.educationSessionsService.deleteEducationSessions(
       churchId,
       educationId,
       educationTermId,
       educationSessionId,
       qr,
     );
+
+    /*return this.educationsService.deleteEducationSessions(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      qr,
+    );*/
   }
 }
