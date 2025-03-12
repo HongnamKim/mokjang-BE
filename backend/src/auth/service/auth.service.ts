@@ -1,15 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { TempUserModel } from '../entity/temp-user.entity';
 import { QueryRunner } from 'typeorm';
-import { UserModel } from '../entity/user.entity';
-import { OauthDto } from '../dto/auth/oauth.dto';
+import { UserModel } from '../../user/entity/user.entity';
+import { OauthDto } from '../dto/oauth.dto';
 import { AuthType } from '../const/enum/auth-type.enum';
 import { TokenService } from './token.service';
-import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
+import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
 import { ConfigService } from '@nestjs/config';
-import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
+import { VerifyCodeDto } from '../dto/verify-code.dto';
 import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
-import { RegisterUserDto } from '../dto/user/register-user.dto';
+import { RegisterUserDto } from '../../user/dto/register-user.dto';
 import {
   AuthException,
   SignInException,
@@ -21,21 +21,30 @@ import {
   BetaVerificationMessage,
   VerificationMessage,
 } from '../const/verification-message.const';
-import { CreateUserDto } from '../dto/user/create-user.dto';
-import { UserService } from './user.service';
-import { TempUserService } from './temp-user.service';
-import { UpdateTempUserDto } from '../dto/user/update-temp-user.dto';
+import { CreateUserDto } from '../../user/dto/create-user.dto';
+import { UpdateTempUserDto } from '../../user/dto/update-temp-user.dto';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 import { MessageService } from '../../common/service/message.service';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../../user/user-domain/interface/user-domain.service.interface';
+import {
+  ITEMP_USER_DOMAIN_SERVICE,
+  ITempUserDomainService,
+} from '../temp-user-domain/service/interface/temp-user.service.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly tempUserService: TempUserService,
-    private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly tokenService: TokenService,
     private readonly messagesService: MessageService,
+
+    @Inject(IUSER_DOMAIN_SERVICE)
+    private readonly userDomainService: IUserDomainService,
+    @Inject(ITEMP_USER_DOMAIN_SERVICE)
+    private readonly tempUserDomainService: ITempUserDomainService,
   ) {}
 
   async loginUser(oauthDto: OauthDto, qr: QueryRunner) {
@@ -43,7 +52,7 @@ export class AuthService {
       throw new BadRequestException(AuthException.MISSING_OAUTH_DATA);
     }
 
-    const user = await this.userService.findUserModelByOAuth(
+    const user = await this.userDomainService.findUserModelByOAuth(
       oauthDto.provider,
       oauthDto.providerId,
       qr,
@@ -65,14 +74,14 @@ export class AuthService {
   }
 
   private async handleNewUser(oauthDto: OauthDto, qr: QueryRunner) {
-    let tempUser = await this.tempUserService.findTempUserModelByOAuth(
+    let tempUser = await this.tempUserDomainService.findTempUserModelByOAuth(
       oauthDto.provider,
       oauthDto.providerId,
       qr,
     );
 
     if (!tempUser) {
-      tempUser = await this.tempUserService.createTempUser(
+      tempUser = await this.tempUserDomainService.createTempUser(
         oauthDto.provider,
         oauthDto.providerId,
         qr,
@@ -91,7 +100,7 @@ export class AuthService {
     dto: RequestVerificationCodeDto,
     qr: QueryRunner,
   ) {
-    const tempUser = await this.tempUserService.getTempUserById(
+    const tempUser = await this.tempUserDomainService.getTempUserById(
       temporalToken.id,
       qr,
     );
@@ -104,7 +113,7 @@ export class AuthService {
     // 마지막 요청 날짜가 지난 경우, 요청 횟수 초기화
     if (DateUtils.isNewDay(new Date(), tempUser.requestedAt)) {
       tempUser.requestAttempts = 0;
-      await this.tempUserService.initRequestAttempt(tempUser, qr);
+      await this.tempUserDomainService.initRequestAttempt(tempUser, qr);
     }
 
     // 요청 횟수가 초과된 경우
@@ -136,7 +145,11 @@ export class AuthService {
       requestedAt: new Date(),
     };
 
-    await this.tempUserService.updateTempUser(tempUser, updateTempUserDto, qr);
+    await this.tempUserDomainService.updateTempUser(
+      tempUser,
+      updateTempUserDto,
+      qr,
+    );
 
     const message =
       dto.isTest === TestEnvironment.BetaTest
@@ -174,7 +187,7 @@ export class AuthService {
   }
 
   async verifyCode(temporalToken: JwtTemporalPayload, dto: VerifyCodeDto) {
-    const tempUser = await this.tempUserService.getTempUserById(
+    const tempUser = await this.tempUserDomainService.getTempUserById(
       temporalToken.id,
     );
 
@@ -182,12 +195,12 @@ export class AuthService {
     this.validateVerificationAttempts(tempUser);
 
     if (tempUser.verificationCode !== dto.code) {
-      await this.tempUserService.incrementVerificationAttempts(tempUser);
+      await this.tempUserDomainService.incrementVerificationAttempts(tempUser);
       throw new BadRequestException(VerifyException.CODE_NOT_MATCH);
     }
 
     // 인증 성공 로직
-    await this.tempUserService.markAsVerified(tempUser);
+    await this.tempUserDomainService.markAsVerified(tempUser);
 
     return {
       timestamp: new Date(),
@@ -218,7 +231,7 @@ export class AuthService {
     dto: RegisterUserDto,
     qr: QueryRunner,
   ) {
-    const tempUser = await this.tempUserService.getTempUserById(
+    const tempUser = await this.tempUserDomainService.getTempUserById(
       temporalToken.id,
       qr,
     );
@@ -242,9 +255,9 @@ export class AuthService {
       privacyPolicyAgreed: dto.privacyPolicyAgreed,
     };
 
-    const newUser = await this.userService.createUser(createUserDto, qr);
+    const newUser = await this.userDomainService.createUser(createUserDto, qr);
 
-    await this.tempUserService.deleteTempUser(tempUser, qr);
+    await this.tempUserDomainService.deleteTempUser(tempUser, qr);
 
     return this.handleRegisteredUser(newUser);
   }

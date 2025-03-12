@@ -2,13 +2,11 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
 import { MemberModel } from './churches/members/entity/member.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MembersModule } from './churches/members/members.module';
 import { MembersManagementModule } from './churches/members-management/members-management.module';
 import { OfficerModel } from './churches/management/entity/officer/officer.entity';
 import { MinistryModel } from './churches/management/entity/ministry/ministry.entity';
@@ -19,7 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
-import { UserModel } from './auth/entity/user.entity';
+import { UserModel } from './user/entity/user.entity';
 import { GroupRoleModel } from './churches/management/entity/group/group-role.entity';
 import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
 import { EducationModel } from './churches/management/entity/education/education.entity';
@@ -33,7 +31,8 @@ import { OfficerHistoryModel } from './churches/members-management/entity/office
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
 import { MemberEventHandler } from './member-event.handler';
-import { CommonModule } from './common/common.module';
+import { UserModule } from './user/user.module';
+import { MembersModule } from './churches/members/members.module';
 
 @Module({
   imports: [
@@ -132,9 +131,10 @@ import { CommonModule } from './common/common.module';
       }),
       inject: [ConfigService],
     }),
-    CommonModule,
+    //CommonModule,
+    //ChurchesModule,
     AuthModule,
-    ChurchesModule,
+    UserModule,
     RequestInfoModule,
     MembersModule,
     MembersManagementModule,

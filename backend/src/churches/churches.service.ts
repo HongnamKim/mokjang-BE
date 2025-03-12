@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChurchModel } from './entity/church.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { CreateChurchDto } from './dto/create-church.dto';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import { UpdateChurchDto } from './dto/update-church.dto';
@@ -29,14 +29,12 @@ export class ChurchesService {
   async isChurchAdmin(churchId: number, memberId: number, qr?: QueryRunner) {
     const church = await this.getChurchById(churchId, qr);
 
-    const subAdminIds = church.subAdmins.map((subAdmin) => subAdmin.id);
+    const adminIds = church.admins.map((subAdmin) => subAdmin.id);
 
-    const allAdminIds = [church.mainAdmin.id, ...subAdminIds];
-
-    return allAdminIds.includes(memberId);
+    return adminIds.includes(memberId);
   }
 
-  async isChurchMainAdmin(
+  /*async isChurchMainAdmin(
     churchId: number,
     memberId: number,
     qr?: QueryRunner,
@@ -44,7 +42,7 @@ export class ChurchesService {
     const church = await this.getChurchById(churchId, qr);
 
     return church.mainAdmin.id === memberId;
-  }
+  }*/
 
   async getChurchById(id: number, qr?: QueryRunner) {
     const churchRepository = this.getChurchRepository(qr);
@@ -55,8 +53,9 @@ export class ChurchesService {
       },
       relations: {
         //requestInfos: true,
-        mainAdmin: true,
-        subAdmins: true,
+        //mainAdmin: true,
+        //subAdmins: true,
+        admins: true,
       },
     });
 
@@ -100,9 +99,7 @@ export class ChurchesService {
 
     const isMainAdmin = await churchRepository.findOne({
       where: {
-        mainAdmin: {
-          id: accessToken.id,
-        },
+        admins: In([accessToken.id]),
       },
     });
 

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, Length } from 'class-validator';
-import { TestEnvironment } from '../../const/enum/test-environment.enum';
+import { TestEnvironment } from '../const/enum/test-environment.enum';
 
 export class RequestVerificationCodeDto {
   @ApiProperty({

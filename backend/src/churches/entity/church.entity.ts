@@ -1,19 +1,11 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  OneToMany,
-  OneToOne,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { GroupModel } from '../management/entity/group/group.entity';
 import { OfficerModel } from '../management/entity/officer/officer.entity';
 import { MinistryModel } from '../management/entity/ministry/ministry.entity';
-import { UserModel } from '../../auth/entity/user.entity';
+import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupRoleModel } from '../management/entity/group/group-role.entity';
 import { EducationModel } from '../management/entity/education/education.entity';
@@ -47,12 +39,8 @@ export class ChurchModel extends BaseModel {
   @Column({ nullable: true })
   mainAdminId: number;
 
-  @JoinColumn()
-  @OneToOne(() => UserModel, (user) => user.adminChurch)
-  mainAdmin: UserModel;
-
-  @OneToMany(() => UserModel, (user) => user.managingChurch)
-  subAdmins: UserModel[];
+  @OneToMany(() => UserModel, (user) => user.adminChurch)
+  admins: UserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];

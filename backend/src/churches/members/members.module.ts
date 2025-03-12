@@ -9,10 +9,11 @@ import { FamilyService } from './service/family.service';
 import { RouterModule } from '@nestjs/core';
 import { MembersFamilyController } from './controller/members-family.controller';
 import { SearchMembersService } from './service/search-members.service';
+import { ChurchModel } from '../entity/church.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MemberModel, FamilyModel]),
+    TypeOrmModule.forFeature([MemberModel, FamilyModel, ChurchModel]),
     RouterModule.register([
       { path: 'churches/:churchId/members', module: MembersModule },
     ]),

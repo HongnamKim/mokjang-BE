@@ -29,7 +29,7 @@ export class ChurchAdminGuard implements CanActivate {
 
 @Injectable()
 export class ChurchMainAdminGuard implements CanActivate {
-  constructor(private readonly churchService: ChurchesService) {}
+  constructor(private readonly churchesService: ChurchesService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -38,7 +38,9 @@ export class ChurchMainAdminGuard implements CanActivate {
 
     const churchId = parseInt(req.params.churchId);
 
-    const isMainAdmin = await this.churchService.isChurchMainAdmin(
+    //const user = await this.userService.getUserById(token.id);
+
+    const isMainAdmin = await this.churchesService.isChurchAdmin(
       churchId,
       token.id,
     );
