@@ -48,8 +48,6 @@ import { EducationEnrollmentSessionSyncService } from './service/education-sync/
         module: ManagementModule,
       },
     ]),
-    ChurchesModule,
-    MembersModule,
     TypeOrmModule.forFeature([
       OfficerModel,
       // 사역 관련 엔티티
@@ -65,6 +63,8 @@ import { EducationEnrollmentSessionSyncService } from './service/education-sync/
       GroupModel,
       GroupRoleModel,
     ]),
+    ChurchesModule,
+    MembersModule,
   ],
   controllers: [
     OfficersController,

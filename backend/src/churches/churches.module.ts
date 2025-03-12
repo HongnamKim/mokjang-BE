@@ -3,19 +3,10 @@ import { ChurchesService } from './churches.service';
 import { ChurchesController } from './churches.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './entity/church.entity';
-import { AuthModule } from '../auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      ChurchModel,
-      //OfficerModel,
-      //EducationModel,
-      //MinistryModel,
-      //GroupModel,
-    ]),
-    AuthModule,
-  ],
+  imports: [TypeOrmModule.forFeature([ChurchModel]), JwtModule.register({})],
   controllers: [ChurchesController],
   providers: [ChurchesService],
   exports: [ChurchesService],

@@ -4,12 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TempUserModel } from '../entity/temp-user.entity';
+import { TempUserModel } from '../../entity/temp-user.entity';
 import { QueryRunner, Repository } from 'typeorm';
-import { UpdateTempUserDto } from '../dto/user/update-temp-user.dto';
+import { UpdateTempUserDto } from '../../../user/dto/update-temp-user.dto';
+import { ITempUserDomainService } from './interface/temp-user.service.interface';
 
 @Injectable()
-export class TempUserService {
+export class TempUserDomainService implements ITempUserDomainService {
   constructor(
     @InjectRepository(TempUserModel)
     private readonly tempUserRepository: Repository<TempUserModel>,
@@ -87,8 +88,6 @@ export class TempUserService {
   async initRequestAttempt(tempUser: TempUserModel, qr?: QueryRunner) {
     const tempUserRepository = this.getTempUserRepository(qr);
 
-    //const tempUser = await this.getTempUserById(id, qr);
-
     return tempUserRepository.update(
       {
         id: tempUser.id,
@@ -106,7 +105,9 @@ export class TempUserService {
   ) {
     const tempUserRepository = this.getTempUserRepository(qr);
 
-    return tempUserRepository.update({ id: tempUser.id }, { ...dto });
+    await tempUserRepository.update({ id: tempUser.id }, { ...dto });
+
+    return tempUserRepository.findOne({ where: { id: tempUser.id } });
   }
 
   incrementVerificationAttempts(tempUser: TempUserModel, qr?: QueryRunner) {

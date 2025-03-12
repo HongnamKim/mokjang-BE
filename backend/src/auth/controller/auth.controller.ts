@@ -11,15 +11,15 @@ import {
 } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { ApiTags } from '@nestjs/swagger';
-import { OauthDto } from '../dto/auth/oauth.dto';
+import { OauthDto } from '../dto/oauth.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { RefreshTokenGuard, TemporalTokenGuard } from '../guard/jwt.guard';
 import { Token } from '../decorator/jwt.decorator';
-import { RequestVerificationCodeDto } from '../dto/auth/request-verification-code.dto';
-import { VerifyCodeDto } from '../dto/auth/verify-code.dto';
-import { RegisterUserDto } from '../dto/user/register-user.dto';
+import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
+import { VerifyCodeDto } from '../dto/verify-code.dto';
+import { RegisterUserDto } from '../../user/dto/register-user.dto';
 import { JwtRefreshPayload, JwtTemporalPayload } from '../type/jwt';
 import { TokenService } from '../service/token.service';
 import {
