@@ -2,13 +2,20 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Inject,
   Injectable,
 } from '@nestjs/common';
-import { ChurchesService } from '../churches.service';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
-export class ChurchAdminGuard implements CanActivate {
-  constructor(private readonly churchService: ChurchesService) {}
+export class ChurchManagerGuard implements CanActivate {
+  constructor(
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -17,9 +24,10 @@ export class ChurchAdminGuard implements CanActivate {
 
     const churchId = parseInt(req.params.churchId);
 
-    const isAdmin = await this.churchService.isChurchAdmin(churchId, token.id);
+    const managerIds =
+      await this.churchesDomainService.getChurchManagerIds(churchId);
 
-    if (!isAdmin) {
+    if (!managerIds.includes(token.id)) {
       throw new ForbiddenException('해당 교회의 관리자만 접근할 수 있습니다.');
     }
 
@@ -29,7 +37,10 @@ export class ChurchAdminGuard implements CanActivate {
 
 @Injectable()
 export class ChurchMainAdminGuard implements CanActivate {
-  constructor(private readonly churchesService: ChurchesService) {}
+  constructor(
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -38,14 +49,10 @@ export class ChurchMainAdminGuard implements CanActivate {
 
     const churchId = parseInt(req.params.churchId);
 
-    //const user = await this.userService.getUserById(token.id);
+    const mainAdminIds =
+      await this.churchesDomainService.getChurchMainAdminIds(churchId);
 
-    const isMainAdmin = await this.churchesService.isChurchAdmin(
-      churchId,
-      token.id,
-    );
-
-    if (!isMainAdmin) {
+    if (!mainAdminIds.includes(token.id)) {
       throw new ForbiddenException(
         '해당 교회의 최고 관리자만 접근할 수 있습니다.',
       );

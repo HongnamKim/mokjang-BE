@@ -1,16 +1,20 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupModel } from '../../entity/group/group.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../../churches.service';
 import { CreateGroupDto } from '../../dto/group/create-group.dto';
 import { UpdateGroupDto } from '../../dto/group/update-group.dto';
 import { MANAGEMENT_EXCEPTION } from '../../exception-messages/exception-messages.const';
 import { GroupExceptionMessage } from '../../const/exception/group/group.exception';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class GroupsService {
@@ -18,7 +22,8 @@ export class GroupsService {
     @InjectRepository(GroupModel)
     private readonly groupsRepository: Repository<GroupModel>,
 
-    private readonly churchesService: ChurchesService,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private getGroupRepository(qr?: QueryRunner) {
@@ -26,7 +31,7 @@ export class GroupsService {
   }
 
   private async checkChurchExist(churchId: number, qr?: QueryRunner) {
-    const isExistChurch = await this.churchesService.isExistChurch(
+    const isExistChurch = await this.churchesDomainService.isExistChurch(
       churchId,
       qr,
     );
