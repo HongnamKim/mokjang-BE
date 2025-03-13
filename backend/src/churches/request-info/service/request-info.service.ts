@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -7,7 +8,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import { QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../churches.service';
 import { CreateRequestInfoDto } from '../dto/create-request-info.dto';
 import { ValidateRequestInfoDto } from '../dto/validate-request-info.dto';
 import { ChurchModel } from '../../entity/church.entity';
@@ -17,7 +17,6 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { MembersService } from '../../members/service/members.service';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
-//import { MessagesService } from './messages.service';
 import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
@@ -25,17 +24,23 @@ import { ConfigService } from '@nestjs/config';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
 import { RequestLimitValidationType } from '../types/request-limit-validation-result';
 import { MessageService } from '../../../common/service/message.service';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class RequestInfoService {
   constructor(
     @InjectRepository(RequestInfoModel)
     private readonly requestInfosRepository: Repository<RequestInfoModel>,
-    private readonly churchesService: ChurchesService,
     private readonly membersService: MembersService,
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessageService,
     private readonly configService: ConfigService,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private readonly REQUEST_EXPIRE_DAYS = this.configService.getOrThrow<number>(
@@ -108,7 +113,7 @@ export class RequestInfoService {
       }
 
       // 요청 가능한 경우 요청 횟수 증가
-      await this.churchesService.updateRequestAttempts(
+      await this.churchesDomainService.updateRequestAttempts(
         church,
         churchValidation.type,
         qr,
@@ -164,7 +169,7 @@ export class RequestInfoService {
       throw new BadRequestException(validationResult.error);
     }
 
-    await this.churchesService.updateRequestAttempts(
+    await this.churchesDomainService.updateRequestAttempts(
       church,
       validationResult.type,
       qr,
@@ -237,7 +242,10 @@ export class RequestInfoService {
      */
 
     // 교회 존재 여부 확인 && 교회 데이터 불러오기
-    const church = await this.churchesService.getChurchModelById(churchId, qr); //getChurchById(churchId, qr);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    ); //getChurchById(churchId, qr);
 
     const repository = this.getRequestInfosRepository(qr);
     const existingRequest = await repository.findOne({

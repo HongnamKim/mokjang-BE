@@ -1,93 +1,32 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ChurchModel } from './entity/church.entity';
-import { In, QueryRunner, Repository } from 'typeorm';
+import { Inject, Injectable } from '@nestjs/common';
+import { QueryRunner } from 'typeorm';
 import { CreateChurchDto } from './dto/create-church.dto';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import { UpdateChurchDto } from './dto/update-church.dto';
-import { RequestLimitValidationType } from './request-info/types/request-limit-validation-result';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from './churches-domain/interface/churches-domain.service.interface';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../user/user-domain/interface/user-domain.service.interface';
 
 @Injectable()
 export class ChurchesService {
   constructor(
-    @InjectRepository(ChurchModel)
-    private readonly churchRepository: Repository<ChurchModel>,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IUSER_DOMAIN_SERVICE)
+    private readonly userDomainService: IUserDomainService,
   ) {}
 
-  private getChurchRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
-  }
-
   findAllChurches() {
-    return this.churchRepository.find();
+    return this.churchesDomainService.findAllChurches();
   }
-
-  async isChurchAdmin(churchId: number, memberId: number, qr?: QueryRunner) {
-    const church = await this.getChurchById(churchId, qr);
-
-    const adminIds = church.admins.map((subAdmin) => subAdmin.id);
-
-    return adminIds.includes(memberId);
-  }
-
-  /*async isChurchMainAdmin(
-    churchId: number,
-    memberId: number,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.getChurchById(churchId, qr);
-
-    return church.mainAdmin.id === memberId;
-  }*/
 
   async getChurchById(id: number, qr?: QueryRunner) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    const church = await churchRepository.findOne({
-      where: {
-        id,
-      },
-      relations: {
-        //requestInfos: true,
-        //mainAdmin: true,
-        //subAdmins: true,
-        admins: true,
-      },
-    });
-
-    if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
-    }
-
-    return church;
-  }
-
-  async getChurchModelById(churchId: number, qr?: QueryRunner) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    const church = await churchRepository.findOne({
-      where: {
-        id: churchId,
-      },
-    });
-
-    if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
-    }
-
-    return church;
-  }
-
-  async isExistChurch(id: number, qr?: QueryRunner) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    const church = await churchRepository.findOne({ where: { id } });
-
-    return !!church;
+    return this.churchesDomainService.findChurchById(id, qr);
   }
 
   async createChurch(
@@ -95,112 +34,18 @@ export class ChurchesService {
     dto: CreateChurchDto,
     qr?: QueryRunner,
   ) {
-    const churchRepository = this.getChurchRepository(qr);
+    const user = await this.userDomainService.findUserById(accessToken.id, qr);
 
-    const isMainAdmin = await churchRepository.findOne({
-      where: {
-        admins: In([accessToken.id]),
-      },
-    });
+    this.userDomainService.isAbleToCreateChurch(user);
 
-    if (isMainAdmin) {
-      throw new BadRequestException('이미 생성한 교회가 있습니다.');
-    }
-
-    const isDuplicated = await churchRepository.findOne({
-      where: {
-        name: dto.name,
-        identifyNumber: dto.identifyNumber,
-      },
-    });
-
-    if (isDuplicated) {
-      throw new BadRequestException('이미 존재하는 교회입니다.');
-    }
-
-    return churchRepository.save({
-      ...dto,
-      mainAdmin: {
-        id: accessToken.id,
-      },
-    });
+    return this.churchesDomainService.createChurch(user, dto, qr);
   }
 
   async updateChurch(churchId: number, dto: UpdateChurchDto) {
-    const churchRepository = this.getChurchRepository();
-
-    const result = await churchRepository.update(
-      {
-        id: churchId,
-      },
-      {
-        ...dto,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('');
-    }
-
-    return this.getChurchById(churchId);
+    return this.churchesDomainService.updateChurch(churchId, dto);
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    const result = await churchRepository.softDelete({ id });
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
-    }
-
-    return `churchId: ${id} deleted`;
-  }
-
-  /**
-   * 초대 횟수 초기화 메소드
-   * @param church 초기화 대상 교회
-   * @param qr QueryRunner
-   */
-  initRequestAttempts(church: ChurchModel, qr: QueryRunner) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    return churchRepository.update(
-      { id: church.id },
-      { dailyRequestAttempts: 1, lastRequestDate: new Date() },
-    );
-  }
-
-  increaseRequestAttempts(church: ChurchModel, qr: QueryRunner) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    return churchRepository.update(
-      { id: church.id },
-      {
-        lastRequestDate: new Date(),
-        dailyRequestAttempts: () => 'dailyRequestAttempts + 1',
-      },
-    );
-  }
-
-  updateRequestAttempts(
-    church: ChurchModel,
-    validationResultType:
-      | RequestLimitValidationType.INIT
-      | RequestLimitValidationType.INCREASE,
-    qr: QueryRunner,
-  ) {
-    const churchRepository = this.getChurchRepository(qr);
-
-    return churchRepository.update(
-      { id: church.id },
-      {
-        lastRequestDate: new Date(),
-        dailyRequestAttempts:
-          validationResultType === RequestLimitValidationType.INCREASE
-            ? () => 'dailyRequestAttempts + 1'
-            : 1,
-      },
-    );
+    return this.churchesDomainService.deleteChurchById(id, qr);
   }
 }

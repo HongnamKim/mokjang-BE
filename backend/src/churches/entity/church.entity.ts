@@ -1,5 +1,5 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { GroupModel } from '../management/entity/group/group.entity';
@@ -12,7 +12,6 @@ import { EducationModel } from '../management/entity/education/education.entity'
 import { MinistryGroupModel } from '../management/entity/ministry/ministry-group.entity';
 
 @Entity()
-//@Unique(['name', 'identifyNumber'])
 export class ChurchModel extends BaseModel {
   @Column()
   name: string;
@@ -35,12 +34,8 @@ export class ChurchModel extends BaseModel {
   @Column({ enum: MemberSize, nullable: true })
   memberSize: MemberSize;
 
-  @Index()
-  @Column({ nullable: true })
-  mainAdminId: number;
-
   @OneToMany(() => UserModel, (user) => user.adminChurch)
-  admins: UserModel[];
+  users: UserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];

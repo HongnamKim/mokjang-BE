@@ -30,6 +30,8 @@ export interface IUserDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
+  isAbleToCreateChurch(user: UserModel): boolean;
+
   signInChurch(
     user: UserModel,
     church: ChurchModel,

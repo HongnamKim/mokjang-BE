@@ -1,21 +1,27 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryGroupModel } from '../../entity/ministry/ministry-group.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../../churches.service';
 import { CreateMinistryGroupDto } from '../../dto/ministry/create-ministry-group.dto';
 import { UpdateMinistryGroupDto } from '../../dto/ministry/update-ministry-group.dto';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MinistryGroupService {
   constructor(
     @InjectRepository(MinistryGroupModel)
     private readonly ministryGroupRepository: Repository<MinistryGroupModel>,
-    private readonly churchesService: ChurchesService,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private getMinistryGroupRepository(qr?: QueryRunner) {
@@ -25,7 +31,7 @@ export class MinistryGroupService {
   }
 
   private async checkChurchExist(churchId: number, qr?: QueryRunner) {
-    const isExistChurch = await this.churchesService.isExistChurch(
+    const isExistChurch = await this.churchesDomainService.isExistChurch(
       churchId,
       qr,
     );

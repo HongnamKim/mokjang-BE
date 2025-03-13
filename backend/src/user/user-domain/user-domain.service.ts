@@ -12,6 +12,7 @@ import { IUserDomainService } from './interface/user-domain.service.interface';
 import { MemberModel } from '../../churches/members/entity/member.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { UserRole } from '../const/user-role.enum';
 
 @Injectable()
 export class UserDomainService implements IUserDomainService {
@@ -93,6 +94,16 @@ export class UserDomainService implements IUserDomainService {
         ...dto,
       },
     );
+  }
+
+  isAbleToCreateChurch(user: UserModel): boolean {
+    if (user.role !== UserRole.none) {
+      throw new BadRequestException(
+        '소속된 교회가 있을 경우, 교회를 생성할 수 없습니다.',
+      );
+    }
+
+    return true;
   }
 
   async signInChurch(

@@ -33,6 +33,7 @@ import { DummyDataService } from './dummy-data.service';
 import { MemberEventHandler } from './member-event.handler';
 import { UserModule } from './user/user.module';
 import { MembersModule } from './churches/members/members.module';
+import { ChurchesModule } from './churches/churches.module';
 
 @Module({
   imports: [
@@ -132,9 +133,9 @@ import { MembersModule } from './churches/members/members.module';
       inject: [ConfigService],
     }),
     //CommonModule,
-    //ChurchesModule,
     AuthModule,
     UserModule,
+    ChurchesModule,
     RequestInfoModule,
     MembersModule,
     MembersManagementModule,

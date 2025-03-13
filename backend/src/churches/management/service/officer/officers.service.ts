@@ -1,22 +1,28 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OfficerModel } from '../../entity/officer/officer.entity';
 import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../../churches.service';
 import { MANAGEMENT_EXCEPTION } from '../../exception-messages/exception-messages.const';
 import { CreateOfficerDto } from '../../dto/officer/create-officer.dto';
 import { UpdateOfficerDto } from '../../dto/officer/update-officer.dto';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class OfficersService {
   constructor(
     @InjectRepository(OfficerModel)
     private readonly officersRepository: Repository<OfficerModel>,
-    private readonly churchesService: ChurchesService,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private getOfficersRepository(qr?: QueryRunner) {
@@ -26,7 +32,8 @@ export class OfficersService {
   }
 
   private async checkChurchExist(churchId: number) {
-    const isExistChurch = await this.churchesService.isExistChurch(churchId);
+    const isExistChurch =
+      await this.churchesDomainService.isExistChurch(churchId);
 
     if (!isExistChurch) {
       throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
