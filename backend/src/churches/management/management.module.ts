@@ -29,6 +29,16 @@ import { MinistryService } from './service/ministry/ministry.service';
 import { MinistryGroupService } from './service/ministry/ministry-group.service';
 import { MinistryGroupsController } from './controller/ministry/ministry-groups.controller';
 import { OfficersService } from './service/officer/officers.service';
+import { EducationSessionService } from './service/education/educaiton-session.service';
+import { EducationEnrollmentService } from './service/education/education-enrollment.service';
+import { EducationTermService } from './service/education/education-term.service';
+import { SessionAttendanceService } from './service/education/session-attendance.service';
+import { EducationTermSyncService } from './service/education-sync/education-term-sync.service';
+import { EducationTermSessionSyncService } from './service/education-sync/education-term-session-sync.service';
+import { EducationTermAttendanceSyncService } from './service/education-sync/education-term-attendance-sync.service';
+import { EducationTermEnrollmentSyncService } from './service/education-sync/education-term-enrollment-sync.service';
+import { EducationEnrollmentAttendanceSyncService } from './service/education-sync/education-enrollment-attendance-sync.service';
+import { EducationEnrollmentSessionSyncService } from './service/education-sync/education-enrollment-session-sync.service';
 
 @Module({
   imports: [
@@ -38,8 +48,6 @@ import { OfficersService } from './service/officer/officers.service';
         module: ManagementModule,
       },
     ]),
-    ChurchesModule,
-    MembersModule,
     TypeOrmModule.forFeature([
       OfficerModel,
       // 사역 관련 엔티티
@@ -55,6 +63,8 @@ import { OfficersService } from './service/officer/officers.service';
       GroupModel,
       GroupRoleModel,
     ]),
+    ChurchesModule,
+    MembersModule,
   ],
   controllers: [
     OfficersController,
@@ -73,6 +83,16 @@ import { OfficersService } from './service/officer/officers.service';
     GroupsService,
     GroupsRolesService,
     EducationsService,
+    EducationSessionService,
+    EducationEnrollmentService,
+    EducationTermService,
+    SessionAttendanceService,
+    EducationTermSyncService,
+    EducationTermSessionSyncService,
+    EducationTermAttendanceSyncService,
+    EducationTermEnrollmentSyncService,
+    EducationEnrollmentAttendanceSyncService,
+    EducationEnrollmentSessionSyncService,
     MinistryService,
     MinistryGroupService,
   ],
@@ -82,6 +102,10 @@ import { OfficersService } from './service/officer/officers.service';
     GroupsService,
     GroupsRolesService,
     EducationsService,
+    //EducationSessionService,
+    EducationEnrollmentService,
+    //EducationTermService,
+    //SessionAttendanceService,
     OfficersService,
   ],
 })

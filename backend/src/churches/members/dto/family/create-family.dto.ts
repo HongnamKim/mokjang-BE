@@ -18,7 +18,7 @@ export class CreateFamilyDto extends PickType(FamilyModel, [
   @ApiProperty({
     name: 'relation',
     description: '가족 관계',
-    example: '어머니',
+    example: FamilyRelation.MOTHER,
     default: FamilyRelation.FAMILY,
   })
   @IsString()

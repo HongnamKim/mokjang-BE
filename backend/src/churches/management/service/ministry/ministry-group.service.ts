@@ -1,21 +1,27 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryGroupModel } from '../../entity/ministry/ministry-group.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
-import { ChurchesService } from '../../../churches.service';
 import { CreateMinistryGroupDto } from '../../dto/ministry/create-ministry-group.dto';
 import { UpdateMinistryGroupDto } from '../../dto/ministry/update-ministry-group.dto';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MinistryGroupService {
   constructor(
     @InjectRepository(MinistryGroupModel)
     private readonly ministryGroupRepository: Repository<MinistryGroupModel>,
-    private readonly churchesService: ChurchesService,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private getMinistryGroupRepository(qr?: QueryRunner) {
@@ -25,7 +31,7 @@ export class MinistryGroupService {
   }
 
   private async checkChurchExist(churchId: number, qr?: QueryRunner) {
-    const isExistChurch = await this.churchesService.isExistChurch(
+    const isExistChurch = await this.churchesDomainService.isExistChurch(
       churchId,
       qr,
     );
@@ -178,18 +184,30 @@ export class MinistryGroupService {
   ) {
     await this.checkChurchExist(churchId, qr);
 
-    if (
-      await this.isExistMinistryGroup(
-        churchId,
-        dto.parentMinistryGroupId,
-        dto.name,
-        qr,
-      )
-    ) {
-      throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
-    }
-
     const ministryGroupRepository = this.getMinistryGroupRepository(qr);
+
+    const existingMinistryGroup = await ministryGroupRepository.findOne({
+      where: {
+        churchId,
+        parentMinistryGroupId: dto.parentMinistryGroupId
+          ? dto.parentMinistryGroupId
+          : IsNull(),
+        name: dto.name,
+      },
+      relations: {
+        childMinistryGroups: true,
+        ministries: true,
+      },
+      withDeleted: true,
+    });
+
+    if (existingMinistryGroup) {
+      if (!existingMinistryGroup.deletedAt) {
+        throw new BadRequestException('이미 존재하는 사역 그룹 이름입니다.');
+      }
+
+      await ministryGroupRepository.remove(existingMinistryGroup);
+    }
 
     // 상위 그룹 지정 시
     if (dto.parentMinistryGroupId) {
@@ -346,7 +364,7 @@ export class MinistryGroupService {
       { ministries: true },
     );
 
-    // 하위 그룹 or 사역이 있을 경우 Exception
+    /*// 하위 그룹 or 사역이 있을 경우 Exception
     if (
       deleteTarget.childMinistryGroupIds.length > 0 ||
       deleteTarget.ministries.length > 0
@@ -360,6 +378,9 @@ export class MinistryGroupService {
       id: ministryGroupId,
       churchId,
     });
+    */
+
+    await ministryGroupRepository.softRemove(deleteTarget);
 
     await this.removeChildMinistryGroupId(
       deleteTarget.parentMinistryGroupId,

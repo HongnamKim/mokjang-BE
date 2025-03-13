@@ -2,14 +2,11 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
 import { MemberModel } from './churches/members/entity/member.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MembersModule } from './churches/members/members.module';
 import { MembersManagementModule } from './churches/members-management/members-management.module';
 import { OfficerModel } from './churches/management/entity/officer/officer.entity';
 import { MinistryModel } from './churches/management/entity/ministry/ministry.entity';
@@ -20,7 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
-import { UserModel } from './auth/entity/user.entity';
+import { UserModel } from './user/entity/user.entity';
 import { GroupRoleModel } from './churches/management/entity/group/group-role.entity';
 import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
 import { EducationModel } from './churches/management/entity/education/education.entity';
@@ -32,6 +29,11 @@ import { MinistryGroupModel } from './churches/management/entity/ministry/minist
 import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { DummyDataService } from './dummy-data.service';
+import { MemberEventHandler } from './member-event.handler';
+import { UserModule } from './user/user.module';
+import { MembersModule } from './churches/members/members.module';
+import { ChurchesModule } from './churches/churches.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
+        // 배포환경
+        NODE_ENV: Joi.string().required(),
         // DB
         DB_TYPE: Joi.string().valid('postgres').required(),
         DB_HOST: Joi.string().required(),
@@ -55,6 +59,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
         PROTOCOL: Joi.string().required(),
         HOST: Joi.string().required(),
         PORT: Joi.number().required(),
+        CLIENT_HOST: Joi.string().required(),
+        CLIENT_PORT: Joi.number().required(),
         // 메시지 API
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
@@ -126,7 +132,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       }),
       inject: [ConfigService],
     }),
+    //CommonModule,
     AuthModule,
+    UserModule,
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
@@ -135,11 +143,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
   ],
   controllers: [AppController],
   providers: [
+    MemberEventHandler,
     AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    DummyDataService,
   ],
 })
 export class AppModule {}
