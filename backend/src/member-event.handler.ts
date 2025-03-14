@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from './churches/members/events/member.event';
 import { DataSource } from 'typeorm';
-import { EducationEnrollmentService } from './churches/management/service/education/education-enrollment.service';
+import { EducationEnrollmentService } from './management/service/education/education-enrollment.service';
 
 @Injectable()
 export class MemberEventHandler {

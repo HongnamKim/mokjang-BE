@@ -9,9 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OfficerHistoryModel } from '../entity/officer-history.entity';
 import { GetOfficerHistoryDto } from '../dto/officer/get-officer-history.dto';
 import { SetMemberOfficerDto } from '../dto/officer/set-member-officer.dto';
-import { OfficersService } from '../../management/service/officer/officers.service';
 import { EndMemberOfficeDto } from '../dto/officer/end-member-officer.dto';
 import { UpdateOfficerHistoryDto } from '../dto/officer/update-officer-history.dto';
+import { OfficersService } from '../../../management/service/officer/officers.service';
 
 @Injectable()
 export class MemberOfficerService {
