@@ -10,9 +10,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateOfficerDto } from '../../dto/officer/create-officer.dto';
-import { UpdateOfficerDto } from '../../dto/officer/update-officer.dto';
-import { OfficersService } from '../../service/officer/officers.service';
+import { CreateOfficerDto } from '../dto/create-officer.dto';
+import { UpdateOfficerDto } from '../dto/update-officer.dto';
+import { OfficersService } from '../service/officers.service';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';

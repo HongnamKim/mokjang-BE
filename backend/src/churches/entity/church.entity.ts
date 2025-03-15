@@ -5,12 +5,12 @@ import { MemberModel } from '../members/entity/member.entity';
 
 import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
-import { GroupModel } from '../../management/group/entity/group.entity';
-import { GroupRoleModel } from '../../management/group/entity/group-role.entity';
+import { GroupModel } from '../../management/groups/entity/group.entity';
+import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
 import { EducationModel } from '../../management/entity/education/education.entity';
-import { OfficerModel } from '../../management/entity/officer/officer.entity';
-import { MinistryGroupModel } from '../../management/entity/ministry/ministry-group.entity';
-import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
+import { OfficerModel } from '../../management/officers/entity/officer.entity';
+import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
+import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
 
 @Entity()
 export class ChurchModel extends BaseModel {

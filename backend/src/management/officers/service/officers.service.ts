@@ -5,15 +5,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OfficerModel } from '../../entity/officer/officer.entity';
+import { OfficerModel } from '../entity/officer.entity';
 import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
 import { MANAGEMENT_EXCEPTION } from '../../exception-messages/exception-messages.const';
-import { CreateOfficerDto } from '../../dto/officer/create-officer.dto';
-import { UpdateOfficerDto } from '../../dto/officer/update-officer.dto';
+import { CreateOfficerDto } from '../dto/create-officer.dto';
+import { UpdateOfficerDto } from '../dto/update-officer.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IOFFICERS_DOMAIN_SERVICE,
+  IOfficersDomainService,
+} from '../officer-domain/interface/officers-domain.service.interface';
 
 @Injectable()
 export class OfficersService {
@@ -23,6 +27,8 @@ export class OfficersService {
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IOFFICERS_DOMAIN_SERVICE)
+    private readonly officersDomainService: IOfficersDomainService,
   ) {}
 
   private getOfficersRepository(qr?: QueryRunner) {

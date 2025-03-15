@@ -11,8 +11,8 @@ import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
 import { UpdateMinistryHistoryDto } from '../dto/ministry/update-ministry-history.dto';
-import { MinistryService } from '../../../management/service/ministry/ministry.service';
-import { MinistryGroupService } from '../../../management/service/ministry/ministry-group.service';
+import { MinistryService } from '../../../management/ministries/service/ministry.service';
+import { MinistryGroupService } from '../../../management/ministries/service/ministry-group.service';
 
 @Injectable()
 export class MemberMinistryService {

@@ -31,11 +31,11 @@ import { EducationTermModel } from './management/entity/education/education-term
 import { EducationSessionModel } from './management/entity/education/education-session.entity';
 import { SessionAttendanceModel } from './management/entity/education/session-attendance.entity';
 import { EducationEnrollmentModel } from './management/entity/education/education-enrollment.entity';
-import { OfficerModel } from './management/entity/officer/officer.entity';
-import { MinistryModel } from './management/entity/ministry/ministry.entity';
-import { MinistryGroupModel } from './management/entity/ministry/ministry-group.entity';
-import { GroupModel } from './management/group/entity/group.entity';
-import { GroupRoleModel } from './management/group/entity/group-role.entity';
+import { OfficerModel } from './management/officers/entity/officer.entity';
+import { MinistryModel } from './management/ministries/entity/ministry.entity';
+import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
+import { GroupModel } from './management/groups/entity/group.entity';
+import { GroupRoleModel } from './management/groups/entity/group-role.entity';
 import { ManagementModule } from './management/management.module';
 
 @Module({

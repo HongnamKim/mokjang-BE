@@ -10,7 +10,7 @@ import {
 import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
-} from '../group-management-domain/interface/groups-domain.service.interface';
+} from '../groups-domain/interface/groups-domain.service.interface';
 
 @Injectable()
 export class GroupsService {

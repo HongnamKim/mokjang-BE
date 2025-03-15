@@ -34,10 +34,10 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
-import { OfficerModel } from '../../../management/entity/officer/officer.entity';
-import { MinistryModel } from '../../../management/entity/ministry/ministry.entity';
-import { GroupModel } from '../../../management/group/entity/group.entity';
-import { GroupRoleModel } from '../../../management/group/entity/group-role.entity';
+import { OfficerModel } from '../../../management/officers/entity/officer.entity';
+import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
+import { GroupModel } from '../../../management/groups/entity/group.entity';
+import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 
 @Injectable()
 export class MembersService {
