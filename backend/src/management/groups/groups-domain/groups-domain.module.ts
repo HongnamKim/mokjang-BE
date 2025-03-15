@@ -18,4 +18,4 @@ import { GroupRolesDomainService } from './group-roles-domain.service';
   ],
   exports: [IGROUP_ROLES_DOMAIN_SERVICE, IGROUPS_DOMAIN_SERVICE],
 })
-export class GroupDomainModule {}
+export class GroupsDomainModule {}

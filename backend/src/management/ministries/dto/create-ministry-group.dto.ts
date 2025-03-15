@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { MinistryGroupModel } from '../../entity/ministry/ministry-group.entity';
+import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import {
   IsNotEmpty,
   IsNumber,

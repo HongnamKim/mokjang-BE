@@ -15,7 +15,7 @@ import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
 import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
-} from '../../../management/group/group-management-domain/interface/groups-domain.service.interface';
+} from '../../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,

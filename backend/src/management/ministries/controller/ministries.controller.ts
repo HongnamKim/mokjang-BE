@@ -11,10 +11,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { MinistryService } from '../../service/ministry/ministry.service';
-import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
-import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
-import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
+import { MinistryService } from '../service/ministry.service';
+import { CreateMinistryDto } from '../dto/create-ministry.dto';
+import { UpdateMinistryDto } from '../dto/update-ministry.dto';
+import { GetMinistryDto } from '../dto/get-ministry.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';

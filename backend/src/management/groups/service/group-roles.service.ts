@@ -6,7 +6,7 @@ import { UpdateGroupRoleDto } from '../dto/update-group-role.dto';
 import {
   IGROUP_ROLES_DOMAIN_SERVICE,
   IGroupRolesDomainService,
-} from '../group-management-domain/interface/groups-roles-domain.service.interface';
+} from '../groups-domain/interface/groups-roles-domain.service.interface';
 
 @Injectable()
 export class GroupRolesService {

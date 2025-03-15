@@ -5,8 +5,6 @@ import { MemberOfficerService } from './service/member-officer.service';
 import { MemberOfficerController } from './controller/member-officer.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
-//import { MemberEducationService } from './service/education-history.service';
-//import { EducationHistoryModel } from './entity/education-history.entity';
 import { MemberEducationController } from './controller/member-education.controller';
 import { MemberGroupController } from './controller/member-group.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
@@ -17,8 +15,10 @@ import { MemberMinistryController } from './controller/member-ministry.controlle
 import { OfficerHistoryModel } from './entity/officer-history.entity';
 import { ManagementModule } from '../../management/management.module';
 import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
-import { GroupDomainModule } from '../../management/group/group-management-domain/group-domain.module';
+import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
+import { OfficersModule } from '../../management/officers/officers.module';
+import { MinistriesModule } from '../../management/ministries/ministries.module';
 
 @Module({
   imports: [
@@ -38,7 +38,11 @@ import { ChurchesDomainModule } from '../churches-domain/churches-domain.module'
     MembersModule,
     ManagementModule,
     //GroupsModule,
-    GroupDomainModule,
+    // 임시 import
+    OfficersModule,
+    MinistriesModule,
+    //
+    GroupsDomainModule,
     ChurchesDomainModule,
   ],
   exports: [],

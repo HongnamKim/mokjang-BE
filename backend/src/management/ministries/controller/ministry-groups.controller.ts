@@ -9,11 +9,11 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
-import { MinistryGroupService } from '../../service/ministry/ministry-group.service';
+import { MinistryGroupService } from '../service/ministry-group.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateMinistryGroupDto } from '../../dto/ministry/create-ministry-group.dto';
+import { CreateMinistryGroupDto } from '../dto/create-ministry-group.dto';
 import { QueryRunner as QR } from 'typeorm';
-import { UpdateMinistryGroupDto } from '../../dto/ministry/update-ministry-group.dto';
+import { UpdateMinistryGroupDto } from '../dto/update-ministry-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 

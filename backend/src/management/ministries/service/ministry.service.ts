@@ -4,13 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MinistryModel } from '../../entity/ministry/ministry.entity';
+import { MinistryModel } from '../entity/ministry.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
-import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
-import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
+import { CreateMinistryDto } from '../dto/create-ministry.dto';
+import { UpdateMinistryDto } from '../dto/update-ministry.dto';
 import { MinistryExceptionMessage } from '../../const/exception/ministry/ministry.exception';
 import { MinistryGroupService } from './ministry-group.service';
-import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
+import { GetMinistryDto } from '../dto/get-ministry.dto';
 
 @Injectable()
 export class MinistryService {

@@ -16,7 +16,6 @@ import { GroupModel } from '../entity/group.entity';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupExceptionMessage } from '../const/exception/group.exception';
-import { MANAGEMENT_EXCEPTION } from '../../exception-messages/exception-messages.const';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -297,7 +296,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(MANAGEMENT_EXCEPTION.GroupModel.NOT_FOUND);
+      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
     }
 
     return true;
@@ -403,7 +402,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(MANAGEMENT_EXCEPTION.GroupModel.NOT_FOUND);
+      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
     }
 
     const updatedGroup = await groupsRepository.findOne({

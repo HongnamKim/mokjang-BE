@@ -5,10 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MinistryGroupModel } from '../../entity/ministry/ministry-group.entity';
+import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
-import { CreateMinistryGroupDto } from '../../dto/ministry/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../../dto/ministry/update-ministry-group.dto';
+import { CreateMinistryGroupDto } from '../dto/create-ministry-group.dto';
+import { UpdateMinistryGroupDto } from '../dto/update-ministry-group.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
