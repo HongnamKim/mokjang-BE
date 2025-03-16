@@ -19,6 +19,7 @@ import { GroupsDomainModule } from '../../management/groups/groups-domain/groups
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
 import { OfficersModule } from '../../management/officers/officers.module';
 import { MinistriesModule } from '../../management/ministries/ministries.module';
+import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { MinistriesModule } from '../../management/ministries/ministries.module'
     MinistriesModule,
     //
     GroupsDomainModule,
+    OfficersDomainModule,
     ChurchesDomainModule,
   ],
   exports: [],

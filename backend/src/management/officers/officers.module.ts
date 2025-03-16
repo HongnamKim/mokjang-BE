@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OfficerModel } from './entity/officer.entity';
 import { OfficersController } from './controller/officers.controller';
 import { OfficersService } from './service/officers.service';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
@@ -15,12 +13,11 @@ import { RouterModule } from '@nestjs/core';
         module: OfficersModule,
       },
     ]),
-    TypeOrmModule.forFeature([OfficerModel]),
     ChurchesDomainModule,
     OfficersDomainModule,
   ],
   controllers: [OfficersController],
   providers: [OfficersService],
-  exports: [OfficersService],
+  exports: [],
 })
 export class OfficersModule {}

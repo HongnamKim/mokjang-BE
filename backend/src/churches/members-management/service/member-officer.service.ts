@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,7 +12,14 @@ import { GetOfficerHistoryDto } from '../dto/officer/get-officer-history.dto';
 import { SetMemberOfficerDto } from '../dto/officer/set-member-officer.dto';
 import { EndMemberOfficeDto } from '../dto/officer/end-member-officer.dto';
 import { UpdateOfficerHistoryDto } from '../dto/officer/update-officer-history.dto';
-import { OfficersService } from '../../../management/officers/service/officers.service';
+import {
+  IOFFICERS_DOMAIN_SERVICE,
+  IOfficersDomainService,
+} from '../../../management/officers/officer-domain/interface/officers-domain.service.interface';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MemberOfficerService {
@@ -19,7 +27,11 @@ export class MemberOfficerService {
     @InjectRepository(OfficerHistoryModel)
     private readonly officerHistoryRepository: Repository<OfficerHistoryModel>,
     private readonly membersService: MembersService,
-    private readonly officersService: OfficersService,
+
+    @Inject(IOFFICERS_DOMAIN_SERVICE)
+    private readonly officersDomainService: IOfficersDomainService,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private getOfficerHistoryRepository(qr?: QueryRunner) {
@@ -82,6 +94,11 @@ export class MemberOfficerService {
     dto: SetMemberOfficerDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
 
     const member = await this.membersService.getMemberModelById(
@@ -95,8 +112,8 @@ export class MemberOfficerService {
       throw new BadRequestException('직분이 있는 교인입니다.');
     }
 
-    const officer = await this.officersService.getOfficerModelById(
-      churchId,
+    const officer = await this.officersDomainService.findOfficerModelById(
+      church,
       dto.officerId,
       qr,
     );
@@ -115,7 +132,7 @@ export class MemberOfficerService {
       }),
 
       // 직분 인원수 증가
-      this.officersService.incrementMembersCount(churchId, dto.officerId, qr),
+      this.officersDomainService.incrementMembersCount(officer, qr),
 
       // 교인 - 직분 관계 설정
       this.membersService.startMemberOfficer(
@@ -179,9 +196,8 @@ export class MemberOfficerService {
       this.membersService.endMemberOfficer(member, qr),
 
       // 직분의 membersCount 감소
-      this.officersService.decrementMembersCount(
-        churchId,
-        officerHistory.officer.id,
+      this.officersDomainService.decrementMembersCount(
+        officerHistory.officer,
         qr,
       ),
     ]);

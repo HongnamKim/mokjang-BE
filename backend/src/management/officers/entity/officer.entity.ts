@@ -8,7 +8,6 @@ import {
   OneToMany,
   Unique,
 } from 'typeorm';
-
 import { ConflictException } from '@nestjs/common';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
