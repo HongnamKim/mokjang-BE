@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,17 +12,29 @@ import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
 import { UpdateMinistryHistoryDto } from '../dto/ministry/update-ministry-history.dto';
-import { MinistryService } from '../../../management/ministries/service/ministry.service';
 import { MinistryGroupService } from '../../../management/ministries/service/ministry-group.service';
+import {
+  IMINISTRIES_DOMAIN_SERVICE,
+  IMinistriesDomainService,
+} from '../../../management/ministries/ministries-domain/interface/ministries-domain.service.interface';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MemberMinistryService {
   constructor(
     private readonly membersService: MembersService,
-    private readonly ministryService: MinistryService,
+    //private readonly ministryService: MinistryService,
     private readonly ministryGroupService: MinistryGroupService,
     @InjectRepository(MinistryHistoryModel)
     private readonly ministryHistoryRepository: Repository<MinistryHistoryModel>,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMINISTRIES_DOMAIN_SERVICE)
+    private readonly ministriesDomainService: IMinistriesDomainService,
   ) {}
 
   private getMinistryHistoryRepository(qr?: QueryRunner) {
@@ -154,14 +167,19 @@ export class MemberMinistryService {
     dto: CreateMemberMinistryDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
 
     const [ministry, member, isExistMinistryHistory] = await Promise.all([
-      this.ministryService.getMinistryModelById(
-        churchId,
+      this.ministriesDomainService.findMinistryModelById(
+        church,
         dto.ministryId,
-        { ministryGroup: true },
         qr,
+        { ministryGroup: true },
       ),
       this.membersService.getMemberModelById(
         churchId,
@@ -184,7 +202,7 @@ export class MemberMinistryService {
         startDate: dto.startDate,
       }),
       // 인원 수 증가
-      this.ministryService.incrementMembersCount(churchId, dto.ministryId, qr),
+      this.ministriesDomainService.incrementMembersCount(ministry, qr),
       // 사역 relation 추가
       this.membersService.startMemberMinistry(member, ministry, qr),
     ]);
@@ -251,7 +269,10 @@ export class MemberMinistryService {
         qr,
       ),
       // 사역 인원수 감소
-      this.ministryService.decrementMembersCount(churchId, ministryId, qr),
+      this.ministriesDomainService.decrementMembersCount(
+        ministryHistory.ministry,
+        qr,
+      ),
     ]);
 
     return this.membersService.getMemberById(churchId, memberId, qr);

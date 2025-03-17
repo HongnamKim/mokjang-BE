@@ -24,6 +24,6 @@ import { MinistriesDomainModule } from './ministries-domain/ministries-domain.mo
   ],
   controllers: [MinistriesController, MinistryGroupsController],
   providers: [MinistryService, MinistryGroupService],
-  exports: [MinistryService, MinistryGroupService],
+  exports: [MinistryGroupService],
 })
 export class MinistriesModule {}

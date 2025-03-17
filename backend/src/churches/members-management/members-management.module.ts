@@ -17,9 +17,9 @@ import { ManagementModule } from '../../management/management.module';
 import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
-import { OfficersModule } from '../../management/officers/officers.module';
 import { MinistriesModule } from '../../management/ministries/ministries.module';
 import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
+import { MinistriesDomainModule } from '../../management/ministries/ministries-domain/ministries-domain.module';
 
 @Module({
   imports: [
@@ -39,12 +39,13 @@ import { OfficersDomainModule } from '../../management/officers/officer-domain/o
     MembersModule,
     ManagementModule,
     //GroupsModule,
+    //OfficersModule,
     // 임시 import
-    OfficersModule,
     MinistriesModule,
-    //
+    // Domain Modules
     GroupsDomainModule,
     OfficersDomainModule,
+    MinistriesDomainModule,
     ChurchesDomainModule,
   ],
   exports: [],

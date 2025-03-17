@@ -51,6 +51,7 @@ export class MinistriesController {
   }
 
   @Patch(':ministryId')
+  @UseInterceptors(TransactionInterceptor)
   patchMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,

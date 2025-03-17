@@ -1,4 +1,4 @@
-export const GroupExceptionMessage = {
+export const GroupException = {
   NOT_FOUND: '해당 그룹을 찾을 수 없습니다.',
   ALREADY_EXIST: '이미 존재하는 그룹입니다.',
   LIMIT_DEPTH_REACHED: '더 이상 하위 그룹을 생성할 수 없습니다.',
