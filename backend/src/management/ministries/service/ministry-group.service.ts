@@ -13,6 +13,10 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IMINISTRY_GROUPS_DOMAIN_SERVICE,
+  IMinistryGroupsDomainService,
+} from '../ministries-domain/interface/ministry-groups-domain.service.interface';
 
 @Injectable()
 export class MinistryGroupService {
@@ -22,6 +26,8 @@ export class MinistryGroupService {
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMINISTRY_GROUPS_DOMAIN_SERVICE)
+    private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
   ) {}
 
   private getMinistryGroupRepository(qr?: QueryRunner) {

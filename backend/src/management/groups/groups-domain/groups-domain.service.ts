@@ -15,7 +15,7 @@ import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { GroupModel } from '../entity/group.entity';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GroupExceptionMessage } from '../const/exception/group.exception';
+import { GroupException } from '../const/exception/group.exception';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -64,7 +64,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     if (!group) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     return group;
@@ -83,7 +83,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (isExistingGroup) {
-      throw new BadRequestException(GroupExceptionMessage.ALREADY_EXIST);
+      throw new BadRequestException(GroupException.ALREADY_EXIST);
     }
 
     if (dto.parentGroupId) {
@@ -108,7 +108,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     return true;
@@ -131,16 +131,14 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     if (!deleteTarget) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     if (
       deleteTarget.childGroupIds.length > 0 ||
       deleteTarget.membersCount > 0
     ) {
-      throw new BadRequestException(
-        GroupExceptionMessage.GROUP_HAS_DEPENDENCIES,
-      );
+      throw new BadRequestException(GroupException.GROUP_HAS_DEPENDENCIES);
     }
 
     await groupsRepository.softRemove(deleteTarget);
@@ -179,7 +177,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     if (!group) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     return group;
@@ -296,7 +294,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     return true;
@@ -318,7 +316,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     if (!updateTargetGroup) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     // 그룹 이름을 변경하는 경우 중복 확인
@@ -326,7 +324,7 @@ export class GroupsDomainService implements IGroupsDomainService {
       dto.name &&
       (await this.isExistGroup(churchId, dto.name, qr, dto.parentGroupId))
     ) {
-      throw new BadRequestException(GroupExceptionMessage.ALREADY_EXIST);
+      throw new BadRequestException(GroupException.ALREADY_EXIST);
     }
 
     if (dto.parentGroupId) {
@@ -344,14 +342,14 @@ export class GroupsDomainService implements IGroupsDomainService {
       });
 
       if (!newParentGroup) {
-        throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+        throw new NotFoundException(GroupException.NOT_FOUND);
       }
 
       // 종속 관계를 역전시키려는 경우
       // A -> B 관계를 직접 A <- B 로 바꾸려는 경우
       if (updateTargetGroup.childGroupIds.includes(dto.parentGroupId)) {
         throw new BadRequestException(
-          GroupExceptionMessage.CANNOT_SET_SUBGROUP_AS_PARENT,
+          GroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
         );
       }
 
@@ -402,7 +400,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     const updatedGroup = await groupsRepository.findOne({
@@ -449,7 +447,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     if (!parentGroup) {
-      throw new NotFoundException(GroupExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
     const grandParentGroups = await this.findParentGroups(
@@ -460,7 +458,7 @@ export class GroupsDomainService implements IGroupsDomainService {
 
     // 그룹의 depth 는 5 를 넘을 수 없음.
     if (grandParentGroups.length + 1 === 5) {
-      throw new BadRequestException(GroupExceptionMessage.LIMIT_DEPTH_REACHED);
+      throw new BadRequestException(GroupException.LIMIT_DEPTH_REACHED);
     }
 
     const newGroup = await groupsRepository.save({

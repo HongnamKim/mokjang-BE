@@ -1,14 +1,5 @@
-import {
-  BeforeRemove,
-  BeforeSoftRemove,
-  Column,
-  Entity,
-  Index,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { MinistryModel } from './ministry.entity';
-import { ConflictException } from '@nestjs/common';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
@@ -46,7 +37,7 @@ export class MinistryGroupModel extends BaseModel {
   @OneToMany(() => MinistryModel, (ministry) => ministry.ministryGroup)
   ministries: MinistryModel[];
 
-  @BeforeRemove()
+  /*@BeforeRemove()
   @BeforeSoftRemove()
   preventIfHasChild() {
     if (this.childMinistryGroupIds.length > 0 || this.ministries.length > 0) {
@@ -54,5 +45,5 @@ export class MinistryGroupModel extends BaseModel {
         '해당 사역 그룹에 속한 하위 사역 그룹 또는 사역이 존재합니다.',
       );
     }
-  }
+  }*/
 }
