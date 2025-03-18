@@ -12,7 +12,6 @@ import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
 import { UpdateMinistryHistoryDto } from '../dto/ministry/update-ministry-history.dto';
-import { MinistryGroupService } from '../../../management/ministries/service/ministry-group.service';
 import {
   IMINISTRIES_DOMAIN_SERVICE,
   IMinistriesDomainService,
@@ -21,20 +20,24 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
+import {
+  IMINISTRY_GROUPS_DOMAIN_SERVICE,
+  IMinistryGroupsDomainService,
+} from '../../../management/ministries/ministries-domain/interface/ministry-groups-domain.service.interface';
 
 @Injectable()
 export class MemberMinistryService {
   constructor(
-    private readonly membersService: MembersService,
-    //private readonly ministryService: MinistryService,
-    private readonly ministryGroupService: MinistryGroupService,
     @InjectRepository(MinistryHistoryModel)
     private readonly ministryHistoryRepository: Repository<MinistryHistoryModel>,
+    private readonly membersService: MembersService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMINISTRIES_DOMAIN_SERVICE)
     private readonly ministriesDomainService: IMinistriesDomainService,
+    @Inject(IMINISTRY_GROUPS_DOMAIN_SERVICE)
+    private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
   ) {}
 
   private getMinistryHistoryRepository(qr?: QueryRunner) {
@@ -120,9 +123,14 @@ export class MemberMinistryService {
   ) {
     const ministryGroupId = ministryHistory.ministry.ministryGroupId;
 
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const ministryParentGroups = ministryGroupId
-      ? await this.ministryGroupService.getParentMinistryGroups(
-          churchId,
+      ? await this.ministryGroupsDomainService.findParentMinistryGroups(
+          church,
           ministryGroupId,
           qr,
         )

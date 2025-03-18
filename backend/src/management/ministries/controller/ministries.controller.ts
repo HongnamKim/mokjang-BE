@@ -10,7 +10,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MinistryService } from '../service/ministry.service';
 import { CreateMinistryDto } from '../dto/create-ministry.dto';
 import { UpdateMinistryDto } from '../dto/update-ministry.dto';
@@ -50,6 +50,11 @@ export class MinistriesController {
     return this.ministryService.getMinistryById(churchId, ministryId);
   }
 
+  @ApiOperation({
+    summary: '사역 수정',
+    description:
+      '소속 사역 그룹을 없애려는 경우 ministryGroupId 를 0 으로 설정',
+  })
   @Patch(':ministryId')
   @UseInterceptors(TransactionInterceptor)
   patchMinistry(

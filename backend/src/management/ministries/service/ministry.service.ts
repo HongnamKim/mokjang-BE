@@ -3,7 +3,6 @@ import { MinistryModel } from '../entity/ministry.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { CreateMinistryDto } from '../dto/create-ministry.dto';
 import { UpdateMinistryDto } from '../dto/update-ministry.dto';
-import { MinistryGroupService } from './ministry-group.service';
 import { GetMinistryDto } from '../dto/get-ministry.dto';
 import {
   IMINISTRIES_DOMAIN_SERVICE,
@@ -17,14 +16,11 @@ import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
 } from '../ministries-domain/interface/ministry-groups-domain.service.interface';
+import { MinistryGroupModel } from '../entity/ministry-group.entity';
 
 @Injectable()
 export class MinistryService {
   constructor(
-    /*@InjectRepository(MinistryModel)
-    private readonly ministryRepository: Repository<MinistryModel>,*/
-    private readonly ministryGroupService: MinistryGroupService,
-
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMINISTRIES_DOMAIN_SERVICE)
@@ -33,31 +29,6 @@ export class MinistryService {
     private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
   ) {}
 
-  /*private getMinistryRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(MinistryModel)
-      : this.ministryRepository;
-  }*/
-
-  /*async isExistMinistry(
-    churchId: number,
-    ministryGroupId: number | null,
-    name: string,
-    qr?: QueryRunner /!*ministryGroupId: number*!/,
-  ) {
-    const ministryRepository = this.getMinistryRepository(qr);
-
-    const ministry = await ministryRepository.findOne({
-      where: {
-        churchId,
-        ministryGroupId: ministryGroupId ? ministryGroupId : IsNull(),
-        name: name,
-      },
-    });
-
-    return !!ministry;
-  }*/
-
   async getMinistries(churchId: number, dto: GetMinistryDto, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
@@ -65,20 +36,6 @@ export class MinistryService {
     );
 
     return this.ministriesDomainService.findMinistries(church, dto, qr);
-
-    /*const ministryRepository = this.getMinistryRepository(qr);
-
-    return ministryRepository.find({
-      where: {
-        churchId,
-        ministryGroupId:
-          dto.ministryGroupId === 0 ? IsNull() : dto.ministryGroupId,
-      },
-      order: {
-        [dto.order]: dto.orderDirection,
-        id: 'asc',
-      },
-    });*/
   }
 
   async getMinistryModelById(
@@ -98,24 +55,6 @@ export class MinistryService {
       qr,
       relationOptions,
     );
-
-    /*const ministryRepository = this.getMinistryRepository(qr);
-
-    const ministry = await ministryRepository.findOne({
-      where: {
-        id: ministryId,
-        churchId,
-      },
-      relations: {
-        ministryGroup: true,
-      },
-    });
-
-    if (!ministry) {
-      throw new NotFoundException(MinistryException.NOT_FOUND);
-    }
-
-    return ministry;*/
   }
 
   async getMinistryById(
@@ -133,24 +72,6 @@ export class MinistryService {
       ministryId,
       qr,
     );
-
-    /*const ministryRepository = this.getMinistryRepository(qr);
-
-    const ministry = await ministryRepository.findOne({
-      where: {
-        churchId,
-        id: ministryId,
-      },
-      relations: {
-        members: true,
-      },
-    });
-
-    if (!ministry) {
-      throw new NotFoundException(MinistryException.NOT_FOUND);
-    }
-
-    return ministry;*/
   }
 
   async createMinistry(
@@ -164,8 +85,8 @@ export class MinistryService {
     );
 
     const ministryGroup = dto.ministryGroupId
-      ? await this.ministryGroupService.getMinistryGroupModelById(
-          church.id,
+      ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
+          church,
           dto.ministryGroupId,
           qr,
         )
@@ -177,49 +98,6 @@ export class MinistryService {
       qr,
       ministryGroup,
     );
-
-    /*const ministryRepository = this.getMinistryRepository(qr);
-
-    const existingMinistry = await ministryRepository.findOne({
-      where: {
-        churchId,
-        ministryGroupId: dto.ministryGroupId ? dto.ministryGroupId : IsNull(),
-        name: dto.name,
-      },
-      relations: { members: true },
-      withDeleted: true,
-    });
-
-    if (existingMinistry) {
-      if (!existingMinistry.deletedAt) {
-        throw new BadRequestException(MinistryException.ALREADY_EXIST);
-      }
-
-      await ministryRepository.remove(existingMinistry);
-    }
-
-    const ministryGroup = dto.ministryGroupId
-      ? await this.ministryGroupService.getMinistryGroupModelById(
-          churchId,
-          dto.ministryGroupId,
-          qr,
-        )
-      : undefined;
-
-    const result = await ministryRepository.insert({
-      name: dto.name,
-      churchId: churchId,
-      ministryGroup,
-    });
-
-    return ministryRepository.findOne({
-      where: {
-        id: result.identifiers[0].id,
-      },
-      relations: {
-        ministryGroup: true,
-      },
-    });*/
   }
 
   async updateMinistry(
@@ -256,13 +134,15 @@ export class MinistryService {
         },
       );
 
-    const newMinistryGroup = dto.ministryGroupId
-      ? await this.ministryGroupService.getMinistryGroupModelById(
-          church.id,
+    let newMinistryGroup: MinistryGroupModel | null = dto.ministryGroupId
+      ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
+          church,
           dto.ministryGroupId,
           qr,
         )
       : targetMinistry.ministryGroup;
+
+    if (dto.ministryGroupId === 0) newMinistryGroup = null;
 
     return this.ministriesDomainService.updateMinistry(
       church,
@@ -271,63 +151,6 @@ export class MinistryService {
       qr,
       newMinistryGroup,
     );
-
-    /*const ministryRepository = this.getMinistryRepository(qr);
-
-    const targetMinistry = await this.getMinistryModelById(
-      churchId,
-      ministryId,
-      {},
-      qr,
-    );
-
-    // dto.ministryGroupId 가 있을 경우(number | 0) --> ministryGroup 변경 dto.ministryGroupId
-    // dto.ministryGroupId 가 없을 경우(undefined) --> ministryGroup 유지 targetMinistry.ministryGroupId
-    const newMinistryGroupId =
-      dto.ministryGroupId === undefined
-        ? targetMinistry.ministryGroupId
-        : dto.ministryGroupId;
-
-    // 그룹 변경 시 그룹이 있는지 확인
-    dto.ministryGroupId
-      ? await this.ministryGroupService.getMinistryGroupModelById(
-          churchId,
-          dto.ministryGroupId,
-          qr,
-        )
-      : undefined;
-
-    // 이름 중복 확인
-    const name = dto.name ? dto.name : targetMinistry.name;
-
-    const isExistMinistry = await this.isExistMinistry(
-      churchId,
-      newMinistryGroupId,
-      name,
-      qr,
-    );
-
-    if (isExistMinistry) {
-      throw new BadRequestException(MinistryException.ALREADY_EXIST);
-    }
-
-    await ministryRepository.update(
-      {
-        id: ministryId,
-        churchId,
-      },
-      {
-        ministryGroupId: newMinistryGroupId ? newMinistryGroupId : null,
-        name: dto.name,
-      },
-    );
-
-    return ministryRepository.findOne({
-      where: {
-        id: ministryId,
-        churchId,
-      },
-    });*/
   }
 
   async deleteMinistry(churchId: number, ministryId: number, qr: QueryRunner) {
@@ -343,53 +166,5 @@ export class MinistryService {
     );
 
     return this.ministriesDomainService.deleteMinistry(ministry, qr);
-
-    /*const ministryRepository = this.getMinistryRepository(qr);
-
-    const targetMinistry = await this.getMinistryById(churchId, ministryId, qr);
-
-    await ministryRepository.softRemove(targetMinistry);
-
-    return `ministryId ${ministryId} deleted`;*/
   }
-
-  /*async incrementMembersCount(
-    churchId: number,
-    ministryId: number,
-    qr: QueryRunner,
-  ) {
-    const ministryRepository = this.getMinistryRepository(qr);
-
-    const result = await ministryRepository.increment(
-      { id: ministryId, churchId },
-      'membersCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException(MinistryException.NOT_FOUND);
-    }
-
-    return true;
-  }*/
-
-  /*async decrementMembersCount(
-    churchId: number,
-    ministryId: number,
-    qr: QueryRunner,
-  ) {
-    const ministryRepository = this.getMinistryRepository(qr);
-
-    const result = await ministryRepository.decrement(
-      { id: ministryId, churchId },
-      'membersCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException(MinistryException.NOT_FOUND);
-    }
-
-    return true;
-  }*/
 }

@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateMinistryGroupDto } from '../dto/create-ministry-group.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateMinistryGroupDto } from '../dto/update-ministry-group.dto';
@@ -48,6 +48,11 @@ export class MinistryGroupsController {
     );
   }
 
+  @ApiOperation({
+    summary: '사역 그룹 수정',
+    description:
+      '최상위 그룹으로 설정하려는 경우 parentMinistryGroupId 를 0 으로 설정',
+  })
   @Patch(':ministryGroupId')
   @UseInterceptors(TransactionInterceptor)
   patchMinistryGroup(

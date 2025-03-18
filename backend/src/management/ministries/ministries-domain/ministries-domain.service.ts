@@ -145,7 +145,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     targetMinistry: MinistryModel,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
-    newMinistryGroup?: MinistryGroupModel,
+    newMinistryGroup?: MinistryGroupModel | null,
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
@@ -170,7 +170,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
       },
       {
         name: dto.name,
-        ministryGroupId: newMinistryGroupId ? newMinistryGroupId : undefined,
+        ministryGroupId: dto.ministryGroupId === 0 ? null : dto.ministryGroupId,
       },
     );
 

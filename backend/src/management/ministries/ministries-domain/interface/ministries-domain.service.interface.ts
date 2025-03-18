@@ -40,7 +40,7 @@ export interface IMinistriesDomainService {
     targetMinistry: MinistryModel,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
-    newMinistryGroup?: MinistryGroupModel,
+    newMinistryGroup?: MinistryGroupModel | null,
   ): Promise<MinistryModel>;
 
   deleteMinistry(ministry: MinistryModel, qr?: QueryRunner): Promise<string>;

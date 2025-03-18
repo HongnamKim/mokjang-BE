@@ -17,7 +17,6 @@ import { ManagementModule } from '../../management/management.module';
 import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
-import { MinistriesModule } from '../../management/ministries/ministries.module';
 import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
 import { MinistriesDomainModule } from '../../management/ministries/ministries-domain/ministries-domain.module';
 
@@ -38,10 +37,10 @@ import { MinistriesDomainModule } from '../../management/ministries/ministries-d
     ]),
     MembersModule,
     ManagementModule,
+    // 임시 import
     //GroupsModule,
     //OfficersModule,
-    // 임시 import
-    MinistriesModule,
+    //MinistriesModule,
     // Domain Modules
     GroupsDomainModule,
     OfficersDomainModule,

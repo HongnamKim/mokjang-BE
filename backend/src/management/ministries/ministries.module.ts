@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MinistryModel } from './entity/ministry.entity';
-import { MinistryGroupModel } from './entity/ministry-group.entity';
 import { MinistriesController } from './controller/ministries.controller';
 import { MinistryGroupsController } from './controller/ministry-groups.controller';
 import { MinistryService } from './service/ministry.service';
@@ -18,12 +17,12 @@ import { MinistriesDomainModule } from './ministries-domain/ministries-domain.mo
         module: MinistriesModule,
       },
     ]),
-    TypeOrmModule.forFeature([MinistryModel, MinistryGroupModel]),
+    TypeOrmModule.forFeature([MinistryModel]),
     ChurchesDomainModule,
     MinistriesDomainModule,
   ],
   controllers: [MinistriesController, MinistryGroupsController],
   providers: [MinistryService, MinistryGroupService],
-  exports: [MinistryGroupService],
+  exports: [],
 })
 export class MinistriesModule {}
