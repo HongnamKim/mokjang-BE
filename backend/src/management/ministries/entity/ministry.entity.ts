@@ -1,6 +1,4 @@
 import {
-  BeforeRemove,
-  BeforeSoftRemove,
   Column,
   Entity,
   Index,
@@ -10,7 +8,6 @@ import {
   Unique,
 } from 'typeorm';
 import { MinistryGroupModel } from './ministry-group.entity';
-import { ConflictException } from '@nestjs/common';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../churches/members/entity/member.entity';
@@ -51,7 +48,7 @@ export class MinistryModel extends BaseModel {
   )
   ministryHistory: MinistryModel[];
 
-  @BeforeRemove()
+  /*@BeforeRemove()
   @BeforeSoftRemove()
   preventIfHasMember() {
     if (this.members.length > 0) {
@@ -61,5 +58,5 @@ export class MinistryModel extends BaseModel {
         `해당 사역을 가진 교인이 존재합니다.\n${memberNames}`,
       );
     }
-  }
+  }*/
 }

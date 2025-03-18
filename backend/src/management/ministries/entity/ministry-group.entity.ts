@@ -10,7 +10,7 @@ export class MinistryGroupModel extends BaseModel {
 
   @Column({ nullable: true })
   @Index()
-  parentMinistryGroupId: number;
+  parentMinistryGroupId: number | null;
 
   @ManyToOne(
     () => MinistryGroupModel,

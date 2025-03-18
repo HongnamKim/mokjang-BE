@@ -47,6 +47,18 @@ export class GroupsDomainService implements IGroupsDomainService {
     return !!existingGroup;
   }
 
+  async findGroups(church: ChurchModel): Promise<GroupModel[]> {
+    const groupsRepository = this.getGroupsRepository();
+
+    return groupsRepository.find({
+      where: {
+        churchId: church.id,
+      },
+      relations: { groupRoles: true },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
   async findGroupModelById(
     church: ChurchModel,
     groupId: number,
@@ -68,95 +80,6 @@ export class GroupsDomainService implements IGroupsDomainService {
     }
 
     return group;
-  }
-
-  async createGroup(
-    church: ChurchModel,
-    dto: CreateGroupDto,
-    qr: QueryRunner,
-  ): Promise<GroupModel> {
-    const isExistingGroup = await this.isExistGroup(
-      church.id,
-      dto.name,
-      qr,
-      dto.parentGroupId,
-    );
-
-    if (isExistingGroup) {
-      throw new BadRequestException(GroupException.ALREADY_EXIST);
-    }
-
-    if (dto.parentGroupId) {
-      return this.handleLeafGroup(church, dto, qr);
-    }
-
-    return dto.parentGroupId
-      ? this.handleLeafGroup(church, dto, qr)
-      : this.handleNodeGroup(church, dto, qr);
-  }
-
-  async decrementMembersCount(
-    group: GroupModel,
-    qr: QueryRunner,
-  ): Promise<boolean> {
-    const groupsRepository = this.getGroupsRepository(qr);
-
-    const result = await groupsRepository.decrement(
-      { id: group.id, deletedAt: IsNull() },
-      'membersCount',
-      1,
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException(GroupException.NOT_FOUND);
-    }
-
-    return true;
-  }
-
-  async deleteGroup(
-    churchId: number,
-    groupId: number,
-    qr: QueryRunner,
-  ): Promise<string> {
-    const groupsRepository = this.getGroupsRepository(qr);
-
-    //const deleteTarget = await this.findGroupModelById(churchId, groupId, qr);
-
-    const deleteTarget = await this.groupsRepository.findOne({
-      where: {
-        id: groupId,
-        churchId,
-      },
-    });
-
-    if (!deleteTarget) {
-      throw new NotFoundException(GroupException.NOT_FOUND);
-    }
-
-    if (
-      deleteTarget.childGroupIds.length > 0 ||
-      deleteTarget.membersCount > 0
-    ) {
-      throw new BadRequestException(GroupException.GROUP_HAS_DEPENDENCIES);
-    }
-
-    await groupsRepository.softRemove(deleteTarget);
-
-    // 부모 그룹의 자식 그룹 ID 배열 업데이트
-    await groupsRepository
-      .createQueryBuilder(undefined, qr)
-      .update()
-      .set({
-        childGroupIds: () => `array_remove("childGroupIds", :deleteTargetId)`,
-      })
-      .where('id = :id', { id: deleteTarget.parentGroupId })
-      .setParameters({
-        deleteTargetId: deleteTarget.id,
-      })
-      .execute();
-
-    return `groupId ${groupId} deleted`;
   }
 
   async findGroupById(
@@ -181,18 +104,6 @@ export class GroupsDomainService implements IGroupsDomainService {
     }
 
     return group;
-  }
-
-  async findGroups(church: ChurchModel): Promise<GroupModel[]> {
-    const groupsRepository = this.getGroupsRepository();
-
-    return groupsRepository.find({
-      where: {
-        churchId: church.id,
-      },
-      relations: { groupRoles: true },
-      order: { createdAt: 'ASC' },
-    });
   }
 
   async findChildGroupIds(
@@ -281,23 +192,25 @@ export class GroupsDomainService implements IGroupsDomainService {
     return result;
   }
 
-  async incrementMembersCount(
-    group: GroupModel,
+  async createGroup(
+    church: ChurchModel,
+    dto: CreateGroupDto,
     qr: QueryRunner,
-  ): Promise<boolean> {
-    const groupsRepository = this.getGroupsRepository(qr);
-
-    const result = await groupsRepository.increment(
-      { id: group.id },
-      'membersCount',
-      1,
+  ): Promise<GroupModel> {
+    const isExistingGroup = await this.isExistGroup(
+      church.id,
+      dto.name,
+      qr,
+      dto.parentGroupId,
     );
 
-    if (result.affected === 0) {
-      throw new NotFoundException(GroupException.NOT_FOUND);
+    if (isExistingGroup) {
+      throw new BadRequestException(GroupException.ALREADY_EXIST);
     }
 
-    return true;
+    return dto.parentGroupId
+      ? this.handleLeafGroup(church, dto, qr)
+      : this.handleNodeGroup(church, dto, qr);
   }
 
   async updateGroup(
@@ -355,36 +268,12 @@ export class GroupsDomainService implements IGroupsDomainService {
 
       // 이전 상위 그룹, 새로운 상위 그룹의 childGroupId 수정
       await Promise.all([
-        this.addChildGroupId(updateTargetGroup, newParentGroup, qr),
+        this.appendChildGroupId(updateTargetGroup, newParentGroup, qr),
         this.removeChildGroupId(
           updateTargetGroup,
           updateTargetGroup.parentGroup,
           qr,
         ),
-        /*groupsRepository
-          .createQueryBuilder(undefined, qr)
-          .update()
-          .set({
-            childGroupIds: () =>
-              `array_remove("childGroupIds", :beforeUpdateGroupId)`,
-          })
-          .where('id = :id', { id: beforeUpdateGroup.parentGroupId })
-          .setParameters({
-            beforeUpdateGroupId: beforeUpdateGroup.id,
-          })
-          .execute(),
-        groupsRepository
-          .createQueryBuilder(undefined, qr)
-          .update()
-          .set({
-            childGroupIds: () =>
-              `array_append("childGroupIds", :beforeUpdateGroupId)`,
-          })
-          .where('id = :id', { id: dto.parentGroupId })
-          .setParameters({
-            beforeUpdateGroupId: beforeUpdateGroup.id,
-          })
-          .execute(),*/
       ]);
     }
 
@@ -414,6 +303,80 @@ export class GroupsDomainService implements IGroupsDomainService {
     return updatedGroup;
   }
 
+  async deleteGroup(
+    churchId: number,
+    groupId: number,
+    qr: QueryRunner,
+  ): Promise<string> {
+    const groupsRepository = this.getGroupsRepository(qr);
+
+    const deleteTarget = await this.groupsRepository.findOne({
+      where: {
+        id: groupId,
+        churchId,
+      },
+      relations: {
+        parentGroup: true,
+      },
+    });
+
+    if (!deleteTarget) {
+      throw new NotFoundException(GroupException.NOT_FOUND);
+    }
+
+    if (
+      deleteTarget.childGroupIds.length > 0 ||
+      deleteTarget.membersCount > 0
+    ) {
+      throw new BadRequestException(GroupException.GROUP_HAS_DEPENDENCIES);
+    }
+
+    await groupsRepository.softRemove(deleteTarget);
+
+    // 부모 그룹의 자식 그룹 ID 배열 업데이트
+    await this.removeChildGroupId(deleteTarget, deleteTarget.parentGroup, qr);
+
+    return `groupId ${groupId} deleted`;
+  }
+
+  async incrementMembersCount(
+    group: GroupModel,
+    qr: QueryRunner,
+  ): Promise<boolean> {
+    const groupsRepository = this.getGroupsRepository(qr);
+
+    const result = await groupsRepository.increment(
+      { id: group.id },
+      'membersCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException(GroupException.NOT_FOUND);
+    }
+
+    return true;
+  }
+
+  async decrementMembersCount(
+    group: GroupModel,
+    qr: QueryRunner,
+  ): Promise<boolean> {
+    const groupsRepository = this.getGroupsRepository(qr);
+
+    const result = await groupsRepository.decrement(
+      { id: group.id, deletedAt: IsNull() },
+      'membersCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException(GroupException.NOT_FOUND);
+    }
+
+    return true;
+  }
+
   private async handleNodeGroup(
     church: ChurchModel,
     dto: CreateGroupDto,
@@ -434,11 +397,6 @@ export class GroupsDomainService implements IGroupsDomainService {
   ) {
     const groupsRepository = this.getGroupsRepository(qr);
 
-    /*const parentGroup = await this.findGroupModelById(
-      church.id,
-      dto.parentGroupId,
-      qr,
-    );*/
     const parentGroup = await groupsRepository.findOne({
       where: {
         id: dto.parentGroupId,
@@ -466,23 +424,12 @@ export class GroupsDomainService implements IGroupsDomainService {
       ...dto,
     });
 
-    await this.addChildGroupId(newGroup, parentGroup, qr);
-
-    /*// 부모 그룹에 새로운 자식 그룹 추가
-    await groupsRepository
-      .createQueryBuilder(undefined, qr)
-      .update()
-      .set({
-        childGroupIds: () => `array_append("childGroupIds", :newGroupId)`,
-      })
-      .where('id= :id', { id: parentGroup.id })
-      .setParameters({ newGroupId: newGroup.id })
-      .execute();*/
+    await this.appendChildGroupId(newGroup, parentGroup, qr);
 
     return newGroup;
   }
 
-  private async addChildGroupId(
+  private async appendChildGroupId(
     childGroup: GroupModel,
     parentGroup: GroupModel,
     qr: QueryRunner,
