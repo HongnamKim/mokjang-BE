@@ -58,9 +58,10 @@ export interface IMinistryGroupsDomainService {
 
   updateMinistryGroup(
     church: ChurchModel,
-    ministryGroupId: number,
+    targetMinistryGroup: MinistryGroupModel,
     dto: UpdateMinistryGroupDto,
     qr: QueryRunner,
+    newParentMinistryGroup: MinistryGroupModel | null,
   ): Promise<MinistryGroupWithParentGroups>;
 
   deleteMinistryGroup(

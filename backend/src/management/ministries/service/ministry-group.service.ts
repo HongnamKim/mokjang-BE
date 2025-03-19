@@ -92,11 +92,31 @@ export class MinistryGroupService {
       qr,
     );
 
+    const targetMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+        { parentMinistryGroup: true },
+      );
+
+    const newParentMinistryGroup: MinistryGroupModel | null =
+      dto.parentMinistryGroupId === undefined
+        ? targetMinistryGroup.parentMinistryGroup // 변경하지 않는 경우 (기존 값 유지) nullable
+        : dto.parentMinistryGroupId === null
+          ? null // 상위 사역 그룹을 없애는 경우 (최상위 계층으로 이동)
+          : await this.ministryGroupsDomainService.findMinistryGroupModelById(
+              church,
+              dto.parentMinistryGroupId,
+              qr,
+            ); // 새 상위 사역 그룹으로 변경
+
     return this.ministryGroupsDomainService.updateMinistryGroup(
       church,
-      ministryGroupId,
+      targetMinistryGroup,
       dto,
       qr,
+      newParentMinistryGroup,
     );
   }
 

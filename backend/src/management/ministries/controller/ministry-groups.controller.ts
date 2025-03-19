@@ -51,7 +51,7 @@ export class MinistryGroupsController {
   @ApiOperation({
     summary: '사역 그룹 수정',
     description:
-      '최상위 그룹으로 설정하려는 경우 parentMinistryGroupId 를 0 으로 설정',
+      '최상위 그룹으로 설정하려는 경우 parentMinistryGroupId 를 null 로 설정',
   })
   @Patch(':ministryGroupId')
   @UseInterceptors(TransactionInterceptor)

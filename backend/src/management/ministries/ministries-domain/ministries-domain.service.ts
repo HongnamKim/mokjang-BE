@@ -30,7 +30,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
 
   private async isExistMinistry(
     churchId: number,
-    ministryGroupId: number,
+    ministryGroup: MinistryGroupModel | null,
     name: string,
     qr?: QueryRunner,
   ) {
@@ -39,7 +39,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     const ministry = await ministriesRepository.findOne({
       where: {
         churchId,
-        ministryGroupId: ministryGroupId ? ministryGroupId : IsNull(),
+        ministryGroupId: ministryGroup === null ? IsNull() : ministryGroup.id,
         name,
       },
     });
@@ -117,14 +117,14 @@ export class MinistriesDomainService implements IMinistriesDomainService {
   async createMinistry(
     church: ChurchModel,
     dto: CreateMinistryDto,
+    ministryGroup: MinistryGroupModel | null,
     qr?: QueryRunner,
-    ministryGroup?: MinistryGroupModel,
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
     const isExistMinistry = await this.isExistMinistry(
       church.id,
-      dto.ministryGroupId,
+      ministryGroup,
       dto.name,
       qr,
     );
@@ -136,7 +136,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     return ministriesRepository.save({
       name: dto.name,
       churchId: church.id,
-      ministryGroup,
+      ministryGroup: ministryGroup ? ministryGroup : undefined,
     });
   }
 
@@ -145,16 +145,15 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     targetMinistry: MinistryModel,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
-    newMinistryGroup?: MinistryGroupModel | null,
+    newMinistryGroup: MinistryGroupModel | null,
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
-    const newMinistryGroupId = newMinistryGroup ? newMinistryGroup.id : 0;
     const newName = dto.name ? dto.name : targetMinistry.name;
 
     const isExist = await this.isExistMinistry(
       church.id,
-      newMinistryGroupId,
+      newMinistryGroup,
       newName,
       qr,
     );
@@ -170,7 +169,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
       },
       {
         name: dto.name,
-        ministryGroupId: dto.ministryGroupId === 0 ? null : dto.ministryGroupId,
+        ministryGroupId: newMinistryGroup === null ? null : newMinistryGroup.id,
       },
     );
 

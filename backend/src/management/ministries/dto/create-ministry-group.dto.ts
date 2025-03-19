@@ -33,5 +33,5 @@ export class CreateMinistryGroupDto extends PickType(MinistryGroupModel, [
   })
   @IsNumber()
   @IsOptional()
-  override parentMinistryGroupId: number;
+  override parentMinistryGroupId: number | null;
 }

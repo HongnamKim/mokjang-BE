@@ -9,7 +9,7 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GroupsService } from '../service/groups.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
@@ -45,6 +45,10 @@ export class GroupsController {
     return this.groupsService.getGroupByIdWithParents(churchId, groupId);
   }
 
+  @ApiOperation({
+    summary: '그룹 수정',
+    description: '상위 그룹을 없애려는 경우 ministryGroupId 를 null 로 설정',
+  })
   @Patch(':groupId')
   @UseInterceptors(TransactionInterceptor)
   patchGroup(

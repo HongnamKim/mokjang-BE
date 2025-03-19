@@ -84,19 +84,21 @@ export class MinistryService {
       qr,
     );
 
+    // 소속 사역 그룹을 설정할 경우 해당 그룹 조회
+    // 설정하지 않을 경우 null
     const ministryGroup = dto.ministryGroupId
       ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
           church,
           dto.ministryGroupId,
           qr,
         )
-      : undefined;
+      : null;
 
     return this.ministriesDomainService.createMinistry(
       church,
       dto,
-      qr,
       ministryGroup,
+      qr,
     );
   }
 
@@ -134,15 +136,16 @@ export class MinistryService {
         },
       );
 
-    let newMinistryGroup: MinistryGroupModel | null = dto.ministryGroupId
-      ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
-          church,
-          dto.ministryGroupId,
-          qr,
-        )
-      : targetMinistry.ministryGroup;
-
-    if (dto.ministryGroupId === 0) newMinistryGroup = null;
+    const newMinistryGroup: MinistryGroupModel | null =
+      dto.ministryGroupId === undefined
+        ? targetMinistry.ministryGroup // 변경하지 않는 경우 (기존 값 유지)
+        : dto.ministryGroupId === null
+          ? null // 소속 사역 그룹을 없애는 경우
+          : await this.ministryGroupsDomainService.findMinistryGroupModelById(
+              church,
+              dto.ministryGroupId,
+              qr,
+            ); // 새 사역 그룹으로 변경
 
     return this.ministriesDomainService.updateMinistry(
       church,

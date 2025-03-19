@@ -31,8 +31,8 @@ export interface IMinistriesDomainService {
   createMinistry(
     church: ChurchModel,
     dto: CreateMinistryDto,
+    ministryGroup: MinistryGroupModel | null,
     qr?: QueryRunner,
-    ministryGroup?: MinistryGroupModel,
   ): Promise<MinistryModel>;
 
   updateMinistry(

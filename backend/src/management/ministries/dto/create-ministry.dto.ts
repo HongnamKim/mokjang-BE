@@ -38,5 +38,5 @@ export class CreateMinistryDto /*extends PickType(MinistryModel, [
   @Min(0)
   @IsNumber()
   @IsOptional()
-  ministryGroupId: number;
+  ministryGroupId: number | null;
 }
