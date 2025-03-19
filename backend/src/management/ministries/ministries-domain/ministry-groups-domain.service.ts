@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -15,6 +16,7 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MinistryGroupException } from '../const/ministry-group.exception';
 import { CreateMinistryGroupDto } from '../dto/create-ministry-group.dto';
 import { UpdateMinistryGroupDto } from '../dto/update-ministry-group.dto';
+import { GROUP_MAX_DEPTH } from '../../const/group-depth.const';
 
 @Injectable()
 export class MinistryGroupsDomainService
@@ -33,8 +35,8 @@ export class MinistryGroupsDomainService
 
   private async isExistMinistryGroup(
     church: ChurchModel,
+    parentMinistryGroup: MinistryGroupModel | null,
     name: string,
-    parentMinistryGroup?: MinistryGroupModel | null,
     qr?: QueryRunner,
   ) {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
@@ -210,18 +212,19 @@ export class MinistryGroupsDomainService
           dto.parentMinistryGroupId,
           qr,
         )
-      : undefined;
+      : null;
 
-    const isExist = await this.isExistMinistryGroup(
+    await this.checkIsAvailableName(church, parentMinistryGroup, dto.name, qr);
+    /*const isExist = await this.isExistMinistryGroup(
       church,
-      dto.name,
       parentMinistryGroup,
+      dto.name,
       qr,
     );
 
     if (isExist) {
       throw new BadRequestException(MinistryGroupException.ALREADY_EXIST);
-    }
+    }*/
 
     return parentMinistryGroup
       ? this.handleLeafMinistryGroup(church, parentMinistryGroup, dto, qr)
@@ -270,107 +273,137 @@ export class MinistryGroupsDomainService
     });
   }
 
-  async updateMinistryGroup(
+  private async checkIsAvailableName(
     church: ChurchModel,
-    ministryGroupId: number,
-    dto: UpdateMinistryGroupDto,
+    parentMinistryGroup: MinistryGroupModel | null,
+    name: string,
     qr: QueryRunner,
   ) {
-    const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
-
-    const ministryGroup = await this.findMinistryGroupModelById(
-      church,
-      ministryGroupId,
-      qr,
-      { parentMinistryGroup: true },
-    );
-
-    // 이름 중복 체크 시작
-    // 부모 변경 시 새로운 부모 그룹 || 기존 부모 그룹 (노드 그룹일 경우 null)
-    let newParentGroup: MinistryGroupModel | null = dto.parentMinistryGroupId
-      ? await this.findMinistryGroupModelById(
-          church,
-          dto.parentMinistryGroupId,
-          qr,
-        )
-      : ministryGroup.parentMinistryGroup;
-
-    // 업데이트 대상을 최상위 그룹으로 옮기는 경우
-    if (dto.parentMinistryGroupId === 0) {
-      newParentGroup = null;
-    }
-
-    // 변경하려는 이름 || 기존 이름
-    const newName = dto.name ? dto.name : ministryGroup.name;
-
     const isExist = await this.isExistMinistryGroup(
       church,
-      newName,
-      newParentGroup,
+      parentMinistryGroup,
+      name,
       qr,
     );
 
     if (isExist) {
       throw new BadRequestException(MinistryGroupException.ALREADY_EXIST);
     }
-    // 이름 중복 체크 종료
 
-    // 부모 변경 시 체크
+    return true;
+  }
+
+  async updateMinistryGroup(
+    church: ChurchModel,
+    targetMinistryGroup: MinistryGroupModel,
+    dto: UpdateMinistryGroupDto,
+    qr: QueryRunner,
+    newParentMinistryGroup: MinistryGroupModel | null,
+  ) {
+    const newName = dto.name ?? targetMinistryGroup.name;
+
+    // 사용 가능한 그룹인지 체크 --> 불가능할 경우 BadRequestException
+    await this.checkIsAvailableName(
+      church,
+      newParentMinistryGroup,
+      newName,
+      qr,
+    );
+    /*const isExist = await this.isExistMinistryGroup(
+      church,
+      newParentMinistryGroup,
+      newName,
+      qr,
+    );
+
+    if (isExist) {
+      throw new BadRequestException(MinistryGroupException.ALREADY_EXIST);
+    }*/
+
+    // 새로운 상위 그룹에 넣을 경우
     if (
-      (dto.parentMinistryGroupId && newParentGroup) ||
-      dto.parentMinistryGroupId === 0
+      newParentMinistryGroup !== null &&
+      newParentMinistryGroup.id !== targetMinistryGroup.parentMinistryGroupId
     ) {
-      // 1. 의존 관계 역전인지
-      if (
-        ministryGroup.childMinistryGroupIds.includes(dto.parentMinistryGroupId)
-      ) {
-        throw new BadRequestException(
-          MinistryGroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
-        );
-      }
-
-      // 2. 그룹의 depth 확인
-      const newGrandParentGroups = await this.findParentMinistryGroups(
+      await this.validateUpdateHierarchy(
         church,
-        dto.parentMinistryGroupId,
+        targetMinistryGroup,
+        newParentMinistryGroup,
         qr,
       );
-
-      if (newGrandParentGroups.length + 1 >= 5) {
-        throw new BadRequestException(
-          MinistryGroupException.LIMIT_DEPTH_REACHED,
-        );
-      }
-
-      // 이전 상위 그룹, 새로운 상위 그룹의 childGroupId 수정
-      await Promise.all([
-        this.appendChildMinistryGroupId(newParentGroup, ministryGroup, qr),
-        this.removeChildMinistryGroupId(
-          ministryGroup.parentMinistryGroup,
-          ministryGroup,
-          qr,
-        ),
-      ]);
     }
 
-    // 업데이트 수행
+    if (dto.parentMinistryGroupId !== undefined) {
+      // 기존 상위 그룹에서 타겟 그룹 id 제거
+      await this.removeChildMinistryGroupId(
+        targetMinistryGroup.parentMinistryGroup,
+        targetMinistryGroup,
+        qr,
+      );
+      // 새로운 상위 그룹에 타겟 그룹 id 추가
+      await this.appendChildMinistryGroupId(
+        newParentMinistryGroup,
+        targetMinistryGroup,
+        qr,
+      );
+    }
+
+    const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
+
     const result = await ministryGroupsRepository.update(
       {
-        id: ministryGroupId,
+        id: targetMinistryGroup.id,
         deletedAt: IsNull(),
       },
       {
-        ...dto,
+        name: dto.name,
         parentMinistryGroupId:
-          dto.parentMinistryGroupId === 0 ? null : dto.parentMinistryGroupId,
+          newParentMinistryGroup === null ? null : newParentMinistryGroup.id,
       },
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(MinistryGroupException.NOT_FOUND);
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
     }
 
-    return this.findMinistryGroupById(church, ministryGroupId, qr);
+    return this.findMinistryGroupById(church, targetMinistryGroup.id, qr);
+  }
+
+  private async validateUpdateHierarchy(
+    church: ChurchModel,
+    targetMinistryGroup: MinistryGroupModel,
+    newParentMinistryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ) {
+    // 계층 역전 확인
+    if (
+      targetMinistryGroup.childMinistryGroupIds.includes(
+        newParentMinistryGroup.id,
+      )
+    ) {
+      throw new BadRequestException(
+        MinistryGroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
+      );
+    }
+
+    //depth 확인
+    const newGrandParentMinistryGroups = await this.findParentMinistryGroups(
+      church,
+      newParentMinistryGroup.id,
+      qr,
+    );
+
+    // 5 depth 초과 시 에러
+    const newDepth =
+      newGrandParentMinistryGroups.length +
+      targetMinistryGroup.childMinistryGroupIds.length +
+      2;
+
+    if (newDepth >= GROUP_MAX_DEPTH) {
+      throw new BadRequestException(MinistryGroupException.LIMIT_DEPTH_REACHED);
+    }
   }
 
   async deleteMinistryGroup(

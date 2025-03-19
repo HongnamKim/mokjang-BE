@@ -94,7 +94,36 @@ export class GroupsService {
     dto: UpdateGroupDto,
     qr: QueryRunner,
   ) {
-    return this.groupsDomainService.updateGroup(churchId, groupId, dto, qr);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetGroup = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+      qr,
+      { parentGroup: true },
+    );
+
+    const newParentGroup: GroupModel | null =
+      dto.parentGroupId === undefined
+        ? targetGroup.parentGroup // 상위 그룹을 변경하지 않는 경우 (기존 값 유지) nullable
+        : dto.parentGroupId === null
+          ? null // 상위 그룹을 없애는 경우 (최상위 계층으로 이동)
+          : await this.groupsDomainService.findGroupModelById(
+              church,
+              dto.parentGroupId,
+              qr,
+            ); // 새 상위 그룹으로 변경
+
+    return this.groupsDomainService.updateGroup(
+      church,
+      targetGroup,
+      dto,
+      qr,
+      newParentGroup,
+    );
   }
 
   async deleteGroup(churchId: number, groupId: number, qr: QueryRunner) {

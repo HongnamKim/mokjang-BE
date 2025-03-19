@@ -52,10 +52,11 @@ export interface IGroupsDomainService {
   ): Promise<GroupModel>;
 
   updateGroup(
-    churchId: number,
-    groupId: number,
+    church: ChurchModel,
+    targetGroup: GroupModel,
     dto: UpdateGroupDto,
     qr: QueryRunner,
+    newParentGroup: GroupModel | null,
   ): Promise<GroupModel>;
 
   deleteGroup(

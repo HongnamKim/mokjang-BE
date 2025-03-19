@@ -53,7 +53,7 @@ export class MinistriesController {
   @ApiOperation({
     summary: '사역 수정',
     description:
-      '소속 사역 그룹을 없애려는 경우 ministryGroupId 를 0 으로 설정',
+      '소속 사역 그룹을 없애려는 경우 ministryGroupId 를 null 로 설정',
   })
   @Patch(':ministryId')
   @UseInterceptors(TransactionInterceptor)
