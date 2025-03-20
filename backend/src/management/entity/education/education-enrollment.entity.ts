@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { EducationTermModel } from './education-term.entity';
-import { EducationStatus } from '../../const/education/education-status.enum';
+import { EducationStatus } from '../../educations/const/education-status.enum';
 import { SessionAttendanceModel } from './session-attendance.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../churches/members/entity/member.entity';
