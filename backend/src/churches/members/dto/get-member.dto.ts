@@ -21,7 +21,7 @@ import {
 } from '../decorator/transform-array';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { QueryBoolean } from '../decorator/query-boolean.decorator';
-import { EducationStatus } from '../../../management/const/education/education-status.enum';
+import { EducationStatus } from '../../../management/educations/const/education-status.enum';
 
 export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))*/ {
   @ApiProperty({

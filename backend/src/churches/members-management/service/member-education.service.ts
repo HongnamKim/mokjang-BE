@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, QueryRunner, Repository } from 'typeorm';
 import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 import { EducationEnrollmentModel } from '../../../management/entity/education/education-enrollment.entity';
-import { EducationStatus } from '../../../management/const/education/education-status.enum';
+import { EducationStatus } from '../../../management/educations/const/education-status.enum';
 
 @Injectable()
 export class MemberEducationService {

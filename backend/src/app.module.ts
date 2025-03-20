@@ -22,7 +22,6 @@ import { MinistryHistoryModel } from './churches/members-management/entity/minis
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
-import { MemberEventHandler } from './member-event.handler';
 import { UserModule } from './user/user.module';
 import { MembersModule } from './churches/members/members.module';
 import { ChurchesModule } from './churches/churches.module';
@@ -146,7 +145,6 @@ import { ManagementModule } from './management/management.module';
   ],
   controllers: [AppController],
   providers: [
-    MemberEventHandler,
     AppService,
     {
       provide: APP_INTERCEPTOR,
