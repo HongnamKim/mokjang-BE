@@ -36,5 +36,5 @@ export class CreateEducationDto extends PickType(EducationModel, [
   @MaxLength(300)
   @Transform(({ value }) => value?.trim() ?? '')
   @IsOptional()
-  override description: string = '';
+  override description: string;
 }
