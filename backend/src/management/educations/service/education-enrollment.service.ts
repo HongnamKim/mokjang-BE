@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,6 +14,10 @@ import { UpdateEducationEnrollmentDto } from '../dto/enrollments/update-educatio
 import { EducationTermEnrollmentSyncService } from './sync/education-term-enrollment-sync.service';
 import { EducationEnrollmentAttendanceSyncService } from './sync/education-enrollment-attendance-sync.service';
 import { MembersService } from '../../../churches/members/service/members.service';
+import {
+  IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+  IEducationEnrollmentsDomainService,
+} from './education-domain/interface/education-enrollment-domain.service.interface';
 
 @Injectable()
 export class EducationEnrollmentService {
@@ -23,6 +28,9 @@ export class EducationEnrollmentService {
     private readonly membersService: MembersService,
     private readonly educationTermEnrollmentSyncService: EducationTermEnrollmentSyncService,
     private readonly educationEnrollmentAttendanceSyncService: EducationEnrollmentAttendanceSyncService,
+
+    @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly educationEnrollmentsDomain: IEducationEnrollmentsDomainService,
   ) {}
 
   private getEducationEnrollmentsRepository(qr?: QueryRunner) {

@@ -6,9 +6,22 @@ import { EducationDomainService } from './service/education-domain.service';
 import { IEDUCATION_TERM_DOMAIN_SERVICE } from './interface/education-term-domain.service.interface';
 import { EducationTermDomainService } from './service/educaiton-term-domain.service';
 import { EducationTermModel } from '../../../entity/education/education-term.entity';
+import { IEDUCATION_ENROLLMENT_DOMAIN_SERVICE } from './interface/education-enrollment-domain.service.interface';
+import { EducationEnrollmentsDomainService } from './service/education-enrollments-domain.service';
+import { EducationEnrollmentModel } from '../../../entity/education/education-enrollment.entity';
+import { EducationSessionModel } from '../../../entity/education/education-session.entity';
+import { SessionAttendanceModel } from '../../../entity/education/session-attendance.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([EducationModel, EducationTermModel])],
+  imports: [
+    TypeOrmModule.forFeature([
+      EducationModel,
+      EducationTermModel,
+      EducationEnrollmentModel,
+      EducationSessionModel,
+      SessionAttendanceModel,
+    ]),
+  ],
   providers: [
     {
       provide: IEDUCATION_DOMAIN_SERVICE,
@@ -18,7 +31,15 @@ import { EducationTermModel } from '../../../entity/education/education-term.ent
       provide: IEDUCATION_TERM_DOMAIN_SERVICE,
       useClass: EducationTermDomainService,
     },
+    {
+      provide: IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+      useClass: EducationEnrollmentsDomainService,
+    },
   ],
-  exports: [IEDUCATION_DOMAIN_SERVICE, IEDUCATION_TERM_DOMAIN_SERVICE],
+  exports: [
+    IEDUCATION_DOMAIN_SERVICE,
+    IEDUCATION_TERM_DOMAIN_SERVICE,
+    IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+  ],
 })
 export class EducationDomainModule {}
