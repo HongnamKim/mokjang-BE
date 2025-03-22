@@ -22,10 +22,7 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 @ApiTags('Management:Educations:Terms')
 @Controller('educations/:educationId/terms')
 export class EducationTermsController {
-  constructor(
-    //private readonly educationService: EducationsService,
-    private readonly educationTermService: EducationTermService,
-  ) {}
+  constructor(private readonly educationTermService: EducationTermService) {}
 
   @ApiOperation({
     summary: '교육 기수 조회',
@@ -36,7 +33,6 @@ export class EducationTermsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Query() dto: GetEducationTermDto,
   ) {
-    //return this.educationService.getEducationTerms(churchId, educationId, dto);
     return this.educationTermService.getEducationTerms(
       churchId,
       educationId,
@@ -61,12 +57,6 @@ export class EducationTermsController {
       dto,
       qr,
     );
-    /*return this.educationService.createEducationTerm(
-      churchId,
-      educationId,
-      dto,
-      qr,
-    );*/
   }
 
   @ApiOperation({
@@ -83,11 +73,6 @@ export class EducationTermsController {
       educationId,
       educationTermId,
     );
-    /*return this.educationService.getEducationTermById(
-      churchId,
-      educationId,
-      educationTermId,
-    );*/
   }
 
   @ApiOperation({
@@ -109,14 +94,6 @@ export class EducationTermsController {
       dto,
       qr,
     );
-
-    /*return this.educationService.updateEducationTerm(
-      churchId,
-      educationId,
-      educationTermId,
-      dto,
-      qr,
-    );*/
   }
 
   @ApiOperation({ summary: '교육 기수 삭제' })
@@ -131,11 +108,6 @@ export class EducationTermsController {
       educationId,
       educationTermId,
     );
-
-    /*return this.educationService.deleteEducationTerm(
-      educationId,
-      educationTermId,
-    );*/
   }
 
   @ApiOperation({
@@ -158,12 +130,5 @@ export class EducationTermsController {
       educationTermId,
       qr,
     );
-
-    /*return this.educationService.syncSessionAttendances(
-      churchId,
-      educationId,
-      educationTermId,
-      qr,
-    );*/
   }
 }
