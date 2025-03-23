@@ -1,13 +1,14 @@
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { EducationModel } from '../../../../entity/education/education.entity';
 import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
 import { EducationTermModel } from '../../../../entity/education/education-term.entity';
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
 import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
+import { EducationStatus } from '../../../const/education-status.enum';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',
@@ -64,4 +65,26 @@ export interface IEducationTermDomainService {
     educationName: string,
     qr: QueryRunner,
   ): Promise<void>;
+
+  increaseEnrollmentCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementEnrollmentCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  incrementEducationStatusCount(
+    educationTerm: EducationTermModel,
+    status: EducationStatus,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementEducationStatusCount(
+    educationTerm: EducationTermModel,
+    status: EducationStatus,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

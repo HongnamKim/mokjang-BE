@@ -108,7 +108,36 @@ export class EducationEnrollmentsDomainService
     });
   }
 
-  private async getEducationEnrollmentModelById(
+  async findEducationEnrollmentById(
+    educationTerm: EducationTermModel,
+    educationEnrollmentId: number,
+    qr?: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    const enrollment = await educationEnrollmentsRepository.findOne({
+      where: {
+        educationTermId: educationTerm.id,
+        id: educationEnrollmentId,
+      },
+      relations: {
+        member: {
+          group: true,
+          groupRole: true,
+          officer: true,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException(EducationEnrollmentException.NOT_FOUND);
+    }
+
+    return enrollment;
+  }
+
+  async findEducationEnrollmentModelById(
     educationEnrollmentId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<EducationEnrollmentModel>,
