@@ -18,6 +18,7 @@ import { CreateEducationTermDto } from '../../../dto/terms/create-education-term
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
 import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
+import { EducationStatus } from '../../../const/education-status.enum';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -25,6 +26,12 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     @InjectRepository(EducationTermModel)
     private readonly educationTermsRepository: Repository<EducationTermModel>,
   ) {}
+
+  private CountColumnMap = {
+    [EducationStatus.IN_PROGRESS]: 'inProgressCount',
+    [EducationStatus.COMPLETED]: 'completedCount',
+    [EducationStatus.INCOMPLETE]: 'incompleteCount',
+  };
 
   private getEducationTermsRepository(qr?: QueryRunner) {
     return qr
@@ -322,5 +329,87 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         educationName,
       },
     );
+  }
+
+  async increaseEnrollmentCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.increment(
+      { id: educationTerm.id },
+      'enrollmentCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }
+
+  async decrementEnrollmentCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.decrement(
+      { id: educationTerm.id },
+      'enrollmentCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }
+
+  async incrementEducationStatusCount(
+    educationTerm: EducationTermModel,
+    status: EducationStatus,
+    qr: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.increment(
+      {
+        id: educationTerm.id,
+      },
+      this.CountColumnMap[status],
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
+  }
+
+  async decrementEducationStatusCount(
+    educationTerm: EducationTermModel,
+    status: EducationStatus,
+    qr: QueryRunner,
+  ) {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermsRepository.decrement(
+      {
+        id: educationTerm.id,
+      },
+      this.CountColumnMap[status],
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+    }
+
+    return result;
   }
 }

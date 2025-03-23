@@ -16,7 +16,6 @@ import { EducationTermService } from './service/education-term.service';
 import { SessionAttendanceService } from './service/session-attendance.service';
 import { EducationTermSessionSyncService } from './service/sync/education-term-session-sync.service';
 import { EducationTermAttendanceSyncService } from './service/sync/education-term-attendance-sync.service';
-import { EducationTermEnrollmentSyncService } from './service/sync/education-term-enrollment-sync.service';
 import { EducationEnrollmentAttendanceSyncService } from './service/sync/education-enrollment-attendance-sync.service';
 import { EducationEnrollmentSessionSyncService } from './service/sync/education-enrollment-session-sync.service';
 import { RouterModule } from '@nestjs/core';
@@ -63,7 +62,7 @@ import { ChurchesDomainModule } from '../../churches/churches-domain/churches-do
     //EducationTermSyncService,
     EducationTermSessionSyncService,
     EducationTermAttendanceSyncService,
-    EducationTermEnrollmentSyncService,
+    //EducationTermEnrollmentSyncService,
     EducationEnrollmentAttendanceSyncService,
     EducationEnrollmentSessionSyncService,
   ],

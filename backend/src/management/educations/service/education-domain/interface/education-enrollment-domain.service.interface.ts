@@ -1,7 +1,7 @@
 import { EducationEnrollmentPaginationResultDto } from '../../../dto/education-enrollment-pagination-result.dto';
 import { EducationTermModel } from '../../../../entity/education/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
-import { QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
 import { CreateEducationEnrollmentDto } from '../../../dto/enrollments/create-education-enrollment.dto';
@@ -22,6 +22,18 @@ export interface IEducationEnrollmentsDomainService {
     member: MemberModel,
     qr?: QueryRunner,
   ): Promise<EducationEnrollmentModel[]>;
+
+  findEducationEnrollmentById(
+    educationTerm: EducationTermModel,
+    educationEnrollmentId: number,
+    qr?: QueryRunner,
+  ): Promise<EducationEnrollmentModel>;
+
+  findEducationEnrollmentModelById(
+    educationEnrollmentId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationEnrollmentModel>,
+  ): Promise<EducationEnrollmentModel>;
 
   createEducationEnrollment(
     educationTerm: EducationTermModel,
