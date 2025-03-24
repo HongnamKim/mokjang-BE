@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationModel } from '../../../../entity/education/education.entity';
+import { EducationModel } from '../../../entity/education.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationDto } from '../../../dto/education/get-education.dto';

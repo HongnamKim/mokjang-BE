@@ -1,15 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationTermModel } from '../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import { QueryRunner, Repository } from 'typeorm';
-import { SessionAttendanceModel } from '../../../entity/education/session-attendance.entity';
+import { SessionAttendanceModel } from '../../../entity/session-attendance.entity';
 
-@Injectable()
-export class EducationTermAttendanceSyncService {
+//@Injectable()
+/*export*/ class EducationTermAttendanceSyncService {
   constructor(
     @InjectRepository(EducationTermModel)
     private readonly educationTermRepository: Repository<EducationTermModel>,

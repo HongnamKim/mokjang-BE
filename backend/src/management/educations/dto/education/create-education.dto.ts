@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { EducationModel } from '../../../entity/education/education.entity';
+import { EducationModel } from '../../entity/education.entity';
 import {
   IsNotEmpty,
   IsOptional,

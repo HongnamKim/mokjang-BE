@@ -1,12 +1,17 @@
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
-import { EducationModel } from '../../../../entity/education/education.entity';
+import { EducationModel } from '../../../entity/education.entity';
 import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
-import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
+import {
+  FindOptionsRelations,
+  FindOptionsSelect,
+  QueryRunner,
+  UpdateResult,
+} from 'typeorm';
 import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
-import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
 import { EducationStatus } from '../../../const/education-status.enum';
 
@@ -35,6 +40,7 @@ export interface IEducationTermDomainService {
     educationTermId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<EducationTermModel>,
+    selectOptions?: FindOptionsSelect<EducationTermModel>,
   ): Promise<EducationTermModel>;
 
   createEducationTerm(

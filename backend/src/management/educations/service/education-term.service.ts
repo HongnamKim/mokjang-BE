@@ -3,7 +3,6 @@ import { QueryRunner } from 'typeorm';
 import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
 import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
 import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
-import { EducationTermAttendanceSyncService } from './sync/education-term-attendance-sync.service';
 import { MembersService } from '../../../churches/members/service/members.service';
 import {
   IEDUCATION_TERM_DOMAIN_SERVICE,
@@ -21,13 +20,15 @@ import {
   IEDUCATION_SESSION_DOMAIN_SERVICE,
   IEducationSessionDomainService,
 } from './education-domain/interface/education-session-domain.service.interface';
+import {
+  ISESSION_ATTENDANCE_DOMAIN_SERVICE,
+  ISessionAttendanceDomainService,
+} from './education-domain/interface/session-attendance-domain.service.interface';
 
 @Injectable()
 export class EducationTermService {
   constructor(
     private readonly membersService: MembersService,
-
-    private readonly educationTermAttendanceSyncService: EducationTermAttendanceSyncService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -37,6 +38,8 @@ export class EducationTermService {
     private readonly educationTermDomainService: IEducationTermDomainService,
     @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
     private readonly educationSessionDomainService: IEducationSessionDomainService,
+    @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
   ) {}
 
   async getEducationTerms(
@@ -223,7 +226,7 @@ export class EducationTermService {
         (enrollment) => enrollment.id,
       );
 
-      await this.educationTermAttendanceSyncService.createAdditionalSessionAttendance(
+      await this.sessionAttendanceDomainService.createAdditionalSessionAttendance(
         newSessionIds,
         enrollmentIds,
         qr,
@@ -276,10 +279,38 @@ export class EducationTermService {
     educationTermId: number,
     qr: QueryRunner,
   ) {
-    return this.educationTermAttendanceSyncService.syncSessionAttendances(
+    const church = await this.churchesDomainService.findChurchModelById(
       churchId,
+      qr,
+    );
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
       educationId,
-      educationTermId,
+      qr,
+    );
+
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        church,
+        education,
+        educationTermId,
+        qr,
+        {
+          educationSessions: true,
+          educationEnrollments: true,
+        },
+        {
+          educationSessions: {
+            id: true,
+          },
+          educationEnrollments: {
+            id: true,
+          },
+        },
+      );
+
+    return this.sessionAttendanceDomainService.syncSessionAttendances(
+      educationTerm,
       qr,
     );
   }

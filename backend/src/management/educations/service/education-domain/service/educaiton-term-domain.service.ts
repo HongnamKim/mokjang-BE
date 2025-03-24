@@ -6,15 +6,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import {
   FindOptionsRelations,
+  FindOptionsSelect,
   QueryRunner,
   Repository,
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
-import { EducationModel } from '../../../../entity/education/education.entity';
+import { EducationModel } from '../../../entity/education.entity';
 import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
 import { EducationTermOrderEnum } from '../../../const/order.enum';
 import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
@@ -22,7 +23,7 @@ import { EducationTermException } from '../../../const/exception/education.excep
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
-import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { EducationStatus } from '../../../const/education-status.enum';
 
 @Injectable()
@@ -159,6 +160,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     educationTermId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<EducationTermModel>,
+    selectOptions?: FindOptionsSelect<EducationTermModel>,
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
@@ -171,6 +173,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         },
       },
       relations: relationOptions,
+      select: selectOptions,
     });
 
     if (!educationTerm) {

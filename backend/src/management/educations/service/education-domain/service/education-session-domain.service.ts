@@ -1,8 +1,8 @@
 import { IEducationSessionDomainService } from '../interface/education-session-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationSessionModel } from '../../../../entity/education/education-session.entity';
+import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { MoreThan, QueryRunner, Repository } from 'typeorm';
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import {
   InternalServerErrorException,
   NotFoundException,

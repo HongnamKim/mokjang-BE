@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { EducationEnrollmentModel } from '../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../entity/education-enrollment.entity';
 import { EducationStatus } from '../../const/education-status.enum';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';

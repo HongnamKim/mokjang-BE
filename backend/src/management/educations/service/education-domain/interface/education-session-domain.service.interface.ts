@@ -1,6 +1,6 @@
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import { QueryRunner, UpdateResult } from 'typeorm';
-import { EducationSessionModel } from '../../../../entity/education/education-session.entity';
+import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { UpdateEducationSessionDto } from '../../../dto/sessions/update-education-session.dto';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(

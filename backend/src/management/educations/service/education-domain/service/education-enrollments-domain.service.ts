@@ -6,13 +6,22 @@ import {
 } from '@nestjs/common';
 import { IEducationEnrollmentsDomainService } from '../interface/education-enrollment-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
-import { FindOptionsRelations, In, QueryRunner, Repository } from 'typeorm';
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
+import {
+  FindOptionsRelations,
+  In,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
 import { EducationEnrollmentOrderEnum } from '../../../const/order.enum';
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
-import { EducationEnrollmentException } from '../../../const/exception/education.exception';
+import {
+  EducationEnrollmentException,
+  EducationException,
+} from '../../../const/exception/education.exception';
 import { CreateEducationEnrollmentDto } from '../../../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../../../dto/enrollments/update-education-enrollment.dto';
 
@@ -247,6 +256,46 @@ export class EducationEnrollmentsDomainService
     });
 
     return `educationEnrollment: ${educationEnrollment.id} deleted`;
+  }
+
+  async incrementAttendanceCount(
+    educationEnrollment: EducationEnrollmentModel,
+    qr: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    const result = await educationEnrollmentsRepository.increment(
+      { id: educationEnrollment.id, deletedAt: IsNull() },
+      'attendanceCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(EducationException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async decrementAttendanceCount(
+    educationEnrollment: EducationEnrollmentModel,
+    qr: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    const result = await educationEnrollmentsRepository.decrement(
+      { id: educationEnrollment.id, deletedAt: IsNull() },
+      'attendanceCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(EducationException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   async decrementAttendanceCountBySessionDeletion(
