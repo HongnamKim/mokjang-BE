@@ -1,22 +1,24 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MembersModule } from '../members/members.module';
-import { ManagementModule } from '../management/management.module';
 import { MemberOfficerService } from './service/member-officer.service';
 import { MemberOfficerController } from './controller/member-officer.controller';
 import { RouterModule } from '@nestjs/core';
 import { MemberMinistryService } from './service/member-ministry.service';
-//import { MemberEducationService } from './service/education-history.service';
-//import { EducationHistoryModel } from './entity/education-history.entity';
 import { MemberEducationController } from './controller/member-education.controller';
 import { MemberGroupController } from './controller/member-group.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
 import { MemberGroupService } from './service/member-group.service';
-import { EducationEnrollmentModel } from '../management/entity/education/education-enrollment.entity';
 import { MemberEducationService } from './service/member-education.service';
 import { MinistryHistoryModel } from './entity/ministry-history.entity';
 import { MemberMinistryController } from './controller/member-ministry.controller';
 import { OfficerHistoryModel } from './entity/officer-history.entity';
+import { ManagementModule } from '../../management/management.module';
+import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
+import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
+import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
+import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
+import { MinistriesDomainModule } from '../../management/ministries/ministries-domain/ministries-domain.module';
 
 @Module({
   imports: [
@@ -35,6 +37,15 @@ import { OfficerHistoryModel } from './entity/officer-history.entity';
     ]),
     MembersModule,
     ManagementModule,
+    // 임시 import
+    //GroupsModule,
+    //OfficersModule,
+    //MinistriesModule,
+    // Domain Modules
+    GroupsDomainModule,
+    OfficersDomainModule,
+    MinistriesDomainModule,
+    ChurchesDomainModule,
   ],
   exports: [],
   providers: [

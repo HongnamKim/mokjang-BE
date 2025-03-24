@@ -1,7 +1,7 @@
 import { BaseModel } from '../../../common/entity/base.entity';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { MemberModel } from '../../members/entity/member.entity';
-import { OfficerModel } from '../../management/entity/officer/officer.entity';
+import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 
 @Entity()
 export class OfficerHistoryModel extends BaseModel {

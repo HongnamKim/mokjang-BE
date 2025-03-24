@@ -22,14 +22,10 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
-import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
 } from '../const/default-find-options.const';
-import { GroupModel } from '../../management/entity/group/group.entity';
-import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
-import { OfficerModel } from '../../management/entity/officer/officer.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
 import { CreateFamilyDto } from '../dto/family/create-family.dto';
@@ -38,6 +34,10 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
+import { OfficerModel } from '../../../management/officers/entity/officer.entity';
+import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
+import { GroupModel } from '../../../management/groups/entity/group.entity';
+import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 
 @Injectable()
 export class MembersService {

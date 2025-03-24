@@ -8,32 +8,34 @@ import { MemberModel } from './churches/members/entity/member.entity';
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersManagementModule } from './churches/members-management/members-management.module';
-import { OfficerModel } from './churches/management/entity/officer/officer.entity';
-import { MinistryModel } from './churches/management/entity/ministry/ministry.entity';
-import { GroupModel } from './churches/management/entity/group/group.entity';
-import { ManagementModule } from './churches/management/management.module';
+
 import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './user/entity/user.entity';
-import { GroupRoleModel } from './churches/management/entity/group/group-role.entity';
+
 import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
-import { EducationModel } from './churches/management/entity/education/education.entity';
-import { EducationTermModel } from './churches/management/entity/education/education-term.entity';
-import { EducationSessionModel } from './churches/management/entity/education/education-session.entity';
-import { SessionAttendanceModel } from './churches/management/entity/education/session-attendance.entity';
-import { EducationEnrollmentModel } from './churches/management/entity/education/education-enrollment.entity';
-import { MinistryGroupModel } from './churches/management/entity/ministry/ministry-group.entity';
+
 import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
-import { MemberEventHandler } from './member-event.handler';
 import { UserModule } from './user/user.module';
 import { MembersModule } from './churches/members/members.module';
 import { ChurchesModule } from './churches/churches.module';
+import { EducationModel } from './management/educations/entity/education.entity';
+import { EducationTermModel } from './management/educations/entity/education-term.entity';
+import { EducationSessionModel } from './management/educations/entity/education-session.entity';
+import { SessionAttendanceModel } from './management/educations/entity/session-attendance.entity';
+import { EducationEnrollmentModel } from './management/educations/entity/education-enrollment.entity';
+import { OfficerModel } from './management/officers/entity/officer.entity';
+import { MinistryModel } from './management/ministries/entity/ministry.entity';
+import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
+import { GroupModel } from './management/groups/entity/group.entity';
+import { GroupRoleModel } from './management/groups/entity/group-role.entity';
+import { ManagementModule } from './management/management.module';
 
 @Module({
   imports: [
@@ -143,7 +145,6 @@ import { ChurchesModule } from './churches/churches.module';
   ],
   controllers: [AppController],
   providers: [
-    MemberEventHandler,
     AppService,
     {
       provide: APP_INTERCEPTOR,
