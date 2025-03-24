@@ -1,14 +1,35 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 export const ApiTestAuth = () =>
   applyDecorators(
+    ApiQuery({
+      name: 'loginOption',
+      required: false,
+      type: String,
+      description: '로그인 옵션 (기본값: test, 가능한값: test | mobile)',
+    }),
     ApiOperation({
       summary: '테스트 유저 생성/로그인',
       description:
-        '<p><h2>테스트 유저를 생성 또는 로그인합니다.</h2></p>' +
+        '<p><h2>provider, providerId 로 직접 유저를 생성 또는 로그인합니다.</h2></p>' +
+        '<p>모바일 로그인일 경우 loginOption = "mobile"</p>' +
+        '<p>테스트 로그인일 경우 loginOption = "test"</p>' +
+        '<p>기본값 loginOptions = "test"</p>' +
         '<p>기존 생성한 테스트 유저로 로그인할 경우 AccessToken, RefreshToken 반환</p>' +
         '<p>존재하지 않는 테스트 유저일 경우 TemporalToken 반환</p>' +
+        '<p>TemporalToken 으로 이후 회원가입 절차 진행 가능</p>',
+    }),
+  );
+
+export const ApiMobileLoginAuth = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '모바일 유저 생성/로그인',
+      description:
+        '<p><h2>provider, providerId 로 직접 유저를 생성 또는 로그인합니다.</h2></p>' +
+        '<p>기존 생성한 유저로 로그인할 경우 AccessToken, RefreshToken 반환</p>' +
+        '<p>존재하지 않는 유저일 경우 TemporalToken 반환</p>' +
         '<p>TemporalToken 으로 이후 회원가입 절차 진행 가능</p>',
     }),
   );
