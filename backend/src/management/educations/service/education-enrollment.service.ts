@@ -68,163 +68,7 @@ export class EducationEnrollmentService {
       dto,
       qr,
     );
-
-    /*const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    const [result, totalCount] = await Promise.all([
-      educationEnrollmentsRepository.find({
-        where: {
-          educationTermId,
-          educationTerm: {
-            educationId,
-            education: {
-              churchId,
-            },
-          },
-        },
-        relations: {
-          member: {
-            group: true,
-            groupRole: true,
-            officer: true,
-          },
-        },
-        order: {
-          [dto.order]: dto.orderDirection,
-          createdAt:
-            dto.order === EducationEnrollmentOrderEnum.createdAt
-              ? undefined
-              : 'desc',
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      educationEnrollmentsRepository.count({
-        where: {
-          educationTermId,
-          educationTerm: {
-            educationId,
-            education: {
-              churchId,
-            },
-          },
-        },
-      }),
-    ]);
-
-    return {
-      data: result,
-      totalCount,
-      count: result.length,
-      page: dto.page,
-    };*/
   }
-
-  async getMemberEducationEnrollments(
-    memberId: number,
-    churchId: number,
-    qr?: QueryRunner,
-  ) {
-    const member = await this.membersService.getMemberModelById(
-      churchId,
-      memberId,
-      {},
-      qr,
-    );
-
-    return this.educationEnrollmentsDomainService.findMemberEducationEnrollments(
-      member,
-      qr,
-    );
-
-    /*const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    const enrollments = await educationEnrollmentsRepository.find({
-      where: {
-        memberId,
-        educationTerm: {
-          education: {
-            churchId,
-          },
-        },
-      },
-      relations: {
-        educationTerm: true,
-      },
-    });
-
-    return enrollments;*/
-  }
-
-  /*async getEducationEnrollmentModelById(
-    educationEnrollmentId: number,
-    qr?: QueryRunner,
-  ) {
-    const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    const enrollment = await educationEnrollmentsRepository.findOne({
-      where: {
-        id: educationEnrollmentId,
-      },
-    });
-
-    if (!enrollment) {
-      throw new NotFoundException('해당 교육 대상자 내역을 찾을 수 없습니다.');
-    }
-
-    return enrollment;
-  }*/
-
-  /*async getEducationEnrollmentById(
-    churchId: number,
-    educationId: number,
-    educationTermId: number,
-    educationEnrollmentId: number,
-    qr?: QueryRunner,
-  ) {
-    const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    const enrollment = await educationEnrollmentsRepository.findOne({
-      where: {
-        educationTerm: {
-          educationId,
-          education: {
-            churchId,
-          },
-        },
-        educationTermId,
-        id: educationEnrollmentId,
-      },
-    });
-
-    if (!enrollment) {
-      throw new NotFoundException('해당 교육 대상자 내역을 찾을 수 없습니다.');
-    }
-
-    return enrollment;
-  }*/
-
-  /*async isExistEnrollment(
-    educationTermId: number,
-    memberId: number,
-    qr?: QueryRunner,
-  ) {
-    const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    const enrollment = await educationEnrollmentsRepository.findOne({
-      where: {
-        educationTermId,
-        memberId,
-      },
-    });
-
-    return !!enrollment;
-  }*/
 
   async createEducationEnrollment(
     churchId: number,
@@ -256,30 +100,8 @@ export class EducationEnrollmentService {
         education,
         educationTermId,
         qr,
+        { educationSessions: true },
       );
-
-    /*const [educationTerm, isExistEnrollment] = await Promise.all([
-      this.educationTermEnrollmentSyncService.getEducationTermModelById(
-        churchId,
-        educationId,
-        educationTermId,
-        qr,
-      ),
-
-      this.isExistEnrollment(educationTermId, member.id, qr),
-    ]);
-
-    if (isExistEnrollment) {
-      throw new BadRequestException('이미 교육 대상자로 등록된 교인입니다.');
-    }*/
-
-    /*// enrollment 생성
-    const enrollment = await educationEnrollmentsRepository.save({
-      member,
-      educationTerm,
-      status: dto.status,
-      note: dto.note,
-    });*/
 
     const enrollment =
       await this.educationEnrollmentsDomainService.createEducationEnrollment(
@@ -301,21 +123,14 @@ export class EducationEnrollmentService {
         educationTerm,
         qr,
       ),
-      /*this.educationTermEnrollmentSyncService.incrementEnrollmentCount(
-        educationTermId,
-        qr,
-      ),*/
+
       // 교육 수강자 상태 통계값 업데이트
       this.educationTermDomainService.incrementEducationStatusCount(
         educationTerm,
         dto.status,
         qr,
       ),
-      /*this.educationTermEnrollmentSyncService.incrementEducationStatusCount(
-        educationTermId,
-        dto.status,
-        qr,
-      ),*/
+
       // 수강자의 출석 정보 생성
       this.educationEnrollmentAttendanceSyncService.createSessionAttendanceForNewEnrollment(
         enrollment,
@@ -326,7 +141,7 @@ export class EducationEnrollmentService {
 
     return this.educationEnrollmentsDomainService.findEducationEnrollmentById(
       educationTerm,
-      educationTermId,
+      enrollment.id,
       qr,
     );
   }
@@ -362,14 +177,6 @@ export class EducationEnrollmentService {
         qr,
       );
 
-    /*const targetEducationEnrollment = await this.getEducationEnrollmentById(
-      churchId,
-      educationId,
-      educationTermId,
-      educationEnrollmentId,
-      qr,
-    );*/
-
     // 교육 이수 상태 변경 시 해당 기수의 이수자 통계 업데이트
     // 교육 이수 상태를 변경 && 기존 이수 상태와 다를 경우
     if (dto.status && dto.status !== targetEducationEnrollment.status) {
@@ -380,22 +187,13 @@ export class EducationEnrollmentService {
           targetEducationEnrollment.status,
           qr,
         ),
-        /*this.educationTermEnrollmentSyncService.decrementEducationStatusCount(
-          educationTermId,
-          targetEducationEnrollment.status,
-          qr,
-        ),*/
+
         // 새 status 증가
         this.educationTermDomainService.incrementEducationStatusCount(
           educationTerm,
           dto.status,
           qr,
         ),
-        /*this.educationTermEnrollmentSyncService.incrementEducationStatusCount(
-          educationTermId,
-          dto.status,
-          qr,
-        ),*/
       ]);
     }
 
@@ -404,17 +202,6 @@ export class EducationEnrollmentService {
       dto,
       qr,
     );
-    /*// 교육등록 업데이트
-    await educationEnrollmentsRepository.update(
-      {
-        id: educationEnrollmentId,
-        educationTermId,
-      },
-      {
-        status: dto.status,
-        note: dto.note,
-      },
-    );*/
 
     return this.educationEnrollmentsDomainService.findEducationEnrollmentById(
       educationTerm,
@@ -454,14 +241,6 @@ export class EducationEnrollmentService {
         qr,
       );
 
-    /*const targetEnrollment = await this.getEducationEnrollmentById(
-      churchId,
-      educationId,
-      educationTermId,
-      educationEnrollmentId,
-      qr,
-    );*/
-
     const member = memberDeleted
       ? await this.membersService.getDeleteMemberModelById(
           churchId,
@@ -484,30 +263,20 @@ export class EducationEnrollmentService {
         educationTerm,
         qr,
       ),
-      /*this.educationTermEnrollmentSyncService.decrementEnrollmentCount(
-        educationTermId,
-        qr,
-      ),*/
+
       // 상태별 카운트 감소
       this.educationTermDomainService.decrementEducationStatusCount(
         educationTerm,
         targetEnrollment.status,
         qr,
       ),
-      /*this.educationTermEnrollmentSyncService.decrementEducationStatusCount(
-        educationTermId,
-        targetEnrollment.status,
-        qr,
-      ),*/
+
       // 교육 등록 삭제
       this.educationEnrollmentsDomainService.deleteEducationEnrollment(
         targetEnrollment,
         qr,
       ),
-      /*educationEnrollmentsRepository.softDelete({
-        id: educationEnrollmentId,
-        educationTermId,
-      }),*/
+
       // 출석 정보 삭제
       this.educationEnrollmentAttendanceSyncService.deleteSessionAttendanceByEnrollmentDeletion(
         educationEnrollmentId,

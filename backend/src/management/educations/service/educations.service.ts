@@ -38,35 +38,6 @@ export class EducationsService {
     );
 
     return this.educationDomainService.findEducations(church, dto, qr);
-
-    /*const educationsRepository = this.getEducationsRepository(qr);
-
-    const [result, totalCount] = await Promise.all([
-      educationsRepository.find({
-        where: {
-          churchId,
-        },
-        order: {
-          [dto.order]: dto.orderDirection,
-          createdAt:
-            dto.order === EducationOrderEnum.createdAt ? undefined : 'desc',
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      educationsRepository.count({
-        where: {
-          churchId,
-        },
-      }),
-    ]);
-
-    return {
-      data: result,
-      totalCount,
-      count: result.length,
-      page: dto.page,
-    };*/
   }
 
   async getEducationById(
@@ -84,31 +55,6 @@ export class EducationsService {
       educationId,
       qr,
     );
-
-    /*const educationsRepository = this.getEducationsRepository(qr);
-
-    const education = await educationsRepository.findOne({
-      where: {
-        churchId,
-        id: educationId,
-      },
-      relations: {
-        educationTerms: {
-          instructor: true,
-        },
-      },
-      order: {
-        educationTerms: {
-          term: 'asc',
-        },
-      },
-    });
-
-    if (!education) {
-      throw new BadRequestException(EducationException.NOT_FOUND);
-    }
-
-    return education;*/
   }
 
   async createEducation(
@@ -122,26 +68,6 @@ export class EducationsService {
     );
 
     return this.educationDomainService.createEducation(church, dto, qr);
-
-    /*const educationsRepository = this.getEducationsRepository(qr);
-
-    // 교육 이름 중복 체크
-    const existEducationName = await this.isExistEducationName(
-      churchId,
-      dto.name,
-      false,
-      qr,
-    );
-
-    if (existEducationName) {
-      throw new BadRequestException(EducationException.ALREADY_EXIST);
-    }
-
-    return educationsRepository.save({
-      name: dto.name,
-      description: dto.description,
-      churchId,
-    });*/
   }
 
   async updateEducation(
@@ -176,38 +102,6 @@ export class EducationsService {
       dto,
       qr,
     );
-
-    /*const educationsRepository = this.getEducationsRepository(qr);
-
-    const education = await educationsRepository.findOne({
-      where: {
-        churchId,
-        id: educationId,
-      },
-    });
-
-    if (!education) {
-      throw new NotFoundException(EducationException.NOT_FOUND);
-    }
-
-    // 바꾸려는 이름이 존재하는 지 확인
-    const existEducationName = dto.name
-      ? await this.isExistEducationName(churchId, dto.name, false, qr)
-      : false;
-
-    if (existEducationName) {
-      throw new BadRequestException(EducationException.ALREADY_EXIST);
-    }
-
-    await educationsRepository.update(
-      {
-        id: educationId,
-      },
-      {
-        name: dto.name,
-        description: dto.description,
-      },
-    );*/
   }
 
   async deleteEducation(
@@ -228,18 +122,5 @@ export class EducationsService {
       );
 
     return this.educationDomainService.deleteEducation(targetEducation, qr);
-
-    /*const educationsRepository = this.getEducationsRepository(qr);
-
-    const result = await educationsRepository.softDelete({
-      id: educationId,
-      churchId,
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(EducationException.NOT_FOUND);
-    }
-
-    return `educationId: ${educationId} deleted`;*/
   }
 }

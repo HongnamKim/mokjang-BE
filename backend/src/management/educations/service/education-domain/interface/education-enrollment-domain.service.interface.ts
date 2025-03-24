@@ -19,7 +19,8 @@ export interface IEducationEnrollmentsDomainService {
   ): Promise<EducationEnrollmentPaginationResultDto>;
 
   findMemberEducationEnrollments(
-    member: MemberModel,
+    //member: MemberModel,
+    memberId: number,
     qr?: QueryRunner,
   ): Promise<EducationEnrollmentModel[]>;
 
@@ -52,4 +53,9 @@ export interface IEducationEnrollmentsDomainService {
     educationEnrollment: EducationEnrollmentModel,
     qr: QueryRunner,
   ): Promise<string>;
+
+  decrementAttendanceCountBySessionDeletion(
+    attendedEnrollmentIds: number[],
+    qr: QueryRunner,
+  ): Promise<void>;
 }
