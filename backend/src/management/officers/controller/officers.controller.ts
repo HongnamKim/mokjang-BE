@@ -17,7 +17,7 @@ import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 
-@ApiTags('Settings:Officers')
+@ApiTags('Management:Officers')
 @Controller('officers')
 export class OfficersController {
   constructor(private readonly officersService: OfficersService) {}
