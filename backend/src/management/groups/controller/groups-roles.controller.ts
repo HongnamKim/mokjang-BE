@@ -18,7 +18,7 @@ import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 
-@ApiTags('Settings:Groups:Roles')
+@ApiTags('Management:Groups:Roles')
 @Controller('groups')
 export class GroupsRolesController {
   constructor(private readonly groupsRolesService: GroupRolesService) {}
