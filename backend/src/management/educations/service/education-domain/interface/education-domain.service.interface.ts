@@ -2,7 +2,7 @@ import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationDto } from '../../../dto/education/get-education.dto';
 import { QueryRunner } from 'typeorm';
 import { EducationPaginationResultDto } from '../../../dto/education-pagination-result.dto';
-import { EducationModel } from '../../../../entity/education/education.entity';
+import { EducationModel } from '../../../entity/education.entity';
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
 

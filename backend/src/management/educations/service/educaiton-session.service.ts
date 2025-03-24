@@ -1,9 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { QueryRunner, Repository } from 'typeorm';
-import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
+import { QueryRunner } from 'typeorm';
 import { UpdateEducationSessionDto } from '../dto/sessions/update-education-session.dto';
-//import { EducationEnrollmentSessionSyncService } from './sync/education-enrollment-session-sync.service';
 import {
   IEDUCATION_SESSION_DOMAIN_SERVICE,
   IEducationSessionDomainService,
@@ -24,15 +21,14 @@ import {
   IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
   IEducationEnrollmentsDomainService,
 } from './education-domain/interface/education-enrollment-domain.service.interface';
+import {
+  ISESSION_ATTENDANCE_DOMAIN_SERVICE,
+  ISessionAttendanceDomainService,
+} from './education-domain/interface/session-attendance-domain.service.interface';
 
 @Injectable()
 export class EducationSessionService {
   constructor(
-    @InjectRepository(SessionAttendanceModel)
-    private readonly sessionAttendanceRepository: Repository<SessionAttendanceModel>,
-
-    //private readonly educationEnrollmentSessionSyncService: EducationEnrollmentSessionSyncService,
-
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IEDUCATION_DOMAIN_SERVICE)
@@ -43,13 +39,9 @@ export class EducationSessionService {
     private readonly educationSessionDomainService: IEducationSessionDomainService,
     @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
     private readonly educationEnrollmentsDomainService: IEducationEnrollmentsDomainService,
+    @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
   ) {}
-
-  private getSessionAttendanceRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(SessionAttendanceModel)
-      : this.sessionAttendanceRepository;
-  }
 
   private async getEducationTerm(
     churchId: number,
@@ -163,12 +155,17 @@ export class EducationSessionService {
       ),
 
       // 세션 출석 정보 생성
-      this.getSessionAttendanceRepository(qr).save(
+      this.sessionAttendanceDomainService.createSessionAttendance(
+        newSession,
+        educationTerm.educationEnrollments,
+        qr,
+      ),
+      /*this.getSessionAttendanceRepository(qr).save(
         educationTerm.educationEnrollments.map((enrollment) => ({
           educationSessionId: newSession.id,
           educationEnrollmentId: enrollment.id,
         })),
-      ),
+      ),*/
     ]);
 
     return this.educationSessionDomainService.findEducationSessionById(
@@ -247,24 +244,26 @@ export class EducationSessionService {
         qr,
       );
 
-    // 세션 삭제
-    await this.educationSessionDomainService.deleteEducationSession(
-      targetSession,
-      qr,
-    );
+    await Promise.all([
+      // 세션 삭제
+      this.educationSessionDomainService.deleteEducationSession(
+        targetSession,
+        qr,
+      ),
 
-    // 다른 회차들 session 번호 수정
-    await this.educationSessionDomainService.reorderSessionsAfterDeletion(
-      educationTerm,
-      targetSession,
-      qr,
-    );
+      // 다른 회차들 session 번호 수정
+      this.educationSessionDomainService.reorderSessionsAfterDeletion(
+        educationTerm,
+        targetSession,
+        qr,
+      ),
 
-    // 해당 기수의 세션 개수 업데이트
-    await this.educationTermDomainService.decrementNumberOfSessions(
-      educationTerm,
-      qr,
-    );
+      // 해당 기수의 세션 개수 업데이트
+      this.educationTermDomainService.decrementNumberOfSessions(
+        educationTerm,
+        qr,
+      ),
+    ]);
 
     if (targetSession.isDone) {
       await this.educationTermDomainService.decrementDoneCount(
@@ -274,33 +273,27 @@ export class EducationSessionService {
     }
 
     // 해당 세션 하위의 출석 정보 삭제
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
-
-    const attendances = await sessionAttendanceRepository.find({
-      where: {
-        educationSessionId,
-      },
-    });
-
     // 삭제할 세션에 출석한 교육 대상자 ID
-    const attendedEnrollmentIds = attendances
-      .filter((attendance) => attendance.isPresent)
-      .map((attendance) => attendance.educationEnrollmentId);
+    const attended =
+      await this.sessionAttendanceDomainService.findAttendedSessionAttendances(
+        targetSession,
+        qr,
+      );
+
+    const attendedEnrollmentIds = attended.map(
+      (attendance) => attendance.educationEnrollmentId,
+    );
 
     // 해당 세션의 출석 정보 삭제
-    await sessionAttendanceRepository.softDelete({
-      educationSessionId: educationSessionId,
-    });
+    await this.sessionAttendanceDomainService.deleteSessionAttendancesBySessionDeletion(
+      targetSession.id,
+      qr,
+    );
 
     await this.educationEnrollmentsDomainService.decrementAttendanceCountBySessionDeletion(
       attendedEnrollmentIds,
       qr,
     );
-
-    /*await this.educationEnrollmentSessionSyncService.decreaseAttendanceCount(
-      attendedEnrollmentIds,
-      qr,
-    );*/
 
     return `educationSessionId: ${educationSessionId} deleted`;
   }

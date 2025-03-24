@@ -1,9 +1,9 @@
 import { EducationEnrollmentPaginationResultDto } from '../../../dto/education-enrollment-pagination-result.dto';
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../../../../churches/members/entity/member.entity';
-import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { CreateEducationEnrollmentDto } from '../../../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../../../dto/enrollments/update-education-enrollment.dto';
 
@@ -53,6 +53,16 @@ export interface IEducationEnrollmentsDomainService {
     educationEnrollment: EducationEnrollmentModel,
     qr: QueryRunner,
   ): Promise<string>;
+
+  incrementAttendanceCount(
+    educationEnrollment: EducationEnrollmentModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementAttendanceCount(
+    educationEnrollment: EducationEnrollmentModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 
   decrementAttendanceCountBySessionDeletion(
     attendedEnrollmentIds: number[],

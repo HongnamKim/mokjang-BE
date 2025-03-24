@@ -1,8 +1,8 @@
 import { NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationTermModel } from '../../../../entity/education/education-term.entity';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 import { QueryRunner, Repository } from 'typeorm';
-import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { EducationStatus } from '../../../const/education-status.enum';
 
 //@Injectable()

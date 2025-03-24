@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { In, QueryRunner, Repository } from 'typeorm';
-import { SessionAttendanceModel } from '../../../../entity/education/session-attendance.entity';
+import { SessionAttendanceModel } from '../../../entity/session-attendance.entity';
 
 //@Injectable()
 /*export*/ class EducationEnrollmentSessionSyncService {

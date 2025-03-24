@@ -3,7 +3,6 @@ import { QueryRunner } from 'typeorm';
 import { GetEducationEnrollmentDto } from '../dto/enrollments/get-education-enrollment.dto';
 import { CreateEducationEnrollmentDto } from '../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../dto/enrollments/update-education-enrollment.dto';
-import { EducationEnrollmentAttendanceSyncService } from './sync/education-enrollment-attendance-sync.service';
 import { MembersService } from '../../../churches/members/service/members.service';
 import {
   IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
@@ -21,12 +20,15 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  ISESSION_ATTENDANCE_DOMAIN_SERVICE,
+  ISessionAttendanceDomainService,
+} from './education-domain/interface/session-attendance-domain.service.interface';
 
 @Injectable()
 export class EducationEnrollmentService {
   constructor(
     private readonly membersService: MembersService,
-    private readonly educationEnrollmentAttendanceSyncService: EducationEnrollmentAttendanceSyncService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -36,6 +38,8 @@ export class EducationEnrollmentService {
     private readonly educationTermDomainService: IEducationTermDomainService,
     @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
     private readonly educationEnrollmentsDomainService: IEducationEnrollmentsDomainService,
+    @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
   ) {}
 
   async getEducationEnrollments(
@@ -132,7 +136,7 @@ export class EducationEnrollmentService {
       ),
 
       // 수강자의 출석 정보 생성
-      this.educationEnrollmentAttendanceSyncService.createSessionAttendanceForNewEnrollment(
+      this.sessionAttendanceDomainService.createSessionAttendanceForNewEnrollment(
         enrollment,
         educationSessionIds,
         qr,
@@ -278,8 +282,8 @@ export class EducationEnrollmentService {
       ),
 
       // 출석 정보 삭제
-      this.educationEnrollmentAttendanceSyncService.deleteSessionAttendanceByEnrollmentDeletion(
-        educationEnrollmentId,
+      this.sessionAttendanceDomainService.deleteSessionAttendanceByEnrollmentDeletion(
+        targetEnrollment,
         qr,
       ),
     ]);

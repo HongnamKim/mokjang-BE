@@ -23,8 +23,8 @@ import { RequestInfoModel } from '../../request-info/entity/request-info.entity'
 import { UserModel } from '../../../user/entity/user.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { EducationEnrollmentModel } from '../../../management/entity/education/education-enrollment.entity';
-import { EducationTermModel } from '../../../management/entity/education/education-term.entity';
+import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
+import { EducationTermModel } from '../../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 

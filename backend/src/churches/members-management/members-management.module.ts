@@ -14,7 +14,7 @@ import { MinistryHistoryModel } from './entity/ministry-history.entity';
 import { MemberMinistryController } from './controller/member-ministry.controller';
 import { OfficerHistoryModel } from './entity/officer-history.entity';
 import { ManagementModule } from '../../management/management.module';
-import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
 import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';

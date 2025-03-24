@@ -1,30 +1,114 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { SessionAttendanceModel } from '../../entity/education/session-attendance.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { Inject, Injectable } from '@nestjs/common';
+import { SessionAttendanceModel } from '../entity/session-attendance.entity';
+import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { GetAttendanceDto } from '../dto/attendance/get-attendance.dto';
 import { UpdateAttendanceDto } from '../dto/attendance/update-attendance.dto';
-import { EducationEnrollmentModel } from '../../entity/education/education-enrollment.entity';
+import {
+  ISESSION_ATTENDANCE_DOMAIN_SERVICE,
+  ISessionAttendanceDomainService,
+} from './education-domain/interface/session-attendance-domain.service.interface';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IEDUCATION_DOMAIN_SERVICE,
+  IEducationDomainService,
+} from './education-domain/interface/education-domain.service.interface';
+import {
+  IEDUCATION_TERM_DOMAIN_SERVICE,
+  IEducationTermDomainService,
+} from './education-domain/interface/education-term-domain.service.interface';
+import {
+  IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+  IEducationEnrollmentsDomainService,
+} from './education-domain/interface/education-enrollment-domain.service.interface';
+import {
+  IEDUCATION_SESSION_DOMAIN_SERVICE,
+  IEducationSessionDomainService,
+} from './education-domain/interface/education-session-domain.service.interface';
 
 @Injectable()
 export class SessionAttendanceService {
   constructor(
-    @InjectRepository(EducationEnrollmentModel)
-    private readonly educationEnrollmentsRepository: Repository<EducationEnrollmentModel>,
-    @InjectRepository(SessionAttendanceModel)
-    private readonly sessionAttendanceRepository: Repository<SessionAttendanceModel>,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IEDUCATION_DOMAIN_SERVICE)
+    private readonly educationDomainService: IEducationDomainService,
+    @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
+    private readonly educationTermDomainService: IEducationTermDomainService,
+    @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly educationEnrollmentDomainService: IEducationEnrollmentsDomainService,
+    @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
+    private readonly educationSessionDomainService: IEducationSessionDomainService,
+    @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
   ) {}
 
-  private getEducationEnrollmentsRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(EducationEnrollmentModel)
-      : this.educationEnrollmentsRepository;
+  private async getSessionAttendanceModelById(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    educationSessionId: number,
+    sessionAttendanceId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<SessionAttendanceModel>,
+  ) {
+    const { educationSession } = await this.getEducationInfo(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      qr,
+    );
+
+    return this.sessionAttendanceDomainService.findSessionAttendanceModelById(
+      educationSession,
+      sessionAttendanceId,
+      qr,
+      relationOptions,
+    );
   }
 
-  private getSessionAttendanceRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(SessionAttendanceModel)
-      : this.sessionAttendanceRepository;
+  private async getEducationInfo(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    educationSessionId: number,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
+      educationId,
+      qr,
+    );
+
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        church,
+        education,
+        educationTermId,
+        qr,
+      );
+
+    const educationSession =
+      await this.educationSessionDomainService.findEducationSessionById(
+        educationTerm,
+        educationSessionId,
+        qr,
+      );
+
+    return {
+      church,
+      education,
+      educationTerm,
+      educationSession,
+    };
   }
 
   async getSessionAttendance(
@@ -34,83 +118,17 @@ export class SessionAttendanceService {
     educationSessionId: number,
     dto: GetAttendanceDto,
   ) {
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository();
+    const { educationSession } = await this.getEducationInfo(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+    );
 
-    const [result, totalCount] = await Promise.all([
-      sessionAttendanceRepository.find({
-        where: {
-          educationSession: {
-            educationTermId,
-            educationTerm: {
-              educationId,
-              education: {
-                churchId,
-              },
-            },
-          },
-          educationSessionId,
-        },
-        relations: {
-          educationEnrollment: {
-            member: {
-              group: true,
-              groupRole: true,
-              officer: true,
-            },
-          },
-        },
-        order: {
-          [dto.order]: dto.orderDirection,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      sessionAttendanceRepository.count({
-        where: {
-          educationSessionId,
-        },
-      }),
-    ]);
-
-    return {
-      data: result,
-      totalCount,
-      count: result.length,
-      page: dto.page,
-    };
-  }
-
-  async getSessionAttendanceModelById(
-    churchId: number,
-    educationId: number,
-    educationTermId: number,
-    educationSessionId: number,
-    sessionAttendanceId: number,
-    qr?: QueryRunner,
-  ) {
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
-
-    const sessionAttendance = await sessionAttendanceRepository.findOne({
-      where: {
-        id: sessionAttendanceId,
-        educationSessionId,
-        educationSession: {
-          educationTermId,
-          educationTerm: {
-            educationId,
-            education: {
-              churchId,
-            },
-          },
-        },
-      },
-    });
-
-    if (!sessionAttendance) {
-      throw new NotFoundException('해당 세션 출석 정보를 찾을 수 없습니다.');
-    }
-
-    return sessionAttendance;
+    return this.sessionAttendanceDomainService.findSessionAttendances(
+      educationSession,
+      dto,
+    );
   }
 
   async updateSessionAttendance(
@@ -130,7 +148,6 @@ export class SessionAttendanceService {
      *  1. 출석 --> sessionAttendance, educationEnrollment 수정
      *  2. 비고 --> sessionAttendance 만 수정
      */
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
     const sessionAttendance = await this.getSessionAttendanceModelById(
       churchId,
@@ -138,65 +155,39 @@ export class SessionAttendanceService {
       educationTermId,
       educationSessionId,
       sessionAttendanceId,
+      qr,
+      { educationEnrollment: true, educationSession: true },
     );
 
-    // sessionAttendance 업데이트
-    await sessionAttendanceRepository.update(
-      {
-        id: sessionAttendanceId,
-      },
-      {
-        isPresent: dto.isPresent,
-        note: dto.note,
-      },
+    await this.sessionAttendanceDomainService.updateSessionAttendance(
+      sessionAttendance,
+      dto,
+      qr,
     );
 
     // 출석 정보 업데이트 시
     // isPresent 가 boolean 이기 때문에 undefined 로 판단
-    if (dto.isPresent !== undefined) {
-      await this.updateAttendanceCount(sessionAttendance, qr);
+    if (
+      dto.isPresent !== undefined &&
+      dto.isPresent !== sessionAttendance.isPresent
+    ) {
+      if (dto.isPresent) {
+        await this.educationEnrollmentDomainService.incrementAttendanceCount(
+          sessionAttendance.educationEnrollment,
+          qr,
+        );
+      } else {
+        await this.educationEnrollmentDomainService.decrementAttendanceCount(
+          sessionAttendance.educationEnrollment,
+          qr,
+        );
+      }
     }
 
-    return sessionAttendanceRepository.findOne({
-      where: {
-        id: sessionAttendanceId,
-      },
-    });
-  }
-
-  private async updateAttendanceCount(
-    sessionAttendance: SessionAttendanceModel,
-    qr: QueryRunner,
-  ) {
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
-    const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
-
-    const [enrollment, attendanceCount] = await Promise.all([
-      educationEnrollmentsRepository.findOne({
-        where: {
-          id: sessionAttendance.educationEnrollmentId,
-        },
-      }),
-      sessionAttendanceRepository.count({
-        where: {
-          educationEnrollmentId: sessionAttendance.educationEnrollmentId,
-          isPresent: true,
-        },
-      }),
-    ]);
-
-    if (!enrollment) {
-      throw new NotFoundException('해당 교육 대상자 내역을 찾을 수 없습니다.');
-    }
-
-    await educationEnrollmentsRepository.update(
-      {
-        id: enrollment.id,
-      },
-      {
-        attendanceCount: attendanceCount,
-      },
+    return this.sessionAttendanceDomainService.findSessionAttendanceModelById(
+      sessionAttendance.educationSession,
+      sessionAttendanceId,
+      qr,
     );
   }
 }
