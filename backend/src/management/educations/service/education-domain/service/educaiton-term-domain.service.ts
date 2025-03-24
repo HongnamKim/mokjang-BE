@@ -7,7 +7,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationTermModel } from '../../../../entity/education/education-term.entity';
-import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  QueryRunner,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { EducationModel } from '../../../../entity/education/education.entity';
 import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
@@ -64,6 +69,16 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   ): Promise<EducationTermPaginationResultDto> {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
+    const order: Partial<
+      Record<EducationTermOrderEnum, 'asc' | 'desc' | 'ASC' | 'DESC'>
+    > = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== EducationTermOrderEnum.createdAt) {
+      order.createdAt = 'desc';
+    }
+
     const [result, totalCount] = await Promise.all([
       educationTermsRepository.find({
         where: {
@@ -72,11 +87,11 @@ export class EducationTermDomainService implements IEducationTermDomainService {
           },
           educationId: education.id,
         },
-        order: {
+        order /*{
           [dto.order]: dto.orderDirection,
           createdAt:
             dto.order === EducationTermOrderEnum.createdAt ? undefined : 'desc',
-        },
+        }*/,
         relations: {
           instructor: {
             officer: true,
@@ -331,7 +346,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     );
   }
 
-  async increaseEnrollmentCount(
+  async incrementEnrollmentCount(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ) {
@@ -344,7 +359,9 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
     }
 
     return result;
@@ -363,7 +380,9 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
     }
 
     return result;
@@ -385,7 +404,9 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
     }
 
     return result;
@@ -407,7 +428,91 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('해당 교육 기수를 찾을 수 없습니다.');
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async incrementNumberOfSessions(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    const result = await educationTermsRepository.increment(
+      { id: educationTerm.id },
+      'numberOfSessions',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async decrementNumberOfSessions(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+    const result = await educationTermsRepository.decrement(
+      { id: educationTerm.id },
+      'numberOfSessions',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async incrementDoneCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const educationTermRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermRepository.increment(
+      { id: educationTerm.id },
+      'isDoneCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async decrementDoneCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const educationTermRepository = this.getEducationTermsRepository(qr);
+
+    const result = await educationTermRepository.decrement(
+      { id: educationTerm.id },
+      'isDoneCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationTermException.UPDATE_ERROR,
+      );
     }
 
     return result;

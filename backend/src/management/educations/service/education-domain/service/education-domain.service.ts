@@ -53,16 +53,22 @@ export class EducationDomainService implements IEducationDomainService {
   ): Promise<EducationPaginationResultDto> {
     const educationsRepository = this.getEducationsRepository(qr);
 
+    const order: Partial<
+      Record<EducationOrderEnum, 'asc' | 'desc' | 'ASC' | 'DESC'>
+    > = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== EducationOrderEnum.createdAt) {
+      order.createdAt = 'desc';
+    }
+
     const [result, totalCount] = await Promise.all([
       educationsRepository.find({
         where: {
           churchId: church.id,
         },
-        order: {
-          [dto.order]: dto.orderDirection,
-          createdAt:
-            dto.order !== EducationOrderEnum.createdAt ? 'desc' : undefined,
-        },
+        order,
         take: dto.take,
         skip: dto.take * (dto.page - 1),
       }),

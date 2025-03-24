@@ -11,6 +11,8 @@ import { EducationEnrollmentsDomainService } from './service/education-enrollmen
 import { EducationEnrollmentModel } from '../../../entity/education/education-enrollment.entity';
 import { EducationSessionModel } from '../../../entity/education/education-session.entity';
 import { SessionAttendanceModel } from '../../../entity/education/session-attendance.entity';
+import { IEDUCATION_SESSION_DOMAIN_SERVICE } from './interface/education-session-domain.service.interface';
+import { EducationSessionDomainService } from './service/education-session-domain.service';
 
 @Module({
   imports: [
@@ -35,11 +37,16 @@ import { SessionAttendanceModel } from '../../../entity/education/session-attend
       provide: IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
       useClass: EducationEnrollmentsDomainService,
     },
+    {
+      provide: IEDUCATION_SESSION_DOMAIN_SERVICE,
+      useClass: EducationSessionDomainService,
+    },
   ],
   exports: [
     IEDUCATION_DOMAIN_SERVICE,
     IEDUCATION_TERM_DOMAIN_SERVICE,
     IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+    IEDUCATION_SESSION_DOMAIN_SERVICE,
   ],
 })
 export class EducationDomainModule {}
