@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -14,7 +15,6 @@ import {
   QueryRunner,
   Repository,
 } from 'typeorm';
-import { ChurchesService } from '../../churches.service';
 import { CreateMemberDto } from '../dto/create-member.dto';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
@@ -22,28 +22,34 @@ import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { FamilyService } from './family.service';
-import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
 } from '../const/default-find-options.const';
-import { GroupModel } from '../../management/entity/group/group.entity';
-import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
-import { OfficerModel } from '../../management/entity/officer/officer.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
 import { CreateFamilyDto } from '../dto/family/create-family.dto';
 import { SearchMembersService } from './search-members.service';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches-domain/interface/churches-domain.service.interface';
+import { OfficerModel } from '../../../management/officers/entity/officer.entity';
+import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
+import { GroupModel } from '../../../management/groups/entity/group.entity';
+import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 
 @Injectable()
 export class MembersService {
   constructor(
     @InjectRepository(MemberModel)
     private readonly membersRepository: Repository<MemberModel>,
-    private readonly churchesService: ChurchesService,
     private readonly familyService: FamilyService,
     private readonly eventEmitter: EventEmitter2,
     private readonly searchMembersService: SearchMembersService,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
   ) {}
 
   private getMembersRepository(qr?: QueryRunner) {
@@ -188,7 +194,7 @@ export class MembersService {
     members: MemberModel[],
     qr?: QueryRunner,
   ) {
-    await this.churchesService.getChurchById(churchId, qr);
+    await this.churchesDomainService.findChurchById(churchId, qr);
 
     const membersRepository = this.getMembersRepository(qr);
 
@@ -197,7 +203,10 @@ export class MembersService {
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
     //const church = await this.churchesService.getChurchById(churchId, qr);
-    const church = await this.churchesService.getChurchModelById(churchId, qr);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
 
     const membersRepository = this.getMembersRepository(qr);
 

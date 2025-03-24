@@ -13,23 +13,32 @@ import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
 import { ChurchModel } from '../../entity/church.entity';
 import { BaptismEnum } from '../enum/baptism.enum';
-import { OfficerModel } from '../../management/entity/officer/officer.entity';
-import { MinistryModel } from '../../management/entity/ministry/ministry.entity';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { GroupHistoryModel } from '../../members-management/entity/group-history.entity';
-import { EducationTermModel } from '../../management/entity/education/education-term.entity';
-import { EducationEnrollmentModel } from '../../management/entity/education/education-enrollment.entity';
-import { GroupModel } from '../../management/entity/group/group.entity';
 import { MinistryHistoryModel } from '../../members-management/entity/ministry-history.entity';
-import { GroupRoleModel } from '../../management/entity/group/group-role.entity';
 import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 import { Exclude } from 'class-transformer';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
+import { UserModel } from '../../../user/entity/user.entity';
+import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
+import { OfficerModel } from '../../../management/officers/entity/officer.entity';
+import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
+import { EducationTermModel } from '../../../management/educations/entity/education-term.entity';
+import { GroupModel } from '../../../management/groups/entity/group.entity';
+import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 
 @Entity()
 //@Unique(['name', 'mobilePhone', 'churchId'])
 export class MemberModel extends BaseModel {
+  @Index()
+  @Column({ nullable: true })
+  userId: number;
+
+  @OneToOne(() => UserModel, (user) => user.member)
+  @JoinColumn({ name: 'userId' })
+  user: UserModel;
+
   @Column()
   @Index()
   @Exclude({ toPlainOnly: true })
@@ -186,50 +195,3 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];
 }
-
-/*
-@BeforeRemove()
-  preventIfHasRelations() {
-    if (this.family.length > 0) {
-      // 가족 relation 확인
-      throw new InternalServerErrorException('family relation exception');
-    }
-
-    if (this.guiding.length > 0) {
-      // 인도자 relation 확인
-      throw new InternalServerErrorException('guiding relation exception');
-    }
-
-    if (this.instructingEducation.length > 0) {
-      // 진행자로 등록된 교육 relation
-      throw new InternalServerErrorException(
-        'instructing education relation exception',
-      );
-    }
-
-    if (this.ministries.length > 0 || this.ministryHistory.length > 0) {
-      // 사역과 N:N 관계, 사역 이력 1:N 관계
-      throw new InternalServerErrorException(
-        `ministries relation exception ${this.ministries.length} ${this.ministryHistory.length}`,
-      );
-    }
-
-    if (this.officerHistory.length > 0) {
-      // 직분 이력과 1:N 관계
-      throw new InternalServerErrorException(
-        'officer history relation exception',
-      );
-    }
-
-    if (this.educations.length > 0) {
-      // 교육 등록과 1 : N 관계
-      throw new InternalServerErrorException('educations relation exception');
-    }
-
-    if (this.groupHistory.length > 0) {
-      throw new InternalServerErrorException(
-        'education history relation exception',
-      );
-    }
-  }
- */

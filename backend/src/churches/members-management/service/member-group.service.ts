@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,11 +8,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GroupHistoryModel } from '../entity/group-history.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MembersService } from '../../members/service/members.service';
-import { GroupsService } from '../../management/service/group/groups.service';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
 import { AddMemberToGroupDto } from '../dto/group/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
 import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MemberGroupService {
@@ -19,7 +27,12 @@ export class MemberGroupService {
     @InjectRepository(GroupHistoryModel)
     private readonly groupHistoryRepository: Repository<GroupHistoryModel>,
     private readonly membersService: MembersService,
-    private readonly groupsService: GroupsService,
+    //private readonly groupsService: GroupsService,
+
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupDomainService: IGroupsDomainService,
   ) {}
 
   private getGroupHistoryRepository(qr?: QueryRunner) {
@@ -120,10 +133,20 @@ export class MemberGroupService {
     groupHistory: GroupHistoryModel,
     qr?: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const parentGroups = groupHistory.groupId
-      ? await this.groupsService.getParentGroups(
+      ? /*await this.groupsService.getParentGroups(
           churchId,
           groupHistory.groupId,
+          qr,
+        )*/
+        await this.groupDomainService.findParentGroups(
+          church,
+          groupHistory.group,
           qr,
         )
       : [];
@@ -148,6 +171,11 @@ export class MemberGroupService {
     dto: AddMemberToGroupDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
     // 교인 검증
@@ -163,8 +191,8 @@ export class MemberGroupService {
     }
 
     // 그룹 검증
-    const group = await this.groupsService.getGroupModelById(
-      churchId,
+    const group = await this.groupDomainService.findGroupModelById(
+      church,
       dto.groupId,
       qr,
       { groupRoles: true },
@@ -191,7 +219,7 @@ export class MemberGroupService {
       }),
 
       // 그룹의 인원 수 증가
-      this.groupsService.incrementMembersCount(dto.groupId, qr),
+      this.groupDomainService.incrementMembersCount(group, qr),
 
       // 교인의 그룹 정보 업데이트
       this.membersService.startMemberGroup(member, group, groupRole, qr),
@@ -254,7 +282,12 @@ export class MemberGroupService {
       // MemberModel, GroupModel, GroupRoleModel relation 해제
       this.membersService.endMemberGroup(groupHistory.member, qr),
       // 그룹 인원수 감소
-      this.groupsService.decrementMembersCount(groupHistory.group.id, qr),
+      this.groupDomainService.decrementMembersCount(groupHistory.group, qr),
+      /*this.groupService.decrementMembersCount(
+        churchId,
+        groupHistory.group.id,
+        qr,
+      ),*/
     ]);
 
     return this.membersService.getMemberById(churchId, memberId, qr);

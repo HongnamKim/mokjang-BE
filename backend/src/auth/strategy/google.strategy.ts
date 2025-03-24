@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
-import { OauthDto } from '../dto/auth/oauth.dto';
+import { OauthDto } from '../dto/oauth.dto';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 //import { GOOGLE_OAUTH } from '../const/env.const';
 

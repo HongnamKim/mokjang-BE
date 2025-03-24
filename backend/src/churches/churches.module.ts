@@ -3,21 +3,18 @@ import { ChurchesService } from './churches.service';
 import { ChurchesController } from './churches.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './entity/church.entity';
-import { AuthModule } from '../auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
+import { UserDomainModule } from '../user/user-domain/user-domain.module';
+import { ChurchesDomainModule } from './churches-domain/churches-domain.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      ChurchModel,
-      //OfficerModel,
-      //EducationModel,
-      //MinistryModel,
-      //GroupModel,
-    ]),
-    AuthModule,
+    TypeOrmModule.forFeature([ChurchModel]),
+    JwtModule.register({}),
+    UserDomainModule,
+    ChurchesDomainModule,
   ],
   controllers: [ChurchesController],
   providers: [ChurchesService],
-  exports: [ChurchesService],
 })
 export class ChurchesModule {}

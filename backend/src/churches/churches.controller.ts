@@ -16,9 +16,9 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Token } from '../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import {
-  ChurchAdminGuard,
+  ChurchManagerGuard,
   ChurchMainAdminGuard,
-} from './guard/church-admin.guard';
+} from './guard/church-manager-guard.service';
 import { UpdateChurchDto } from './dto/update-church.dto';
 import {
   ApiDeleteChurch,
@@ -53,7 +53,7 @@ export class ChurchesController {
   @ApiGetChurchById()
   @Get(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.getChurchById(churchId);
   }
