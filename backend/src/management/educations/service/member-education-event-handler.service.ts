@@ -1,8 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../../../churches/members/events/member.event';
 import { DataSource } from 'typeorm';
 import { EducationEnrollmentService } from './education-enrollment.service';
+import {
+  IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+  IEducationEnrollmentsDomainService,
+} from './education-domain/interface/education-enrollment-domain.service.interface';
 
 @Injectable()
 export class MemberEducationEventHandler {
@@ -10,6 +14,9 @@ export class MemberEducationEventHandler {
     private readonly educationEnrollmentService: EducationEnrollmentService,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
+
+    @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly educationEnrollmentDomainService: IEducationEnrollmentsDomainService,
   ) {}
 
   // 재시도 간격을 지수적으로 증가 (exponential backoff)
@@ -28,11 +35,15 @@ export class MemberEducationEventHandler {
 
     try {
       const enrollments =
-        await this.educationEnrollmentService.getMemberEducationEnrollments(
+        await this.educationEnrollmentDomainService.findMemberEducationEnrollments(
+          memberId,
+          qr,
+        );
+      /*await this.educationEnrollmentService.getMemberEducationEnrollments(
           event.memberId,
           event.churchId,
           qr,
-        );
+        );*/
 
       await Promise.all(
         enrollments.map((enrollment) =>

@@ -7,7 +7,7 @@ import {
 import { IEducationEnrollmentsDomainService } from '../interface/education-enrollment-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
-import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, In, QueryRunner, Repository } from 'typeorm';
 import { EducationTermModel } from '../../../../entity/education/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
 import { EducationEnrollmentOrderEnum } from '../../../const/order.enum';
@@ -104,13 +104,13 @@ export class EducationEnrollmentsDomainService
     };
   }
 
-  async findMemberEducationEnrollments(member: MemberModel, qr?: QueryRunner) {
+  async findMemberEducationEnrollments(memberId: number, qr?: QueryRunner) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
     return await educationEnrollmentsRepository.find({
       where: {
-        memberId: member.id,
+        memberId: memberId,
       },
       relations: {
         educationTerm: true,
@@ -247,5 +247,19 @@ export class EducationEnrollmentsDomainService
     });
 
     return `educationEnrollment: ${educationEnrollment.id} deleted`;
+  }
+
+  async decrementAttendanceCountBySessionDeletion(
+    attendedEnrollmentIds: number[],
+    qr: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    await educationEnrollmentsRepository.decrement(
+      { id: In(attendedEnrollmentIds) },
+      'attendanceCount',
+      1,
+    );
   }
 }

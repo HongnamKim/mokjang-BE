@@ -16,7 +16,7 @@ import { EducationTermService } from './service/education-term.service';
 import { SessionAttendanceService } from './service/session-attendance.service';
 import { EducationTermAttendanceSyncService } from './service/sync/education-term-attendance-sync.service';
 import { EducationEnrollmentAttendanceSyncService } from './service/sync/education-enrollment-attendance-sync.service';
-import { EducationEnrollmentSessionSyncService } from './service/sync/education-enrollment-session-sync.service';
+//import { EducationEnrollmentSessionSyncService } from './service/sync/education-enrollment-session-sync.service';
 import { RouterModule } from '@nestjs/core';
 import { MembersModule } from '../../churches/members/members.module';
 import { MemberEducationEventHandler } from './service/member-education-event-handler.service';
@@ -63,7 +63,7 @@ import { ChurchesDomainModule } from '../../churches/churches-domain/churches-do
     EducationTermAttendanceSyncService,
     //EducationTermEnrollmentSyncService,
     EducationEnrollmentAttendanceSyncService,
-    EducationEnrollmentSessionSyncService,
+    //EducationEnrollmentSessionSyncService,
   ],
   exports: [/*EducationsService,*/ EducationEnrollmentService],
 })

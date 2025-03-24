@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationEnrollmentModel } from '../../../entity/education/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../../entity/education/education-enrollment.entity';
 import { In, QueryRunner, Repository } from 'typeorm';
-import { SessionAttendanceModel } from '../../../entity/education/session-attendance.entity';
+import { SessionAttendanceModel } from '../../../../entity/education/session-attendance.entity';
 
-@Injectable()
-export class EducationEnrollmentSessionSyncService {
+//@Injectable()
+/*export*/ class EducationEnrollmentSessionSyncService {
   constructor(
     @InjectRepository(EducationEnrollmentModel)
     private readonly educationEnrollmentRepository: Repository<EducationEnrollmentModel>,
