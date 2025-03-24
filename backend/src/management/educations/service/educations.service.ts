@@ -161,7 +161,16 @@ export class EducationsService {
       qr,
     );
 
-    const updatedEducation = await this.educationDomainService.updateEducation(
+    // 이름 변경 시 하위 기수들의 교육명 업데이트
+    if (dto.name) {
+      await this.educationTermDomainService.updateEducationTermName(
+        education,
+        dto.name,
+        qr,
+      );
+    }
+
+    return this.educationDomainService.updateEducation(
       church,
       education,
       dto,
@@ -199,17 +208,6 @@ export class EducationsService {
         description: dto.description,
       },
     );*/
-
-    // 이름 변경 시 하위 기수들의 교육명 업데이트
-    if (dto.name) {
-      await this.educationTermDomainService.updateEducationTermName(
-        education,
-        dto.name,
-        qr,
-      );
-    }
-
-    return updatedEducation;
   }
 
   async deleteEducation(

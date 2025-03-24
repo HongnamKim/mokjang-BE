@@ -57,6 +57,16 @@ export class EducationEnrollmentsDomainService
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
+    const order: Partial<
+      Record<EducationEnrollmentOrderEnum, 'asc' | 'desc' | 'ASC' | 'DESC'>
+    > = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== EducationEnrollmentOrderEnum.createdAt) {
+      order.createdAt = 'desc';
+    }
+
     const [result, totalCount] = await Promise.all([
       educationEnrollmentsRepository.find({
         where: {

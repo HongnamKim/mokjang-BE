@@ -97,16 +97,19 @@ export class EducationTermsController {
   }
 
   @ApiOperation({ summary: '교육 기수 삭제' })
+  @UseInterceptors(TransactionInterceptor)
   @Delete(':educationTermId')
   deleteEducationTerm(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.deleteEducationTerm(
       churchId,
       educationId,
       educationTermId,
+      qr,
     );
   }
 

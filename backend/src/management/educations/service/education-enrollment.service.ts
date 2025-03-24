@@ -297,7 +297,7 @@ export class EducationEnrollmentService {
     // 수강 대상 교인 수 증가 + 세션의 출석 정보 생성
     await Promise.all([
       // 교육 수강자 수 증가
-      this.educationTermDomainService.increaseEnrollmentCount(
+      this.educationTermDomainService.incrementEnrollmentCount(
         educationTerm,
         qr,
       ),

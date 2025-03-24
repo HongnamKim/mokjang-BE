@@ -66,7 +66,7 @@ export interface IEducationTermDomainService {
     qr: QueryRunner,
   ): Promise<void>;
 
-  increaseEnrollmentCount(
+  incrementEnrollmentCount(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
@@ -85,6 +85,26 @@ export interface IEducationTermDomainService {
   decrementEducationStatusCount(
     educationTerm: EducationTermModel,
     status: EducationStatus,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  incrementNumberOfSessions(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementNumberOfSessions(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  incrementDoneCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementDoneCount(
+    educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 }

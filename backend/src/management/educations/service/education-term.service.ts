@@ -3,7 +3,6 @@ import { QueryRunner } from 'typeorm';
 import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
 import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
 import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
-import { EducationTermSessionSyncService } from './sync/education-term-session-sync.service';
 import { EducationTermAttendanceSyncService } from './sync/education-term-attendance-sync.service';
 import { MembersService } from '../../../churches/members/service/members.service';
 import {
@@ -18,12 +17,16 @@ import {
   IEDUCATION_DOMAIN_SERVICE,
   IEducationDomainService,
 } from './education-domain/interface/education-domain.service.interface';
+import {
+  IEDUCATION_SESSION_DOMAIN_SERVICE,
+  IEducationSessionDomainService,
+} from './education-domain/interface/education-session-domain.service.interface';
 
 @Injectable()
 export class EducationTermService {
   constructor(
     private readonly membersService: MembersService,
-    private readonly educationTermSessionSyncService: EducationTermSessionSyncService,
+    //private readonly educationTermSessionSyncService: EducationTermSessionSyncService,
     private readonly educationTermAttendanceSyncService: EducationTermAttendanceSyncService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
@@ -32,6 +35,8 @@ export class EducationTermService {
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
     private readonly educationTermDomainService: IEducationTermDomainService,
+    @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
+    private readonly educationSessionDomainService: IEducationSessionDomainService,
   ) {}
 
   async getEducationTerms(
@@ -278,11 +283,16 @@ export class EducationTermService {
       );
 
     // 회차에 맞게 EducationSession 생성
-    await this.educationTermSessionSyncService.createEducationSessions(
-      educationTerm.id,
+    await this.educationSessionDomainService.createEducationSessions(
+      educationTerm,
       educationTerm.numberOfSessions,
       qr,
     );
+    /*await this.educationTermSessionSyncService.createEducationSessions(
+      educationTerm.id,
+      educationTerm.numberOfSessions,
+      qr,
+    );*/
 
     return educationTerm;
   }
@@ -428,7 +438,7 @@ export class EducationTermService {
         education,
         educationTermId,
         qr,
-        { educationEnrollments: true },
+        { educationEnrollments: true, educationSessions: true },
       );
     const newInstructor = dto.instructorId
       ? await this.membersService.getMemberModelById(
@@ -457,11 +467,16 @@ export class EducationTermService {
     ) {
       // dto: 8, term: 5 --> session 6, 7, 8 생성
       const newSessions =
-        await this.educationTermSessionSyncService.createAdditionalSessions(
+        await this.educationSessionDomainService.createAdditionalSessions(
+          educationTerm,
+          dto.numberOfSessions,
+          qr,
+        );
+      /*await this.educationTermSessionSyncService.createAdditionalSessions(
           educationTerm,
           dto,
           qr,
-        );
+        );*/
 
       // 증가된 세션에 대한 출석 정보 생성
       const newSessionIds = newSessions.map((newSession) => newSession.id);
@@ -483,7 +498,7 @@ export class EducationTermService {
     churchId: number,
     educationId: number,
     educationTermId: number,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
@@ -503,6 +518,12 @@ export class EducationTermService {
         qr,
         {},
       );
+
+    // 기수의 세션들 삭제
+    await this.educationSessionDomainService.deleteEducationSessionCasCade(
+      educationTerm,
+      qr,
+    );
 
     return await this.educationTermDomainService.deleteEducationTerm(
       educationTerm,

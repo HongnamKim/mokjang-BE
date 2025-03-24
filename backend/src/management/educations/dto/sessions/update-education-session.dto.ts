@@ -19,12 +19,12 @@ export class UpdateEducationSessionDto {
 
   @ApiProperty({
     description: '교육 일시',
-    default: new Date(),
+    //default: new Date(),
     required: false,
   })
   @IsOptional()
   @IsDate()
-  sessionDate: Date = new Date();
+  sessionDate: Date;
 
   @ApiProperty({
     description: '교육 진행 내용 (최대 300자, 빈 문자열 허용)',
