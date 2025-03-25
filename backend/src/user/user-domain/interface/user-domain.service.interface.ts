@@ -1,9 +1,9 @@
 import { QueryRunner, UpdateResult } from 'typeorm';
 import { UserModel } from '../../entity/user.entity';
 import { CreateUserDto } from '../../dto/create-user.dto';
-import { MemberModel } from '../../../churches/members/entity/member.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateUserDto } from '../../dto/update-user.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 export const IUSER_DOMAIN_SERVICE = Symbol('IUserDomainService');
 

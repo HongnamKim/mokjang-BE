@@ -11,8 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { CreateFamilyDto } from '../dto/family/create-family.dto';
-import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateFamilyDto } from '../dto/family/update-family.dto';
@@ -24,6 +22,8 @@ import {
   ApiPatchFamilyMember,
   ApiPostFamilyMember,
 } from '../const/swagger/member-family/controller.swagger';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members:Family')
 @Controller(':memberId/family')

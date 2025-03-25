@@ -5,8 +5,6 @@ export enum GetMemberOrderEnum {
   name = 'name',
   birth = 'birth',
   gender = 'gender',
-  /*school = 'school',
-  previousChurch = 'previousChurch',*/
   group = 'group',
   officer = 'officer',
   officerStartDate = 'officerStartDate',

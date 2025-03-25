@@ -21,7 +21,7 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { GetRequestInfoDto } from './dto/get-request-info.dto';
 import { SubmitRequestInfoDto } from './dto/submit-request-info.dto';
-import { FamilyRelationPipe } from '../members/pipe/family-relation.pipe';
+import { FamilyRelationPipe } from '../../members/pipe/family-relation.pipe';
 
 @ApiTags('Churches:Request-Info')
 @Controller('churches/:churchId/request')

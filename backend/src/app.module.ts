@@ -4,12 +4,11 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
-import { MemberModel } from './churches/members/entity/member.entity';
+
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersManagementModule } from './churches/members-management/members-management.module';
 
-import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
@@ -23,7 +22,7 @@ import { OfficerHistoryModel } from './churches/members-management/entity/office
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
-import { MembersModule } from './churches/members/members.module';
+
 import { ChurchesModule } from './churches/churches.module';
 import { EducationModel } from './management/educations/entity/education.entity';
 import { EducationTermModel } from './management/educations/entity/education-term.entity';
@@ -36,6 +35,11 @@ import { MinistryGroupModel } from './management/ministries/entity/ministry-grou
 import { GroupModel } from './management/groups/entity/group.entity';
 import { GroupRoleModel } from './management/groups/entity/group-role.entity';
 import { ManagementModule } from './management/management.module';
+import { MemberModel } from './members/entity/member.entity';
+import { FamilyModel } from './members/entity/family.entity';
+import { MembersModule } from './members/members.module';
+import { MembersDomainModule } from './members/member-domain/members-domain.module';
+import { ChurchesDomainModule } from './churches/churches-domain/churches-domain.module';
 
 @Module({
   imports: [
@@ -142,6 +146,9 @@ import { ManagementModule } from './management/management.module';
     MembersModule,
     MembersManagementModule,
     ManagementModule,
+
+    ChurchesDomainModule,
+    MembersDomainModule,
   ],
   controllers: [AppController],
   providers: [

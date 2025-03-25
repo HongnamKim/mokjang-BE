@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
-import { MemberModel } from '../churches/members/entity/member.entity';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from './user-domain/interface/user-domain.service.interface';
 import { ChurchModel } from '../churches/entity/church.entity';
 import { UserRole } from './const/user-role.enum';
+import { MemberModel } from '../members/entity/member.entity';
 
 @Injectable()
 export class UserService {

@@ -14,12 +14,12 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../const/enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
-import { BaptismEnum } from '../enum/baptism.enum';
+import { BaptismEnum } from '../const/enum/baptism.enum';
 import { FamilyRelation } from '../const/family-relation.const';
 import { MarriageOptions } from '../const/marriage-options.const';
+import { TransformName } from '../../churches/decorator/transform-name';
 
 export class CreateMemberDto {
   @ApiProperty({

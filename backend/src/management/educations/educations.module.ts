@@ -10,10 +10,10 @@ import { EducationEnrollmentService } from './service/education-enrollment.servi
 import { EducationTermService } from './service/education-term.service';
 import { SessionAttendanceService } from './service/session-attendance.service';
 import { RouterModule } from '@nestjs/core';
-import { MembersModule } from '../../churches/members/members.module';
 import { MemberEducationEventHandler } from './service/member-education-event-handler.service';
 import { EducationDomainModule } from './service/education-domain/education-domain.module';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
+import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 
 @Module({
   imports: [
@@ -23,7 +23,8 @@ import { ChurchesDomainModule } from '../../churches/churches-domain/churches-do
         module: EducationsModule,
       },
     ]),
-    MembersModule,
+    //MembersModule,
+    MembersDomainModule,
     ChurchesDomainModule,
     EducationDomainModule,
   ],
