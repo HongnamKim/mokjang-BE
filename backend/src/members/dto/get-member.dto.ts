@@ -11,19 +11,19 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { TransformName } from '../../decorator/transform-name';
 import { GenderEnum } from '../const/enum/gender.enum';
-import { BaptismEnum } from '../enum/baptism.enum';
+import { BaptismEnum } from '../const/enum/baptism.enum';
 import { GetMemberOrderEnum } from '../const/enum/get-member-order.enum';
 import {
   TransformNumberArray,
   TransformStringArray,
-} from '../decorator/transform-array';
+} from '../../common/decorator/transformer/transform-array';
 import { MarriageOptions } from '../const/marriage-options.const';
-import { QueryBoolean } from '../decorator/query-boolean.decorator';
-import { EducationStatus } from '../../../management/educations/const/education-status.enum';
+import { QueryBoolean } from '../../common/decorator/transformer/query-boolean.decorator';
+import { TransformName } from '../../churches/decorator/transform-name';
+import { EducationStatus } from '../../management/educations/const/education-status.enum';
 
-export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))*/ {
+export class GetMemberDto {
   @ApiProperty({
     name: 'take',
     description: '조회할 데이터 개수',
@@ -364,16 +364,6 @@ export class GetMemberDto /*extends PartialType(PickType(MemberModel, ['name']))
   @IsEnum(EducationStatus, { each: true })
   @IsOptional()
   educationStatus?: EducationStatus[];
-
-  /*@ApiProperty({
-    name: 'baptism',
-    description: '신급',
-    enum: BaptismEnum,
-    required: false,
-  })
-  @IsEnum(BaptismEnum)
-  @IsOptional()
-  baptism?: BaptismEnum;*/
 
   @ApiProperty({
     name: 'baptism',

@@ -21,10 +21,10 @@ import { EducationTermOrderEnum } from '../../../const/order.enum';
 import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
 import { EducationTermException } from '../../../const/exception/education.exception';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
-import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { EducationStatus } from '../../../const/education-status.enum';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -88,11 +88,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
           },
           educationId: education.id,
         },
-        order /*{
-          [dto.order]: dto.orderDirection,
-          createdAt:
-            dto.order === EducationTermOrderEnum.createdAt ? undefined : 'desc',
-        }*/,
+        order,
         relations: {
           instructor: {
             officer: true,

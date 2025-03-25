@@ -15,9 +15,7 @@ import { ResponseValidateRequestInfoDto } from '../dto/response/response-validat
 import { GetRequestInfoDto } from '../dto/get-request-info.dto';
 import { ResponsePaginationDto } from '../dto/response/response-pagination.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
-import { MembersService } from '../../members/service/members.service';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
-import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { DateUtils } from '../utils/date-utils.util';
 import { ConfigService } from '@nestjs/config';
@@ -28,6 +26,12 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
+import { MembersService } from '../../../members/service/members.service';
+import { UpdateMemberDto } from '../../../members/dto/update-member.dto';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class RequestInfoService {
@@ -41,6 +45,8 @@ export class RequestInfoService {
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   private readonly REQUEST_EXPIRE_DAYS = this.configService.getOrThrow<number>(
@@ -175,34 +181,29 @@ export class RequestInfoService {
       qr,
     );
 
-    const isExistMember =
-      await this.membersService.isExistMemberByNameAndMobilePhone(
-        church.id,
+    const existMember =
+      await this.membersDomainService.findMemberModelByNameAndMobilePhone(
+        church,
         dto.name,
         dto.mobilePhone,
+        {},
         qr,
       );
 
-    const member = isExistMember
-      ? await this.membersService.getMemberModelByNameAndMobilePhone(
-          church.id,
-          dto.name,
-          dto.mobilePhone,
-          {},
-          qr,
-        )
-      : await this.membersService.createMember(
-          church.id,
-          {
-            name: dto.name,
-            mobilePhone: dto.mobilePhone,
-            guidedById: dto.guidedById,
-          },
-          qr,
-        );
+    const member =
+      existMember ||
+      (await this.membersDomainService.createMember(
+        church,
+        {
+          name: dto.name,
+          mobilePhone: dto.mobilePhone,
+          guidedById: dto.guidedById,
+        },
+        qr,
+      ));
 
     // 새로 등록 + 가족 관계를 설정한 경우
-    if (!isExistMember && dto.familyMemberId && dto.relation) {
+    if (!existMember && dto.familyMemberId && dto.relation) {
       await this.membersService.fetchFamilyRelation(
         church.id,
         member.id,
@@ -245,7 +246,7 @@ export class RequestInfoService {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    ); //getChurchById(churchId, qr);
+    );
 
     const repository = this.getRequestInfosRepository(qr);
     const existingRequest = await repository.findOne({
@@ -271,8 +272,8 @@ export class RequestInfoService {
 
     // url 생성
     const protocol = this.configService.getOrThrow('PROTOCOL');
-    const host = this.configService.getOrThrow('CLIENT_HOST'); //this.configService.getOrThrow('HOST');
-    const port = this.configService.getOrThrow('CLIENT_PORT'); //this.configService.getOrThrow('PORT');
+    const host = this.configService.getOrThrow('CLIENT_HOST');
+    const port = this.configService.getOrThrow('CLIENT_PORT');
 
     const url = `${churchName}의 새 가족이 되신 것을 환영합니다!\n새 가족카드 작성을 부탁드립니다!\n${protocol}://${host}:${port}/church/${requestInfo.churchId}/request/${requestInfo.id}`;
 
@@ -371,6 +372,11 @@ export class RequestInfoService {
     dto: SubmitRequestInfoDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const requestInfosRepository = this.getRequestInfosRepository(qr);
 
     const requestInfo = await requestInfosRepository.findOne({
@@ -395,9 +401,16 @@ export class RequestInfoService {
       ...dto,
     };
 
-    const updated = await this.membersService.updateMember(
-      churchId,
+    const targetMember = await this.membersDomainService.findMemberModelById(
+      church,
       requestInfo.memberId,
+      qr,
+      {},
+    );
+
+    const updated = await this.membersDomainService.updateMember(
+      church,
+      targetMember,
       updateDto,
       qr,
     );

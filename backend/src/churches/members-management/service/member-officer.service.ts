@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MembersService } from '../../members/service/members.service';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OfficerHistoryModel } from '../entity/officer-history.entity';
@@ -20,18 +19,23 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class MemberOfficerService {
   constructor(
     @InjectRepository(OfficerHistoryModel)
     private readonly officerHistoryRepository: Repository<OfficerHistoryModel>,
-    private readonly membersService: MembersService,
 
     @Inject(IOFFICERS_DOMAIN_SERVICE)
     private readonly officersDomainService: IOfficersDomainService,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   private getOfficerHistoryRepository(qr?: QueryRunner) {
@@ -101,11 +105,11 @@ export class MemberOfficerService {
 
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
 
-    const member = await this.membersService.getMemberModelById(
-      churchId,
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
       memberId,
-      { officer: true, church: true },
       qr,
+      { officer: true, church: true },
     );
 
     if (member.officer) {
@@ -135,7 +139,7 @@ export class MemberOfficerService {
       this.officersDomainService.incrementMembersCount(officer, qr),
 
       // 교인 - 직분 관계 설정
-      this.membersService.startMemberOfficer(
+      this.membersDomainService.startMemberOfficer(
         member,
         officer,
         dto.startDate,
@@ -144,7 +148,7 @@ export class MemberOfficerService {
       ),
     ]);
 
-    return this.membersService.getMemberById(churchId, memberId, qr);
+    return this.membersDomainService.findMemberById(church, memberId, qr);
   }
 
   async endMemberOfficer(
@@ -153,6 +157,11 @@ export class MemberOfficerService {
     dto: EndMemberOfficeDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
 
     const officerHistory = await officerHistoryRepository.findOne({
@@ -193,7 +202,7 @@ export class MemberOfficerService {
       ),
 
       // 교인 - 직분 관계 해제
-      this.membersService.endMemberOfficer(member, qr),
+      this.membersDomainService.endMemberOfficer(member, qr),
 
       // 직분의 membersCount 감소
       this.officersDomainService.decrementMembersCount(
@@ -202,7 +211,7 @@ export class MemberOfficerService {
       ),
     ]);
 
-    return this.membersService.getMemberById(churchId, memberId, qr);
+    return this.membersDomainService.findMemberById(church, memberId, qr);
   }
 
   private isValidUpdateDate(

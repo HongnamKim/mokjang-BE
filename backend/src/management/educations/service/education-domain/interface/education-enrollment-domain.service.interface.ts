@@ -2,10 +2,10 @@ import { EducationEnrollmentPaginationResultDto } from '../../../dto/education-e
 import { EducationTermModel } from '../../../entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
-import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { CreateEducationEnrollmentDto } from '../../../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../../../dto/enrollments/update-education-enrollment.dto';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export const IEDUCATION_ENROLLMENT_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_ENROLLMENT_DOMAIN_SERVICE',

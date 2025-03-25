@@ -9,7 +9,7 @@ import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../entity/member.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
 import { FamilyRelation } from '../const/family-relation.const';
-import { FamilyExceptionMessage } from '../exception-message/family-exception.message';
+import { FamilyException } from '../const/exception/family.exception';
 
 type FamilyRelation = {
   meId: number;
@@ -83,7 +83,7 @@ export class FamilyService {
     const isExist = await this.isExistFamilyRelation(me.id, newFamilyMember.id);
 
     if (isExist) {
-      throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
+      throw new BadRequestException(FamilyException.AlREADY_EXISTS);
     }
 
     const [newFamilyExistingFamilyMemberIds, myFamilyMemberIds] =
@@ -140,7 +140,7 @@ export class FamilyService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(FamilyExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(FamilyException.NOT_FOUND);
     }
 
     return familyRepository.findOne({
@@ -163,7 +163,7 @@ export class FamilyService {
     });
 
     if (result.affected === 0) {
-      throw new NotFoundException(FamilyExceptionMessage.NOT_FOUND);
+      throw new NotFoundException(FamilyException.NOT_FOUND);
     }
 
     return 'ok';
@@ -184,7 +184,7 @@ export class FamilyService {
     );
 
     if (isExistRelation) {
-      throw new BadRequestException(FamilyExceptionMessage.AlREADY_EXISTS);
+      throw new BadRequestException(FamilyException.AlREADY_EXISTS);
     }
 
     // 반대 관계가 이미 있으면 생성 생략
@@ -233,16 +233,21 @@ export class FamilyService {
 
   /**
    * 가족 관계 soft delete - 복구 가능
-   * @param deletedId
+   * @param deletedMember
    * @param qr
    */
-  async cascadeDeleteAllFamilyRelation(deletedId: number, qr: QueryRunner) {
+  async cascadeDeleteAllFamilyRelation(
+    deletedMember: MemberModel,
+    qr: QueryRunner,
+  ) {
     const familyRepository = this.getFamilyRepository(qr);
 
     const result = await familyRepository
       .createQueryBuilder()
       .softDelete()
-      .where('meId = :deletedId OR familyMemberId = :deletedId', { deletedId })
+      .where('meId = :deletedId OR familyMemberId = :deletedId', {
+        deletedId: deletedMember.id,
+      })
       .execute();
 
     return result.affected;
@@ -326,54 +331,4 @@ export class FamilyService {
     [FamilyRelation.WIFE_FATHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
     [FamilyRelation.WIFE_MOTHER_IN_LAW]: FamilyRelation.SON_IN_LAW,
   };
-
-  /*switch (relation) {
-      // 조부모 - 손자/손녀
-      case FamilyRelation.GRANDFATHER:
-      case FamilyRelation.GRANDMOTHER:
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.GRANDSON
-          : FamilyRelation.GRANDDAUGHTER;
-      case FamilyRelation.GRANDSON:
-      case FamilyRelation.GRANDDAUGHTER:
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.GRANDFATHER
-          : FamilyRelation.GRANDMOTHER;
-      // 부모 - 자녀
-      case FamilyRelation.MOTHER:
-      case FamilyRelation.FATHER:
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.SON
-          : FamilyRelation.DAUGHTER;
-
-      case FamilyRelation.SON:
-      case FamilyRelation.DAUGHTER:
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.FATHER
-          : FamilyRelation.MOTHER;
-      // 형제, 자매, 남매, 친인척, 가족
-      case FamilyRelation.BROTHER:
-      case FamilyRelation.SISTER:
-      case FamilyRelation.SIBLING:
-      case FamilyRelation.RELATIVE:
-      case FamilyRelation.FAMILY:
-        return relation;
-      // 장인/장모 시부모 - 사위/며느리
-      case FamilyRelation.SON_IN_LAW: // 사위 추가
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.WIFE_FATHER_IN_LAW
-          : FamilyRelation.WIFE_MOTHER_IN_LAW;
-      case FamilyRelation.DAUGHTER_IN_LAW: // 며느리 추가
-        return me.gender === GenderEnum.male
-          ? FamilyRelation.HUSBAND_FATHER_IN_LAW
-          : FamilyRelation.HUSBAND_MOTHER_IN_LAW;
-      case FamilyRelation.HUSBAND_FATHER_IN_LAW: // 시부모 추가
-      case FamilyRelation.HUSBAND_MOTHER_IN_LAW:
-        return FamilyRelation.DAUGHTER_IN_LAW;
-      case FamilyRelation.WIFE_FATHER_IN_LAW: // 장인 장모 추가
-      case FamilyRelation.WIFE_MOTHER_IN_LAW:
-        return FamilyRelation.SON_IN_LAW;
-      default:
-        return FamilyRelation.FAMILY;
-    }*/
 }

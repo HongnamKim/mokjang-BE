@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MembersModule } from '../members/members.module';
 import { MemberOfficerService } from './service/member-officer.service';
 import { MemberOfficerController } from './controller/member-officer.controller';
 import { RouterModule } from '@nestjs/core';
@@ -13,12 +12,12 @@ import { MemberEducationService } from './service/member-education.service';
 import { MinistryHistoryModel } from './entity/ministry-history.entity';
 import { MemberMinistryController } from './controller/member-ministry.controller';
 import { OfficerHistoryModel } from './entity/officer-history.entity';
-import { ManagementModule } from '../../management/management.module';
 import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
 import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
 import { MinistriesDomainModule } from '../../management/ministries/ministries-domain/ministries-domain.module';
+import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 
 @Module({
   imports: [
@@ -29,19 +28,12 @@ import { MinistriesDomainModule } from '../../management/ministries/ministries-d
       },
     ]),
     TypeOrmModule.forFeature([
-      //EducationHistoryModel,
       GroupHistoryModel,
       EducationEnrollmentModel,
       MinistryHistoryModel,
       OfficerHistoryModel,
     ]),
-    MembersModule,
-    ManagementModule,
-    // 임시 import
-    //GroupsModule,
-    //OfficersModule,
-    //MinistriesModule,
-    // Domain Modules
+    MembersDomainModule,
     GroupsDomainModule,
     OfficersDomainModule,
     MinistriesDomainModule,

@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupHistoryModel } from '../entity/group-history.entity';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { MembersService } from '../../members/service/members.service';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
 import { AddMemberToGroupDto } from '../dto/group/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
@@ -20,19 +19,23 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class MemberGroupService {
   constructor(
     @InjectRepository(GroupHistoryModel)
     private readonly groupHistoryRepository: Repository<GroupHistoryModel>,
-    private readonly membersService: MembersService,
-    //private readonly groupsService: GroupsService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IGROUPS_DOMAIN_SERVICE)
     private readonly groupDomainService: IGroupsDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   private getGroupHistoryRepository(qr?: QueryRunner) {
@@ -79,26 +82,6 @@ export class MemberGroupService {
       }),
     ]);
 
-    /*const groupHistories = await groupHistoryRepository.find({
-      where: {
-        member: {
-          churchId,
-        },
-        memberId,
-      },
-      relations: {
-        group: true,
-        groupRole: true,
-      },
-      order: {
-        endDate: dto.orderDirection,
-        startDate: dto.orderDirection,
-        id: dto.orderDirection,
-      },
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
-    });*/
-
     // 현재 속한 그룹 이력
     const currentHistory = groupHistories.find((history) => !history.endDate);
     // 현재 그룹 snapShot 처리
@@ -139,12 +122,7 @@ export class MemberGroupService {
     );
 
     const parentGroups = groupHistory.groupId
-      ? /*await this.groupsService.getParentGroups(
-          churchId,
-          groupHistory.groupId,
-          qr,
-        )*/
-        await this.groupDomainService.findParentGroups(
+      ? await this.groupDomainService.findParentGroups(
           church,
           groupHistory.group,
           qr,
@@ -179,11 +157,11 @@ export class MemberGroupService {
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
     // 교인 검증
-    const member = await this.membersService.getMemberModelById(
-      churchId,
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
       memberId,
-      { group: true },
       qr,
+      { group: true },
     );
     // 기존 그룹 여부 검증
     if (member.group) {
@@ -222,10 +200,10 @@ export class MemberGroupService {
       this.groupDomainService.incrementMembersCount(group, qr),
 
       // 교인의 그룹 정보 업데이트
-      this.membersService.startMemberGroup(member, group, groupRole, qr),
+      this.membersDomainService.startMemberGroup(member, group, groupRole, qr),
     ]);
 
-    return this.membersService.getMemberById(churchId, memberId, qr);
+    return this.membersDomainService.findMemberById(church, memberId, qr);
   }
 
   async endMemberGroup(
@@ -234,6 +212,11 @@ export class MemberGroupService {
     dto: EndMemberGroupDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
     const groupHistory = await groupHistoryRepository.findOne({
@@ -280,17 +263,12 @@ export class MemberGroupService {
         },
       ),
       // MemberModel, GroupModel, GroupRoleModel relation 해제
-      this.membersService.endMemberGroup(groupHistory.member, qr),
+      this.membersDomainService.endMemberGroup(groupHistory.member, qr),
       // 그룹 인원수 감소
       this.groupDomainService.decrementMembersCount(groupHistory.group, qr),
-      /*this.groupService.decrementMembersCount(
-        churchId,
-        groupHistory.group.id,
-        qr,
-      ),*/
     ]);
 
-    return this.membersService.getMemberById(churchId, memberId, qr);
+    return this.membersDomainService.findMemberById(church, memberId, qr);
   }
 
   private isValidUpdateDate(

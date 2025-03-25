@@ -19,9 +19,11 @@ import {
   DefaultMembersSelectOption,
 } from '../const/default-find-options.const';
 import { GetMemberOrderEnum } from '../const/enum/get-member-order.enum';
+import { ISearchMembersService } from './interface/search-members.service.interface';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
-export class SearchMembersService {
+export class SearchMembersService implements ISearchMembersService {
   constructor() {}
 
   private CHURCH_MANAGEMENT_COLUMNS = [
@@ -32,8 +34,6 @@ export class SearchMembersService {
   ];
 
   private SELECT_PREFIX = 'select__';
-
-  //private PAGING_OPTIONS = ['take', 'page', 'order', 'orderDirection'];
 
   private isSelectColumn(key: string): boolean {
     return key.startsWith(this.SELECT_PREFIX);
@@ -255,91 +255,9 @@ export class SearchMembersService {
     return hasCustomColumns
       ? { ...requiredSelect, ...selectOptions }
       : { ...requiredSelect, ...DefaultMembersSelectOption };
-
-    /*let needDefaultSelectOptions = true;
-
-    // 컬럼 사용자화
-    Object.entries(dto).forEach(([key, value]) => {
-      if (!key.startsWith(this.SELECT_PREFIX) || value === false) return;
-
-      needDefaultSelectOptions = false;
-
-      // 컬럼 사용자화
-      const [, column] = key.split('__');
-
-      if (this.CHURCH_MANAGEMENT_COLUMNS.includes(column)) {
-        // 사역, 직분, 그룹, 교육
-        switch (column) {
-          case 'educations':
-            selectOptions[column] = {
-              id: true,
-              status: true,
-              educationTerm: {
-                id: true,
-                term: true,
-                educationName: true,
-              },
-            };
-            break;
-          case 'group':
-            selectOptions[column] = {
-              id: true,
-              name: true,
-            };
-            selectOptions['groupRole'] = {
-              id: true,
-              role: true,
-            };
-            break;
-          default:
-            selectOptions[column] = {
-              id: value,
-              name: value,
-            };
-        }
-
-        needDefaultSelectOptions = false;
-        return;
-      }
-
-      if (column === 'address') {
-        // 도로명 주소 선택 시 상제 주소 추가
-        selectOptions[column] = value;
-        selectOptions['detailAddress'] = value;
-
-        needDefaultSelectOptions = false;
-
-        return;
-      }
-      if (column === 'birth') {
-        // 생년월일 추가 시 음력여부 추가
-        selectOptions[column] = value;
-        selectOptions['isLunar'] = value;
-
-        needDefaultSelectOptions = false;
-
-        return;
-      }
-
-      selectOptions[column] = value;
-    });
-
-    // 항상 들어가야할 컬럼
-    const result: FindOptionsSelect<MemberModel> = {
-      id: true,
-      registeredAt: true,
-      name: true,
-      [dto.order]: this.CHURCH_MANAGEMENT_COLUMNS.includes(dto.order)
-        ? { id: true, name: true }
-        : true,
-    };
-
-    return needDefaultSelectOptions
-      ? { ...result, ...DefaultMembersSelectOption }
-      : { ...result, ...selectOptions };*/
   }
 
-  parseWhereOption(churchId: number, dto: GetMemberDto) {
+  parseWhereOption(church: ChurchModel, dto: GetMemberDto) {
     const createDateFilter = (start?: Date, end?: Date) =>
       start && end
         ? Between(start, end)
@@ -350,7 +268,7 @@ export class SearchMembersService {
             : undefined;
 
     const findOptionsWhere: FindOptionsWhere<MemberModel> = {
-      churchId,
+      churchId: church.id,
       name: dto.name && ILike(`%${dto.name}%`),
       mobilePhone: dto.mobilePhone && Like(`%${dto.mobilePhone}%`),
       homePhone: dto.homePhone && Like(`%${dto.homePhone}%`),

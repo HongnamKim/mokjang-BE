@@ -9,27 +9,26 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
-import { BaseModel } from '../../../common/entity/base.entity';
 import { GenderEnum } from '../const/enum/gender.enum';
-import { ChurchModel } from '../../entity/church.entity';
-import { BaptismEnum } from '../enum/baptism.enum';
+import { BaptismEnum } from '../const/enum/baptism.enum';
 import { FamilyModel } from './family.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
-import { GroupHistoryModel } from '../../members-management/entity/group-history.entity';
-import { MinistryHistoryModel } from '../../members-management/entity/ministry-history.entity';
-import { OfficerHistoryModel } from '../../members-management/entity/officer-history.entity';
 import { Exclude } from 'class-transformer';
-import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
-import { UserModel } from '../../../user/entity/user.entity';
-import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
-import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
-import { EducationTermModel } from '../../../management/educations/entity/education-term.entity';
-import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
+import { BaseModel } from '../../common/entity/base.entity';
+import { UserModel } from '../../user/entity/user.entity';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { RequestInfoModel } from '../../churches/request-info/entity/request-info.entity';
+import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
+import { MinistryHistoryModel } from '../../churches/members-management/entity/ministry-history.entity';
+import { OfficerModel } from '../../management/officers/entity/officer.entity';
+import { OfficerHistoryModel } from '../../churches/members-management/entity/officer-history.entity';
+import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
+import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
+import { GroupModel } from '../../management/groups/entity/group.entity';
+import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
+import { GroupHistoryModel } from '../../churches/members-management/entity/group-history.entity';
 
 @Entity()
-//@Unique(['name', 'mobilePhone', 'churchId'])
 export class MemberModel extends BaseModel {
   @Index()
   @Column({ nullable: true })

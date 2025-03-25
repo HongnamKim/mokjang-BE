@@ -13,11 +13,11 @@ import {
 import { MembersService } from '../service/members.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateMemberDto } from '../dto/create-member.dto';
-import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members')
 @Controller()
@@ -68,34 +68,4 @@ export class MembersController {
   ) {
     return this.membersService.softDeleteMember(churchId, memberId, qr);
   }
-
-  /*@Get(':memberId/deleted')
-  getDeletedMember(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-  ) {
-    return this.membersService.getDeleteMemberModelById(churchId, memberId, {
-      ...HardDeleteMemberRelationOptions,
-    });
-  }
-
-  @Post(':memberId/restore')
-  @UseInterceptors(TransactionInterceptor)
-  restoreMember(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.membersService.restoreMember(churchId, memberId, qr);
-  }
-
-  @Delete(':memberId/hard-delete')
-  @UseInterceptors(TransactionInterceptor)
-  hardDeleteMember(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.membersService.hardDeleteMember(churchId, memberId, qr);
-  }*/
 }

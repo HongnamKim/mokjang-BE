@@ -9,7 +9,7 @@ import {
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { UserRole } from '../const/user-role.enum';
-import { MemberModel } from '../../churches/members/entity/member.entity';
+import { MemberModel } from '../../members/entity/member.entity';
 
 @Entity()
 export class UserModel extends BaseModel {

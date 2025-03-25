@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MembersService } from '../../members/service/members.service';
 import { IsNull, QueryRunner, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
@@ -24,13 +23,16 @@ import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
 } from '../../../management/ministries/ministries-domain/interface/ministry-groups-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class MemberMinistryService {
   constructor(
     @InjectRepository(MinistryHistoryModel)
     private readonly ministryHistoryRepository: Repository<MinistryHistoryModel>,
-    private readonly membersService: MembersService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -38,6 +40,8 @@ export class MemberMinistryService {
     private readonly ministriesDomainService: IMinistriesDomainService,
     @Inject(IMINISTRY_GROUPS_DOMAIN_SERVICE)
     private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   private getMinistryHistoryRepository(qr?: QueryRunner) {
@@ -189,12 +193,9 @@ export class MemberMinistryService {
         qr,
         { ministryGroup: true },
       ),
-      this.membersService.getMemberModelById(
-        churchId,
-        memberId,
-        { ministries: true },
-        qr,
-      ),
+      this.membersDomainService.findMemberModelById(church, memberId, qr, {
+        ministries: true,
+      }),
       this.isExistMinistryHistory(churchId, memberId, dto.ministryId, qr),
     ]);
 
@@ -212,10 +213,10 @@ export class MemberMinistryService {
       // 인원 수 증가
       this.ministriesDomainService.incrementMembersCount(ministry, qr),
       // 사역 relation 추가
-      this.membersService.startMemberMinistry(member, ministry, qr),
+      this.membersDomainService.startMemberMinistry(member, ministry, qr),
     ]);
 
-    return this.membersService.getMemberById(churchId, memberId, qr);
+    return this.membersDomainService.findMemberById(church, memberId, qr);
   }
 
   async endMemberMinistry(
@@ -225,6 +226,11 @@ export class MemberMinistryService {
     dto: EndMemberMinistryDto,
     qr: QueryRunner,
   ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
     const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
 
     const ministryHistory = await ministryHistoryRepository.findOne({
@@ -271,7 +277,7 @@ export class MemberMinistryService {
         },
       ),
       // 교인 - 사역 관계 해제
-      this.membersService.endMemberMinistry(
+      this.membersDomainService.endMemberMinistry(
         ministryHistory.member,
         ministryHistory.ministry,
         qr,
@@ -283,7 +289,7 @@ export class MemberMinistryService {
       ),
     ]);
 
-    return this.membersService.getMemberById(churchId, memberId, qr);
+    return this.membersDomainService.findMemberById(church, memberId, qr);
   }
 
   private isValidUpdateDate(

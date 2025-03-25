@@ -10,7 +10,7 @@ import {
   Matches,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
-import { FamilyRelation } from '../../members/const/family-relation.const';
+import { FamilyRelation } from '../../../members/const/family-relation.const';
 
 export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',
