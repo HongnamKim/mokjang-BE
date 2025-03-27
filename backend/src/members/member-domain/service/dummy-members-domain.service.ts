@@ -3,7 +3,9 @@ import { CreateMemberDto } from '../../dto/create-member.dto';
 import { MemberModel } from '../../entity/member.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class DummyMembersDomainService implements IDummyMembersDomainService {
   constructor(
     @InjectRepository(MemberModel)

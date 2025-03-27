@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Post,
   Query,
@@ -28,6 +30,7 @@ import {
   OAuthUser,
 } from '../decorator/oauth.decorator';
 import {
+  ApiMobileLoginAuth,
   ApiRequestVerificationCode,
   ApiRotateToken,
   ApiSignIn,
@@ -41,6 +44,7 @@ import { TOKEN_COOKIE_OPTIONS } from '../const/token-cookie-option.const';
 import { AuthType } from '../const/enum/auth-type.enum';
 import { AuthCookieHelper } from '../helper/auth-cookie.helper';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
+import { MobileLoginDto } from '../dto/mobile-login.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -60,6 +64,7 @@ export class AuthController {
   async loginTestAuth(
     @Query('provider') provider: string,
     @Query('providerId') providerId: string,
+    @Query('loginOption', new DefaultValuePipe('test')) loginOption: string,
     @QueryRunner() qr: QR,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -68,9 +73,25 @@ export class AuthController {
       qr,
     );
 
-    this.clearCookie(res);
+    if (loginOption === 'test') {
+      this.clearCookie(res);
 
-    return this.authCookieHelper.handleLoginResult(loginResult, res, true);
+      return this.authCookieHelper.handleLoginResult(loginResult, res, true);
+    } else if (loginOption === 'mobile') {
+      return loginResult;
+    } else {
+      throw new BadRequestException('잘못된 로그인 옵션입니다.');
+    }
+  }
+
+  @ApiMobileLoginAuth()
+  @Post('mobile-login')
+  @UseInterceptors(TransactionInterceptor)
+  async mobileLoginAuth(@Body() dto: MobileLoginDto, @QueryRunner() qr: QR) {
+    return this.authService.loginUser(
+      new OauthDto(dto.provider, dto.providerId),
+      qr,
+    );
   }
 
   @Get('cookie-test')

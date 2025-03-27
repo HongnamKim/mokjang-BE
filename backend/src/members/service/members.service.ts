@@ -6,10 +6,8 @@ import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
-import { FamilyService } from './family.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
-import { CreateFamilyDto } from '../dto/family/create-family.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -22,11 +20,14 @@ import {
   ISEARCH_MEMBERS_SERVICE,
   ISearchMembersService,
 } from './interface/search-members.service.interface';
+import {
+  IFAMILY_RELATION_DOMAIN_SERVICE,
+  IFamilyRelationDomainService,
+} from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
 
 @Injectable()
 export class MembersService {
   constructor(
-    private readonly familyService: FamilyService,
     private readonly eventEmitter: EventEmitter2,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
@@ -35,6 +36,8 @@ export class MembersService {
     private readonly membersDomainService: IMembersDomainService,
     @Inject(ISEARCH_MEMBERS_SERVICE)
     private readonly searchMembersService: ISearchMembersService,
+    @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
+    private readonly familyDomainService: IFamilyRelationDomainService,
   ) {}
 
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
@@ -92,13 +95,26 @@ export class MembersService {
 
     // 가족 등록
     if (dto.familyMemberId && dto.relation) {
-      await this.fetchFamilyRelation(
+      const newFamily = await this.membersDomainService.findMemberModelById(
+        church,
+        dto.familyMemberId,
+        qr,
+      );
+
+      await this.familyDomainService.fetchAndCreateFamilyRelations(
+        newMember,
+        newFamily,
+        dto.relation,
+        qr,
+      );
+
+      /*await this.fetchFamilyRelation(
         churchId,
         newMember.id,
         dto.familyMemberId,
         dto.relation,
         qr,
-      );
+      );*/
     }
 
     return newMember;
@@ -151,7 +167,7 @@ export class MembersService {
     await this.membersDomainService.deleteMember(church, targetMember, qr);
 
     // 가족 관계 모두 삭제
-    await this.familyService.cascadeDeleteAllFamilyRelation(targetMember, qr);
+    await this.familyDomainService.deleteAllFamilyRelations(targetMember, qr);
 
     // 이벤트는 트랜잭션 처리 불가능 본 요청과 이벤트 요청은 서로 달라서 본 요청 응답이 나갈 때
     // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음
@@ -163,7 +179,7 @@ export class MembersService {
     return new ResponseDeleteDto(true, targetMember.id);
   }
 
-  async getFamilyRelation(
+  /*async getFamilyRelation(
     churchId: number,
     memberId: number,
     qr?: QueryRunner,
@@ -180,13 +196,13 @@ export class MembersService {
       {},
     );
 
-    return this.familyService.getFamilyMember(member);
-  }
+    //return this.familyService.getFamilyRelations(member);
+  }*/
 
-  async createFamilyRelation(
+  /*async createFamilyRelation(
     churchId: number,
     memberId: number,
-    dto: CreateFamilyDto,
+    dto: CreateFamilyRelationDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -204,15 +220,15 @@ export class MembersService {
       ),
     ]);
 
-    return this.familyService.createFamilyMember(
+    /!*return this.familyService.createFamilyMember(
       member,
       familyMember,
       dto.relation,
       qr,
-    );
-  }
+    );*!/
+  }*/
 
-  async fetchFamilyRelation(
+  /*async fetchFamilyRelation(
     churchId: number,
     memberId: number,
     familyMemberId: number,
@@ -234,15 +250,15 @@ export class MembersService {
       ),
     ]);
 
-    return this.familyService.fetchAndCreateFamilyRelation(
+    /!*return this.familyService.fetchAndCreateFamilyRelation(
       member,
       familyMember,
       relation,
       qr,
-    );
-  }
+    );*!/
+  }*/
 
-  async patchFamilyRelation(
+  /*async patchFamilyRelation(
     churchId: number,
     memberId: number,
     familyMemberId: number,
@@ -264,10 +280,10 @@ export class MembersService {
       ),
     ]);
 
-    return this.familyService.updateFamilyRelation(me, family, relation, qr);
-  }
+    //return this.familyService.updateFamilyRelation(me, family, relation, qr);
+  }*/
 
-  async deleteFamilyRelation(
+  /*async deleteFamilyRelation(
     churchId: number,
     memberId: number,
     familyMemberId: number,
@@ -288,6 +304,6 @@ export class MembersService {
       ),
     ]);
 
-    return this.familyService.deleteFamilyRelation(me, family, qr);
-  }
+    //return this.familyService.deleteFamilyRelation(me, family, qr);
+  }*/
 }

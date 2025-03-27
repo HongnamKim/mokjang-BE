@@ -10,25 +10,25 @@ import {
   Post,
   UseInterceptors,
 } from '@nestjs/common';
-import { CreateFamilyDto } from '../dto/family/create-family.dto';
+import { CreateFamilyRelationDto } from '../dto/create-family-relation.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
-import { UpdateFamilyDto } from '../dto/family/update-family.dto';
-import { MembersService } from '../service/members.service';
+import { UpdateFamilyRelationDto } from '../dto/update-family-relation.dto';
 import {
   ApiDeleteFamilyMember,
   ApiFetchFamilyMember,
   ApiGetFamilyMember,
   ApiPatchFamilyMember,
   ApiPostFamilyMember,
-} from '../const/swagger/member-family/controller.swagger';
+} from '../const/swagger/controller.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { FamilyRelationService } from '../service/family-relation.service';
 
 @ApiTags('Churches:Members:Family')
 @Controller(':memberId/family')
-export class MembersFamilyController {
-  constructor(private readonly memberService: MembersService) {}
+export class FamilyRelationController {
+  constructor(private readonly familyService: FamilyRelationService) {}
 
   @ApiGetFamilyMember()
   @Get()
@@ -36,7 +36,7 @@ export class MembersFamilyController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
   ) {
-    return this.memberService.getFamilyRelation(churchId, memberId);
+    return this.familyService.getFamilyRelations(churchId, memberId);
   }
 
   @ApiPostFamilyMember()
@@ -45,10 +45,10 @@ export class MembersFamilyController {
   postFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() createFamilyDto: CreateFamilyDto,
+    @Body() createFamilyDto: CreateFamilyRelationDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberService.createFamilyRelation(
+    return this.familyService.createFamilyMember(
       churchId,
       memberId,
       createFamilyDto,
@@ -62,7 +62,7 @@ export class MembersFamilyController {
   fetchFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: CreateFamilyDto,
+    @Body() dto: CreateFamilyRelationDto,
     @QueryRunner() qr: QR,
   ) {
     throw new GoneException('더 이상 사용할 수 없는 요청입니다.');
@@ -83,10 +83,10 @@ export class MembersFamilyController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
     @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
-    @Body() dto: UpdateFamilyDto,
+    @Body() dto: UpdateFamilyRelationDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberService.patchFamilyRelation(
+    return this.familyService.updateFamilyRelation(
       churchId,
       memberId,
       familyMemberId,
@@ -102,7 +102,7 @@ export class MembersFamilyController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Param('familyMemberId', ParseIntPipe) familyMemberId: number,
   ) {
-    return this.memberService.deleteFamilyRelation(
+    return this.familyService.deleteFamilyRelation(
       churchId,
       memberId,
       familyMemberId,
