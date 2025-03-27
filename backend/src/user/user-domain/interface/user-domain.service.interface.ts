@@ -4,6 +4,7 @@ import { CreateUserDto } from '../../dto/create-user.dto';
 import { MemberModel } from '../../../churches/members/entity/member.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateUserDto } from '../../dto/update-user.dto';
+import { UserRole } from '../../const/user-role.enum';
 
 export const IUSER_DOMAIN_SERVICE = Symbol('IUserDomainService');
 
@@ -35,6 +36,7 @@ export interface IUserDomainService {
   signInChurch(
     user: UserModel,
     church: ChurchModel,
+    role: UserRole,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
