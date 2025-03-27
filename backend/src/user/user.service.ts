@@ -11,26 +11,25 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from './user-domain/interface/user-domain.service.interface';
-import { ChurchModel } from '../churches/entity/church.entity';
 import { UserRole } from './const/user-role.enum';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../churches/churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
     @InjectRepository(MemberModel)
     private readonly memberRepository: Repository<MemberModel>,
-    @InjectRepository(ChurchModel)
-    private readonly churchRepository: Repository<ChurchModel>,
   ) {}
 
   private getMemberRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.memberRepository;
-  }
-
-  private getChurchRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
   }
 
   async getUserById(id: number) {
@@ -40,12 +39,15 @@ export class UserService {
   async signInChurch(userId: number, churchId: number, qr?: QueryRunner) {
     const user = await this.userDomainService.findUserById(userId);
 
-    if (user.adminChurch) {
+    if (user.church) {
       throw new BadRequestException('이미 소속된 교회가 있습니다.');
     }
 
-    // TODO ChurchDomainService 로 변경
-    const church = await this.getChurchRepository(qr).findOne({
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    /*const church = await this.getChurchRepository(qr).findOne({
       where: {
         id: churchId,
       },
@@ -53,17 +55,22 @@ export class UserService {
 
     if (!church) {
       throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
-    }
+    }*/
 
-    // 사용자 정보 업데이트
+    /*// 사용자 정보 업데이트
     await this.userDomainService.updateUser(
       user,
       { role: UserRole.member },
       qr,
-    );
+    );*/
 
     // 사용자 - 교회 관계 설정
-    await this.userDomainService.signInChurch(user, church, qr);
+    await this.userDomainService.signInChurch(
+      user,
+      church,
+      UserRole.member,
+      qr,
+    );
   }
 
   async linkMemberToUser(userId: number, memberId: number, qr?: QueryRunner) {
@@ -71,7 +78,7 @@ export class UserService {
 
     const member = await this.getMemberRepository(qr).findOne({
       where: {
-        churchId: user.adminChurch.id,
+        churchId: user.church.id,
         id: memberId,
       },
     });

@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ChurchesService } from './churches.service';
 import { CreateChurchDto } from './dto/create-church.dto';
@@ -28,6 +29,9 @@ import {
   ApiPostChurch,
 } from './const/swagger/churches/controller.swagger';
 import { AuthType } from '../auth/const/enum/auth-type.enum';
+import { TransactionInterceptor } from '../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
 
 @Controller('churches')
 export class ChurchesController {
@@ -43,11 +47,13 @@ export class ChurchesController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(TransactionInterceptor)
   postChurch(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @Body() dto: CreateChurchDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.createChurch(accessToken, dto);
+    return this.churchesService.createChurch(accessPayload, dto, qr);
   }
 
   @ApiGetChurchById()

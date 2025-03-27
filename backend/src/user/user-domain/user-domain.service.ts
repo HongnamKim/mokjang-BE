@@ -33,7 +33,7 @@ export class UserDomainService implements IUserDomainService {
         id,
       },
       relations: {
-        adminChurch: true,
+        church: true,
         member: true,
       },
     });
@@ -109,6 +109,7 @@ export class UserDomainService implements IUserDomainService {
   async signInChurch(
     user: UserModel,
     church: ChurchModel,
+    role: UserRole,
     qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const userRepository = this.getUserRepository(qr);
@@ -118,7 +119,8 @@ export class UserDomainService implements IUserDomainService {
         id: user.id,
       },
       {
-        adminChurch: church,
+        church: church,
+        role,
       },
     );
   }
@@ -143,7 +145,7 @@ export class UserDomainService implements IUserDomainService {
         id: user.id,
       },
       relations: {
-        adminChurch: true,
+        church: true,
         member: true,
       },
     });
