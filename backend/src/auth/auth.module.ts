@@ -2,9 +2,6 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './service/auth.service';
 import { AuthController } from './controller/auth.controller';
 import { GoogleStrategy } from './strategy/google.strategy';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TempUserModel } from './entity/temp-user.entity';
-import { JwtModule } from '@nestjs/jwt';
 import { TokenService } from './service/token.service';
 import { NaverStrategy } from './strategy/naver.strategy';
 import { KakaoStrategy } from './strategy/kakao.strategy';
@@ -15,8 +12,8 @@ import { TempUserDomainModule } from './temp-user-domain/temp-user-domain.module
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TempUserModel]),
-    JwtModule.register({}),
+    //TypeOrmModule.forFeature([TempUserModel]),
+    //JwtModule.register({}),
     CommonModule,
     UserDomainModule,
     TempUserDomainModule,
@@ -30,6 +27,8 @@ import { TempUserDomainModule } from './temp-user-domain/temp-user-domain.module
     KakaoStrategy,
     AuthCookieHelper,
   ],
-  exports: [JwtModule],
+  exports: [
+    /*JwtModule*/
+  ],
 })
 export class AuthModule {}

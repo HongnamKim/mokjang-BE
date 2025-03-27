@@ -36,6 +36,8 @@ import { MembersModule } from './members/members.module';
 import { MembersDomainModule } from './members/member-domain/members-domain.module';
 import { ChurchesDomainModule } from './churches/churches-domain/churches-domain.module';
 import { FamilyRelationModule } from './family-relation/family-relation.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ENV_VARIABLE_KEY } from './common/const/env.const';
 
 @Module({
   imports: [
@@ -131,6 +133,13 @@ import { FamilyRelationModule } from './family-relation/family-relation.module';
           GroupHistoryModel,
         ],
         synchronize: true,
+      }),
+      inject: [ConfigService],
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.getOrThrow(ENV_VARIABLE_KEY.JWT_SECRET),
       }),
       inject: [ConfigService],
     }),
