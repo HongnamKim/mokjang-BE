@@ -35,7 +35,7 @@ export class ChurchModel extends BaseModel {
   @Column({ enum: MemberSize, nullable: true })
   memberSize: MemberSize;
 
-  @OneToMany(() => UserModel, (user) => user.adminChurch)
+  @OneToMany(() => UserModel, (user) => user.church)
   users: UserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
