@@ -21,7 +21,7 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { GetRequestInfoDto } from './dto/get-request-info.dto';
 import { SubmitRequestInfoDto } from './dto/submit-request-info.dto';
-import { FamilyRelationPipe } from '../../members/pipe/family-relation.pipe';
+import { DefaultFamilyRelationPipe } from '../../family-relation/pipe/default-family-relation-pipe.service';
 
 @ApiTags('Churches:Request-Info')
 @Controller('churches/:churchId/request')
@@ -41,7 +41,7 @@ export class RequestInfoController {
   async postRequestInfo(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query('isTest') isTest: boolean,
-    @Body(FamilyRelationPipe) dto: CreateRequestInfoDto,
+    @Body(DefaultFamilyRelationPipe) dto: CreateRequestInfoDto,
     @QueryRunner() qr: QR,
   ) {
     const requestInfo = await this.requestInfoService.createRequestInfo(

@@ -4,25 +4,20 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './churches/entity/church.entity';
 import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
-
 import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersManagementModule } from './churches/members-management/members-management.module';
-
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './user/entity/user.entity';
-
 import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
-
 import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
 import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
-
 import { ChurchesModule } from './churches/churches.module';
 import { EducationModel } from './management/educations/entity/education.entity';
 import { EducationTermModel } from './management/educations/entity/education-term.entity';
@@ -36,10 +31,11 @@ import { GroupModel } from './management/groups/entity/group.entity';
 import { GroupRoleModel } from './management/groups/entity/group-role.entity';
 import { ManagementModule } from './management/management.module';
 import { MemberModel } from './members/entity/member.entity';
-import { FamilyModel } from './members/entity/family.entity';
+import { FamilyRelationModel } from './family-relation/entity/family-relation.entity';
 import { MembersModule } from './members/members.module';
 import { MembersDomainModule } from './members/member-domain/members-domain.module';
 import { ChurchesDomainModule } from './churches/churches-domain/churches-domain.module';
+import { FamilyRelationModule } from './family-relation/family-relation.module';
 
 @Module({
   imports: [
@@ -114,7 +110,7 @@ import { ChurchesDomainModule } from './churches/churches-domain/churches-domain
           // 교인 관련 엔티티
           RequestInfoModel,
           MemberModel,
-          FamilyModel,
+          FamilyRelationModel,
           // 교육 관련 엔티티
           EducationModel,
           EducationTermModel,
@@ -144,6 +140,7 @@ import { ChurchesDomainModule } from './churches/churches-domain/churches-domain
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
+    FamilyRelationModule,
     MembersManagementModule,
     ManagementModule,
 

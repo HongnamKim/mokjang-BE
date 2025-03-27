@@ -1,9 +1,9 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { FamilyModel } from '../../entity/family.entity';
+import { FamilyRelationModel } from '../entity/family-relation.entity';
 import { IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
-import { FamilyRelation } from '../../const/family-relation.const';
+import { FamilyRelationConst } from '../family-relation-domain/const/family-relation.const';
 
-export class CreateFamilyDto extends PickType(FamilyModel, [
+export class CreateFamilyRelationDto extends PickType(FamilyRelationModel, [
   'familyMemberId',
   'relation',
 ]) {
@@ -18,11 +18,11 @@ export class CreateFamilyDto extends PickType(FamilyModel, [
   @ApiProperty({
     name: 'relation',
     description: '가족 관계',
-    example: FamilyRelation.MOTHER,
-    default: FamilyRelation.FAMILY,
+    example: FamilyRelationConst.MOTHER,
+    default: FamilyRelationConst.FAMILY,
   })
   @IsString()
-  @IsIn(Object.values(FamilyRelation))
+  @IsIn(Object.values(FamilyRelationConst))
   @IsOptional()
-  relation: string = FamilyRelation.FAMILY;
+  relation: string = FamilyRelationConst.FAMILY;
 }

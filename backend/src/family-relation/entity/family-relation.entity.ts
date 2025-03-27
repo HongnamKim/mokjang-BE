@@ -9,10 +9,10 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { MemberModel } from './member.entity';
+import { MemberModel } from '../../members/entity/member.entity';
 
 @Entity()
-export class FamilyModel {
+export class FamilyRelationModel {
   @PrimaryColumn()
   @Index()
   meId: number;

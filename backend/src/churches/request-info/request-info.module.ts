@@ -6,24 +6,18 @@ import { RequestInfoModel } from './entity/request-info.entity';
 import { RequestLimitValidatorService } from './service/request-limit-validator.service';
 import { CommonModule } from '../../common/common.module';
 import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
-import { MemberModel } from '../../members/entity/member.entity';
-import { MembersModule } from '../../members/members.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
+import { FamilyRelationDomainModule } from '../../family-relation/family-relation-domain/family-relation-domain.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RequestInfoModel, MemberModel]),
-    ChurchesDomainModule,
-    MembersModule,
+    TypeOrmModule.forFeature([RequestInfoModel]),
     CommonModule,
+    ChurchesDomainModule,
     MembersDomainModule,
+    FamilyRelationDomainModule,
   ],
   controllers: [RequestInfoController],
-  providers: [
-    RequestInfoService,
-    //MessagesService,
-    RequestLimitValidatorService,
-    //CoolSMSProvider,
-  ],
+  providers: [RequestInfoService, RequestLimitValidatorService],
 })
 export class RequestInfoModule {}

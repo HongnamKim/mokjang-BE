@@ -17,7 +17,7 @@ import {
 import { GenderEnum } from '../const/enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../const/enum/baptism.enum';
-import { FamilyRelation } from '../const/family-relation.const';
+import { FamilyRelationConst } from '../../family-relation/family-relation-domain/const/family-relation.const';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { TransformName } from '../../churches/decorator/transform-name';
 
@@ -82,9 +82,9 @@ export class CreateMemberDto {
     required: false,
   })
   @IsString()
-  @IsIn(Object.values(FamilyRelation))
+  @IsIn(Object.values(FamilyRelationConst))
   @IsOptional()
-  relation?: string = FamilyRelation.FAMILY;
+  relation?: string = FamilyRelationConst.FAMILY;
 
   @ApiProperty({
     name: 'isLunar',

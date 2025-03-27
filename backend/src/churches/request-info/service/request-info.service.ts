@@ -26,19 +26,22 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches-domain/interface/churches-domain.service.interface';
-import { MembersService } from '../../../members/service/members.service';
 import { UpdateMemberDto } from '../../../members/dto/update-member.dto';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../../members/member-domain/service/interface/members-domain.service.interface';
+import {
+  IFAMILY_RELATION_DOMAIN_SERVICE,
+  IFamilyRelationDomainService,
+} from '../../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
 
 @Injectable()
 export class RequestInfoService {
   constructor(
     @InjectRepository(RequestInfoModel)
     private readonly requestInfosRepository: Repository<RequestInfoModel>,
-    private readonly membersService: MembersService,
+
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessageService,
     private readonly configService: ConfigService,
@@ -47,6 +50,8 @@ export class RequestInfoService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
+    private readonly familyDomainService: IFamilyRelationDomainService,
   ) {}
 
   private readonly REQUEST_EXPIRE_DAYS = this.configService.getOrThrow<number>(
@@ -204,13 +209,25 @@ export class RequestInfoService {
 
     // 새로 등록 + 가족 관계를 설정한 경우
     if (!existMember && dto.familyMemberId && dto.relation) {
-      await this.membersService.fetchFamilyRelation(
+      const newFamily = await this.membersDomainService.findMemberModelById(
+        church,
+        dto.familyMemberId,
+        qr,
+      );
+
+      await this.familyDomainService.fetchAndCreateFamilyRelations(
+        member,
+        newFamily,
+        dto.relation,
+        qr,
+      );
+      /*await this.membersService.fetchFamilyRelation(
         church.id,
         member.id,
         dto.familyMemberId,
         dto.relation,
         qr,
-      );
+      );*/
     }
 
     const repository = this.getRequestInfosRepository(qr);

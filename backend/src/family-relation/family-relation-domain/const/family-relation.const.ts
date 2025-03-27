@@ -1,4 +1,4 @@
-export const FamilyRelation = {
+export const FamilyRelationConst = {
   FAMILY: 'family', // 가족
   SPOUSE: 'spouse', // 배우자
   FATHER: 'father', // 아버지

@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { GenderEnum } from '../const/enum/gender.enum';
 import { BaptismEnum } from '../const/enum/baptism.enum';
-import { FamilyModel } from './family.entity';
+import { FamilyRelationModel } from '../../family-relation/entity/family-relation.entity';
 import { MarriageOptions } from '../const/marriage-options.const';
 import { Exclude } from 'class-transformer';
 import { BaseModel } from '../../common/entity/base.entity';
@@ -84,11 +84,11 @@ export class MemberModel extends BaseModel {
   homePhone: string;
 
   // 가족 관계
-  @OneToMany(() => FamilyModel, (family) => family.me)
-  family: FamilyModel[];
+  @OneToMany(() => FamilyRelationModel, (family) => family.me)
+  family: FamilyRelationModel[];
 
-  @OneToMany(() => FamilyModel, (family) => family.familyMember)
-  counterFamily: FamilyModel[];
+  @OneToMany(() => FamilyRelationModel, (family) => family.familyMember)
+  counterFamily: FamilyRelationModel[];
 
   @Index()
   @Column({ length: 30, nullable: true, comment: '직업' })

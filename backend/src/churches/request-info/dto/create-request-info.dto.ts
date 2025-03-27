@@ -10,7 +10,7 @@ import {
   Matches,
 } from 'class-validator';
 import { TransformName } from '../../decorator/transform-name';
-import { FamilyRelation } from '../../../members/const/family-relation.const';
+import { FamilyRelationConst } from '../../../family-relation/family-relation-domain/const/family-relation.const';
 
 export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',
@@ -63,11 +63,11 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   @ApiProperty({
     name: 'relation',
     description: '가족 관계',
-    example: FamilyRelation.MOTHER,
+    example: FamilyRelationConst.MOTHER,
     required: false,
   })
   @IsString()
-  @IsIn(Object.values(FamilyRelation))
+  @IsIn(Object.values(FamilyRelationConst))
   @IsOptional()
   relation?: string;
 }
