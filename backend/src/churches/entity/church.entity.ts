@@ -1,6 +1,5 @@
 import { BaseModel } from '../../common/entity/base.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { RequestInfoModel } from '../request-info/entity/request-info.entity';
 import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
@@ -10,6 +9,7 @@ import { OfficerModel } from '../../management/officers/entity/officer.entity';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
 import { MemberModel } from '../../members/entity/member.entity';
+import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 
 @Entity()
 export class ChurchModel extends BaseModel {

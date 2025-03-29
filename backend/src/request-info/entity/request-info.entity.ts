@@ -7,10 +7,10 @@ import {
   OneToOne,
   Unique,
 } from 'typeorm';
-import { ChurchModel } from '../../entity/church.entity';
-import { BaseModel } from '../../../common/entity/base.entity';
 import { Exclude } from 'class-transformer';
-import { MemberModel } from '../../../members/entity/member.entity';
+import { BaseModel } from '../../common/entity/base.entity';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { MemberModel } from '../../members/entity/member.entity';
 
 @Entity()
 @Unique(['churchId', 'name', 'mobilePhone'])

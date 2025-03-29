@@ -3,8 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './churches/entity/church.entity';
-import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
-import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MembersManagementModule } from './churches/members-management/members-management.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -38,6 +36,8 @@ import { ChurchesDomainModule } from './churches/churches-domain/churches-domain
 import { FamilyRelationModule } from './family-relation/family-relation.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ENV_VARIABLE_KEY } from './common/const/env.const';
+import { RequestInfoModel } from './request-info/entity/request-info.entity';
+import { RequestInfoModule } from './request-info/request-info.module';
 
 @Module({
   imports: [

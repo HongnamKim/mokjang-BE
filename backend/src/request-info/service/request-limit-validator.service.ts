@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { REQUEST_CONSTANTS } from '../const/request-info.const';
-import { ChurchModel } from '../../entity/church.entity';
 import {
   RequestLimitValidationResult,
   RequestLimitValidationType,
 } from '../types/request-limit-validation-result';
-import { DateUtils } from '../utils/date-utils.util';
+import { DateUtils } from '../../common/utils/date-utils.util';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import { ConfigService } from '@nestjs/config';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class RequestLimitValidatorService {

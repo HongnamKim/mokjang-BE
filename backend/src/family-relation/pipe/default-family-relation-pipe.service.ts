@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateMemberDto } from '../../members/dto/create-member.dto';
 import { FamilyRelationConst } from '../family-relation-domain/const/family-relation.const';
-import { CreateRequestInfoDto } from '../../churches/request-info/dto/create-request-info.dto';
+import { CreateRequestInfoDto } from '../../request-info/dto/create-request-info.dto';
 
 /**
  * 가족을 추가하지만 관계가 입력되지 않은 경우 기본값으로 관계를 지정
