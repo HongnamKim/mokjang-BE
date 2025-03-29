@@ -9,8 +9,8 @@ import {
   Length,
   Matches,
 } from 'class-validator';
-import { TransformName } from '../../decorator/transform-name';
-import { FamilyRelationConst } from '../../../family-relation/family-relation-domain/const/family-relation.const';
+import { TransformName } from '../../churches/decorator/transform-name';
+import { FamilyRelationConst } from '../../family-relation/family-relation-domain/const/family-relation.const';
 
 export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',

@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Post,
@@ -16,12 +15,12 @@ import { RequestInfoService } from './service/request-info.service';
 import { CreateRequestInfoDto } from './dto/create-request-info.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateRequestInfoDto } from './dto/validate-request-info.dto';
-import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { GetRequestInfoDto } from './dto/get-request-info.dto';
 import { SubmitRequestInfoDto } from './dto/submit-request-info.dto';
-import { DefaultFamilyRelationPipe } from '../../family-relation/pipe/default-family-relation-pipe.service';
+import { TransactionInterceptor } from '../common/interceptor/transaction.interceptor';
+import { DefaultFamilyRelationPipe } from '../family-relation/pipe/default-family-relation-pipe.service';
+import { QueryRunner } from '../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Request-Info')
 @Controller('churches/:churchId/request')
@@ -50,9 +49,9 @@ export class RequestInfoController {
       qr,
     );
 
-    if (!requestInfo) {
+    /*if (!requestInfo) {
       throw new InternalServerErrorException('입력 요청 생성 중 문제 발생');
-    }
+    }*/
 
     return this.requestInfoService.sendRequestInfoUrlMessage(
       requestInfo,
