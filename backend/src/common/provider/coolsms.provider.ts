@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import coolsms from 'coolsms-node-sdk';
 import { ENV_VARIABLE_KEY } from '../const/env.const';
 
-export const COOLSMS_CLIENT = 'COOLSMS_CLIENT';
+export const COOLSMS_CLIENT = Symbol('COOLSMS_CLIENT');
 
 export const CoolSMSProvider: Provider = {
   provide: COOLSMS_CLIENT,

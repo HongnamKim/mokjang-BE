@@ -1,5 +1,10 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { DeleteResult, QueryRunner, UpdateResult } from 'typeorm';
+import {
+  DeleteResult,
+  FindOptionsRelations,
+  QueryRunner,
+  UpdateResult,
+} from 'typeorm';
 import { RequestInfoModel } from '../../../entity/request-info.entity';
 import { GetRequestInfoDto } from '../../../dto/get-request-info.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
@@ -28,6 +33,13 @@ export interface IRequestInfoDomainService {
     church: ChurchModel,
     requestInfoId: number,
     qr?: QueryRunner,
+  ): Promise<RequestInfoModel>;
+
+  findRequestInfoModelById(
+    church: ChurchModel,
+    requestInfoId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<RequestInfoModel>,
   ): Promise<RequestInfoModel>;
 
   createRequestInfo(

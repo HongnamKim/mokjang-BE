@@ -49,14 +49,16 @@ export class RequestInfoController {
       qr,
     );
 
-    /*if (!requestInfo) {
-      throw new InternalServerErrorException('입력 요청 생성 중 문제 발생');
-    }*/
-
-    return this.requestInfoService.sendRequestInfoUrlMessage(
+    const message = this.requestInfoService.sendRequestInfoUrlMessage(
       requestInfo,
       isTest,
     );
+
+    if (isTest) {
+      return message;
+    } else {
+      return '초대 메시지 전송 완료';
+    }
   }
 
   @Delete(':requestInfoId')
