@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RequestInfoService } from './service/request-info.service';
 import { RequestInfoController } from './request-info.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { RequestInfoModel } from './entity/request-info.entity';
 import { RequestLimitValidatorService } from './service/request-limit-validator.service';
 import { CommonModule } from '../common/common.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
@@ -12,7 +10,6 @@ import { RequestInfoDomainModule } from './request-info-domain/request-info-doma
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RequestInfoModel]),
     CommonModule,
     RequestInfoDomainModule,
     ChurchesDomainModule,

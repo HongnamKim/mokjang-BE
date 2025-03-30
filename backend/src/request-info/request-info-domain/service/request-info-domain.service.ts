@@ -1,7 +1,7 @@
 import { IRequestInfoDomainService } from './interface/request-info-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../../entity/request-info.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetRequestInfoDto } from '../../dto/get-request-info.dto';
 import { CreateRequestInfoDto } from '../../dto/create-request-info.dto';
@@ -52,25 +52,6 @@ export class RequestInfoDomainService implements IRequestInfoDomainService {
     };
   }
 
-  private async isExistRequest(
-    church: ChurchModel,
-    name: string,
-    mobilePhone: string,
-    qr: QueryRunner,
-  ) {
-    const requestInfoRepository = this.getRequestInfoRepository(qr);
-
-    const isExist = await requestInfoRepository.findOne({
-      where: {
-        churchId: church.id,
-        name,
-        mobilePhone,
-      },
-    });
-
-    return !!isExist;
-  }
-
   async findRequestInfoByNameAndMobilePhone(
     church: ChurchModel,
     name: string,
@@ -100,7 +81,29 @@ export class RequestInfoDomainService implements IRequestInfoDomainService {
         churchId: church.id,
         id: requestInfoId,
       },
-      relations: { church: true },
+    });
+
+    if (!requestInfo) {
+      throw new NotFoundException(RequestInfoException.NOT_FOUND);
+    }
+
+    return requestInfo;
+  }
+
+  async findRequestInfoModelById(
+    church: ChurchModel,
+    requestInfoId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<RequestInfoModel>,
+  ) {
+    const requestInfoRepository = this.getRequestInfoRepository(qr);
+
+    const requestInfo = await requestInfoRepository.findOne({
+      where: {
+        churchId: church.id,
+        id: requestInfoId,
+      },
+      relations: relationOptions,
     });
 
     if (!requestInfo) {

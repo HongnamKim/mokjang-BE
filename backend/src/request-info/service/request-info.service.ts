@@ -4,9 +4,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../entity/request-info.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { CreateRequestInfoDto } from '../dto/create-request-info.dto';
 import { ValidateRequestInfoDto } from '../dto/validate-request-info.dto';
 import { ResponseValidateRequestInfoDto } from '../dto/response/response-validate-request-info.dto';
@@ -38,13 +37,11 @@ import {
 } from '../request-info-domain/service/interface/request-info-domain.service.interface';
 import { RequestInfoPaginationResultDto } from '../dto/response/request-info-pagination-result.dto';
 import { RequestInfoException } from '../const/exception/request-info.exception';
+import { RequestInfoRules } from '../const/request-info.rules';
 
 @Injectable()
 export class RequestInfoService {
   constructor(
-    /*@InjectRepository(RequestInfoModel)
-    private readonly requestInfosRepository: Repository<RequestInfoModel>,*/
-
     private readonly requestLimitValidator: RequestLimitValidatorService,
     private readonly messagesService: MessageService,
     private readonly configService: ConfigService,
@@ -59,19 +56,6 @@ export class RequestInfoService {
     private readonly familyDomainService: IFamilyRelationDomainService,
   ) {}
 
-  private readonly REQUEST_EXPIRE_DAYS = this.configService.getOrThrow<number>(
-    'REQUEST_INFO_EXPIRE_DAYS',
-  );
-  private readonly VALIDATION_LIMITS = this.configService.getOrThrow<number>(
-    'REQUEST_INFO_VALIDATION_LIMITS',
-  );
-
-  /*private getRequestInfosRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(RequestInfoModel)
-      : this.requestInfosRepository;
-  }*/
-
   async findAllRequestInfos(churchId: number, dto: GetRequestInfoDto) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
@@ -80,13 +64,6 @@ export class RequestInfoService {
       await this.requestInfoDomainService.findAllRequestInfos(church, dto);
 
     const totalPage = Math.ceil(totalCount / dto.page);
-
-    /*const result = await this.requestInfosRepository.find({
-      where: { churchId: churchId },
-      order: { createdAt: 'desc' },
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
-    });*/
 
     const result: RequestInfoPaginationResultDto = {
       data,
@@ -97,14 +74,6 @@ export class RequestInfoService {
     };
 
     return result;
-
-    /*return new ResponsePaginationDto<RequestInfoModel>(
-      result,
-      result.length,
-      dto.page,
-      totalCount,
-      totalPage,
-    );*/
   }
 
   private async handleExistingRequest(
@@ -112,8 +81,6 @@ export class RequestInfoService {
     church: ChurchModel,
     qr: QueryRunner,
   ) {
-    //const repository = this.getRequestInfosRepository(qr);
-
     // 이미 존재하는 요청에 대해 재요청이 가능한지
     const validationResult =
       this.requestLimitValidator.validateRetry(requestInfo);
@@ -154,43 +121,14 @@ export class RequestInfoService {
       validationResult.type,
       qr,
     );
-    //await this.updateRequestAttempts(requestInfo, validationResult.type, qr);
 
-    return this.requestInfoDomainService.findRequestInfoById(
+    return this.requestInfoDomainService.findRequestInfoModelById(
       church,
       requestInfo.id,
       qr,
+      { church: true },
     );
-    /*return repository.findOne({
-      where: { id: requestInfo.id },
-      relations: { church: true },
-    });*/
   }
-
-  /*private async updateRequestAttempts(
-    requestInfo: RequestInfoModel,
-    validationResultType:
-      | RequestLimitValidationType.INIT
-      | RequestLimitValidationType.INCREASE,
-    qr: QueryRunner,
-  ) {
-    const requestInfosRepository = this.getRequestInfosRepository(qr);
-
-    return requestInfosRepository.update(
-      {
-        id: requestInfo.id,
-      },
-      {
-        requestInfoAttempts:
-          validationResultType === RequestLimitValidationType.INCREASE
-            ? () => 'requestInfoAttempts + 1'
-            : 1,
-        requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-          this.REQUEST_EXPIRE_DAYS,
-        ),
-      },
-    );
-  }*/
 
   private async handleNewRequest(
     church: ChurchModel,
@@ -248,35 +186,21 @@ export class RequestInfoService {
         dto.relation,
         qr,
       );
-      /*await this.membersService.fetchFamilyRelation(
-        church.id,
-        member.id,
-        dto.familyMemberId,
-        dto.relation,
-        qr,
-      );*/
     }
 
-    return this.requestInfoDomainService.createRequestInfo(
+    const newRequest = await this.requestInfoDomainService.createRequestInfo(
       church,
       member,
       dto,
       qr,
     );
-    /*const repository = this.getRequestInfosRepository(qr);
-    const newRequestInfo = await repository.save({
-      ...dto,
-      memberId: member.id,
-      church: church,
-      requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-        this.REQUEST_EXPIRE_DAYS,
-      ),
-    });
 
-    return repository.findOne({
-      where: { id: newRequestInfo.id },
-      relations: { church: true },
-    });*/
+    return this.requestInfoDomainService.findRequestInfoModelById(
+      church,
+      newRequest.id,
+      qr,
+      { church: true },
+    );
   }
 
   async createRequestInfo(
@@ -305,15 +229,6 @@ export class RequestInfoService {
         dto.mobilePhone,
         qr,
       );
-
-    /*const repository = this.getRequestInfosRepository(qr);
-    const existingRequest = await repository.findOne({
-      where: {
-        churchId: churchId,
-        name: dto.name,
-        mobilePhone: dto.mobilePhone,
-      },
-    });*/
 
     return existingRequest
       ? this.handleExistingRequest(existingRequest, church, qr)
@@ -359,34 +274,20 @@ export class RequestInfoService {
       await this.requestInfoDomainService.deleteRequestInfo(validateTarget);
 
       throw new BadRequestException(RequestInfoException.REQUEST_EXPIRED);
-
-      /*await this.requestInfosRepository.delete({
-        id: requestInfoId,
-      });
-
-      throw new BadRequestException(
-        REQUEST_CONSTANTS.ERROR_MESSAGES.REQUEST_EXPIRED,
-      );*/
     }
 
     // 검증 시도 횟수 초과
-    if (validateTarget.validateAttempts === this.VALIDATION_LIMITS) {
+    if (
+      validateTarget.validateAttempts ===
+      RequestInfoRules.REQUEST_INFO_VALIDATION_LIMITS /*this.VALIDATION_LIMITS*/
+    ) {
       await this.requestInfoDomainService.deleteRequestInfo(validateTarget);
 
       throw new BadRequestException(
-        RequestInfoException.VALIDATION_LIMIT_EXCEEDED(this.VALIDATION_LIMITS),
-      );
-
-      /*await this.requestInfosRepository.delete({
-        id: requestInfoId,
-        churchId: churchId,
-      });
-
-      throw new BadRequestException(
-        REQUEST_CONSTANTS.ERROR_MESSAGES.VALIDATION_LIMIT_EXCEEDED(
-          this.VALIDATION_LIMITS,
+        RequestInfoException.VALIDATION_LIMIT_EXCEEDED(
+          RequestInfoRules.REQUEST_INFO_VALIDATION_LIMITS /*this.VALIDATION_LIMITS*/,
         ),
-      );*/
+      );
     }
 
     // 이름과 전화번호를 제대로 입력하지 않은 경우 --> 검증 실패
@@ -394,12 +295,6 @@ export class RequestInfoService {
       validateTarget.name !== dto.name ||
       validateTarget.mobilePhone !== dto.mobilePhone
     ) {
-      /*await this.requestInfosRepository.increment(
-        { id: requestInfoId, churchId: churchId },
-        'validateAttempts',
-        1,
-      );*/
-
       await this.requestInfoDomainService.incrementValidationAttempt(
         validateTarget,
       );
@@ -411,10 +306,6 @@ export class RequestInfoService {
 
     // 검증 성공
     await this.requestInfoDomainService.successValidation(validateTarget);
-    /*await this.requestInfosRepository.update(
-      { id: requestInfoId, churchId: churchId },
-      { isValidated: true },
-    );*/
 
     return new ResponseValidateRequestInfoDto(true);
   }
@@ -424,17 +315,6 @@ export class RequestInfoService {
     requestInfoId: number,
     qr?: QueryRunner,
   ) {
-    /*const requestInfosRepository = this.getRequestInfosRepository(qr);
-
-    const result = await requestInfosRepository.delete({
-      id: requestInfoId,
-      churchId: churchId,
-    });
-
-    if (result.affected === 0) {
-      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
-    }*/
-
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -462,16 +342,6 @@ export class RequestInfoService {
       churchId,
       qr,
     );
-
-    /*const requestInfosRepository = this.getRequestInfosRepository(qr);
-
-    const requestInfo = await requestInfosRepository.findOne({
-      where: { id: requestInfoId, churchId: churchId },
-    });
-
-    if (!requestInfo) {
-      throw new NotFoundException(REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_FOUND);
-    }*/
 
     const requestInfo = await this.requestInfoDomainService.findRequestInfoById(
       church,
@@ -507,7 +377,6 @@ export class RequestInfoService {
       qr,
     );
 
-    //await this.deleteRequestInfoById(churchId, requestInfoId, qr);
     await this.requestInfoDomainService.deleteRequestInfo(requestInfo, qr);
 
     return updated;
