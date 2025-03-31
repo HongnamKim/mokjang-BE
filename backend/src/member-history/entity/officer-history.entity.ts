@@ -1,7 +1,7 @@
-import { BaseModel } from '../../../common/entity/base.entity';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
-import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { MemberModel } from '../../../members/entity/member.entity';
+import { BaseModel } from '../../common/entity/base.entity';
+import { MemberModel } from '../../members/entity/member.entity';
+import { OfficerModel } from '../../management/officers/entity/officer.entity';
 
 @Entity()
 export class OfficerHistoryModel extends BaseModel {
@@ -21,7 +21,7 @@ export class OfficerHistoryModel extends BaseModel {
   officerId: number | null;
 
   @ManyToOne(() => OfficerModel, (officer) => officer.history)
-  officer: OfficerModel;
+  officer: OfficerModel | null;
 
   @Column({ comment: '직분 종료일 시점의 직분명', nullable: true })
   officerSnapShot: string;

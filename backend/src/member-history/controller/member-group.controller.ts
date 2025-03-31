@@ -11,8 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
 import { MemberGroupService } from '../service/member-group.service';
@@ -26,6 +24,8 @@ import {
   ApiPostMemberGroup,
 } from '../const/swagger/group/controller.swagger';
 import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members:Groups')
 @Controller('groups')

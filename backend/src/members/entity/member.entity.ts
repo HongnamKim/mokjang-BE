@@ -18,15 +18,15 @@ import { BaseModel } from '../../common/entity/base.entity';
 import { UserModel } from '../../user/entity/user.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
-import { MinistryHistoryModel } from '../../churches/members-management/entity/ministry-history.entity';
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
-import { OfficerHistoryModel } from '../../churches/members-management/entity/officer-history.entity';
 import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
 import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
-import { GroupHistoryModel } from '../../churches/members-management/entity/group-history.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
+import { MinistryHistoryModel } from '../../member-history/entity/ministry-history.entity';
+import { OfficerHistoryModel } from '../../member-history/entity/officer-history.entity';
+import { GroupHistoryModel } from '../../member-history/entity/group-history.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {

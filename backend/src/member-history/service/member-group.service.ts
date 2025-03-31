@@ -12,17 +12,17 @@ import { AddMemberToGroupDto } from '../dto/group/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
 import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
 import {
-  IGROUPS_DOMAIN_SERVICE,
-  IGroupsDomainService,
-} from '../../../management/groups/groups-domain/interface/groups-domain.service.interface';
-import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from '../../churches-domain/interface/churches-domain.service.interface';
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class MemberGroupService {

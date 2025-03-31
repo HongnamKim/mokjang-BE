@@ -2,8 +2,8 @@ import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { GroupModel } from './group.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { GroupHistoryModel } from '../../../churches/members-management/entity/group-history.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { GroupHistoryModel } from '../../../member-history/entity/group-history.entity';
 
 @Entity()
 @Unique(['role', 'groupId'])

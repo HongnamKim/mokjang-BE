@@ -3,7 +3,7 @@ import { QueryRunner, UpdateResult } from 'typeorm';
 import { CreateChurchDto } from '../../dto/create-church.dto';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { UserModel } from '../../../user/entity/user.entity';
-import { RequestLimitValidationType } from '../../request-info/types/request-limit-validation-result';
+import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 
 export const ICHURCHES_DOMAIN_SERVICE = Symbol('ICHURCHES_DOMAIN_SERVICE');
 
