@@ -12,32 +12,35 @@ import { MemberEducationService } from './service/member-education.service';
 import { MinistryHistoryModel } from './entity/ministry-history.entity';
 import { MemberMinistryController } from './controller/member-ministry.controller';
 import { OfficerHistoryModel } from './entity/officer-history.entity';
-import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
-import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
-import { ChurchesDomainModule } from '../churches-domain/churches-domain.module';
-import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
-import { MinistriesDomainModule } from '../../management/ministries/ministries-domain/ministries-domain.module';
-import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
+import { EducationEnrollmentModel } from '../management/educations/entity/education-enrollment.entity';
+import { MembersDomainModule } from '../members/member-domain/members-domain.module';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
+import { OfficersDomainModule } from '../management/officers/officer-domain/officers-domain.module';
+import { MinistriesDomainModule } from '../management/ministries/ministries-domain/ministries-domain.module';
+import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
+import { MemberHistoryDomainModule } from './member-history-domain/member-history-domain.module';
 
 @Module({
   imports: [
     RouterModule.register([
       {
         path: 'churches/:churchId/members/:memberId', // 공통 prefix
-        module: MembersManagementModule,
+        module: MemberHistoryModule,
       },
     ]),
     TypeOrmModule.forFeature([
       GroupHistoryModel,
       EducationEnrollmentModel,
       MinistryHistoryModel,
-      OfficerHistoryModel,
+      //OfficerHistoryModel,
     ]),
     MembersDomainModule,
     GroupsDomainModule,
     OfficersDomainModule,
     MinistriesDomainModule,
     ChurchesDomainModule,
+
+    MemberHistoryDomainModule,
   ],
   exports: [],
   providers: [
@@ -53,4 +56,4 @@ import { MembersDomainModule } from '../../members/member-domain/members-domain.
     MemberMinistryController,
   ],
 })
-export class MembersManagementModule {}
+export class MemberHistoryModule {}

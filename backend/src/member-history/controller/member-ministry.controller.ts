@@ -13,8 +13,6 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { MemberMinistryService } from '../service/member-ministry.service';
 import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.dto';
-import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
@@ -27,6 +25,8 @@ import {
   ApiPatchMinistryHistory,
   ApiPostMemberMinistry,
 } from '../const/swagger/ministry/controller.swagger';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members:Ministries')
 @Controller('ministries')

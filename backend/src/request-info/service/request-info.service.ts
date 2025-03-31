@@ -63,7 +63,7 @@ export class RequestInfoService {
     const { data, totalCount } =
       await this.requestInfoDomainService.findAllRequestInfos(church, dto);
 
-    const totalPage = Math.ceil(totalCount / dto.page);
+    const totalPage = Math.ceil(totalCount / dto.take);
 
     const result: RequestInfoPaginationResultDto = {
       data,

@@ -4,15 +4,11 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './churches/entity/church.entity';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MembersManagementModule } from './churches/members-management/members-management.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './user/entity/user.entity';
-import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
-import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
-import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
@@ -38,6 +34,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ENV_VARIABLE_KEY } from './common/const/env.const';
 import { RequestInfoModel } from './request-info/entity/request-info.entity';
 import { RequestInfoModule } from './request-info/request-info.module';
+import { OfficerHistoryModel } from './member-history/entity/officer-history.entity';
+import { MinistryHistoryModel } from './member-history/entity/ministry-history.entity';
+import { GroupHistoryModel } from './member-history/entity/group-history.entity';
+import { MemberHistoryModule } from './member-history/member-history.module';
 
 @Module({
   imports: [
@@ -150,7 +150,7 @@ import { RequestInfoModule } from './request-info/request-info.module';
     RequestInfoModule,
     MembersModule,
     FamilyRelationModule,
-    MembersManagementModule,
+    MemberHistoryModule,
     ManagementModule,
 
     ChurchesDomainModule,

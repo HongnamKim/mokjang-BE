@@ -11,8 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { MemberOfficerService } from '../service/member-officer.service';
-import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { GetOfficerHistoryDto } from '../dto/officer/get-officer-history.dto';
@@ -26,6 +24,8 @@ import {
   ApiPatchOfficerHistory,
   ApiPostMemberOfficer,
 } from '../const/swagger/officer/controller.swagger';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members:Officer')
 @Controller('officers')

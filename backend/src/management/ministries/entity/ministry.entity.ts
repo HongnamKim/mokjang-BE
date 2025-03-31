@@ -10,8 +10,8 @@ import {
 import { MinistryGroupModel } from './ministry-group.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { MinistryHistoryModel } from '../../../churches/members-management/entity/ministry-history.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { MinistryHistoryModel } from '../../../member-history/entity/ministry-history.entity';
 
 @Entity()
 @Unique(['name', 'ministryGroupId'])

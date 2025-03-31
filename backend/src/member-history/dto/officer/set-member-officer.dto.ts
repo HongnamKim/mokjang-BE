@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { IsValidHistoryDate } from '../../decorator/is-valid-history-date.decorator';
 import { TransformStartDate } from '../../decorator/transform-start-date.decorator';
-import { TransformName } from '../../../decorator/transform-name';
+import { TransformName } from '../../../churches/decorator/transform-name';
 
 export class SetMemberOfficerDto {
   @ApiProperty({

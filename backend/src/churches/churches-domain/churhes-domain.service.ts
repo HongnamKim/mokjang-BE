@@ -9,9 +9,9 @@ import { CreateChurchDto } from '../dto/create-church.dto';
 import { IsNull, QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { ChurchModel } from '../entity/church.entity';
 import { UpdateChurchDto } from '../dto/update-church.dto';
-import { RequestLimitValidationType } from '../request-info/types/request-limit-validation-result';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from '../../user/const/user-role.enum';
+import { RequestLimitValidationType } from '../../request-info/types/request-limit-validation-result';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {

@@ -12,21 +12,21 @@ import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
 import { UpdateMinistryHistoryDto } from '../dto/ministry/update-ministry-history.dto';
 import {
-  IMINISTRIES_DOMAIN_SERVICE,
-  IMinistriesDomainService,
-} from '../../../management/ministries/ministries-domain/interface/ministries-domain.service.interface';
-import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from '../../churches-domain/interface/churches-domain.service.interface';
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IMINISTRIES_DOMAIN_SERVICE,
+  IMinistriesDomainService,
+} from '../../management/ministries/ministries-domain/interface/ministries-domain.service.interface';
 import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
-} from '../../../management/ministries/ministries-domain/interface/ministry-groups-domain.service.interface';
+} from '../../management/ministries/ministries-domain/interface/ministry-groups-domain.service.interface';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class MemberMinistryService {

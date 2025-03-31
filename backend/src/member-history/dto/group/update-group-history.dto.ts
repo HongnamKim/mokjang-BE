@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsOptional, ValidateIf } from 'class-validator';
+import { IsDate, IsOptional } from 'class-validator';
 import { IsValidHistoryDate } from '../../decorator/is-valid-history-date.decorator';
-import { TransformStartDate } from '../../decorator/transform-start-date.decorator';
 import { TransformEndDate } from '../../decorator/transform-end-date.decorator';
-import { IsAfterDate } from '../../../../management/decorator/is-after-date.decorator';
+import { TransformStartDate } from '../../decorator/transform-start-date.decorator';
+import { IsAfterDate } from '../../../management/decorator/is-after-date.decorator';
 
-export class UpdateOfficerHistoryDto {
+export class UpdateGroupHistoryDto {
   @ApiProperty({
-    description: '직분 시작 날짜',
+    description: '그룹 시작 날짜',
     default: new Date(),
     required: false,
   })
@@ -18,15 +18,14 @@ export class UpdateOfficerHistoryDto {
   startDate: Date;
 
   @ApiProperty({
-    description: '직분 종료 날짜',
+    description: '그룹 종료 날짜',
     default: new Date(),
     required: false,
   })
   @IsOptional()
   @IsDate()
-  @IsValidHistoryDate()
   @TransformEndDate()
-  @ValidateIf((o) => o.startDate)
+  @IsValidHistoryDate()
   @IsAfterDate('startDate')
   endDate: Date;
 }
