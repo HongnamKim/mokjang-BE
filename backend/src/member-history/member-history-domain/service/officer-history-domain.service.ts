@@ -238,7 +238,7 @@ export class OfficerHistoryDomainService
     qr?: QueryRunner,
   ) {
     if (officerHistory.endDate === null) {
-      throw new BadRequestException('종료되지 않은 이력을 삭제할 수 없습니다.');
+      throw new BadRequestException(OfficerHistoryException.CANNOT_DELETE);
     }
 
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
