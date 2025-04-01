@@ -21,7 +21,6 @@ import {
   ApiDeleteMemberMinistry,
   ApiDeleteMinistryHistory,
   ApiGetMemberMinistry,
-  ApiGetMinistryHistory,
   ApiPatchMinistryHistory,
   ApiPostMemberMinistry,
 } from '../const/swagger/ministry/controller.swagger';
@@ -41,7 +40,7 @@ export class MemberMinistryController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Query() dto: GetMinistryHistoryDto,
   ) {
-    return this.memberMinistryService.getCurrentMemberMinistry(
+    return this.memberMinistryService.getMinistryHistories(
       churchId,
       memberId,
       dto,
@@ -80,49 +79,10 @@ export class MemberMinistryController {
     return 'patch ministry';
   }
 
-  // 교인의 현재 사역 삭제 + 종료
-  // N:N relation 삭제
-  // 현재 ministryHistory 삭제 + 해당 MinistryHistoryModel 에 endDate 추가
-  @ApiDeleteMemberMinistry()
-  @Delete(':ministryId')
-  @UseInterceptors(TransactionInterceptor)
-  deleteMemberMinistry(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-    @Body() dto: EndMemberMinistryDto,
-    @QueryRunner() qr: QR,
-  ) {
-    //return 'delete Ministry';
-    return this.memberMinistryService.endMemberMinistry(
-      churchId,
-      memberId,
-      ministryId,
-      dto,
-      qr,
-    );
-  }
-
-  // 교인의 사역 이력 조회
-  @ApiGetMinistryHistory()
-  //@Get('history')
-  getMinistryHistory(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Query() dto: GetMinistryHistoryDto,
-  ) {
-    /*return this.memberMinistryService.getMinistryHistory(
-      churchId,
-      memberId,
-      dto,
-    );*/
-    //return 'get history';
-  }
-
   // 교인의 사역 이력 수정
   // 사역의 시작 날짜, 종료 날짜만 수정 가능
   @ApiPatchMinistryHistory()
-  @Patch('history/:ministryHistoryId')
+  @Patch(':ministryHistoryId')
   patchMinistryHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -138,9 +98,31 @@ export class MemberMinistryController {
     );
   }
 
+  // 교인의 현재 사역  종료
+  // N:N relation 삭제
+  // 해당 MinistryHistoryModel 에 endDate 추가
+  @ApiDeleteMemberMinistry()
+  @Patch(':ministryHistoryId/end')
+  @UseInterceptors(TransactionInterceptor)
+  deleteMemberMinistry(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Param('ministryHistoryId', ParseIntPipe) ministryHistoryId: number,
+    @Body() dto: EndMemberMinistryDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.memberMinistryService.endMemberMinistry(
+      churchId,
+      memberId,
+      ministryHistoryId,
+      dto,
+      qr,
+    );
+  }
+
   // 교인의 사역 이력 삭제
   @ApiDeleteMinistryHistory()
-  @Delete('history/:ministryHistoryId')
+  @Delete(':ministryHistoryId')
   deleteMinistryHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,

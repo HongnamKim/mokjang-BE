@@ -21,7 +21,7 @@ export class MinistryHistoryModel extends BaseModel {
   ministryId: number | null;
 
   @ManyToOne(() => MinistryModel, (ministry) => ministry.ministryHistory)
-  ministry: MinistryModel;
+  ministry: MinistryModel | null;
 
   @Column({ comment: '사역 종료일 시점의 사역 이름', nullable: true })
   ministrySnapShot: string;

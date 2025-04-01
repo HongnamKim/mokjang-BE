@@ -2,10 +2,9 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
+import { QueryRunner } from 'typeorm';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
 import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.dto';
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
@@ -27,13 +26,17 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/service/interface/members-domain.service.interface';
+import {
+  IMINISTRY_HISTORY_DOMAIN_SERVICE,
+  IMinistryHistoryDomainService,
+} from '../member-history-domain/service/interface/ministry-history-domain.service.interface';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { MinistryHistoryPaginationResult } from '../dto/ministry/ministry-history-pagination-result.dto';
+import { MinistryHistoryException } from '../const/exception/ministry-history.exception';
 
 @Injectable()
 export class MemberMinistryService {
   constructor(
-    @InjectRepository(MinistryHistoryModel)
-    private readonly ministryHistoryRepository: Repository<MinistryHistoryModel>,
-
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMINISTRIES_DOMAIN_SERVICE)
@@ -42,61 +45,41 @@ export class MemberMinistryService {
     private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
   ) {}
 
-  private getMinistryHistoryRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(MinistryHistoryModel)
-      : this.ministryHistoryRepository;
-  }
-
-  async getCurrentMemberMinistry(
+  async getMinistryHistories(
     churchId: number,
     memberId: number,
     dto: GetMinistryHistoryDto,
     qr?: QueryRunner,
   ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      qr,
+    );
 
-    const [ministryHistories, totalCount] = await Promise.all([
-      ministryHistoryRepository.find({
-        where: {
-          member: {
-            churchId,
-          },
-          memberId,
-        },
-        relations: {
-          ministry: {
-            ministryGroup: true,
-          },
-        },
-        order: {
-          endDate: dto.orderDirection,
-          startDate: dto.orderDirection,
-          id: dto.orderDirection,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      ministryHistoryRepository.count({
-        where: {
-          member: {
-            churchId,
-          },
-          memberId,
-        },
-      }),
-    ]);
+    const { ministryHistories, totalCount } =
+      await this.ministryHistoryDomainService.paginateMinistryHistory(
+        member,
+        dto,
+        qr,
+      );
 
-    const currentHistories = ministryHistories.filter(
+    const currentMinistries = ministryHistories.filter(
       (history) => !history.endDate,
     );
 
     await Promise.all(
-      currentHistories.map(async (history) => {
+      currentMinistries.map(async (history) => {
         const snapShot = await this.createCurrentMinistryGroupSnapShot(
-          churchId,
+          church,
           history,
           qr,
         );
@@ -106,31 +89,35 @@ export class MemberMinistryService {
       }),
     );
 
-    const result = ministryHistories.map((history) =>
+    const data = ministryHistories.map((history) =>
       history.endDate === null
         ? { ...history, ministry: null }
         : { ...history },
     );
 
-    return {
-      data: result,
+    const output: MinistryHistoryPaginationResult = {
+      data,
       totalCount,
-      count: result.length,
+      count: data.length,
       page: dto.page,
+      totalPage: Math.ceil(totalCount / dto.take),
     };
+
+    return output;
   }
 
   private async createCurrentMinistryGroupSnapShot(
-    churchId: number,
+    church: ChurchModel,
     ministryHistory: MinistryHistoryModel,
     qr?: QueryRunner,
   ) {
-    const ministryGroupId = ministryHistory.ministry.ministryGroupId;
+    if (!ministryHistory.ministry) {
+      throw new InternalServerErrorException(
+        MinistryHistoryException.RELATION_OPTIONS_ERROR,
+      );
+    }
 
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
+    const ministryGroupId = ministryHistory.ministry.ministryGroupId;
 
     const ministryParentGroups = ministryGroupId
       ? await this.ministryGroupsDomainService.findParentMinistryGroups(
@@ -153,26 +140,6 @@ export class MemberMinistryService {
     };
   }
 
-  private async isExistMinistryHistory(
-    churchId: number,
-    memberId: number,
-    ministryId: number,
-    qr?: QueryRunner,
-  ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
-
-    const ministryHistory = await ministryHistoryRepository.findOne({
-      where: {
-        member: { churchId },
-        memberId,
-        ministryId,
-        endDate: IsNull(),
-      },
-    });
-
-    return !!ministryHistory;
-  }
-
   async createMemberMinistry(
     churchId: number,
     memberId: number,
@@ -184,45 +151,55 @@ export class MemberMinistryService {
       qr,
     );
 
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
-
-    const [ministry, member, isExistMinistryHistory] = await Promise.all([
+    const [member, ministry] = await Promise.all([
+      this.membersDomainService.findMemberModelById(church, memberId, qr, {
+        ministries: true,
+      }),
       this.ministriesDomainService.findMinistryModelById(
         church,
         dto.ministryId,
         qr,
         { ministryGroup: true },
       ),
-      this.membersDomainService.findMemberModelById(church, memberId, qr, {
-        ministries: true,
-      }),
-      this.isExistMinistryHistory(churchId, memberId, dto.ministryId, qr),
     ]);
 
-    if (isExistMinistryHistory) {
-      throw new BadRequestException('이미 부여된 사역입니다.');
-    }
-
-    await Promise.all([
+    const [newMinistryHistory] = await Promise.all([
       // 사역 이력 생성
-      ministryHistoryRepository.save({
+      this.ministryHistoryDomainService.createMinistryHistory(
         member,
         ministry,
-        startDate: dto.startDate,
-      }),
+        dto.startDate,
+        qr,
+      ),
+
       // 인원 수 증가
       this.ministriesDomainService.incrementMembersCount(ministry, qr),
       // 사역 relation 추가
       this.membersDomainService.startMemberMinistry(member, ministry, qr),
     ]);
 
-    return this.membersDomainService.findMemberById(church, memberId, qr);
+    const snapShot = await this.createCurrentMinistryGroupSnapShot(
+      church,
+      newMinistryHistory,
+      qr,
+    );
+
+    newMinistryHistory.ministrySnapShot = snapShot.ministrySnapShot;
+    newMinistryHistory.ministryGroupSnapShot = snapShot.ministryGroupSnapShot;
+
+    const result = {
+      ...newMinistryHistory,
+      member: undefined,
+      ministry: null,
+    };
+
+    return result;
   }
 
   async endMemberMinistry(
     churchId: number,
     memberId: number,
-    ministryId: number,
+    ministryHistoryId: number,
     dto: EndMemberMinistryDto,
     qr: QueryRunner,
   ) {
@@ -231,7 +208,22 @@ export class MemberMinistryService {
       qr,
     );
 
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      qr,
+      { ministries: true },
+    );
+
+    const ministryHistory =
+      await this.ministryHistoryDomainService.findMinistryHistoryModelById(
+        member,
+        ministryHistoryId,
+        qr,
+        { ministry: { ministryGroup: true } },
+      );
+
+    /*const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
 
     const ministryHistory = await ministryHistoryRepository.findOne({
       where: {
@@ -253,6 +245,10 @@ export class MemberMinistryService {
 
     if (!ministryHistory) {
       throw new NotFoundException('부여되지 않은 사역을 삭제할 수 없습니다.');
+    }*/
+
+    if (!ministryHistory.ministry) {
+      throw new InternalServerErrorException('사역 정보 불러오기 실패');
     }
 
     if (ministryHistory.startDate > dto.endDate) {
@@ -260,25 +256,22 @@ export class MemberMinistryService {
     }
 
     const snapShot = await this.createCurrentMinistryGroupSnapShot(
-      churchId,
+      church,
       ministryHistory,
       qr,
     );
 
     await Promise.all([
       // 사역 이력 종료 날짜 추가
-      ministryHistoryRepository.update(
-        { memberId, ministryId },
-        {
-          ministryId: null,
-          ministrySnapShot: snapShot.ministrySnapShot, //ministry.name,
-          ministryGroupSnapShot: snapShot.ministryGroupSnapShot,
-          endDate: dto.endDate,
-        },
+      this.ministryHistoryDomainService.endMinistryHistory(
+        ministryHistory,
+        snapShot,
+        dto.endDate,
+        qr,
       ),
       // 교인 - 사역 관계 해제
       this.membersDomainService.endMemberMinistry(
-        ministryHistory.member,
+        member,
         ministryHistory.ministry,
         qr,
       ),
@@ -289,38 +282,11 @@ export class MemberMinistryService {
       ),
     ]);
 
-    return this.membersDomainService.findMemberById(church, memberId, qr);
-  }
-
-  private isValidUpdateDate(
-    targetHistory: MinistryHistoryModel,
-    dto: UpdateMinistryHistoryDto,
-  ) {
-    if (targetHistory.endDate === null && dto.endDate) {
-      throw new BadRequestException(
-        '종료되지 않은 사역의 종료 날짜를 수정할 수 없습니다.',
-      );
-    }
-
-    // 시작일 변경하는 경우 --> 새로운 시작일이 종료일보다 앞에 있어야함
-    // 종료일 변경하는 경우 --> 새로운 종료일이 시작일보다 뒤에 있어야함
-    // 시작일,종료일 변경하는 경우 --> DTO 에서 검증
-
-    if (dto.startDate && !dto.endDate) {
-      if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
-        throw new BadRequestException(
-          '이력 시작일은 종료일보다 늦을 수 없습니다.',
-        );
-      }
-    }
-
-    if (dto.endDate && !dto.startDate) {
-      if (dto.endDate < targetHistory.startDate) {
-        throw new BadRequestException(
-          '이력 종료일은 시작일보다 빠를 수 없습니다.',
-        );
-      }
-    }
+    return this.ministryHistoryDomainService.findMinistryHistoryModelById(
+      member,
+      ministryHistoryId,
+      qr,
+    );
   }
 
   async updateMinistryHistory(
@@ -330,36 +296,56 @@ export class MemberMinistryService {
     dto: UpdateMinistryHistoryDto,
     qr?: QueryRunner,
   ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
-
-    const targetHistory = await ministryHistoryRepository.findOne({
-      where: {
-        member: {
-          churchId,
-        },
-        memberId,
-        id: ministryHistoryId,
-      },
-    });
-
-    if (!targetHistory) {
-      throw new NotFoundException('해당 사역 이력을 찾을 수 없습니다.');
-    }
-
-    // 날짜 검증
-    this.isValidUpdateDate(targetHistory, dto);
-
-    await ministryHistoryRepository.update(
-      { id: ministryHistoryId },
-      {
-        startDate: dto.startDate,
-        endDate: dto.endDate,
-      },
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      qr,
     );
 
-    return ministryHistoryRepository.findOne({
-      where: { id: ministryHistoryId },
-    });
+    const targetHistory =
+      await this.ministryHistoryDomainService.findMinistryHistoryModelById(
+        member,
+        ministryHistoryId,
+        qr,
+      );
+
+    // 날짜 검증
+    await this.ministryHistoryDomainService.updateMinistryHistory(
+      targetHistory,
+      dto,
+      qr,
+    );
+
+    const updatedHistory =
+      await this.ministryHistoryDomainService.findMinistryHistoryModelById(
+        member,
+        ministryHistoryId,
+        qr,
+        {
+          ministry: {
+            ministryGroup: true,
+          },
+        },
+      );
+
+    if (updatedHistory.endDate) {
+      return updatedHistory;
+    } else {
+      const snapShot = await this.createCurrentMinistryGroupSnapShot(
+        church,
+        updatedHistory,
+        qr,
+      );
+
+      updatedHistory.ministrySnapShot = snapShot.ministrySnapShot;
+      updatedHistory.ministryGroupSnapShot = snapShot.ministryGroupSnapShot;
+
+      return { ...updatedHistory, ministry: null };
+    }
   }
 
   async deleteMinistryHistory(
@@ -368,27 +354,27 @@ export class MemberMinistryService {
     ministryHistoryId: number,
     qr?: QueryRunner,
   ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      qr,
+    );
 
-    const targetHistory = await ministryHistoryRepository.findOne({
-      where: {
-        id: ministryHistoryId,
-        member: {
-          churchId,
-        },
-        memberId,
-      },
-    });
+    const targetHistory =
+      await this.ministryHistoryDomainService.findMinistryHistoryModelById(
+        member,
+        ministryHistoryId,
+        qr,
+      );
 
-    if (!targetHistory) {
-      throw new NotFoundException('해당 사역 이력을 찾을 수 없습니다.');
-    }
-
-    if (targetHistory.endDate === null) {
-      throw new BadRequestException('종료되지 않은 이력을 삭제할 수 없습니다.');
-    }
-
-    await ministryHistoryRepository.softDelete(targetHistory.id);
+    await this.ministryHistoryDomainService.deleteMinistryHistory(
+      targetHistory,
+      qr,
+    );
 
     return `ministryHistoryId ${ministryHistoryId} deleted`;
   }
