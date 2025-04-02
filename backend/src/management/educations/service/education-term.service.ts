@@ -3,7 +3,6 @@ import { QueryRunner } from 'typeorm';
 import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
 import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
 import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
-import { MembersService } from '../../../churches/members/service/members.service';
 import {
   IEDUCATION_TERM_DOMAIN_SERVICE,
   IEducationTermDomainService,
@@ -24,11 +23,16 @@ import {
   ISESSION_ATTENDANCE_DOMAIN_SERVICE,
   ISessionAttendanceDomainService,
 } from './education-domain/interface/session-attendance-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class EducationTermService {
   constructor(
-    private readonly membersService: MembersService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -108,10 +112,9 @@ export class EducationTermService {
     );
 
     const instructor = dto.instructorId
-      ? await this.membersService.getMemberModelById(
-          church.id,
+      ? await this.membersDomainService.findMemberModelById(
+          church,
           dto.instructorId,
-          {},
           qr,
         )
       : null;
@@ -188,10 +191,9 @@ export class EducationTermService {
         { educationEnrollments: true, educationSessions: true },
       );
     const newInstructor = dto.instructorId
-      ? await this.membersService.getMemberModelById(
-          churchId,
+      ? await this.membersDomainService.findMemberModelById(
+          church,
           dto.instructorId,
-          {},
           qr,
         )
       : null;

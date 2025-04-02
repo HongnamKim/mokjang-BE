@@ -3,7 +3,7 @@ import { EducationModel } from './education.entity';
 import { EducationSessionModel } from './education-session.entity';
 import { EducationEnrollmentModel } from './education-enrollment.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { MemberModel } from '../../../churches/members/entity/member.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Entity()
 export class EducationTermModel extends BaseModel {

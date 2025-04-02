@@ -32,9 +32,9 @@ export class TokenService {
     );
 
     return this.jwtService.sign(payload, {
-      secret: this.configService.getOrThrow<string>(
+      /*secret: this.configService.getOrThrow<string>(
         ENV_VARIABLE_KEY.JWT_SECRET,
-      ),
+      ),*/
       expiresIn,
     });
   }
@@ -61,9 +61,9 @@ export class TokenService {
   verifyToken(token: string) {
     try {
       return this.jwtService.verify(token, {
-        secret: this.configService.getOrThrow<string>(
+        /*secret: this.configService.getOrThrow<string>(
           ENV_VARIABLE_KEY.JWT_SECRET,
-        ),
+        ),*/
       });
     } catch (error) {
       if (error instanceof TokenExpiredError) {

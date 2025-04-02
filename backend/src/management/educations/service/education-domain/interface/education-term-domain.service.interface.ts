@@ -9,11 +9,11 @@ import {
 } from 'typeorm';
 import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
 import { EducationTermModel } from '../../../entity/education-term.entity';
-import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
 import { EducationStatus } from '../../../const/education-status.enum';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',

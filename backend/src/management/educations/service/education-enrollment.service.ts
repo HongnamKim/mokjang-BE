@@ -3,7 +3,6 @@ import { QueryRunner } from 'typeorm';
 import { GetEducationEnrollmentDto } from '../dto/enrollments/get-education-enrollment.dto';
 import { CreateEducationEnrollmentDto } from '../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../dto/enrollments/update-education-enrollment.dto';
-import { MembersService } from '../../../churches/members/service/members.service';
 import {
   IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
   IEducationEnrollmentsDomainService,
@@ -24,11 +23,16 @@ import {
   ISESSION_ATTENDANCE_DOMAIN_SERVICE,
   ISessionAttendanceDomainService,
 } from './education-domain/interface/session-attendance-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class EducationEnrollmentService {
   constructor(
-    private readonly membersService: MembersService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -91,10 +95,9 @@ export class EducationEnrollmentService {
       qr,
     );
 
-    const member = await this.membersService.getMemberModelById(
-      churchId,
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
       dto.memberId,
-      {},
       qr,
     );
 
@@ -246,22 +249,26 @@ export class EducationEnrollmentService {
       );
 
     const member = memberDeleted
-      ? await this.membersService.getDeleteMemberModelById(
-          churchId,
+      ? await this.membersDomainService.findDeleteMemberModelById(
+          church,
           targetEnrollment.memberId,
           { educations: true },
           qr,
         )
-      : await this.membersService.getMemberModelById(
-          churchId,
+      : await this.membersDomainService.findMemberModelById(
+          church,
           targetEnrollment.memberId,
-          { educations: true },
           qr,
+          { educations: true },
         );
 
     await Promise.all([
       // 교인 - 교육 관계 해제
-      this.membersService.endMemberEducation(member, educationEnrollmentId, qr),
+      this.membersDomainService.endMemberEducation(
+        member,
+        educationEnrollmentId,
+        qr,
+      ),
       // 등록 인원 감소
       this.educationTermDomainService.decrementEnrollmentCount(
         educationTerm,

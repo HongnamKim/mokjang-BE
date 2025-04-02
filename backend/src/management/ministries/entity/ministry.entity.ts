@@ -10,8 +10,8 @@ import {
 import { MinistryGroupModel } from './ministry-group.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { MemberModel } from '../../../churches/members/entity/member.entity';
-import { MinistryHistoryModel } from '../../../churches/members-management/entity/ministry-history.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { MinistryHistoryModel } from '../../../member-history/entity/ministry-history.entity';
 
 @Entity()
 @Unique(['name', 'ministryGroupId'])
@@ -47,16 +47,4 @@ export class MinistryModel extends BaseModel {
     (ministryHistory) => ministryHistory.ministry,
   )
   ministryHistory: MinistryModel[];
-
-  /*@BeforeRemove()
-  @BeforeSoftRemove()
-  preventIfHasMember() {
-    if (this.members.length > 0) {
-      const memberNames = this.members.map((m) => m.name).join(', ');
-
-      throw new ConflictException(
-        `해당 사역을 가진 교인이 존재합니다.\n${memberNames}`,
-      );
-    }
-  }*/
 }

@@ -48,6 +48,11 @@ export class UserController {
     @Body() dto: LinkMemberToUserDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.userService.linkMemberToUser(accessToken.id, dto.memberId, qr);
+    return this.userService.linkMemberToUser(
+      accessToken.id,
+      dto.churchId,
+      dto.memberId,
+      qr,
+    );
   }
 }

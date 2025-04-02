@@ -1,10 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
 import { ENV_VARIABLE_KEY } from '../const/env.const';
 import { COOLSMS_CLIENT } from '../provider/coolsms.provider';
 import { ICoolSMS } from '../provider/coolsms.interface';
-//import { MESSAGE_SERVICE } from '../const/env.const';
 
 @Injectable()
 export class MessageService {
