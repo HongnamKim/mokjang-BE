@@ -35,7 +35,7 @@ abstract class JwtTokenGuard implements CanActivate {
       throw new UnauthorizedException(AuthException.TOKEN_REQUIRED);
     }
 
-    return Buffer.from(rawToken, 'base64').toString('utf-8');
+    return rawToken;
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

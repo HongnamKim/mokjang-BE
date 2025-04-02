@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { CreateChurchDto } from './dto/create-church.dto';
 import { JwtAccessPayload } from '../auth/type/jwt';
@@ -11,6 +11,8 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from '../user/user-domain/interface/user-domain.service.interface';
+import { UserRole } from '../user/const/user-role.enum';
+import { ChurchException } from './const/exception/church.exception';
 
 @Injectable()
 export class ChurchesService {
@@ -30,22 +32,41 @@ export class ChurchesService {
   }
 
   async createChurch(
-    accessToken: JwtAccessPayload,
+    accessPayload: JwtAccessPayload,
     dto: CreateChurchDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
-    const user = await this.userDomainService.findUserById(accessToken.id, qr);
+    const user = await this.userDomainService.findUserById(
+      accessPayload.id,
+      qr,
+    );
 
-    this.userDomainService.isAbleToCreateChurch(user);
+    if (user.role !== UserRole.none) {
+      throw new ForbiddenException(ChurchException.NOT_ALLOWED_TO_CREATE);
+    }
 
-    return this.churchesDomainService.createChurch(user, dto, qr);
+    const newChurch = await this.churchesDomainService.createChurch(dto, qr);
+
+    await this.userDomainService.signInChurch(
+      user,
+      newChurch,
+      UserRole.mainAdmin,
+      qr,
+    );
+
+    return newChurch;
   }
 
   async updateChurch(churchId: number, dto: UpdateChurchDto) {
-    return this.churchesDomainService.updateChurch(churchId, dto);
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    return this.churchesDomainService.updateChurch(church, dto);
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {
-    return this.churchesDomainService.deleteChurchById(id, qr);
+    const church = await this.churchesDomainService.findChurchModelById(id, qr);
+
+    return this.churchesDomainService.deleteChurch(church, qr);
   }
 }

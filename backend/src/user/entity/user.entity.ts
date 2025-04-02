@@ -33,7 +33,7 @@ export class UserModel extends BaseModel {
   privacyPolicyAgreed: boolean;
 
   @ManyToOne(() => ChurchModel, (church) => church.users)
-  adminChurch: ChurchModel;
+  church: ChurchModel;
 
   @Column({ enum: UserRole, default: UserRole.none })
   role: UserRole;

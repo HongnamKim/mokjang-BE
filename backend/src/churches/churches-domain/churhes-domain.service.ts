@@ -1,17 +1,24 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { IChurchesDomainService } from './interface/churches-domain.service.interface';
-import { UserModel } from '../../user/entity/user.entity';
 import { CreateChurchDto } from '../dto/create-church.dto';
-import { IsNull, QueryRunner, Repository, UpdateResult } from 'typeorm';
+import {
+  FindOptionsRelations,
+  IsNull,
+  QueryRunner,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { ChurchModel } from '../entity/church.entity';
 import { UpdateChurchDto } from '../dto/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from '../../user/const/user-role.enum';
 import { RequestLimitValidationType } from '../../request-info/types/request-limit-validation-result';
+import { ChurchException } from '../const/exception/church.exception';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -24,16 +31,15 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
   }
 
-  findAllChurches(): Promise<ChurchModel[]> {
+  async findAllChurches(): Promise<ChurchModel[]> {
     const churchRepository = this.getChurchRepository();
 
     return churchRepository.find();
   }
 
   async createChurch(
-    user: UserModel,
     dto: CreateChurchDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository(qr);
 
@@ -45,31 +51,29 @@ export class ChurchesDomainService implements IChurchesDomainService {
     });
 
     if (isDuplicated) {
-      throw new BadRequestException('이미 존재하는 교회입니다.');
+      throw new ConflictException(ChurchException.ALREADY_EXIST);
     }
 
     const newChurch = churchRepository.create({
       ...dto,
     });
 
-    newChurch.users.push(user);
-
     return churchRepository.save(newChurch);
   }
 
-  async deleteChurchById(id: number, qr?: QueryRunner): Promise<string> {
+  async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
     const churchRepository = this.getChurchRepository(qr);
 
     const result = await churchRepository.softDelete({
-      id,
+      id: church.id,
       deletedAt: IsNull(),
     });
 
     if (result.affected === 0) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+      throw new InternalServerErrorException(ChurchException.DELETE_ERROR);
     }
 
-    return `churchId: ${id} deleted`;
+    return `churchId: ${church.id} deleted`;
   }
 
   async findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel> {
@@ -80,12 +84,12 @@ export class ChurchesDomainService implements IChurchesDomainService {
         id,
       },
       relations: {
-        users: true,
+        //users: true,
       },
     });
 
     if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+      throw new NotFoundException(ChurchException.NOT_FOUND);
     }
 
     return church;
@@ -94,6 +98,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async findChurchModelById(
     id: number,
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
   ): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository(qr);
 
@@ -101,10 +106,11 @@ export class ChurchesDomainService implements IChurchesDomainService {
       where: {
         id,
       },
+      relations: relationOptions,
     });
 
     if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+      throw new NotFoundException(ChurchException.NOT_FOUND);
     }
 
     return church;
@@ -119,14 +125,14 @@ export class ChurchesDomainService implements IChurchesDomainService {
   }
 
   async updateChurch(
-    churchId: number,
+    church: ChurchModel,
     dto: UpdateChurchDto,
   ): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository();
 
     const result = await churchRepository.update(
       {
-        id: churchId,
+        id: church.id,
       },
       {
         ...dto,
@@ -134,10 +140,10 @@ export class ChurchesDomainService implements IChurchesDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException('');
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
     }
 
-    return this.findChurchById(churchId);
+    return this.findChurchById(church.id);
   }
 
   updateRequestAttempts(
@@ -177,7 +183,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     });
 
     if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+      throw new NotFoundException(ChurchException.NOT_FOUND);
     }
 
     return church.users
@@ -201,7 +207,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     });
 
     if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
+      throw new NotFoundException(ChurchException.NOT_FOUND);
     }
 
     return church.users

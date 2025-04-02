@@ -25,6 +25,9 @@ export class UserService {
     private readonly membersDomainService: IMembersDomainService,
 
     /*@InjectRepository(MemberModel)
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @InjectRepository(MemberModel)
     private readonly memberRepository: Repository<MemberModel>,
     @InjectRepository(ChurchModel)
     private readonly churchRepository: Repository<ChurchModel>,*/
@@ -45,7 +48,7 @@ export class UserService {
   async signInChurch(userId: number, churchId: number, qr?: QueryRunner) {
     const user = await this.userDomainService.findUserById(userId);
 
-    if (user.adminChurch) {
+    if (user.church) {
       throw new BadRequestException('이미 소속된 교회가 있습니다.');
     }
 
@@ -63,15 +66,20 @@ export class UserService {
       throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
     }*/
 
-    // 사용자 정보 업데이트
+    /*// 사용자 정보 업데이트
     await this.userDomainService.updateUser(
       user,
       { role: UserRole.member },
       qr,
-    );
+    );*/
 
     // 사용자 - 교회 관계 설정
-    await this.userDomainService.signInChurch(user, church, qr);
+    await this.userDomainService.signInChurch(
+      user,
+      church,
+      UserRole.member,
+      qr,
+    );
   }
 
   async linkMemberToUser(
@@ -95,7 +103,7 @@ export class UserService {
 
     /*const member = await this.getMemberRepository(qr).findOne({
       where: {
-        churchId: user.adminChurch.id,
+        churchId: user.church.id,
         id: memberId,
       },
     });

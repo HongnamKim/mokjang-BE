@@ -15,10 +15,6 @@ export class AuthCookieHelper {
   private readonly REFRESH_TOKEN: 'refreshToken' = 'refreshToken';
   private readonly TEMPORAL_TOKEN: 'temporal' = 'temporal';
 
-  private encodeBase64(token: string) {
-    return Buffer.from(token).toString('base64');
-  }
-
   public setTokenCookie(
     loginResult:
       | { accessToken: string; refreshToken: string }
@@ -27,34 +23,27 @@ export class AuthCookieHelper {
     res: Response,
   ) {
     if (this.ACCESS_TOKEN in loginResult && this.REFRESH_TOKEN in loginResult) {
-      const encodedAccessToken = this.encodeBase64(loginResult.accessToken);
-      const encodedRefreshToken = this.encodeBase64(loginResult.refreshToken);
-
       res.cookie(
         this.configService.getOrThrow(ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY),
-        encodedAccessToken,
+        loginResult.accessToken,
         TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.ACCESS),
       );
 
       res.cookie(
         this.configService.getOrThrow(ENV_VARIABLE_KEY.REFRESH_TOKEN_KEY),
-        encodedRefreshToken,
+        loginResult.refreshToken,
         TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.REFRESH),
       );
     } else if (this.ACCESS_TOKEN in loginResult) {
-      const encodedAccessToken = this.encodeBase64(loginResult.accessToken);
-
       res.cookie(
         this.configService.getOrThrow(ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY),
-        encodedAccessToken,
+        loginResult.accessToken,
         TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.ACCESS),
       );
     } else if (this.TEMPORAL_TOKEN in loginResult) {
-      const encodedTemporalToken = this.encodeBase64(loginResult.temporal);
-
       res.cookie(
         this.configService.getOrThrow(ENV_VARIABLE_KEY.TEMPORAL_TOKEN_KEY),
-        encodedTemporalToken,
+        loginResult.temporal,
         TOKEN_COOKIE_OPTIONS(this.NODE_ENV, AuthType.TEMP),
       );
     }
