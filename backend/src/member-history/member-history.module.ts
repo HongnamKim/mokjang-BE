@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { OfficerHistoryService } from './service/officer-history.service';
 import { OfficerHistoryController } from './controller/officer-history.controller';
 import { RouterModule } from '@nestjs/core';
 import { MinistryHistoryService } from './service/ministry-history.service';
 import { EducationHistoryController } from './controller/education-history.controller';
 import { MemberGroupController } from './controller/member-group.controller';
-import { GroupHistoryModel } from './entity/group-history.entity';
-import { MemberGroupService } from './service/member-group.service';
+import { GroupHistoryService } from './service/group-history.service';
 import { EducationHistoryService } from './service/education-history.service';
 import { MinistryHistoryController } from './controller/ministry-history.controller';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
@@ -25,12 +23,6 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
         module: MemberHistoryModule,
       },
     ]),
-    TypeOrmModule.forFeature([
-      GroupHistoryModel,
-      //EducationEnrollmentModel,
-      //MinistryHistoryModel,
-      //OfficerHistoryModel,
-    ]),
     MembersDomainModule,
     GroupsDomainModule,
     OfficersDomainModule,
@@ -44,7 +36,7 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
     OfficerHistoryService,
     MinistryHistoryService,
     EducationHistoryService,
-    MemberGroupService,
+    GroupHistoryService,
   ],
   controllers: [
     OfficerHistoryController,

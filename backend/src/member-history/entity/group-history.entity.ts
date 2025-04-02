@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
@@ -22,6 +22,7 @@ export class GroupHistoryModel extends BaseModel {
   groupId: number | null;
 
   @ManyToOne(() => GroupModel, (group) => group.history)
+  @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 
   @Index()
@@ -33,6 +34,7 @@ export class GroupHistoryModel extends BaseModel {
   groupRoleId: number | null;
 
   @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.history)
+  @JoinColumn({ name: 'groupRoleId' })
   groupRole: GroupRoleModel;
 
   @Column({

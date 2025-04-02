@@ -64,7 +64,8 @@ export class OfficerHistoryController {
   }
 
   @ApiEndMemberOfficer()
-  @Delete()
+  //@Delete()
+  @Patch('end')
   @UseInterceptors(TransactionInterceptor)
   endMemberOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
