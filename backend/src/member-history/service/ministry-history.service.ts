@@ -221,36 +221,14 @@ export class MinistryHistoryService {
         { ministry: { ministryGroup: true } },
       );
 
-    /*const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
-
-    const ministryHistory = await ministryHistoryRepository.findOne({
-      where: {
-        member: {
-          churchId,
-        },
-        memberId,
-        ministryId,
-      },
-      relations: {
-        member: {
-          ministries: true,
-        },
-        ministry: {
-          ministryGroup: true,
-        },
-      },
-    });
-
-    if (!ministryHistory) {
-      throw new NotFoundException('부여되지 않은 사역을 삭제할 수 없습니다.');
-    }*/
-
     if (!ministryHistory.ministry) {
-      throw new InternalServerErrorException('사역 정보 불러오기 실패');
+      throw new InternalServerErrorException(
+        MinistryHistoryException.RELATION_OPTIONS_ERROR,
+      );
     }
 
     if (ministryHistory.startDate > dto.endDate) {
-      throw new BadRequestException('사역 종료일이 시작일을 앞설 수 없습니다.');
+      throw new BadRequestException(MinistryHistoryException.INVALID_END_DATE);
     }
 
     const snapShot = await this.createCurrentMinistryGroupSnapShot(

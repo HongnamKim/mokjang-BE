@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -13,7 +14,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { GetGroupHistoryDto } from '../dto/group/get-group-history.dto';
-import { MemberGroupService } from '../service/member-group.service';
+import { GroupHistoryService } from '../service/group-history.service';
 import { AddMemberToGroupDto } from '../dto/group/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/group/update-group-history.dto';
 import {
@@ -30,7 +31,7 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 @ApiTags('Churches:Members:Groups')
 @Controller('groups')
 export class MemberGroupController {
-  constructor(private readonly groupHistoryService: MemberGroupService) {}
+  constructor(private readonly groupHistoryService: GroupHistoryService) {}
 
   @ApiGetMemberGroupHistory()
   @Get()
@@ -64,6 +65,7 @@ export class MemberGroupController {
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '교인의 그룹 내 역할 수정',
     description:
       '<p><b>완성되지 않은 엔드포인트</b></p>' +
@@ -72,10 +74,12 @@ export class MemberGroupController {
       '<p>이력을 분리해야하는지</p>',
   })
   @Patch()
-  patchMemberGroupRole() {}
+  patchMemberGroupRole() {
+    throw new GoneException('사용되지 않는 엔드포인트');
+  }
 
   @ApiEndMemberGroup()
-  @Delete()
+  @Patch('end')
   @UseInterceptors(TransactionInterceptor)
   endMemberGroup(
     @Param('churchId', ParseIntPipe) churchId: number,

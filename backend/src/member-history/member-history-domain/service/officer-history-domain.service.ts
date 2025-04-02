@@ -88,7 +88,8 @@ export class OfficerHistoryDomainService
 
     if (!history.officer) {
       throw new InternalServerErrorException(
-        '현재 직분 이력의 직분 정보를 가져올 수 없음',
+        OfficerHistoryException.RELATION_OPTIONS_ERROR,
+        //'현재 직분 이력의 직분 정보를 가져올 수 없음',
       );
     }
 
@@ -142,12 +143,16 @@ export class OfficerHistoryDomainService
   ) {
     if (!officerHistory.officer) {
       throw new InternalServerErrorException(
-        '직분 이력의 직분 정보를 가져올 수 없음',
+        OfficerHistoryException.RELATION_OPTIONS_ERROR,
+        //'직분 이력의 직분 정보를 가져올 수 없음',
       );
     }
 
     if (officerHistory.startDate > endDate) {
-      throw new BadRequestException('직분 종료일이 시작일을 앞설 수 없습니다.');
+      throw new BadRequestException(
+        OfficerHistoryException.INVALID_END_DATE,
+        //'직분 종료일이 시작일을 앞설 수 없습니다.'
+      );
     }
 
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);

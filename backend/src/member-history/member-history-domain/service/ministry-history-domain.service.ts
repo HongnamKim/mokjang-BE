@@ -169,7 +169,8 @@ export class MinistryHistoryDomainService
   ) {
     if (targetHistory.endDate === null && dto.endDate) {
       throw new BadRequestException(
-        '종료되지 않은 사역의 종료 날짜를 수정할 수 없습니다.',
+        MinistryHistoryException.CANNOT_UPDATE_END_DATE,
+        //'종료되지 않은 사역의 종료 날짜를 수정할 수 없습니다.',
       );
     }
 
@@ -180,7 +181,8 @@ export class MinistryHistoryDomainService
     if (dto.startDate && !dto.endDate) {
       if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
         throw new BadRequestException(
-          '이력 시작일은 종료일보다 늦을 수 없습니다.',
+          MinistryHistoryException.INVALID_START_DATE,
+          //'이력 시작일은 종료일보다 늦을 수 없습니다.',
         );
       }
     }
@@ -188,7 +190,8 @@ export class MinistryHistoryDomainService
     if (dto.endDate && !dto.startDate) {
       if (dto.endDate < targetHistory.startDate) {
         throw new BadRequestException(
-          '이력 종료일은 시작일보다 빠를 수 없습니다.',
+          MinistryHistoryException.INVALID_END_DATE,
+          //'이력 종료일은 시작일보다 빠를 수 없습니다.',
         );
       }
     }

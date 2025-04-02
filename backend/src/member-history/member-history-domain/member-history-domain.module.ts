@@ -9,6 +9,9 @@ import { MinistryHistoryModel } from '../entity/ministry-history.entity';
 import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
 import { IEDUCATION_HISTORY_DOMAIN_SERVICE } from './service/interface/education-history-domain.service.interface';
 import { EducationHistoryDomainService } from './service/education-history-domain.service';
+import { GroupHistoryModel } from '../entity/group-history.entity';
+import { IGROUP_HISTORY_DOMAIN_SERVICE } from './service/interface/group-history-domain.service.interface';
+import { GroupHistoryDomainService } from './service/group-history-domain.service';
 
 @Module({
   imports: [
@@ -16,6 +19,7 @@ import { EducationHistoryDomainService } from './service/education-history-domai
       OfficerHistoryModel,
       MinistryHistoryModel,
       EducationEnrollmentModel,
+      GroupHistoryModel,
     ]),
   ],
   providers: [
@@ -31,11 +35,16 @@ import { EducationHistoryDomainService } from './service/education-history-domai
       provide: IEDUCATION_HISTORY_DOMAIN_SERVICE,
       useClass: EducationHistoryDomainService,
     },
+    {
+      provide: IGROUP_HISTORY_DOMAIN_SERVICE,
+      useClass: GroupHistoryDomainService,
+    },
   ],
   exports: [
     IOFFICER_HISTORY_DOMAIN_SERVICE,
     IMINISTRY_HISTORY_DOMAIN_SERVICE,
     IEDUCATION_HISTORY_DOMAIN_SERVICE,
+    IGROUP_HISTORY_DOMAIN_SERVICE,
   ],
 })
 export class MemberHistoryDomainModule {}
