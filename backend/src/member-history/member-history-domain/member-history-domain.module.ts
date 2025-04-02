@@ -6,10 +6,17 @@ import { OfficerHistoryModel } from '../entity/officer-history.entity';
 import { IMINISTRY_HISTORY_DOMAIN_SERVICE } from './service/interface/ministry-history-domain.service.interface';
 import { MinistryHistoryDomainService } from './service/ministry-history-domain.service';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
+import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
+import { IEDUCATION_HISTORY_DOMAIN_SERVICE } from './service/interface/education-history-domain.service.interface';
+import { EducationHistoryDomainService } from './service/education-history-domain.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OfficerHistoryModel, MinistryHistoryModel]),
+    TypeOrmModule.forFeature([
+      OfficerHistoryModel,
+      MinistryHistoryModel,
+      EducationEnrollmentModel,
+    ]),
   ],
   providers: [
     {
@@ -20,7 +27,15 @@ import { MinistryHistoryModel } from '../entity/ministry-history.entity';
       provide: IMINISTRY_HISTORY_DOMAIN_SERVICE,
       useClass: MinistryHistoryDomainService,
     },
+    {
+      provide: IEDUCATION_HISTORY_DOMAIN_SERVICE,
+      useClass: EducationHistoryDomainService,
+    },
   ],
-  exports: [IOFFICER_HISTORY_DOMAIN_SERVICE, IMINISTRY_HISTORY_DOMAIN_SERVICE],
+  exports: [
+    IOFFICER_HISTORY_DOMAIN_SERVICE,
+    IMINISTRY_HISTORY_DOMAIN_SERVICE,
+    IEDUCATION_HISTORY_DOMAIN_SERVICE,
+  ],
 })
 export class MemberHistoryDomainModule {}

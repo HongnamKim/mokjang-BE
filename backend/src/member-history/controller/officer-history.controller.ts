@@ -10,7 +10,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { MemberOfficerService } from '../service/member-officer.service';
+import { OfficerHistoryService } from '../service/officer-history.service';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { GetOfficerHistoryDto } from '../dto/officer/get-officer-history.dto';
@@ -29,8 +29,8 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members:Officer')
 @Controller('officers')
-export class MemberOfficerController {
-  constructor(private readonly memberOfficerService: MemberOfficerService) {}
+export class OfficerHistoryController {
+  constructor(private readonly officerHistoryService: OfficerHistoryService) {}
 
   @ApiGetMemberOfficerHistory()
   @Get()
@@ -39,7 +39,7 @@ export class MemberOfficerController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Query() dto: GetOfficerHistoryDto,
   ) {
-    return this.memberOfficerService.getMemberOfficerHistory(
+    return this.officerHistoryService.getMemberOfficerHistory(
       churchId,
       memberId,
       dto,
@@ -55,7 +55,7 @@ export class MemberOfficerController {
     @Body() dto: SetMemberOfficerDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberOfficerService.setMemberOfficer(
+    return this.officerHistoryService.setMemberOfficer(
       churchId,
       memberId,
       dto,
@@ -72,7 +72,7 @@ export class MemberOfficerController {
     @Body() dto: EndMemberOfficeDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberOfficerService.endMemberOfficer(
+    return this.officerHistoryService.endMemberOfficer(
       churchId,
       memberId,
       dto,
@@ -90,7 +90,7 @@ export class MemberOfficerController {
     @Body() dto: UpdateOfficerHistoryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberOfficerService.updateOfficerHistory(
+    return this.officerHistoryService.updateOfficerHistory(
       churchId,
       memberId,
       officerHistoryId,
@@ -106,7 +106,7 @@ export class MemberOfficerController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Param('officerHistoryId', ParseIntPipe) officerHistoryId: number,
   ) {
-    return this.memberOfficerService.deleteOfficerHistory(
+    return this.officerHistoryService.deleteOfficerHistory(
       churchId,
       memberId,
       officerHistoryId,

@@ -24,7 +24,7 @@ import { OfficerHistoryPaginationResultDto } from '../dto/officer/officer-histor
 import { OfficerHistoryException } from '../const/exception/officer-history.exception';
 
 @Injectable()
-export class MemberOfficerService {
+export class OfficerHistoryService {
   constructor(
     @Inject(IOFFICERS_DOMAIN_SERVICE)
     private readonly officersDomainService: IOfficersDomainService,
@@ -189,39 +189,6 @@ export class MemberOfficerService {
     );
   }
 
-  /*private isValidUpdateDate(
-    targetHistory: OfficerHistoryModel,
-    dto: UpdateOfficerHistoryDto,
-  ) {
-    // 종료되지 않은 이력의 종료 날짜 수정
-    if (targetHistory.endDate === null && dto.endDate) {
-      throw new BadRequestException(
-        OfficerHistoryException.CANNOT_UPDATE_END_DATE,
-      );
-    }
-
-    // 시작 날짜만 수정
-    if (dto.startDate && !dto.endDate) {
-      // 종료된 이력의 시작일 수정 시 시작일이 기존 종료일보다 늦을 경우
-      if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
-        throw new BadRequestException(
-          OfficerHistoryException.INVALID_START_DATE,
-          //'이력 시작일은 종료일보다 늦을 수 없습니다.',
-        );
-      }
-    }
-
-    // 종료 날짜만 수정
-    if (dto.endDate && !dto.startDate) {
-      if (dto.endDate < targetHistory.startDate) {
-        throw new BadRequestException(
-          OfficerHistoryException.INVALID_END_DATE,
-          //'이력 종료일은 시작일보다 빠를 수 없습니다.',
-        );
-      }
-    }
-  }*/
-
   async updateOfficerHistory(
     churchId: number,
     memberId: number,
@@ -245,8 +212,6 @@ export class MemberOfficerService {
         officerHistoryId,
         qr,
       );
-
-    //this.isValidUpdateDate(targetHistory, dto);
 
     await this.officerHistoryDomainService.updateOfficerHistory(
       targetHistory,
@@ -284,7 +249,6 @@ export class MemberOfficerService {
         qr,
       );
 
-    //await officerHistoryRepository.softDelete(targetHistory.id);
     await this.officerHistoryDomainService.deleteOfficerHistory(
       targetHistory,
       qr,

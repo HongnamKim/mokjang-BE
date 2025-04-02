@@ -35,7 +35,7 @@ import { MinistryHistoryPaginationResult } from '../dto/ministry/ministry-histor
 import { MinistryHistoryException } from '../const/exception/ministry-history.exception';
 
 @Injectable()
-export class MemberMinistryService {
+export class MinistryHistoryService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -187,13 +187,11 @@ export class MemberMinistryService {
     newMinistryHistory.ministrySnapShot = snapShot.ministrySnapShot;
     newMinistryHistory.ministryGroupSnapShot = snapShot.ministryGroupSnapShot;
 
-    const result = {
+    return {
       ...newMinistryHistory,
       member: undefined,
       ministry: null,
     };
-
-    return result;
   }
 
   async endMemberMinistry(

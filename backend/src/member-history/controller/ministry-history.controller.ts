@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { MemberMinistryService } from '../service/member-ministry.service';
+import { MinistryHistoryService } from '../service/ministry-history.service';
 import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
@@ -29,8 +29,10 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 
 @ApiTags('Churches:Members:Ministries')
 @Controller('ministries')
-export class MemberMinistryController {
-  constructor(private readonly memberMinistryService: MemberMinistryService) {}
+export class MinistryHistoryController {
+  constructor(
+    private readonly ministryHistoryService: MinistryHistoryService,
+  ) {}
 
   // 교인의 사역 조회 (현재)
   @ApiGetMemberMinistry()
@@ -40,7 +42,7 @@ export class MemberMinistryController {
     @Param('memberId', ParseIntPipe) memberId: number,
     @Query() dto: GetMinistryHistoryDto,
   ) {
-    return this.memberMinistryService.getMinistryHistories(
+    return this.ministryHistoryService.getMinistryHistories(
       churchId,
       memberId,
       dto,
@@ -59,24 +61,12 @@ export class MemberMinistryController {
     @Body() dto: CreateMemberMinistryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberMinistryService.createMemberMinistry(
+    return this.ministryHistoryService.createMemberMinistry(
       churchId,
       memberId,
       dto,
       qr,
     );
-  }
-
-  // 교인의 현재 사역 수정
-  // N:N relation 수정
-  // 현재 ministryHistory 의 ministry 수정 (날짜 수정은 patchMinistryHistory 에서 담당)
-  //@Patch(':ministryId')
-  patchMemberMinistry(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-  ) {
-    return 'patch ministry';
   }
 
   // 교인의 사역 이력 수정
@@ -90,7 +80,7 @@ export class MemberMinistryController {
     ministryHistoryId: number,
     @Body() dto: UpdateMinistryHistoryDto,
   ) {
-    return this.memberMinistryService.updateMinistryHistory(
+    return this.ministryHistoryService.updateMinistryHistory(
       churchId,
       memberId,
       ministryHistoryId,
@@ -111,7 +101,7 @@ export class MemberMinistryController {
     @Body() dto: EndMemberMinistryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.memberMinistryService.endMemberMinistry(
+    return this.ministryHistoryService.endMemberMinistry(
       churchId,
       memberId,
       ministryHistoryId,
@@ -129,7 +119,7 @@ export class MemberMinistryController {
     @Param('ministryHistoryId', ParseIntPipe)
     ministryHistoryId: number,
   ) {
-    return this.memberMinistryService.deleteMinistryHistory(
+    return this.ministryHistoryService.deleteMinistryHistory(
       churchId,
       memberId,
       ministryHistoryId,

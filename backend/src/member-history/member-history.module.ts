@@ -1,18 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MemberOfficerService } from './service/member-officer.service';
-import { MemberOfficerController } from './controller/member-officer.controller';
+import { OfficerHistoryService } from './service/officer-history.service';
+import { OfficerHistoryController } from './controller/officer-history.controller';
 import { RouterModule } from '@nestjs/core';
-import { MemberMinistryService } from './service/member-ministry.service';
-import { MemberEducationController } from './controller/member-education.controller';
+import { MinistryHistoryService } from './service/ministry-history.service';
+import { EducationHistoryController } from './controller/education-history.controller';
 import { MemberGroupController } from './controller/member-group.controller';
 import { GroupHistoryModel } from './entity/group-history.entity';
 import { MemberGroupService } from './service/member-group.service';
-import { MemberEducationService } from './service/member-education.service';
-import { MinistryHistoryModel } from './entity/ministry-history.entity';
-import { MemberMinistryController } from './controller/member-ministry.controller';
-import { OfficerHistoryModel } from './entity/officer-history.entity';
-import { EducationEnrollmentModel } from '../management/educations/entity/education-enrollment.entity';
+import { EducationHistoryService } from './service/education-history.service';
+import { MinistryHistoryController } from './controller/ministry-history.controller';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 import { OfficersDomainModule } from '../management/officers/officer-domain/officers-domain.module';
@@ -30,8 +27,8 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
     ]),
     TypeOrmModule.forFeature([
       GroupHistoryModel,
-      EducationEnrollmentModel,
-      MinistryHistoryModel,
+      //EducationEnrollmentModel,
+      //MinistryHistoryModel,
       //OfficerHistoryModel,
     ]),
     MembersDomainModule,
@@ -44,16 +41,16 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
   ],
   exports: [],
   providers: [
-    MemberOfficerService,
-    MemberMinistryService,
-    MemberEducationService,
+    OfficerHistoryService,
+    MinistryHistoryService,
+    EducationHistoryService,
     MemberGroupService,
   ],
   controllers: [
-    MemberOfficerController,
-    MemberEducationController,
+    OfficerHistoryController,
+    EducationHistoryController,
     MemberGroupController,
-    MemberMinistryController,
+    MinistryHistoryController,
   ],
 })
 export class MemberHistoryModule {}
