@@ -10,6 +10,7 @@ import { MinistryGroupModel } from '../../management/ministries/entity/ministry-
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
+import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 
 @Entity()
 export class ChurchModel extends BaseModel {
@@ -66,4 +67,7 @@ export class ChurchModel extends BaseModel {
 
   @OneToMany(() => MemberModel, (member) => member.church)
   members: MemberModel[];
+
+  @OneToMany(() => VisitationMetaModel, (visitingMeta) => visitingMeta.church)
+  visitations: VisitationMetaModel[];
 }
