@@ -38,6 +38,9 @@ import { OfficerHistoryModel } from './member-history/entity/officer-history.ent
 import { MinistryHistoryModel } from './member-history/entity/ministry-history.entity';
 import { GroupHistoryModel } from './member-history/entity/group-history.entity';
 import { MemberHistoryModule } from './member-history/member-history.module';
+import { VisitationModule } from './visitation/visitation.module';
+import { VisitationMetaModel } from './visitation/entity/visitation-meta.entity';
+import { VisitationDetailModel } from './visitation/entity/visitation-detail.entity';
 
 @Module({
   imports: [
@@ -131,6 +134,9 @@ import { MemberHistoryModule } from './member-history/member-history.module';
           GroupModel,
           GroupRoleModel,
           GroupHistoryModel,
+          // 심방 관련 엔티티
+          VisitationMetaModel,
+          VisitationDetailModel,
         ],
         synchronize: true,
       }),
@@ -152,6 +158,7 @@ import { MemberHistoryModule } from './member-history/member-history.module';
     FamilyRelationModule,
     MemberHistoryModule,
     ManagementModule,
+    VisitationModule,
 
     ChurchesDomainModule,
     MembersDomainModule,
