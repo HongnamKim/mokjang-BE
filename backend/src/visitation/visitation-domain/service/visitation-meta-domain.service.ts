@@ -102,13 +102,15 @@ export class VisitationMetaDomainService
     church: ChurchModel,
     instructor: MemberModel,
     dto: CreateVisitationMetaDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
+    reportTo?: MemberModel,
   ) {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
 
     return visitationMetaRepository.save({
-      church,
+      churchId: church.id,
       instructor,
+      visitationStatus: dto.visitationStatus,
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
       visitationTitle: dto.visitationTitle,

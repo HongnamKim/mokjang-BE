@@ -30,7 +30,7 @@ export interface IVisitationMetaDomainService {
     church: ChurchModel,
     instructor: MemberModel,
     dto: CreateVisitationMetaDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ): Promise<VisitationMetaModel>;
 
   updateVisitationMetaData(

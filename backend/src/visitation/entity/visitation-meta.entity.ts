@@ -4,14 +4,16 @@ import {
   Entity,
   Index,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
 } from 'typeorm';
 import { VisitationDetailModel } from './visitation-detail.entity';
-import { UserModel } from '../../user/entity/user.entity';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { VisitationType } from '../const/visitation-type.enum';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { MemberModel } from '../../members/entity/member.entity';
+import { VisitationStatus } from '../const/visitation-status.enum';
 
 @Entity()
 export class VisitationMetaModel extends BaseModel {
@@ -22,6 +24,13 @@ export class VisitationMetaModel extends BaseModel {
   @ManyToOne(() => ChurchModel, (church) => church.visitations)
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
+
+  @Column({
+    enum: VisitationStatus,
+    comment: '심방 상태 (예약 / 완료 / 지연)',
+    default: VisitationStatus.RESERVE,
+  })
+  visitationStatus: VisitationStatus;
 
   @Column({ enum: VisitationMethod, comment: '심방 방식 (대면 / 비대면)' })
   visitationMethod: VisitationMethod;
@@ -40,9 +49,17 @@ export class VisitationMetaModel extends BaseModel {
   @Column({ comment: '심방 진행자 ID' })
   instructorId: number;
 
-  @ManyToOne(() => UserModel)
+  @ManyToOne(() => MemberModel)
   @JoinColumn({ name: 'instructorId' })
-  instructor: UserModel;
+  instructor: MemberModel;
+
+  @ManyToMany(() => MemberModel, (member) => member.visitationReports)
+  @JoinColumn()
+  reportTo: MemberModel[];
+
+  @ManyToMany(() => MemberModel, (member) => member.visitationMetas)
+  @JoinColumn()
+  members: MemberModel[];
 
   @OneToMany(
     () => VisitationDetailModel,
