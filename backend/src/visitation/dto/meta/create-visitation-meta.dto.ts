@@ -3,8 +3,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsEnum, IsNumber, IsString, Length } from 'class-validator';
 import { VisitationType } from '../../const/visitation-type.enum';
 import { TransformStartDate } from '../../../member-history/decorator/transform-start-date.decorator';
+import { VisitationStatus } from '../../const/visitation-status.enum';
 
 export class CreateVisitationMetaDto {
+  @ApiProperty({
+    description: '심방 상태 (예약 / 완료 / 지연)',
+    enum: VisitationStatus,
+  })
+  @IsEnum(VisitationStatus)
+  visitationStatus: VisitationStatus;
+
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
     enum: VisitationMethod,

@@ -6,13 +6,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 
 @Module({
-  imports: [
-    //TypeOrmModule.forFeature([UserModel /*, MemberModel, ChurchModel*/]),
-    //JwtModule.register({}),
-    UserDomainModule,
-    ChurchesDomainModule,
-    MembersDomainModule,
-  ],
+  imports: [UserDomainModule, ChurchesDomainModule, MembersDomainModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [],

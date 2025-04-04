@@ -11,7 +11,6 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../churches/churches-domain/interface/churches-domain.service.interface';
-import { CreateVisitationMetaDto } from './dto/meta/create-visitation-meta.dto';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
@@ -21,11 +20,14 @@ import {
   IMembersDomainService,
 } from '../members/member-domain/service/interface/members-domain.service.interface';
 import { UserRole } from '../user/const/user-role.enum';
-import { VisitationMetaException } from './const/exception/visitation-meta.exception';
 import { UpdateVisitationMetaDto } from './dto/meta/update-visitation-meta.dto';
 import { QueryRunner } from 'typeorm';
 import { VisitationDetailModel } from './entity/visitation-detail.entity';
 import { VisitationMetaModel } from './entity/visitation-meta.entity';
+import { CreateVisitationDto } from './dto/create-visitation.dto';
+import { JwtAccessPayload } from '../auth/type/jwt';
+import { VisitationMetaException } from './const/exception/visitation-meta.exception';
+import { CreateVisitationMetaDto } from './dto/meta/create-visitation-meta.dto';
 
 @Injectable()
 export class VisitationService {
@@ -81,30 +83,92 @@ export class VisitationService {
     return visitation;
   }
 
-  async createVisitingMetaData(churchId: number, dto: CreateVisitationMetaDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+  async createVisitation(
+    accessPayload: JwtAccessPayload,
+    churchId: number,
+    dto: CreateVisitationDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    /*const creatorUser = await this.userDomainService.findUserById(
+      accessPayload.id,
+      qr,
+    );
+
+    const creatorMember = await this.membersDomainService.findMemberModelById(
+      church,
+      creatorUser.memberId,
+      qr,
+    );*/
 
     const instructor = await this.membersDomainService.findMemberModelById(
       church,
       dto.instructorId,
-      undefined,
+      qr,
       { user: true },
     );
 
+    // 심방 진행자 검증
     if (
-      !instructor.user ||
+      !instructor.user.role ||
       (instructor.user.role !== UserRole.mainAdmin &&
         instructor.user.role !== UserRole.manager)
     ) {
       throw new BadRequestException(VisitationMetaException.INVALID_INSTRUCTOR);
     }
 
-    return this.visitationMetaDomainService.createVisitationMetaData(
-      church,
-      instructor,
-      dto,
+    const createVisitationMetaDto: CreateVisitationMetaDto = {
+      instructorId: dto.instructorId,
+      visitationStatus: dto.visitationStatus,
+      visitationMethod: dto.visitationMethod,
+      visitationType: dto.visitationType,
+      visitationTitle: dto.visitationTitle,
+      visitationDate: dto.visitationDate,
+    };
+
+    const metaData =
+      await this.visitationMetaDomainService.createVisitationMetaData(
+        church,
+        instructor,
+        createVisitationMetaDto,
+        qr,
+      );
+
+    const detailData = await Promise.all(
+      dto.visitationDetails.map(async (visitationDetailDto) => {
+        const member = await this.membersDomainService.findMemberModelById(
+          church,
+          visitationDetailDto.memberId,
+          qr,
+          {
+            group: true,
+            groupRole: true,
+            officer: true,
+          },
+        );
+
+        return this.visitationDetailDomainService.createVisitationDetail(
+          metaData,
+          member,
+          visitationDetailDto,
+          qr,
+        );
+      }),
     );
+
+    const { user, ...instructorMember } = instructor;
+
+    const reservedVisitation = {
+      ...metaData,
+      instructor: instructorMember,
+      visitationDetails: detailData,
+    };
+
+    return reservedVisitation;
   }
 
   async updateVisitingMetaData(

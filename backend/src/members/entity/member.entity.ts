@@ -28,6 +28,7 @@ import { MinistryHistoryModel } from '../../member-history/entity/ministry-histo
 import { OfficerHistoryModel } from '../../member-history/entity/officer-history.entity';
 import { GroupHistoryModel } from '../../member-history/entity/group-history.entity';
 import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
+import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -194,6 +195,24 @@ export class MemberModel extends BaseModel {
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];
+
+  @OneToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.instructor,
+  )
+  visitationInstructor: VisitationMetaModel[];
+
+  @ManyToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.reportTo,
+  )
+  visitationReports: VisitationMetaModel[];
+
+  @ManyToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.members,
+  )
+  visitationMetas: VisitationMetaModel[];
 
   @OneToMany(
     () => VisitationDetailModel,
