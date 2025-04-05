@@ -11,6 +11,7 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { CreateVisitationMetaDto } from '../../dto/meta/create-visitation-meta.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { VisitationMetaException } from '../../const/exception/visitation-meta.exception';
+import { UpdateVisitationMetaDto } from '../../dto/meta/update-visitation-meta.dto';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -120,7 +121,7 @@ export class VisitationMetaDomainService
 
   async updateVisitationMetaData(
     visitationMetaData: VisitationMetaModel,
-    dto: any,
+    dto: UpdateVisitationMetaDto,
     qr?: QueryRunner,
   ): Promise<VisitationMetaModel> {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
