@@ -196,24 +196,35 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];
 
+  // 진행하는 심방
   @OneToMany(
     () => VisitationMetaModel,
     (visitationMeta) => visitationMeta.instructor,
   )
-  visitationInstructor: VisitationMetaModel[];
+  instructingVisitations: VisitationMetaModel[];
 
+  // 생성한 심방
+  @OneToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.creator,
+  )
+  createdVisitations: VisitationMetaModel[];
+
+  // 보고 받을 심방
   @ManyToMany(
     () => VisitationMetaModel,
     (visitationMeta) => visitationMeta.reportTo,
   )
   visitationReports: VisitationMetaModel[];
 
+  // 참여한 심방
   @ManyToMany(
     () => VisitationMetaModel,
     (visitationMeta) => visitationMeta.members,
   )
   visitationMetas: VisitationMetaModel[];
 
+  // 나의 심방 세부 내용
   @OneToMany(
     () => VisitationDetailModel,
     (visitingDetail) => visitingDetail.member,

@@ -4,6 +4,7 @@ import { IsDate, IsEnum, IsNumber, IsString, Length } from 'class-validator';
 import { VisitationType } from '../../const/visitation-type.enum';
 import { TransformStartDate } from '../../../member-history/decorator/transform-start-date.decorator';
 import { VisitationStatus } from '../../const/visitation-status.enum';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 export class CreateVisitationMetaDto {
   @ApiProperty({
@@ -52,4 +53,6 @@ export class CreateVisitationMetaDto {
   @IsDate()
   @TransformStartDate()
   visitationDate: Date;
+
+  creator: MemberModel;
 }

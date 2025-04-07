@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ import { AccessTokenGuard } from '../auth/guard/jwt.guard';
 import { Token } from '../auth/decorator/jwt.decorator';
 import { AuthType } from '../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../auth/type/jwt';
+import { GetVisitationDto } from './dto/get-visitation.dto';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -32,17 +34,22 @@ export class VisitationController {
     summary: '교회의 심방 목록 조회',
   })
   @Get()
-  getVisitations(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.visitationService.getVisitations(churchId);
+  getVisitations(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetVisitationDto,
+  ) {
+    return this.visitationService.getVisitations(churchId, dto);
   }
 
   @ApiOperation({
     summary: '심방 생성 (인증 필요)',
     description:
       '<p>심방을 생성합니다.</p>' +
-      '<p>심방의 예약과 기록은 VisitationStatus 로 구분합니다.</p>' +
+      '<p>심방의 예약과 기록은 <b>VisitationStatus</b> 로 구분합니다.</p>' +
       '<p>예약 생성 시 --> VisitationStatus: RESERVE</p>' +
-      '<p>기록 생성 시 --> VisitationStatus: DONE</p>',
+      '<p>기록 생성 시 --> VisitationStatus: DONE</p>' +
+      '<p>예약 생성이더라도 VisitationDetail 의 내용을 기재할 수 있습니다.</p>' +
+      '<p>VisitationDetail 의 개수에 따라 개인 / 그룹 심방이 결정됩니다.</p>',
   })
   @Post()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
@@ -88,7 +95,7 @@ export class VisitationController {
     @Param('visitationId', ParseIntPipe) visitationMetaDataId: number,
     @Body() dto: UpdateVisitationMetaDto,
   ) {
-    return this.visitationService.updateVisitingMetaData(
+    return this.visitationService.updateVisitationMetaData(
       churchId,
       visitationMetaDataId,
       dto,
@@ -99,11 +106,13 @@ export class VisitationController {
     summary: '심방 삭제 (메타 + 세부)',
   })
   @Delete(':visitationId')
+  @UseInterceptors(TransactionInterceptor)
   deleteVisiting(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return visitationId;
+    return this.visitationService.deleteVisitation(churchId, visitationId, qr);
   }
 
   @ApiOperation({
