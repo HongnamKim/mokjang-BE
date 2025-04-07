@@ -7,12 +7,12 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { VisitationType } from '../const/visitation-type.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { VisitationDetailDto } from './visitation-detail.dto';
 import { Type } from 'class-transformer';
 import { VisitationStatus } from '../const/visitation-status.enum';
+import { VisitationDetailValidator } from '../decorator/visitation-detail.validator';
 
 export class CreateVisitationDto {
   @ApiProperty({
@@ -23,12 +23,13 @@ export class CreateVisitationDto {
   @IsEnum(VisitationStatus)
   visitationStatus: VisitationStatus;
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '심방 종류 (개인 / 그룹)',
     enum: VisitationType,
+    deprecated: true,
   })
   @IsEnum(VisitationType)
-  visitationType: VisitationType;
+  visitationType: VisitationType;*/
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
@@ -65,5 +66,6 @@ export class CreateVisitationDto {
   })
   @ValidateNested({ each: true })
   @Type(() => VisitationDetailDto)
+  @VisitationDetailValidator()
   visitationDetails: VisitationDetailDto[];
 }

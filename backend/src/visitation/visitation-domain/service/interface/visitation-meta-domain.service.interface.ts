@@ -1,8 +1,9 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { CreateVisitationMetaDto } from '../../../dto/meta/create-visitation-meta.dto';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationMetaModel } from '../../../entity/visitation-meta.entity';
+import { GetVisitationDto } from '../../../dto/get-visitation.dto';
 
 export const IVISITATION_META_DOMAIN_SERVICE = Symbol(
   'IVISITATION_META_DOMAIN_SERVICE',
@@ -11,6 +12,7 @@ export const IVISITATION_META_DOMAIN_SERVICE = Symbol(
 export interface IVisitationMetaDomainService {
   paginateVisitations(
     church: ChurchModel,
+    dto: GetVisitationDto,
   ): Promise<{ visitations: VisitationMetaModel[]; totalCount: number }>;
 
   findVisitationMetaById(
@@ -30,6 +32,7 @@ export interface IVisitationMetaDomainService {
     church: ChurchModel,
     instructor: MemberModel,
     dto: CreateVisitationMetaDto,
+    members: MemberModel[],
     qr: QueryRunner,
   ): Promise<VisitationMetaModel>;
 
@@ -38,4 +41,9 @@ export interface IVisitationMetaDomainService {
     dto: any,
     qr?: QueryRunner,
   ): Promise<VisitationMetaModel>;
+
+  deleteVisitationMeta(
+    metaData: VisitationMetaModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

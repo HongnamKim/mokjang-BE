@@ -29,6 +29,12 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
   ): Promise<MemberPaginationResultDto>;
 
+  findMembersById(
+    church: ChurchModel,
+    ids: number[],
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
+
   findMemberById(
     church: ChurchModel,
     memberId: number,
@@ -38,6 +44,13 @@ export interface IMembersDomainService {
   findMemberModelById(
     church: ChurchModel,
     memberId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
+  ): Promise<MemberModel>;
+
+  findMemberModelByUserId(
+    church: ChurchModel,
+    userId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel>;

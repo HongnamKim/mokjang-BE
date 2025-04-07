@@ -12,6 +12,7 @@ import {
   FindOptionsRelations,
   FindOptionsSelect,
   FindOptionsWhere,
+  In,
   IsNull,
   QueryRunner,
   Repository,
@@ -79,6 +80,27 @@ export class MembersDomainService implements IMembersDomainService {
     return resultDto;
   }
 
+  async findMembersById(
+    church: ChurchModel,
+    ids: number[],
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository(qr);
+
+    const members = await repository.find({
+      where: {
+        churchId: church.id,
+        id: In(ids),
+      },
+    });
+
+    if (members.length !== ids.length) {
+      throw new NotFoundException(MemberException.NOT_FOUND_PARTIAL);
+    }
+
+    return members;
+  }
+
   async findMemberById(
     church: ChurchModel,
     memberId: number,
@@ -114,6 +136,29 @@ export class MembersDomainService implements IMembersDomainService {
       where: {
         id: memberId,
         churchId: church.id,
+      },
+      relations: relationOptions,
+    });
+
+    if (!member) {
+      throw new NotFoundException(MemberException.NOT_FOUND);
+    }
+
+    return member;
+  }
+
+  async findMemberModelByUserId(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const member = await membersRepository.findOne({
+      where: {
+        churchId: church.id,
+        userId,
       },
       relations: relationOptions,
     });

@@ -1,5 +1,5 @@
 import { VisitationMetaModel } from '../../../entity/visitation-meta.entity';
-import { QueryRunner } from 'typeorm';
+import { QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationDetailModel } from '../../../entity/visitation-detail.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { VisitationDetailDto } from '../../../dto/visitation-detail.dto';
@@ -15,4 +15,14 @@ export interface IVisitationDetailDomainService {
     dto: VisitationDetailDto,
     qr: QueryRunner,
   ): Promise<VisitationDetailModel>;
+
+  findVisitationDetailsByMetaId(
+    metaData: VisitationMetaModel,
+    qr?: QueryRunner,
+  ): Promise<VisitationDetailModel[]>;
+
+  deleteVisitationDetailsCascade(
+    metaData: VisitationMetaModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

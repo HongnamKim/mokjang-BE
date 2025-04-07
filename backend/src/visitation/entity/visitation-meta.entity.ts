@@ -4,6 +4,7 @@ import {
   Entity,
   Index,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -49,16 +50,24 @@ export class VisitationMetaModel extends BaseModel {
   @Column({ comment: '심방 진행자 ID' })
   instructorId: number;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, (member) => member.instructingVisitations)
   @JoinColumn({ name: 'instructorId' })
   instructor: MemberModel;
 
+  @Index()
+  @Column({ comment: '심방 생성자 ID' })
+  creatorId: number;
+
+  @ManyToOne(() => MemberModel, (member) => member.createdVisitations)
+  @JoinColumn({ name: 'creatorId' })
+  creator: MemberModel;
+
   @ManyToMany(() => MemberModel, (member) => member.visitationReports)
-  @JoinColumn()
+  @JoinTable()
   reportTo: MemberModel[];
 
   @ManyToMany(() => MemberModel, (member) => member.visitationMetas)
-  @JoinColumn()
+  @JoinTable()
   members: MemberModel[];
 
   @OneToMany(

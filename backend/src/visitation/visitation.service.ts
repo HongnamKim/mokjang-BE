@@ -28,6 +28,8 @@ import { CreateVisitationDto } from './dto/create-visitation.dto';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import { VisitationMetaException } from './const/exception/visitation-meta.exception';
 import { CreateVisitationMetaDto } from './dto/meta/create-visitation-meta.dto';
+import { GetVisitationDto } from './dto/get-visitation.dto';
+import { VisitationType } from './const/visitation-type.enum';
 
 @Injectable()
 export class VisitationService {
@@ -45,12 +47,12 @@ export class VisitationService {
     private readonly visitationDetailDomainService: IVisitationDetailDomainService,
   ) {}
 
-  async getVisitations(churchId: number) {
+  async getVisitations(churchId: number, dto: GetVisitationDto) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
     const { visitations, totalCount } =
-      await this.visitationMetaDomainService.paginateVisitations(church);
+      await this.visitationMetaDomainService.paginateVisitations(church, dto);
 
     return {
       data: visitations,
@@ -73,7 +75,11 @@ export class VisitationService {
         qr,
       );
 
-    const visitationDetails: VisitationDetailModel[] = [];
+    const visitationDetails: VisitationDetailModel[] =
+      await this.visitationDetailDomainService.findVisitationDetailsByMetaId(
+        visitationMeta,
+        qr,
+      );
 
     const visitation: VisitationMetaModel = {
       ...visitationMeta,
@@ -94,16 +100,12 @@ export class VisitationService {
       qr,
     );
 
-    /*const creatorUser = await this.userDomainService.findUserById(
-      accessPayload.id,
-      qr,
-    );
-
-    const creatorMember = await this.membersDomainService.findMemberModelById(
-      church,
-      creatorUser.memberId,
-      qr,
-    );*/
+    const creatorMember =
+      await this.membersDomainService.findMemberModelByUserId(
+        church,
+        accessPayload.id,
+        qr,
+      );
 
     const instructor = await this.membersDomainService.findMemberModelById(
       church,
@@ -121,13 +123,23 @@ export class VisitationService {
       throw new BadRequestException(VisitationMetaException.INVALID_INSTRUCTOR);
     }
 
+    const memberIds = dto.visitationDetails.map((detail) => detail.memberId);
+
+    const members = await this.membersDomainService.findMembersById(
+      church,
+      memberIds,
+      qr,
+    );
+
     const createVisitationMetaDto: CreateVisitationMetaDto = {
       instructorId: dto.instructorId,
       visitationStatus: dto.visitationStatus,
       visitationMethod: dto.visitationMethod,
-      visitationType: dto.visitationType,
+      visitationType:
+        memberIds.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
       visitationTitle: dto.visitationTitle,
       visitationDate: dto.visitationDate,
+      creator: creatorMember,
     };
 
     const metaData =
@@ -135,6 +147,7 @@ export class VisitationService {
         church,
         instructor,
         createVisitationMetaDto,
+        members,
         qr,
       );
 
@@ -171,7 +184,7 @@ export class VisitationService {
     return reservedVisitation;
   }
 
-  async updateVisitingMetaData(
+  async updateVisitationMetaData(
     churchId: number,
     visitationMetaDataId: number,
     dto: UpdateVisitationMetaDto,
@@ -188,6 +201,31 @@ export class VisitationService {
     return this.visitationMetaDomainService.updateVisitationMetaData(
       targetMetaData,
       dto,
+    );
+  }
+
+  async deleteVisitation(
+    churchId: number,
+    visitationMetaDataId: number,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const metaData =
+      await this.visitationMetaDomainService.findVisitationMetaModelById(
+        church,
+        visitationMetaDataId,
+        qr,
+      );
+
+    await this.visitationMetaDomainService.deleteVisitationMeta(metaData, qr);
+
+    await this.visitationDetailDomainService.deleteVisitationDetailsCascade(
+      metaData,
+      qr,
     );
   }
 }
