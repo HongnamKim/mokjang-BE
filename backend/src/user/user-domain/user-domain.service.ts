@@ -9,10 +9,10 @@ import { UserModel } from '../entity/user.entity';
 import { QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { IUserDomainService } from './interface/user-domain.service.interface';
-import { MemberModel } from '../../churches/members/entity/member.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserRole } from '../const/user-role.enum';
+import { MemberModel } from '../../members/entity/member.entity';
 
 @Injectable()
 export class UserDomainService implements IUserDomainService {

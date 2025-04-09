@@ -8,7 +8,6 @@ import { TokenService } from './token.service';
 import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
 import { ConfigService } from '@nestjs/config';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
-import { DateUtils } from '../../churches/request-info/utils/date-utils.util';
 import { RegisterUserDto } from '../../user/dto/register-user.dto';
 import {
   AuthException,
@@ -33,6 +32,7 @@ import {
   ITEMP_USER_DOMAIN_SERVICE,
   ITempUserDomainService,
 } from '../temp-user-domain/service/interface/temp-user.service.interface';
+import { DateUtils } from '../../common/utils/date-utils.util';
 
 @Injectable()
 export class AuthService {

@@ -1,8 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { MembersService } from './churches/members/service/members.service';
-import { GenderEnum } from './churches/members/const/enum/gender.enum';
-import { MarriageOptions } from './churches/members/const/marriage-options.const';
-import { BaptismEnum } from './churches/members/enum/baptism.enum';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   bucheonDistricts,
   bucheonRoads,
@@ -13,12 +13,28 @@ import {
   incheonRoads,
   occupations,
 } from './const/dummy-data/dummy-member.const';
+import { GenderEnum } from './members/const/enum/gender.enum';
+import { MarriageOptions } from './members/const/marriage-options.const';
+import { BaptismEnum } from './members/const/enum/baptism.enum';
+import {
+  IDUMMY_MEMBERS_DOMAIN_SERVICE,
+  IDummyMembersDomainService,
+} from './members/member-domain/service/interface/dummy-members-domain.service.interface';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from './churches/churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class DummyDataService {
-  constructor(private readonly membersService: MembersService) {}
+  constructor(
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IDUMMY_MEMBERS_DOMAIN_SERVICE)
+    private readonly dummyMembersDomainService: IDummyMembersDomainService,
+  ) {}
 
-  createRandomMembers(churchId: number, count: number) {
+  async createRandomMembers(churchId: number, count: number) {
     const members = Array.from({ length: count }, () => {
       const registeredAt = this.getRandomDate(2010, 2024);
       const name = this.getRandomName();
@@ -36,7 +52,7 @@ export class DummyDataService {
       const vehicleNumber = this.generateRandomVehicleNumbers();
       const previousChurch = this.generatePreviousChurchName();
 
-      return this.membersService.createDummyMemberModel({
+      return this.dummyMembersDomainService.createDummyMemberModel({
         churchId,
         registeredAt,
         name,
@@ -55,7 +71,10 @@ export class DummyDataService {
     });
 
     try {
-      return this.membersService.createDummyMembers(churchId, members);
+      /*const church =
+        await this.churchesDomainService.findChurchModelById(churchId);*/
+
+      return this.dummyMembersDomainService.createDummyMembers(members);
     } catch (e) {
       throw new InternalServerErrorException(
         '더미 데이터 생성 중 문제가 발생했습니다.',

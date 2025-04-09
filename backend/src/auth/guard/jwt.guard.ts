@@ -43,13 +43,13 @@ abstract class JwtTokenGuard implements CanActivate {
 
     const token = this.extractTokenFromCookie(req);
 
-    const jwtSecret = this.configService.getOrThrow(
+    /*const jwtSecret = this.configService.getOrThrow(
       ENV_VARIABLE_KEY.JWT_SECRET,
-    );
+    );*/
 
     try {
       req.tokenPayload = await this.jwtService.verifyAsync(token, {
-        secret: jwtSecret,
+        //secret: jwtSecret,
       });
 
       return true;

@@ -2,8 +2,8 @@ import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { GroupRoleModel } from './group-role.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { MemberModel } from '../../../churches/members/entity/member.entity';
-import { GroupHistoryModel } from '../../../churches/members-management/entity/group-history.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { GroupHistoryModel } from '../../../member-history/entity/group-history.entity';
 
 @Entity()
 @Unique(['name', 'parentGroupId', 'churchId'])
@@ -42,14 +42,4 @@ export class GroupModel extends BaseModel {
 
   @OneToMany(() => GroupHistoryModel, (history) => history.group)
   history: GroupHistoryModel[];
-
-  /*@BeforeRemove()
-  @BeforeSoftRemove()
-  preventIfHasChildGroup() {
-    if (this.childGroupIds.length > 0 || this.membersCount > 0) {
-      throw new ConflictException(
-        '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
-      );
-    }
-  }*/
 }

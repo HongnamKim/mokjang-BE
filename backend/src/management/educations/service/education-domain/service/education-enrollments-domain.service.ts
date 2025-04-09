@@ -17,13 +17,13 @@ import {
 import { EducationTermModel } from '../../../entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
 import { EducationEnrollmentOrderEnum } from '../../../const/order.enum';
-import { MemberModel } from '../../../../../churches/members/entity/member.entity';
 import {
   EducationEnrollmentException,
   EducationException,
 } from '../../../const/exception/education.exception';
 import { CreateEducationEnrollmentDto } from '../../../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../../../dto/enrollments/update-education-enrollment.dto';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 @Injectable()
 export class EducationEnrollmentsDomainService

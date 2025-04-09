@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { MemberDeletedEvent } from '../../../churches/members/events/member.event';
 import { DataSource } from 'typeorm';
 import { EducationEnrollmentService } from './education-enrollment.service';
 import {
   IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
   IEducationEnrollmentsDomainService,
 } from './education-domain/interface/education-enrollment-domain.service.interface';
+import { MemberDeletedEvent } from '../../../members/events/member.event';
 
 @Injectable()
 export class MemberEducationEventHandler {
@@ -39,11 +39,6 @@ export class MemberEducationEventHandler {
           memberId,
           qr,
         );
-      /*await this.educationEnrollmentService.getMemberEducationEnrollments(
-          event.memberId,
-          event.churchId,
-          qr,
-        );*/
 
       await Promise.all(
         enrollments.map((enrollment) =>
