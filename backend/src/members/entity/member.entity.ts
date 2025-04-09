@@ -27,6 +27,8 @@ import { RequestInfoModel } from '../../request-info/entity/request-info.entity'
 import { MinistryHistoryModel } from '../../member-history/entity/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/entity/officer-history.entity';
 import { GroupHistoryModel } from '../../member-history/entity/group-history.entity';
+import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
+import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -193,4 +195,39 @@ export class MemberModel extends BaseModel {
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];
+
+  // 진행하는 심방
+  @OneToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.instructor,
+  )
+  instructingVisitations: VisitationMetaModel[];
+
+  // 생성한 심방
+  @OneToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.creator,
+  )
+  createdVisitations: VisitationMetaModel[];
+
+  // 보고 받을 심방
+  @ManyToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.reportTo,
+  )
+  visitationReports: VisitationMetaModel[];
+
+  // 참여한 심방
+  @ManyToMany(
+    () => VisitationMetaModel,
+    (visitationMeta) => visitationMeta.members,
+  )
+  visitationMetas: VisitationMetaModel[];
+
+  // 나의 심방 세부 내용
+  @OneToMany(
+    () => VisitationDetailModel,
+    (visitingDetail) => visitingDetail.member,
+  )
+  visitationDetails: VisitationDetailModel[];
 }
