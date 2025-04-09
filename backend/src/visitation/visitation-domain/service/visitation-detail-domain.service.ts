@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { IVisitationDetailDomainService } from './interface/visitation-detail-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationDetailModel } from '../../entity/visitation-detail.entity';
@@ -10,6 +14,8 @@ import {
   VisitationDetailRelationOptions,
   VisitationDetailSelectOptions,
 } from '../../const/visitation-find-options.const';
+import { VisitationDetailException } from '../../const/exception/visitation.exception';
+import { UpdateVisitationDetailDto } from '../../dto/detail/update-visitation-detail.dto';
 
 @Injectable()
 export class VisitationDetailDomainService
@@ -42,6 +48,27 @@ export class VisitationDetailDomainService
     });
   }
 
+  async findVisitationDetailByMetaAndMemberId(
+    metaData: VisitationMetaModel,
+    member: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<VisitationDetailModel> {
+    const repository = this.getRepository(qr);
+
+    const detailData = await repository.findOne({
+      where: {
+        memberId: member.id,
+        visitationMetaId: metaData.id,
+      },
+    });
+
+    if (!detailData) {
+      throw new NotFoundException(VisitationDetailException.NOT_FOUND);
+    }
+
+    return detailData;
+  }
+
   async findVisitationDetailsByMetaId(
     metaData: VisitationMetaModel,
     qr?: QueryRunner,
@@ -57,6 +84,82 @@ export class VisitationDetailDomainService
     });
   }
 
+  async findVisitationDetailById(
+    visitationMeta: VisitationMetaModel,
+    visitationDetailId: number,
+    qr?: QueryRunner,
+  ): Promise<VisitationDetailModel> {
+    const repository = this.getRepository(qr);
+
+    const detail = await repository.findOne({
+      where: {
+        visitationMetaId: visitationMeta.id,
+        id: visitationDetailId,
+      },
+      relations: VisitationDetailRelationOptions,
+      select: VisitationDetailSelectOptions,
+    });
+
+    if (!detail) {
+      throw new NotFoundException(VisitationDetailException.NOT_FOUND);
+    }
+
+    return detail;
+  }
+
+  async findVisitationDetailModelById(
+    visitationMeta: VisitationMetaModel,
+    visitationDetailId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const visitationDetail = await repository.findOne({
+      where: {
+        visitationMetaId: visitationMeta.id,
+        id: visitationDetailId,
+      },
+    });
+
+    if (!visitationDetail) {
+      throw new NotFoundException(VisitationDetailException.NOT_FOUND);
+    }
+
+    return visitationDetail;
+  }
+
+  async updateVisitationDetail(
+    visitationMeta: VisitationMetaModel,
+    visitationDetail: VisitationDetailModel,
+    dto: UpdateVisitationDetailDto,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      {
+        visitationMetaId: visitationMeta.id,
+        id: visitationDetail.id,
+      },
+      {
+        visitationContent: dto.visitationContent,
+        visitationPray: dto.visitationPray,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        VisitationDetailException.UPDATE_ERROR,
+      );
+    }
+
+    return this.findVisitationDetailById(
+      visitationMeta,
+      visitationDetail.id,
+      qr,
+    );
+  }
+
   async deleteVisitationDetailsCascade(
     metaData: VisitationMetaModel,
     qr: QueryRunner,
@@ -66,5 +169,22 @@ export class VisitationDetailDomainService
     return repository.softDelete({
       visitationMetaId: metaData.id,
     });
+  }
+
+  async deleteVisitationDetail(
+    visitationDetail: VisitationDetailModel,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.softDelete(visitationDetail.id);
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        VisitationDetailException.DELETE_ERROR,
+      );
+    }
+
+    return result;
   }
 }

@@ -8,17 +8,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import {
   Between,
+  FindOptionsRelations,
   ILike,
   In,
   LessThanOrEqual,
   MoreThanOrEqual,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { CreateVisitationMetaDto } from '../../dto/meta/create-visitation-meta.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { VisitationMetaException } from '../../const/exception/visitation-meta.exception';
+import { VisitationException } from '../../const/exception/visitation.exception';
 import { UpdateVisitationMetaDto } from '../../dto/meta/update-visitation-meta.dto';
 import { GetVisitationDto } from '../../dto/get-visitation.dto';
 import {
@@ -56,15 +58,11 @@ export class VisitationMetaDomainService
   private parseWhereOptions(dto: GetVisitationDto) {
     return {
       visitationDate: this.parseVisitationDate(dto),
-      visitationStatus:
-        dto.where__visitationStatus && In(dto.where__visitationStatus),
-      visitationMethod:
-        dto.where__visitationMethod && In(dto.where__visitationMethod),
-      visitationType:
-        dto.where__visitationType && In(dto.where__visitationType),
-      visitationTitle:
-        dto.where__visitationTitle && ILike(`%${dto.where__visitationTitle}%`),
-      instructorId: dto.where__instructorId,
+      visitationStatus: dto.visitationStatus && In(dto.visitationStatus),
+      visitationMethod: dto.visitationMethod && In(dto.visitationMethod),
+      visitationType: dto.visitationType && In(dto.visitationType),
+      visitationTitle: dto.visitationTitle && ILike(`%${dto.visitationTitle}%`),
+      instructorId: dto.instructorId,
     };
   }
 
@@ -114,7 +112,7 @@ export class VisitationMetaDomainService
     });
 
     if (!visitation) {
-      throw new NotFoundException(VisitationMetaException.NOT_FOUND);
+      throw new NotFoundException(VisitationException.NOT_FOUND);
     }
 
     return visitation;
@@ -124,6 +122,7 @@ export class VisitationMetaDomainService
     church: ChurchModel,
     visitationMetaId: number,
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<VisitationMetaModel>,
   ): Promise<VisitationMetaModel> {
     const repository = this.getVisitationMetaRepository(qr);
 
@@ -132,10 +131,11 @@ export class VisitationMetaDomainService
         id: visitationMetaId,
         churchId: church.id,
       },
+      relations: relationOptions,
     });
 
     if (!metaData) {
-      throw new NotFoundException(VisitationMetaException.NOT_FOUND);
+      throw new NotFoundException(VisitationException.NOT_FOUND);
     }
 
     return metaData;
@@ -165,11 +165,24 @@ export class VisitationMetaDomainService
     });
   }
 
+  async updateVisitationMember(
+    visitationMetaData: VisitationMetaModel,
+    members: MemberModel[],
+    qr: QueryRunner,
+  ): Promise<VisitationMetaModel> {
+    const repository = this.getVisitationMetaRepository(qr);
+
+    visitationMetaData.members = members;
+
+    return repository.save(visitationMetaData);
+  }
+
   async updateVisitationMetaData(
     visitationMetaData: VisitationMetaModel,
     dto: UpdateVisitationMetaDto,
+    newInstructor?: MemberModel,
     qr?: QueryRunner,
-  ): Promise<VisitationMetaModel> {
+  ): Promise<UpdateResult> {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
 
     const result = await visitationMetaRepository.update(
@@ -177,6 +190,7 @@ export class VisitationMetaDomainService
         id: visitationMetaData.id,
       },
       {
+        instructor: newInstructor,
         ...dto,
       },
     );
@@ -185,19 +199,7 @@ export class VisitationMetaDomainService
       throw new InternalServerErrorException();
     }
 
-    const meta = await this.visitationMetaRepository.findOne({
-      where: {
-        id: visitationMetaData.id,
-      },
-    });
-
-    if (!meta) {
-      throw new InternalServerErrorException(
-        VisitationMetaException.UPDATE_ERROR,
-      );
-    }
-
-    return meta;
+    return result;
   }
 
   async deleteVisitationMeta(metaData: VisitationMetaModel, qr: QueryRunner) {
@@ -206,9 +208,7 @@ export class VisitationMetaDomainService
     const result = await repository.softDelete(metaData.id);
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        VisitationMetaException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(VisitationException.DELETE_ERROR);
     }
 
     return result;

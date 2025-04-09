@@ -4,6 +4,7 @@ import { CreateVisitationMetaDto } from '../../../dto/meta/create-visitation-met
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationMetaModel } from '../../../entity/visitation-meta.entity';
 import { GetVisitationDto } from '../../../dto/get-visitation.dto';
+import { UpdateVisitationMetaDto } from '../../../dto/meta/update-visitation-meta.dto';
 
 export const IVISITATION_META_DOMAIN_SERVICE = Symbol(
   'IVISITATION_META_DOMAIN_SERVICE',
@@ -38,8 +39,15 @@ export interface IVisitationMetaDomainService {
 
   updateVisitationMetaData(
     visitationMetaData: VisitationMetaModel,
-    dto: any,
+    dto: UpdateVisitationMetaDto,
+    newInstructor?: MemberModel,
     qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updateVisitationMember(
+    visitationMetaData: VisitationMetaModel,
+    members: MemberModel[],
+    qr: QueryRunner,
   ): Promise<VisitationMetaModel>;
 
   deleteVisitationMeta(
