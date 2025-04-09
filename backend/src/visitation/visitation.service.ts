@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   IVISITATION_META_DOMAIN_SERVICE,
   IVisitationMetaDomainService,
@@ -12,10 +18,6 @@ import {
   IChurchesDomainService,
 } from '../churches/churches-domain/interface/churches-domain.service.interface';
 import {
-  IUSER_DOMAIN_SERVICE,
-  IUserDomainService,
-} from '../user/user-domain/interface/user-domain.service.interface';
-import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../members/member-domain/service/interface/members-domain.service.interface';
@@ -26,18 +28,21 @@ import { VisitationDetailModel } from './entity/visitation-detail.entity';
 import { VisitationMetaModel } from './entity/visitation-meta.entity';
 import { CreateVisitationDto } from './dto/create-visitation.dto';
 import { JwtAccessPayload } from '../auth/type/jwt';
-import { VisitationMetaException } from './const/exception/visitation-meta.exception';
+import { VisitationException } from './const/exception/visitation.exception';
 import { CreateVisitationMetaDto } from './dto/meta/create-visitation-meta.dto';
 import { GetVisitationDto } from './dto/get-visitation.dto';
 import { VisitationType } from './const/visitation-type.enum';
+import { UpdateVisitationDetailDto } from './dto/detail/update-visitation-detail.dto';
+import { UpdateVisitationDto } from './dto/update-visitation.dto';
+import { VisitationDetailDto } from './dto/visitation-detail.dto';
+import { ChurchModel } from '../churches/entity/church.entity';
+import { MemberModel } from '../members/entity/member.entity';
 
 @Injectable()
 export class VisitationService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(IUSER_DOMAIN_SERVICE)
-    private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
 
@@ -56,6 +61,9 @@ export class VisitationService {
 
     return {
       data: visitations,
+      take: dto.take,
+      page: dto.page,
+      totalPage: Math.ceil(totalCount / dto.take),
       totalCount,
     };
   }
@@ -115,13 +123,7 @@ export class VisitationService {
     );
 
     // 심방 진행자 검증
-    if (
-      !instructor.user.role ||
-      (instructor.user.role !== UserRole.mainAdmin &&
-        instructor.user.role !== UserRole.manager)
-    ) {
-      throw new BadRequestException(VisitationMetaException.INVALID_INSTRUCTOR);
-    }
+    this.checkInstructorAuthorization(instructor);
 
     const memberIds = dto.visitationDetails.map((detail) => detail.memberId);
 
@@ -131,27 +133,35 @@ export class VisitationService {
       qr,
     );
 
-    const createVisitationMetaDto: CreateVisitationMetaDto = {
-      instructorId: dto.instructorId,
-      visitationStatus: dto.visitationStatus,
-      visitationMethod: dto.visitationMethod,
-      visitationType:
-        memberIds.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
-      visitationTitle: dto.visitationTitle,
-      visitationDate: dto.visitationDate,
-      creator: creatorMember,
-    };
+    const visitationMeta = await this.createVisitationMeta(
+      church,
+      creatorMember,
+      instructor,
+      members,
+      dto,
+      qr,
+    );
 
-    const metaData =
-      await this.visitationMetaDomainService.createVisitationMetaData(
-        church,
-        instructor,
-        createVisitationMetaDto,
-        members,
-        qr,
-      );
+    await this.createVisitationDetails(church, visitationMeta, dto, qr);
 
-    const detailData = await Promise.all(
+    return this.getVisitationById(churchId, visitationMeta.id, qr);
+  }
+
+  /**
+   * 심방 생성 시 대상자들의 심방 세부 데이터 생성
+   * @param church 교회 엔티티
+   * @param visitationMeta 사전에 생성된 심방 메타 데이터
+   * @param dto 심방 생성 DTO
+   * @param qr 트랜잭션을 위한 QueryRunner
+   * @private
+   */
+  private async createVisitationDetails(
+    church: ChurchModel,
+    visitationMeta: VisitationMetaModel,
+    dto: CreateVisitationDto,
+    qr: QueryRunner,
+  ) {
+    return Promise.all(
       dto.visitationDetails.map(async (visitationDetailDto) => {
         const member = await this.membersDomainService.findMemberModelById(
           church,
@@ -165,29 +175,192 @@ export class VisitationService {
         );
 
         return this.visitationDetailDomainService.createVisitationDetail(
-          metaData,
+          visitationMeta,
           member,
           visitationDetailDto,
           qr,
         );
       }),
     );
+  }
 
-    const { user, ...instructorMember } = instructor;
-
-    const reservedVisitation = {
-      ...metaData,
-      instructor: instructorMember,
-      visitationDetails: detailData,
+  /**
+   * 심방 생성 시 심방의 메타 데이터 생성
+   * @param church 교회 엔티티
+   * @param creatorMember 심방 생성 교인
+   * @param instructor 심방 진행자
+   * @param members 심방 대상자 (교인 엔티티 배열)
+   * @param dto 심방 생성 DTO
+   * @param qr 트랜잭션을 위한 QueryRunner
+   * @private
+   */
+  private async createVisitationMeta(
+    church: ChurchModel,
+    creatorMember: MemberModel,
+    instructor: MemberModel,
+    members: MemberModel[],
+    dto: CreateVisitationDto,
+    qr: QueryRunner,
+  ) {
+    const createVisitationMetaDto: CreateVisitationMetaDto = {
+      instructorId: dto.instructorId,
+      visitationStatus: dto.visitationStatus,
+      visitationMethod: dto.visitationMethod,
+      visitationType:
+        members.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
+      visitationTitle: dto.visitationTitle,
+      visitationDate: dto.visitationDate,
+      creator: creatorMember,
     };
 
-    return reservedVisitation;
+    return this.visitationMetaDomainService.createVisitationMetaData(
+      church,
+      instructor,
+      createVisitationMetaDto,
+      members,
+      qr,
+    );
+  }
+
+  private checkInstructorAuthorization(instructor?: MemberModel) {
+    if (!instructor) {
+      return;
+    }
+
+    if (
+      !instructor.user ||
+      (instructor.user.role !== UserRole.mainAdmin &&
+        instructor.user.role !== UserRole.manager)
+    ) {
+      throw new BadRequestException(VisitationException.INVALID_INSTRUCTOR);
+    }
+  }
+
+  private async updateVisitationMembers(
+    church: ChurchModel,
+    visitationMeta: VisitationMetaModel,
+    dto: UpdateVisitationDto,
+    qr: QueryRunner,
+  ) {
+    if (!visitationMeta.members) {
+      throw new InternalServerErrorException('심방 대상자 불러오기 실패');
+    }
+
+    let visitationMembers = [...visitationMeta.members];
+
+    // 교인이 추가되는 경우 추가할 수 있는지 확인
+    if (dto.addMemberIds) {
+      const visitationMemberIds = visitationMeta.members.map(
+        (member) => member.id,
+      );
+
+      const alreadyExistMember: number[] = [];
+
+      dto.addMemberIds.forEach((memberId) => {
+        if (visitationMemberIds.includes(memberId)) {
+          alreadyExistMember.push(memberId);
+        }
+      });
+
+      if (alreadyExistMember.length > 0) {
+        throw new ConflictException(
+          VisitationException.ALREADY_EXIST_TARGET_MEMBER(alreadyExistMember),
+        );
+      }
+
+      const newMembers = await this.membersDomainService.findMembersById(
+        church,
+        dto.addMemberIds,
+        qr,
+      );
+
+      // 새 심방 대상자 추가
+      visitationMembers.push(...newMembers);
+
+      await Promise.all(
+        dto.addMemberIds.map(async (memberId) => {
+          const member = await this.membersDomainService.findMemberModelById(
+            church,
+            memberId,
+            qr,
+          );
+
+          const detailDto: VisitationDetailDto = {
+            memberId: memberId,
+          };
+
+          return this.visitationDetailDomainService.createVisitationDetail(
+            visitationMeta,
+            member,
+            detailDto,
+            qr,
+          );
+        }),
+      );
+    }
+
+    // 교인이 삭제되는 경우 삭제할 수 있는지 확인
+    if (dto.deleteMemberIds) {
+      const visitationMemberIds = visitationMeta.members.map(
+        (member) => member.id,
+      );
+
+      const notExistMember: number[] = [];
+
+      // 심방 대상자에 존재하지 않는 id 값 필터링
+      dto.deleteMemberIds.forEach((memberId) => {
+        if (!visitationMemberIds.includes(memberId)) {
+          notExistMember.push(memberId);
+        }
+      });
+
+      if (notExistMember.length > 0) {
+        throw new ConflictException(
+          VisitationException.NOT_EXIST_DELETE_TARGET_MEMBER(notExistMember),
+        );
+      }
+
+      visitationMembers = visitationMembers.filter(
+        (member) => !dto.deleteMemberIds?.includes(member.id),
+      );
+
+      await Promise.all(
+        dto.deleteMemberIds.map(async (memberId) => {
+          const member = await this.membersDomainService.findMemberModelById(
+            church,
+            memberId,
+            qr,
+          );
+
+          const deleteTarget =
+            await this.visitationDetailDomainService.findVisitationDetailByMetaAndMemberId(
+              visitationMeta,
+              member,
+              qr,
+            );
+
+          await this.visitationDetailDomainService.deleteVisitationDetail(
+            deleteTarget,
+            qr,
+          );
+        }),
+      );
+    }
+
+    await this.visitationMetaDomainService.updateVisitationMember(
+      visitationMeta,
+      visitationMembers,
+      qr,
+    );
+
+    return visitationMembers;
   }
 
   async updateVisitationMetaData(
     churchId: number,
     visitationMetaDataId: number,
-    dto: UpdateVisitationMetaDto,
+    dto: UpdateVisitationDto,
+    qr: QueryRunner,
   ) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
@@ -196,11 +369,61 @@ export class VisitationService {
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,
         visitationMetaDataId,
+        qr,
+        { members: true },
       );
 
-    return this.visitationMetaDomainService.updateVisitationMetaData(
+    // 심방 진행자 변경 시
+    const newInstructor =
+      dto.instructorId && dto.instructorId !== targetMetaData.instructorId
+        ? await this.membersDomainService.findMemberModelById(
+            church,
+            dto.instructorId,
+            qr,
+            { user: true },
+          )
+        : undefined;
+
+    // 새로운 심방 진행자의 권한 확인
+    this.checkInstructorAuthorization(newInstructor);
+
+    // 심방 대상자 변경
+    let visitationType: VisitationType = targetMetaData.visitationType;
+
+    if (dto.addMemberIds || dto.deleteMemberIds) {
+      const newVisitationMembers = await this.updateVisitationMembers(
+        church,
+        targetMetaData,
+        dto,
+        qr,
+      );
+
+      visitationType =
+        newVisitationMembers.length > 1
+          ? VisitationType.GROUP
+          : VisitationType.SINGLE;
+    }
+
+    const updateVisitationMetaDto: UpdateVisitationMetaDto = {
+      visitationDate: dto.visitationDate,
+      visitationMethod: dto.visitationMethod,
+      visitationType,
+      visitationStatus: dto.visitationStatus,
+      visitationTitle: dto.visitationTitle,
+      instructorId: dto.instructorId,
+    };
+
+    await this.visitationMetaDomainService.updateVisitationMetaData(
       targetMetaData,
-      dto,
+      updateVisitationMetaDto,
+      newInstructor,
+      qr,
+    );
+
+    return this.visitationMetaDomainService.findVisitationMetaById(
+      church,
+      visitationMetaDataId,
+      qr,
     );
   }
 
@@ -226,6 +449,34 @@ export class VisitationService {
     await this.visitationDetailDomainService.deleteVisitationDetailsCascade(
       metaData,
       qr,
+    );
+  }
+
+  async updateVisitationDetail(
+    churchId: number,
+    visitationId: number,
+    detailId: number,
+    dto: UpdateVisitationDetailDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const metaData =
+      await this.visitationMetaDomainService.findVisitationMetaModelById(
+        church,
+        visitationId,
+      );
+
+    const detailData =
+      await this.visitationDetailDomainService.findVisitationDetailModelById(
+        metaData,
+        detailId,
+      );
+
+    return this.visitationDetailDomainService.updateVisitationDetail(
+      metaData,
+      detailData,
+      dto,
     );
   }
 }

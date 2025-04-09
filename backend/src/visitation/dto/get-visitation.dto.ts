@@ -79,7 +79,7 @@ export class GetVisitationDto {
   @IsOptional()
   @TransformStringArray()
   @IsEnum(VisitationStatus, { each: true })
-  where__visitationStatus?: VisitationStatus[];
+  visitationStatus?: VisitationStatus[];
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
@@ -90,7 +90,7 @@ export class GetVisitationDto {
   @IsOptional()
   @TransformStringArray()
   @IsEnum(VisitationMethod, { each: true })
-  where__visitationMethod?: VisitationMethod[];
+  visitationMethod?: VisitationMethod[];
 
   @ApiProperty({
     description: '심방 종류 (개인 / 그룹)',
@@ -101,7 +101,7 @@ export class GetVisitationDto {
   @IsOptional()
   @TransformStringArray()
   @IsEnum(VisitationType, { each: true })
-  where__visitationType?: VisitationType[];
+  visitationType?: VisitationType[];
 
   @ApiProperty({
     description: '심방 제목',
@@ -109,7 +109,7 @@ export class GetVisitationDto {
   })
   @IsOptional()
   @IsString()
-  where__visitationTitle?: string;
+  visitationTitle?: string;
 
   @ApiProperty({
     description: '심방 진행자의 교인 ID',
@@ -118,5 +118,5 @@ export class GetVisitationDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  where__instructorId?: number;
+  instructorId?: number;
 }
