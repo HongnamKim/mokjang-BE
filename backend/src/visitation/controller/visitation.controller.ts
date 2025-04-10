@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { VisitationService } from '../visitation.service';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
@@ -24,10 +24,16 @@ import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import { GetVisitationDto } from '../dto/get-visitation.dto';
 import {
+  ApiDeleteVisitation,
+  ApiGetVisitationById,
   ApiGetVisitations,
+  ApiPatchVisitationDetail,
+  ApiPatchVisitationMeta,
   ApiPostVisitation,
 } from '../decorator/visitation.swagger';
 import { UpdateVisitationDto } from '../dto/update-visitation.dto';
+import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
+import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -39,7 +45,7 @@ export class VisitationController {
   getVisitations(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetVisitationDto,
-  ) {
+  ): Promise<VisitationPaginationResultDto> {
     return this.visitationService.getVisitations(churchId, dto);
   }
 
@@ -62,9 +68,7 @@ export class VisitationController {
     );
   }
 
-  @ApiOperation({
-    summary: '특정 심방 상세 내용 조회 (메타 + 세부)',
-  })
+  @ApiGetVisitationById()
   @Get(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   getVisitingById(
@@ -79,17 +83,7 @@ export class VisitationController {
     );
   }
 
-  @ApiOperation({
-    summary: '심방의 메타 데이터 수정',
-    description:
-      '<h2>심방의 메타 데이터를 수정합니다.</h2>' +
-      '<h3>수정 가능 요소</h3>' +
-      '<p>1. 심방 상태 (에약 / 완료 / 지연)</p>' +
-      '<p>2. 심방 방식 (대면 / 비대면)</p>' +
-      '<p>3. 심방 제목</p>' +
-      '<p>4. 심방 진행자</p>' +
-      '<p>5. 심방 진행 날짜</p>',
-  })
+  @ApiPatchVisitationMeta()
   @Patch(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   patchVisitationMetaData(
@@ -98,7 +92,7 @@ export class VisitationController {
     @Body() dto: UpdateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.visitationService.updateVisitationMetaData(
+    return this.visitationService.updateVisitationData(
       churchId,
       visitationMetaDataId,
       dto,
@@ -106,9 +100,7 @@ export class VisitationController {
     );
   }
 
-  @ApiOperation({
-    summary: '심방 삭제 (메타 + 세부)',
-  })
+  @ApiDeleteVisitation()
   @Delete(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   deleteVisiting(
@@ -117,5 +109,21 @@ export class VisitationController {
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.deleteVisitation(churchId, visitationId, qr);
+  }
+
+  @ApiPatchVisitationDetail()
+  @Patch(':detailId')
+  patchVisitationDetail(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('visitationId', ParseIntPipe) visitationId: number,
+    @Param('detailId', ParseIntPipe) detailId: number,
+    @Body() dto: UpdateVisitationDetailDto,
+  ) {
+    return this.visitationService.updateVisitationDetail(
+      churchId,
+      visitationId,
+      detailId,
+      dto,
+    );
   }
 }

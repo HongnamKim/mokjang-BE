@@ -18,10 +18,10 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { CreateVisitationMetaDto } from '../../dto/meta/create-visitation-meta.dto';
+import { CreateVisitationMetaDto } from '../../dto/internal/meta/create-visitation-meta.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { VisitationException } from '../../const/exception/visitation.exception';
-import { UpdateVisitationMetaDto } from '../../dto/meta/update-visitation-meta.dto';
+import { UpdateVisitationMetaDto } from '../../dto/internal/meta/update-visitation-meta.dto';
 import { GetVisitationDto } from '../../dto/get-visitation.dto';
 import {
   VisitationRelationOptions,
@@ -143,7 +143,6 @@ export class VisitationMetaDomainService
 
   async createVisitationMetaData(
     church: ChurchModel,
-    instructor: MemberModel,
     dto: CreateVisitationMetaDto,
     members: MemberModel[],
     qr: QueryRunner,
@@ -153,7 +152,7 @@ export class VisitationMetaDomainService
 
     return visitationMetaRepository.save({
       churchId: church.id,
-      instructor,
+      instructor: dto.instructor,
       members,
       creator: dto.creator,
       visitationStatus: dto.visitationStatus,
@@ -180,7 +179,6 @@ export class VisitationMetaDomainService
   async updateVisitationMetaData(
     visitationMetaData: VisitationMetaModel,
     dto: UpdateVisitationMetaDto,
-    newInstructor?: MemberModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
@@ -190,7 +188,6 @@ export class VisitationMetaDomainService
         id: visitationMetaData.id,
       },
       {
-        instructor: newInstructor,
         ...dto,
       },
     );
