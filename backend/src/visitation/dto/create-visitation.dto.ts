@@ -1,7 +1,9 @@
 import {
+  IsBoolean,
   IsDate,
   IsEnum,
   IsNumber,
+  IsOptional,
   IsString,
   Length,
   Min,
@@ -9,27 +11,27 @@ import {
 } from 'class-validator';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { VisitationDetailDto } from './visitation-detail.dto';
 import { Type } from 'class-transformer';
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationDetailValidator } from '../decorator/visitation-detail.validator';
+import { VisitationDetailDto } from './visittion-detail.dto';
+import { TransformName } from '../../churches/decorator/transform-name';
 
 export class CreateVisitationDto {
   @ApiProperty({
+    description: 'API 테스트 시 true (심방 진행자의 권한 체크 건너뛰기)',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isTest: boolean = false;
+
+  @ApiProperty({
     description: '심방 상태 (예약 / 완료 / 지연)',
     enum: VisitationStatus,
-    default: VisitationStatus.RESERVE,
   })
   @IsEnum(VisitationStatus)
   visitationStatus: VisitationStatus;
-
-  /*@ApiProperty({
-    description: '심방 종류 (개인 / 그룹)',
-    enum: VisitationType,
-    deprecated: true,
-  })
-  @IsEnum(VisitationType)
-  visitationType: VisitationType;*/
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
@@ -43,6 +45,7 @@ export class CreateVisitationDto {
     maxLength: 50,
   })
   @IsString()
+  @TransformName()
   @Length(2, 50)
   visitationTitle: string;
 

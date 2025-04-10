@@ -6,7 +6,6 @@ import { VisitationDomainModule } from './visitation-domain/visitation-domain.mo
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
-import { VisitationDetailController } from './controller/visitation-detail.controller';
 
 @Module({
   imports: [
@@ -20,7 +19,7 @@ import { VisitationDetailController } from './controller/visitation-detail.contr
 
     VisitationDomainModule,
   ],
-  controllers: [VisitationController, VisitationDetailController],
+  controllers: [VisitationController],
   providers: [VisitationService],
 })
 export class VisitationModule {}

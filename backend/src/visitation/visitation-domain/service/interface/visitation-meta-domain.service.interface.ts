@@ -1,10 +1,10 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { CreateVisitationMetaDto } from '../../../dto/meta/create-visitation-meta.dto';
+import { CreateVisitationMetaDto } from '../../../dto/internal/meta/create-visitation-meta.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationMetaModel } from '../../../entity/visitation-meta.entity';
 import { GetVisitationDto } from '../../../dto/get-visitation.dto';
-import { UpdateVisitationMetaDto } from '../../../dto/meta/update-visitation-meta.dto';
+import { UpdateVisitationMetaDto } from '../../../dto/internal/meta/update-visitation-meta.dto';
 
 export const IVISITATION_META_DOMAIN_SERVICE = Symbol(
   'IVISITATION_META_DOMAIN_SERVICE',
@@ -31,7 +31,6 @@ export interface IVisitationMetaDomainService {
 
   createVisitationMetaData(
     church: ChurchModel,
-    instructor: MemberModel,
     dto: CreateVisitationMetaDto,
     members: MemberModel[],
     qr: QueryRunner,
@@ -40,7 +39,6 @@ export interface IVisitationMetaDomainService {
   updateVisitationMetaData(
     visitationMetaData: VisitationMetaModel,
     dto: UpdateVisitationMetaDto,
-    newInstructor?: MemberModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
