@@ -2,8 +2,8 @@ import { VisitationMetaModel } from '../../../entity/visitation-meta.entity';
 import { QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationDetailModel } from '../../../entity/visitation-detail.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { VisitationDetailDto } from '../../../dto/visitation-detail.dto';
-import { UpdateVisitationDetailDto } from '../../../dto/detail/update-visitation-detail.dto';
+import { UpdateVisitationDetailDto } from '../../../dto/internal/detail/update-visitation-detail.dto';
+import { VisitationDetailDto } from '../../../dto/visittion-detail.dto';
 
 export const IVISITATION_DETAIL_DOMAIN_SERVICE = Symbol(
   'IVISITATION_DETAIL_DOMAIN_SERVICE',

@@ -9,13 +9,13 @@ import { VisitationDetailModel } from '../../entity/visitation-detail.entity';
 import { QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { VisitationDetailDto } from '../../dto/visitation-detail.dto';
 import {
   VisitationDetailRelationOptions,
   VisitationDetailSelectOptions,
 } from '../../const/visitation-find-options.const';
 import { VisitationDetailException } from '../../const/exception/visitation.exception';
-import { UpdateVisitationDetailDto } from '../../dto/detail/update-visitation-detail.dto';
+import { UpdateVisitationDetailDto } from '../../dto/internal/detail/update-visitation-detail.dto';
+import { VisitationDetailDto } from '../../dto/visittion-detail.dto';
 
 @Injectable()
 export class VisitationDetailDomainService
