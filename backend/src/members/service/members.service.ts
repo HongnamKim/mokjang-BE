@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
-import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, In, QueryRunner } from 'typeorm';
 import { CreateMemberDto } from '../dto/create-member.dto';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
@@ -24,6 +24,7 @@ import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
+import { UserRole } from '../../user/const/user-role.enum';
 
 @Injectable()
 export class MembersService {
@@ -40,7 +41,12 @@ export class MembersService {
     private readonly familyDomainService: IFamilyRelationDomainService,
   ) {}
 
-  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
+  async getMembers(
+    churchId: number,
+    dto: GetMemberDto,
+    qr?: QueryRunner,
+    findManager?: boolean,
+  ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -48,6 +54,12 @@ export class MembersService {
 
     const whereOptions: FindOptionsWhere<MemberModel> =
       this.searchMembersService.parseWhereOption(church, dto);
+
+    if (findManager) {
+      whereOptions.user = {
+        role: In([UserRole.mainAdmin, UserRole.manager]),
+      };
+    }
 
     const orderOptions: FindOptionsOrder<MemberModel> =
       this.searchMembersService.parseOrderOption(dto);

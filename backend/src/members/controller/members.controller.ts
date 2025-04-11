@@ -18,6 +18,7 @@ import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { GetManagerMemberDto } from '../dto/get-manager-member.dto';
 
 @ApiTags('Churches:Members')
 @Controller()
@@ -36,10 +37,18 @@ export class MembersController {
   @UseInterceptors(TransactionInterceptor)
   postMember(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Body(/*FamilyRelationPipe*/) dto: CreateMemberDto,
+    @Body() dto: CreateMemberDto,
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.createMember(churchId, dto, qr);
+  }
+
+  @Get('managers')
+  getManagerMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetManagerMemberDto,
+  ) {
+    return this.membersService.getMembers(churchId, dto, undefined, true);
   }
 
   @Get(':memberId')
