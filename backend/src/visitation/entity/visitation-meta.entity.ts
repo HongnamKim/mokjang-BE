@@ -62,10 +62,6 @@ export class VisitationMetaModel extends BaseModel {
   @JoinColumn({ name: 'creatorId' })
   creator: MemberModel;
 
-  @ManyToMany(() => MemberModel, (member) => member.visitationReports)
-  @JoinTable()
-  reportTo: MemberModel[];
-
   @ManyToMany(() => MemberModel, (member) => member.visitationMetas)
   @JoinTable()
   members: MemberModel[];

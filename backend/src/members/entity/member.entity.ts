@@ -210,13 +210,6 @@ export class MemberModel extends BaseModel {
   )
   createdVisitations: VisitationMetaModel[];
 
-  // 보고 받을 심방
-  @ManyToMany(
-    () => VisitationMetaModel,
-    (visitationMeta) => visitationMeta.reportTo,
-  )
-  visitationReports: VisitationMetaModel[];
-
   // 참여한 심방
   @ManyToMany(
     () => VisitationMetaModel,
@@ -230,4 +223,6 @@ export class MemberModel extends BaseModel {
     (visitingDetail) => visitingDetail.member,
   )
   visitationDetails: VisitationDetailModel[];
+
+  // ------------------ 보고 -------------------------
 }

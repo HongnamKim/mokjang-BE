@@ -39,6 +39,10 @@ import { ChurchModel } from '../churches/entity/church.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { VisitationDetailDto } from './dto/visittion-detail.dto';
 import { MemberException } from '../members/const/exception/member.exception';
+import {
+  IVISITATION_REPORT_DOMAIN_SERVICE,
+  IVisitationReportDomainService,
+} from '../report/report-domain/service/visitation-report-domain.service.interface';
 
 @Injectable()
 export class VisitationService {
@@ -52,6 +56,9 @@ export class VisitationService {
     private readonly visitationMetaDomainService: IVisitationMetaDomainService,
     @Inject(IVISITATION_DETAIL_DOMAIN_SERVICE)
     private readonly visitationDetailDomainService: IVisitationDetailDomainService,
+
+    @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
+    private readonly visitationReportDomainService: IVisitationReportDomainService,
   ) {}
 
   async getVisitations(churchId: number, dto: GetVisitationDto) {
