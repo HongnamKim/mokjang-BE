@@ -22,4 +22,7 @@ export abstract class ReportModel extends BaseModel {
 
   @Column({ default: false })
   isRead: boolean;
+
+  @Column({ default: false })
+  isConfirmed: boolean;
 }
