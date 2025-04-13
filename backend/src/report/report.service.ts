@@ -14,6 +14,7 @@ import {
 } from '../members/member-domain/service/interface/members-domain.service.interface';
 import { VisitationReportPaginationResultDto } from './dto/visitation-report/visitation-report-pagination-result.dto';
 import { QueryRunner } from 'typeorm';
+import { UpdateVisitationReportDto } from './dto/visitation-report/update-visitation-report.dto';
 
 @Injectable()
 export class ReportService {
@@ -79,7 +80,66 @@ export class ReportService {
     return this.visitationReportDomainService.findVisitationReportById(
       receiver,
       visitationReportId,
+      true,
       qr,
     );
+  }
+
+  async updateVisitationReport(
+    churchId: number,
+    memberId: number,
+    visitationReportId: number,
+    dto: UpdateVisitationReportDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const receiver = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+    );
+
+    const targetReport =
+      await this.visitationReportDomainService.findVisitationReportModelById(
+        receiver,
+        visitationReportId,
+      );
+
+    await this.visitationReportDomainService.updateVisitationReport(
+      targetReport,
+      dto,
+    );
+
+    return this.visitationReportDomainService.findVisitationReportById(
+      receiver,
+      targetReport.id,
+      false,
+    );
+  }
+
+  async deleteVisitationReport(
+    churchId: number,
+    memberId: number,
+    visitationReportId: number,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const receiver = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+    );
+
+    const targetReport =
+      await this.visitationReportDomainService.findVisitationReportModelById(
+        receiver,
+        visitationReportId,
+      );
+
+    await this.visitationReportDomainService.deleteVisitationReport(
+      targetReport,
+    );
+
+    return `visitationReport id: ${targetReport.id} deleted`;
   }
 }
