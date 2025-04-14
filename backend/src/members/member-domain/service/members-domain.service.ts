@@ -84,6 +84,7 @@ export class MembersDomainService implements IMembersDomainService {
     church: ChurchModel,
     ids: number[],
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]> {
     const repository = this.getMembersRepository(qr);
 
@@ -92,6 +93,7 @@ export class MembersDomainService implements IMembersDomainService {
         churchId: church.id,
         id: In(ids),
       },
+      relations: relationOptions,
     });
 
     if (members.length !== ids.length) {

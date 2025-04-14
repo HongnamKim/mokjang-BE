@@ -41,6 +41,9 @@ import { MemberHistoryModule } from './member-history/member-history.module';
 import { VisitationModule } from './visitation/visitation.module';
 import { VisitationMetaModel } from './visitation/entity/visitation-meta.entity';
 import { VisitationDetailModel } from './visitation/entity/visitation-detail.entity';
+import { ReportModule } from './report/report.module';
+import { ReportModel } from './report/entity/report.entity';
+import { VisitationReportModel } from './report/entity/visitation-report.entity';
 
 @Module({
   imports: [
@@ -137,6 +140,9 @@ import { VisitationDetailModel } from './visitation/entity/visitation-detail.ent
           // 심방 관련 엔티티
           VisitationMetaModel,
           VisitationDetailModel,
+          // 업무 보고 관련 엔티티
+          ReportModel,
+          VisitationReportModel,
         ],
         synchronize: true,
       }),
@@ -155,6 +161,7 @@ import { VisitationDetailModel } from './visitation/entity/visitation-detail.ent
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
+    ReportModule,
     FamilyRelationModule,
     MemberHistoryModule,
     ManagementModule,

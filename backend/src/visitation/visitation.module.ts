@@ -6,6 +6,7 @@ import { VisitationDomainModule } from './visitation-domain/visitation-domain.mo
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
+import { VisitationReportDomainModule } from '../report/report-domain/visitation-report-domain.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
     MembersDomainModule,
 
     VisitationDomainModule,
+    VisitationReportDomainModule,
   ],
   controllers: [VisitationController],
   providers: [VisitationService],
