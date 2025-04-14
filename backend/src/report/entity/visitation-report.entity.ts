@@ -7,6 +7,6 @@ export class VisitationReportModel extends ReportModel {
   @Column()
   visitationId: number;
 
-  @ManyToOne(() => VisitationMetaModel)
+  @ManyToOne(() => VisitationMetaModel, (visitation) => visitation.reports)
   visitation: VisitationMetaModel;
 }

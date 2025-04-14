@@ -33,6 +33,7 @@ export interface IMembersDomainService {
     church: ChurchModel,
     ids: number[],
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]>;
 
   findMemberById(
