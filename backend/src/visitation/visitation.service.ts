@@ -43,12 +43,18 @@ import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
 } from '../report/report-domain/service/visitation-report-domain.service.interface';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../user/user-domain/interface/user-domain.service.interface';
 
 @Injectable()
 export class VisitationService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IUSER_DOMAIN_SERVICE)
+    private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
 
@@ -118,12 +124,21 @@ export class VisitationService {
       qr,
     );
 
-    const creatorMember =
-      await this.membersDomainService.findMemberModelByUserId(
+    const creatorMemberId = await this.userDomainService.getMemberIdByUserId(
+      accessPayload.id,
+      qr,
+    );
+
+    const creatorMember = await this.membersDomainService.findMemberModelById(
+      church,
+      creatorMemberId,
+      qr,
+    );
+    /*await this.membersDomainService.findMemberModelByUserId(
         church,
         accessPayload.id,
         qr,
-      );
+      );*/
 
     const instructor = await this.membersDomainService.findMemberModelById(
       church,

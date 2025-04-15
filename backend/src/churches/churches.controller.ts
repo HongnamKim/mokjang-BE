@@ -17,8 +17,8 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Token } from '../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../auth/type/jwt';
 import {
-  ChurchManagerGuard,
   ChurchMainAdminGuard,
+  ChurchManagerGuard,
 } from './guard/church-manager-guard.service';
 import { UpdateChurchDto } from './dto/update-church.dto';
 import {

@@ -86,3 +86,55 @@ export const ApiDeleteChurch = () =>
         '<p>AccessToken 필요, 메인관리자 권한만 삭제 가능</p>',
     }),
   );
+
+export const ApiGetChurchJoinRequest = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교회 가입 신청 목록 조회 (임시)',
+      description:
+        '<h2>교회 가입 신청 목록을 조회합니다.</h2>' +
+        '<p>교회 관리자(mainAdmin, manager)만 조회 가능</p>',
+    }),
+  );
+
+export const ApiPostChurchJoinRequest = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교회 가입 신청',
+      description:
+        '<h2>교회에 가입을 신청합니다.</h2>' +
+        '<p>교회에 가입하지 않은 유저만 요청 가능</p>',
+    }),
+  );
+
+export const ApiAcceptChurchJoinRequest = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교회 가입 신청 허가',
+      description:
+        '<h2>교회 가입 신청을 허가합니다.</h2>' +
+        '<p>이미 허가된 신청에 요청 불가능</p>',
+    }),
+  );
+
+export const ApiRejectChurchJoinRequest = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교회 가입 신청 거절',
+      description:
+        '<h2>교회 가입 신청을 거절합니다.</h2>' +
+        '<p>이미 허가, 거절된 신청에 요청 불가능</p>' +
+        '<p>PENDING 상태인 신청만 가능</p>',
+    }),
+  );
+
+export const ApiDeleteChurchJoinRequest = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교회 가입 신청 삭제',
+      description:
+        '<h2>교회 가입 신청을 삭제합니다.</h2>' +
+        '<p>처리 완료된 신청만 삭제 가능</p>' +
+        '<p>PENDING 상태인 신청 삭제 불가능</p>',
+    }),
+  );
