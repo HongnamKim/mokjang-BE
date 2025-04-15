@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../entity/user.entity';
@@ -43,6 +44,22 @@ export class UserDomainService implements IUserDomainService {
     }
 
     return user;
+  }
+
+  async getMemberIdByUserId(id: number, qr?: QueryRunner) {
+    const userRepository = this.getUserRepository(qr);
+
+    const user = await userRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return user.memberId;
   }
 
   findUserModelByOAuth(provider: string, providerId: string, qr?: QueryRunner) {
@@ -130,6 +147,8 @@ export class UserDomainService implements IUserDomainService {
     user: UserModel,
   ): Promise<UserModel> {
     const userRepository = this.getUserRepository();
+
+    console.log('test2');
 
     await userRepository.update(
       {

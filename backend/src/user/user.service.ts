@@ -23,23 +23,7 @@ export class UserService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
-
-    /*@InjectRepository(MemberModel)
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
-    @InjectRepository(MemberModel)
-    private readonly memberRepository: Repository<MemberModel>,
-    @InjectRepository(ChurchModel)
-    private readonly churchRepository: Repository<ChurchModel>,*/
   ) {}
-
-  /*private getMemberRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(MemberModel) : this.memberRepository;
-  }*/
-
-  /*private getChurchRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
-  }*/
 
   async getUserById(id: number) {
     return this.userDomainService.findUserById(id);
@@ -56,22 +40,6 @@ export class UserService {
       churchId,
       qr,
     );
-    /*const church = await this.getChurchRepository(qr).findOne({
-      where: {
-        id: churchId,
-      },
-    });
-
-    if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
-    }*/
-
-    /*// 사용자 정보 업데이트
-    await this.userDomainService.updateUser(
-      user,
-      { role: UserRole.member },
-      qr,
-    );*/
 
     // 사용자 - 교회 관계 설정
     await this.userDomainService.signInChurch(
@@ -80,6 +48,8 @@ export class UserService {
       UserRole.member,
       qr,
     );
+
+    return this.userDomainService.findUserById(userId, qr);
   }
 
   async linkMemberToUser(
@@ -117,6 +87,8 @@ export class UserService {
         '계정 정보와 교인 정보가 일치하지 않습니다.',
       );
     }
+
+    console.log('test');
 
     return this.userDomainService.linkMemberToUser(member, user);
   }

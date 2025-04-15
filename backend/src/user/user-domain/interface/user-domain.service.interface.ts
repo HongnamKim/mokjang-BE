@@ -11,6 +11,8 @@ export const IUSER_DOMAIN_SERVICE = Symbol('IUserDomainService');
 export interface IUserDomainService {
   findUserById(id: number, qr?: QueryRunner): Promise<UserModel>;
 
+  getMemberIdByUserId(id: number, qr?: QueryRunner): Promise<number>;
+
   findUserModelByOAuth(
     provider: string,
     providerId: string,
