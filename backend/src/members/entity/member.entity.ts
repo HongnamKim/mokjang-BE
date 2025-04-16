@@ -32,12 +32,7 @@ import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.ent
 
 @Entity()
 export class MemberModel extends BaseModel {
-  //@Index()
-  //@Column({ nullable: true })
-  //userId: number;
-
   @OneToOne(() => UserModel, (user) => user.member)
-  //@JoinColumn({ name: 'userId' })
   user: UserModel;
 
   @Column()

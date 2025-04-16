@@ -4,6 +4,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
 } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
@@ -47,7 +48,7 @@ export class UserModel extends BaseModel {
   @Column({ enum: UserRole, default: UserRole.none })
   role: UserRole;
 
-  @OneToOne(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
+  @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinRequestModel;
 
   @Index()

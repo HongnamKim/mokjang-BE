@@ -1,12 +1,5 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { ChurchModel } from './church.entity';
 import { UserModel } from '../../user/entity/user.entity';
 import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
@@ -24,7 +17,7 @@ export class ChurchJoinRequestModel extends BaseModel {
   @Column()
   userId: number;
 
-  @OneToOne(() => UserModel, (user) => user.joinRequest)
+  @ManyToOne(() => UserModel, (user) => user.joinRequest)
   @JoinColumn({ name: 'userId' })
   user: UserModel;
 

@@ -9,6 +9,11 @@ export const ICHURCH_JOIN_REQUESTS_DOMAIN = Symbol(
 );
 
 export interface IChurchJoinRequestDomainService {
+  ensureUserCanRequestJoinChurch(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<boolean>;
+
   createChurchJoinRequest(
     church: ChurchModel,
     user: UserModel,
@@ -36,4 +41,20 @@ export interface IChurchJoinRequestDomainService {
     joinRequest: ChurchJoinRequestModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findMyChurchJoinRequest(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinRequestModel[]>;
+
+  findMyChurchJoinRequestById(
+    user: UserModel,
+    joinId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinRequestModel>;
+
+  findMyPendingChurchJoinRequest(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinRequestModel>;
 }

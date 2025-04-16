@@ -93,7 +93,8 @@ export const ApiGetChurchJoinRequest = () =>
       summary: '교회 가입 신청 목록 조회 (임시)',
       description:
         '<h2>교회 가입 신청 목록을 조회합니다.</h2>' +
-        '<p>교회 관리자(mainAdmin, manager)만 조회 가능</p>',
+        '<p>교회 관리자(mainAdmin, manager)만 조회 가능</p>' +
+        '<p>추후 페이징 처리 추가 예정</p>',
     }),
   );
 
@@ -103,17 +104,18 @@ export const ApiPostChurchJoinRequest = () =>
       summary: '교회 가입 신청',
       description:
         '<h2>교회에 가입을 신청합니다.</h2>' +
-        '<p>교회에 가입하지 않은 유저만 요청 가능</p>',
+        '<p>교회에 가입하지 않은 유저만 요청 가능</p>' +
+        '<p>처리 대기 중인 신청이 있을 경우 요청 불가능</p>',
     }),
   );
 
-export const ApiAcceptChurchJoinRequest = () =>
+export const ApiApproveChurchJoinRequest = () =>
   applyDecorators(
     ApiOperation({
       summary: '교회 가입 신청 허가',
       description:
         '<h2>교회 가입 신청을 허가합니다.</h2>' +
-        '<p>이미 허가된 신청에 요청 불가능</p>',
+        '<p>status 가 PENDING 인 신청에만 요청 가능</p>',
     }),
   );
 

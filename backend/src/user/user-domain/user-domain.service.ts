@@ -148,8 +148,6 @@ export class UserDomainService implements IUserDomainService {
   ): Promise<UserModel> {
     const userRepository = this.getUserRepository();
 
-    console.log('test2');
-
     await userRepository.update(
       {
         id: user.id,

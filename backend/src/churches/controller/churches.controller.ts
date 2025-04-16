@@ -10,27 +10,27 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ChurchesService } from './churches.service';
-import { CreateChurchDto } from './dto/create-church.dto';
-import { AccessTokenGuard } from '../auth/guard/jwt.guard';
+import { ChurchesService } from '../service/churches.service';
+import { CreateChurchDto } from '../dto/create-church.dto';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Token } from '../auth/decorator/jwt.decorator';
-import { JwtAccessPayload } from '../auth/type/jwt';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 import {
   ChurchMainAdminGuard,
   ChurchManagerGuard,
-} from './guard/church-manager-guard.service';
-import { UpdateChurchDto } from './dto/update-church.dto';
+} from '../guard/church-manager-guard.service';
+import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ApiDeleteChurch,
   ApiGetAllChurches,
   ApiGetChurchById,
   ApiPatchChurch,
   ApiPostChurch,
-} from './const/swagger/churches/controller.swagger';
-import { AuthType } from '../auth/const/enum/auth-type.enum';
-import { TransactionInterceptor } from '../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../common/decorator/query-runner.decorator';
+} from '../const/swagger/churches/controller.swagger';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 
 @Controller('churches')
