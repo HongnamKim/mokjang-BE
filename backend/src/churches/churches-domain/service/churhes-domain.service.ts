@@ -4,8 +4,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { IChurchesDomainService } from './interface/churches-domain.service.interface';
-import { CreateChurchDto } from '../dto/create-church.dto';
+import { IChurchesDomainService } from '../interface/churches-domain.service.interface';
+import { CreateChurchDto } from '../../dto/create-church.dto';
 import {
   FindOptionsRelations,
   IsNull,
@@ -13,12 +13,12 @@ import {
   Repository,
   UpdateResult,
 } from 'typeorm';
-import { ChurchModel } from '../entity/church.entity';
-import { UpdateChurchDto } from '../dto/update-church.dto';
+import { ChurchModel } from '../../entity/church.entity';
+import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRole } from '../../user/const/user-role.enum';
-import { RequestLimitValidationType } from '../../request-info/types/request-limit-validation-result';
-import { ChurchException } from '../const/exception/church.exception';
+import { UserRole } from '../../../user/const/user-role.enum';
+import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
+import { ChurchException } from '../../const/exception/church.exception';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {

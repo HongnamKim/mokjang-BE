@@ -1,36 +1,36 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { QueryRunner } from 'typeorm';
-import { CreateChurchDto } from './dto/create-church.dto';
-import { JwtAccessPayload } from '../auth/type/jwt';
-import { UpdateChurchDto } from './dto/update-church.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from './churches-domain/interface/churches-domain.service.interface';
-import {
-  IUSER_DOMAIN_SERVICE,
-  IUserDomainService,
-} from '../user/user-domain/interface/user-domain.service.interface';
-import { UserRole } from '../user/const/user-role.enum';
-import {
-  ChurchException,
-  ChurchJoinRequestException,
-} from './const/exception/church.exception';
+} from '../churches-domain/interface/churches-domain.service.interface';
 import {
   ICHURCH_JOIN_REQUESTS_DOMAIN,
   IChurchJoinRequestDomainService,
-} from './churches-domain/interface/church-join-requests-domain.service.interface';
-import { UserException } from '../user/exception/user.exception';
-import { ChurchJoinRequestStatusEnum } from './const/church-join-request-status.enum';
+} from '../churches-domain/interface/church-join-requests-domain.service.interface';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../../user/user-domain/interface/user-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../members/member-domain/service/interface/members-domain.service.interface';
+import { JwtAccessPayload } from '../../auth/type/jwt';
+import { UserException } from '../../user/exception/user.exception';
+import { ApproveJoinRequestDto } from '../dto/church-join-request/approve-join-request.dto';
+import { QueryRunner } from 'typeorm';
+import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
+import { ChurchJoinRequestException } from '../const/exception/church.exception';
+import { UserRole } from '../../user/const/user-role.enum';
+import { MemberException } from '../../members/const/exception/member.exception';
 
 @Injectable()
-export class ChurchesService {
+export class ChurchJoinRequestService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -38,54 +38,9 @@ export class ChurchesService {
     private readonly churchJoinRequestsDomainService: IChurchJoinRequestDomainService,
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
-
-  findAllChurches() {
-    return this.churchesDomainService.findAllChurches();
-  }
-
-  async getChurchById(id: number, qr?: QueryRunner) {
-    return this.churchesDomainService.findChurchById(id, qr);
-  }
-
-  async createChurch(
-    accessPayload: JwtAccessPayload,
-    dto: CreateChurchDto,
-    qr: QueryRunner,
-  ) {
-    const user = await this.userDomainService.findUserById(
-      accessPayload.id,
-      qr,
-    );
-
-    if (user.role !== UserRole.none) {
-      throw new ForbiddenException(ChurchException.NOT_ALLOWED_TO_CREATE);
-    }
-
-    const newChurch = await this.churchesDomainService.createChurch(dto, qr);
-
-    await this.userDomainService.signInChurch(
-      user,
-      newChurch,
-      UserRole.mainAdmin,
-      qr,
-    );
-
-    return newChurch;
-  }
-
-  async updateChurch(churchId: number, dto: UpdateChurchDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
-    return this.churchesDomainService.updateChurch(church, dto);
-  }
-
-  async deleteChurchById(id: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(id, qr);
-
-    return this.churchesDomainService.deleteChurch(church, qr);
-  }
 
   async postChurchJoinRequest(
     accessPayload: JwtAccessPayload,
@@ -97,6 +52,10 @@ export class ChurchesService {
     if (user.church) {
       throw new ConflictException(UserException.ALREADY_JOINED);
     }
+
+    await this.churchJoinRequestsDomainService.ensureUserCanRequestJoinChurch(
+      user,
+    );
 
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
@@ -114,9 +73,10 @@ export class ChurchesService {
     return this.churchJoinRequestsDomainService.findChurchJoinRequests(church);
   }
 
-  async acceptChurchJoinRequest(
+  async approveChurchJoinRequest(
     churchId: number,
     joinId: number,
+    dto: ApproveJoinRequestDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -131,10 +91,15 @@ export class ChurchesService {
         qr,
       );
 
-    if (joinRequest.status === ChurchJoinRequestStatusEnum.APPROVED) {
-      throw new BadRequestException(
-        ChurchJoinRequestException.ALREADY_APPROVED,
-      );
+    if (joinRequest.status !== ChurchJoinRequestStatusEnum.PENDING) {
+      // 취소된 가입 신청일 경우
+      if (joinRequest.status === ChurchJoinRequestStatusEnum.CANCELED) {
+        throw new BadRequestException(
+          ChurchJoinRequestException.CANCELED_REQUEST,
+        );
+      }
+      // 이미 처리된 가입 신청
+      throw new BadRequestException(ChurchJoinRequestException.ALREADY_DECIDED);
     }
 
     await this.churchJoinRequestsDomainService.updateChurchJoinRequest(
@@ -143,12 +108,27 @@ export class ChurchesService {
       qr,
     );
 
+    // user - church 연결
     await this.userDomainService.signInChurch(
       joinRequest.user,
       church,
       UserRole.member,
       qr,
     );
+
+    // user - member 연결
+    const linkMember = await this.membersDomainService.findMemberModelById(
+      church,
+      dto.linkMemberId,
+      qr,
+      { user: true },
+    );
+
+    if (linkMember.user) {
+      throw new ConflictException(MemberException.ALREADY_LINKED);
+    }
+
+    await this.userDomainService.linkMemberToUser(linkMember, joinRequest.user);
 
     return this.churchJoinRequestsDomainService.findChurchJoinRequestById(
       church,
@@ -173,15 +153,9 @@ export class ChurchesService {
         joinId,
         qr,
       );
-    if (joinRequest.status === ChurchJoinRequestStatusEnum.APPROVED) {
-      throw new BadRequestException(
-        ChurchJoinRequestException.ALREADY_APPROVED,
-      );
-    }
-    if (joinRequest.status === ChurchJoinRequestStatusEnum.REJECTED) {
-      throw new BadRequestException(
-        ChurchJoinRequestException.ALREADY_REJECTED,
-      );
+
+    if (joinRequest.status !== ChurchJoinRequestStatusEnum.PENDING) {
+      throw new BadRequestException(ChurchJoinRequestException.ALREADY_DECIDED);
     }
 
     await this.churchJoinRequestsDomainService.updateChurchJoinRequest(
