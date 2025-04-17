@@ -32,6 +32,7 @@ import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+import { UpdateChurchJoinCodeDto } from '../dto/update-church-join-code.dto';
 
 @Controller('churches')
 export class ChurchesController {
@@ -73,6 +74,21 @@ export class ChurchesController {
     @Body() dto: UpdateChurchDto,
   ) {
     return this.churchesService.updateChurch(churchId, dto);
+  }
+
+  @Patch(':churchId/join-code')
+  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseInterceptors(TransactionInterceptor)
+  patchChurchJoinCode(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Body() dto: UpdateChurchJoinCodeDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.churchesService.updateChurchJoinCode(
+      churchId,
+      dto.joinCode,
+      qr,
+    );
   }
 
   @ApiDeleteChurch()

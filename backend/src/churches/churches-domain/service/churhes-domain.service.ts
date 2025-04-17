@@ -9,6 +9,7 @@ import { CreateChurchDto } from '../../dto/create-church.dto';
 import {
   FindOptionsRelations,
   IsNull,
+  QueryFailedError,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -54,11 +55,36 @@ export class ChurchesDomainService implements IChurchesDomainService {
       throw new ConflictException(ChurchException.ALREADY_EXIST);
     }
 
-    const newChurch = churchRepository.create({
+    return churchRepository.save({
       ...dto,
+      joinCode: await this.generateUniqueChurchCode(churchRepository),
     });
+  }
 
-    return churchRepository.save(newChurch);
+  async generateUniqueChurchCode(
+    churchRepo: Repository<ChurchModel>,
+  ): Promise<string> {
+    let code: string;
+    let exists = true;
+
+    do {
+      code = this.generateChurchJoinCode();
+      exists = await churchRepo.exists({ where: { joinCode: code } });
+    } while (exists);
+
+    return code;
+  }
+
+  private generateChurchJoinCode(length = 6): string {
+    const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    let code = '';
+
+    for (let i = 0; i < length; i++) {
+      code += CHARSET[Math.floor(Math.random() * CHARSET.length)];
+    }
+
+    return code;
   }
 
   async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
@@ -144,6 +170,28 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return this.findChurchById(church.id);
+  }
+
+  async updateChurchJoinCode(
+    church: ChurchModel,
+    newCode: string,
+    qr: QueryRunner | undefined,
+  ): Promise<UpdateResult> {
+    try {
+      const churchRepository = this.getChurchRepository(qr);
+
+      return await churchRepository.update(
+        { id: church.id },
+        { joinCode: newCode },
+      );
+    } catch (e) {
+      if (e instanceof QueryFailedError && (e as any).code === '23505') {
+        // 23505 = unique_violation (Postgres 기준)
+        throw new ConflictException(ChurchException.ALREADY_EXIST_JOIN_CODE);
+      }
+
+      throw e; // 다른 에러는 그대로 전파
+    }
   }
 
   updateRequestAttempts(

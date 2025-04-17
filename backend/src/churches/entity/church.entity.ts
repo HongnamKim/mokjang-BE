@@ -1,5 +1,5 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
@@ -14,12 +14,16 @@ import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.ent
 import { ChurchJoinRequestModel } from './church-join-request.entity';
 
 @Entity()
+@Unique(['joinCode'])
 export class ChurchModel extends BaseModel {
   @Column()
   name: string;
 
   @Column({ nullable: true })
   identifyNumber: string;
+
+  @Column({ nullable: true, length: 20 })
+  joinCode: string;
 
   @Column({ nullable: true })
   phone: string;

@@ -13,6 +13,10 @@ import {
 } from '../../user/user-domain/interface/user-domain.service.interface';
 import { UserRole } from '../../user/const/user-role.enum';
 import { ChurchException } from '../const/exception/church.exception';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class ChurchesService {
@@ -22,6 +26,8 @@ export class ChurchesService {
 
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   findAllChurches() {
@@ -55,6 +61,14 @@ export class ChurchesService {
       qr,
     );
 
+    const mainAdminMember = await this.membersDomainService.createMember(
+      newChurch,
+      { name: user.name, mobilePhone: user.mobilePhone },
+      qr,
+    );
+
+    await this.userDomainService.linkMemberToUser(mainAdminMember, user, qr);
+
     return newChurch;
   }
 
@@ -63,6 +77,21 @@ export class ChurchesService {
       await this.churchesDomainService.findChurchModelById(churchId);
 
     return this.churchesDomainService.updateChurch(church, dto);
+  }
+
+  async updateChurchJoinCode(
+    churchId: number,
+    newCode: string,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    await this.churchesDomainService.updateChurchJoinCode(church, newCode, qr);
+
+    return this.churchesDomainService.findChurchModelById(churchId, qr);
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {

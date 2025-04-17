@@ -4,6 +4,7 @@ export const ChurchException = {
   UPDATE_ERROR: '교회 업데이트 도중 에러 발생',
   DELETE_ERROR: '교회 삭제 도중 에러 발생',
   NOT_FOUND: '해당 교회를 찾을 수 없습니다.',
+  ALREADY_EXIST_JOIN_CODE: '이미 존재하는 교회 가입 코드입니다.',
 };
 
 export const ChurchJoinRequestException = {
