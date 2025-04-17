@@ -9,7 +9,7 @@ import {
   IChurchesDomainService,
 } from '../churches-domain/interface/churches-domain.service.interface';
 import {
-  ICHURCH_JOIN_REQUESTS_DOMAIN,
+  ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE,
   IChurchJoinRequestDomainService,
 } from '../churches-domain/interface/church-join-requests-domain.service.interface';
 import {
@@ -28,14 +28,21 @@ import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status
 import { ChurchJoinRequestException } from '../const/exception/church.exception';
 import { UserRole } from '../../user/const/user-role.enum';
 import { MemberException } from '../../members/const/exception/member.exception';
+import {
+  ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE,
+  IChurchJoinRequestStatsDomainService,
+} from '../churches-domain/interface/church-join-request-stats-domain.service.interface';
 
 @Injectable()
 export class ChurchJoinRequestService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN)
+    @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE)
     private readonly churchJoinRequestsDomainService: IChurchJoinRequestDomainService,
+    @Inject(ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE)
+    private readonly churchJoinRequestStatsDomainService: IChurchJoinRequestStatsDomainService,
+
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
@@ -45,6 +52,7 @@ export class ChurchJoinRequestService {
   async postChurchJoinRequest(
     accessPayload: JwtAccessPayload,
     churchId: number,
+    qr: QueryRunner,
   ) {
     const userId = accessPayload.id;
     const user = await this.userDomainService.findUserById(userId);
@@ -53,16 +61,25 @@ export class ChurchJoinRequestService {
       throw new ConflictException(UserException.ALREADY_JOINED);
     }
 
-    await this.churchJoinRequestsDomainService.ensureUserCanRequestJoinChurch(
+    await this.churchJoinRequestStatsDomainService.increaseAttemptsCount(
       user,
+      qr,
     );
 
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+    await this.churchJoinRequestsDomainService.ensureUserCanRequestJoinChurch(
+      user,
+      qr,
+    );
+
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
 
     return this.churchJoinRequestsDomainService.createChurchJoinRequest(
       church,
       user,
+      qr,
     );
   }
 
@@ -198,5 +215,9 @@ export class ChurchJoinRequestService {
     );
 
     return `ChurchJoinRequest id: ${joinId} deleted`;
+  }
+
+  getTopRequestUsers() {
+    return this.churchJoinRequestStatsDomainService.getTopRequestUsers();
   }
 }

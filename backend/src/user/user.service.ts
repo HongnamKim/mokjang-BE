@@ -14,7 +14,7 @@ import {
   IMembersDomainService,
 } from '../members/member-domain/service/interface/members-domain.service.interface';
 import {
-  ICHURCH_JOIN_REQUESTS_DOMAIN,
+  ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE,
   IChurchJoinRequestDomainService,
 } from '../churches/churches-domain/interface/church-join-requests-domain.service.interface';
 import { ChurchJoinRequestStatusEnum } from '../churches/const/church-join-request-status.enum';
@@ -26,7 +26,7 @@ export class UserService {
     private readonly userDomainService: IUserDomainService,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN)
+    @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE)
     private readonly churchJoinRequestsDomainService: IChurchJoinRequestDomainService,
 
     @Inject(IMEMBERS_DOMAIN_SERVICE)

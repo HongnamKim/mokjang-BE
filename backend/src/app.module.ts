@@ -45,6 +45,7 @@ import { ReportModule } from './report/report.module';
 import { ReportModel } from './report/entity/report.entity';
 import { VisitationReportModel } from './report/entity/visitation-report.entity';
 import { ChurchJoinRequestModel } from './churches/entity/church-join-request.entity';
+import { ChurchJoinRequestStatModel } from './churches/entity/church-join-request-stat.entity';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { ChurchJoinRequestModel } from './churches/entity/church-join-request.en
           ChurchModel,
           // 교회 가입 엔티티
           ChurchJoinRequestModel,
+          ChurchJoinRequestStatModel,
           // 교인 관련 엔티티
           RequestInfoModel,
           MemberModel,

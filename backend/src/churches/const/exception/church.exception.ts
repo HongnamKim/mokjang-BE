@@ -16,4 +16,6 @@ export const ChurchJoinRequestException = {
   NOT_FOUND: '가입 요청을 찾을 수 없습니다.',
   UPDATE_ERROR: '가입 요청 업데이트 도중 에러 발생',
   DELETE_ERROR: '가입 요청 삭제 도중 에러 발생',
+  TOO_MANY_REQUESTS: (maxAttempts: number) =>
+    `하루 최대 ${maxAttempts}회의 가입 신청만 가능합니다.`,
 };

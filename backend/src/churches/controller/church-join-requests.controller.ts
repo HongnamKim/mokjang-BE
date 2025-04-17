@@ -37,11 +37,17 @@ export class ChurchJoinRequestsController {
   @ApiPostChurchJoinRequest()
   @Post(':churchId/join')
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(TransactionInterceptor)
   postChurchJoinRequest(
     @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @Param('churchId', ParseIntPipe) churchId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.postChurchJoinRequest(accessPayload, churchId);
+    return this.churchesService.postChurchJoinRequest(
+      accessPayload,
+      churchId,
+      qr,
+    );
   }
 
   @ApiGetChurchJoinRequest()
@@ -90,5 +96,10 @@ export class ChurchJoinRequestsController {
     @Param('joinId', ParseIntPipe) joinId: number,
   ) {
     return this.churchesService.deleteChurchJoinRequest(churchId, joinId);
+  }
+
+  @Get(':churchId/join/stats')
+  getTopRequestUsers() {
+    return this.churchesService.getTopRequestUsers();
   }
 }

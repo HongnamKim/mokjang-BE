@@ -4,8 +4,8 @@ import { QueryRunner, UpdateResult } from 'typeorm';
 import { ChurchJoinRequestModel } from '../../entity/church-join-request.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
 
-export const ICHURCH_JOIN_REQUESTS_DOMAIN = Symbol(
-  'ICHURCH_JOIN_REQUESTS_DOMAIN',
+export const ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE = Symbol(
+  'ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE',
 );
 
 export interface IChurchJoinRequestDomainService {
