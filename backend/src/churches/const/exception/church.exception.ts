@@ -5,10 +5,12 @@ export const ChurchException = {
   DELETE_ERROR: '교회 삭제 도중 에러 발생',
   NOT_FOUND: '해당 교회를 찾을 수 없습니다.',
   ALREADY_EXIST_JOIN_CODE: '이미 존재하는 교회 가입 코드입니다.',
+  INVALID_CHURCH_CODE: '교회 코드는 영문자와 숫자만 사용할 수 있습니다.',
 };
 
 export const ChurchJoinRequestException = {
   ALREADY_EXIST: '이미 교회 가입 신청이 존재합니다.',
+  INVALID_CHURCH_CODE: '잘못된 형식의 교회 코드입니다.',
   ALREADY_APPROVED: '이미 가입 허가된 요청입니다.',
   ALREADY_REJECTED: '이미 가입 거절된 요청입니다.',
   CANCELED_REQUEST: '취소된 가입 요청입니다.',

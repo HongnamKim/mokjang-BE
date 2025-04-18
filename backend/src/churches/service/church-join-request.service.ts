@@ -51,7 +51,7 @@ export class ChurchJoinRequestService {
 
   async postChurchJoinRequest(
     accessPayload: JwtAccessPayload,
-    churchId: number,
+    joinCode: string,
     qr: QueryRunner,
   ) {
     const userId = accessPayload.id;
@@ -71,8 +71,8 @@ export class ChurchJoinRequestService {
       qr,
     );
 
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
+    const church = await this.churchesDomainService.findChurchModelByJoinCode(
+      joinCode,
       qr,
     );
 

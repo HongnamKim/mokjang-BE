@@ -12,6 +12,7 @@ import { MemberModel } from '../../members/entity/member.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { ChurchJoinRequestModel } from './church-join-request.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 @Unique(['joinCode'])
@@ -62,9 +63,11 @@ export class ChurchModel extends BaseModel {
   ministries: MinistryModel[];
 
   @Column({ default: 0 })
+  @Exclude()
   dailyRequestAttempts: number;
 
   @Column({ default: new Date('1900-01-01'), type: 'timestamptz' })
+  @Exclude()
   lastRequestDate: Date;
 
   @OneToMany(() => RequestInfoModel, (requestInfo) => requestInfo.church)

@@ -11,6 +11,12 @@ export interface IChurchesDomainService {
 
   findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel>;
 
+  findChurchModelByJoinCode(
+    joinCode: string,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel>;
+
   findChurchModelById(
     id: number,
     qr?: QueryRunner,

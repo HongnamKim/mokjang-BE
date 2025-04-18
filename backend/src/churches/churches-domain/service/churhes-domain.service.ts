@@ -121,6 +121,27 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return church;
   }
 
+  async findChurchModelByJoinCode(
+    joinCode: string,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel> {
+    const churchesRepository = this.getChurchRepository(qr);
+
+    const church = await churchesRepository.findOne({
+      where: {
+        joinCode,
+      },
+      relations: relationOptions,
+    });
+
+    if (!church) {
+      throw new NotFoundException(ChurchException.NOT_FOUND);
+    }
+
+    return church;
+  }
+
   async findChurchModelById(
     id: number,
     qr?: QueryRunner,
