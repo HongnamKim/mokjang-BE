@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
   ApiApproveChurchJoinRequest,
   ApiDeleteChurchJoinRequest,
   ApiGetChurchJoinRequest,
+  ApiGetTopRequestUsers,
   ApiPostChurchJoinRequest,
   ApiRejectChurchJoinRequest,
 } from '../const/swagger/churches/controller.swagger';
@@ -29,6 +31,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ApproveJoinRequestDto } from '../dto/church-join-request/approve-join-request.dto';
 import { ChurchJoinRequestService } from '../service/church-join-request.service';
 import { CreateJoinRequestDto } from '../dto/church-join-request/create-join-request.dto';
+import { GetJoinRequestDto } from '../dto/church-join-request/get-join-request.dto';
 
 @ApiTags('Churches:Join Requests')
 @Controller('churches')
@@ -55,10 +58,10 @@ export class ChurchJoinRequestsController {
   @Get(':churchId/join')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getChurchJoinRequests(
-    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetJoinRequestDto,
   ) {
-    return this.churchesService.getChurchJoinRequests(churchId);
+    return this.churchesService.getChurchJoinRequests(churchId, dto);
   }
 
   @ApiApproveChurchJoinRequest()
@@ -99,6 +102,7 @@ export class ChurchJoinRequestsController {
     return this.churchesService.deleteChurchJoinRequest(churchId, joinId);
   }
 
+  @ApiGetTopRequestUsers()
   @Get(':churchId/join/stats')
   getTopRequestUsers() {
     return this.churchesService.getTopRequestUsers();

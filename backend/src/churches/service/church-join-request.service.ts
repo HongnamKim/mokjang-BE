@@ -32,6 +32,8 @@ import {
   ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE,
   IChurchJoinRequestStatsDomainService,
 } from '../churches-domain/interface/church-join-request-stats-domain.service.interface';
+import { GetJoinRequestDto } from '../dto/church-join-request/get-join-request.dto';
+import { JoinRequestPaginationResult } from '../dto/church-join-request/join-request-pagination-result.dto';
 
 @Injectable()
 export class ChurchJoinRequestService {
@@ -83,11 +85,25 @@ export class ChurchJoinRequestService {
     );
   }
 
-  async getChurchJoinRequests(churchId: number) {
+  async getChurchJoinRequests(churchId: number, dto: GetJoinRequestDto) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    return this.churchJoinRequestsDomainService.findChurchJoinRequests(church);
+    const { data, totalCount } =
+      await this.churchJoinRequestsDomainService.findChurchJoinRequests(
+        church,
+        dto,
+      );
+
+    const result: JoinRequestPaginationResult = {
+      data,
+      totalCount,
+      totalPage: Math.ceil(totalCount / dto.take),
+      count: data.length,
+      page: dto.page,
+    };
+
+    return result;
   }
 
   async approveChurchJoinRequest(

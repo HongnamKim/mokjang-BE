@@ -7,11 +7,20 @@ import {
 import { IChurchJoinRequestDomainService } from '../interface/church-join-requests-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChurchJoinRequestModel } from '../../entity/church-join-request.entity';
-import { QueryRunner, Repository, UpdateResult } from 'typeorm';
+import {
+  Between,
+  In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  QueryRunner,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { ChurchModel } from '../../entity/church.entity';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
 import { ChurchJoinRequestException } from '../../const/exception/church.exception';
+import { GetJoinRequestDto } from '../../dto/church-join-request/get-join-request.dto';
 
 @Injectable()
 export class ChurchJoinRequestsDomainService
@@ -64,26 +73,57 @@ export class ChurchJoinRequestsDomainService
     return this.findMyChurchJoinRequestById(user, newRequest.id, qr);
   }
 
-  findChurchJoinRequests(
+  private parseCreatedAt(dto: GetJoinRequestDto) {
+    if (dto.toCreatedAt && dto.fromCreatedAt) {
+      return Between(dto.fromCreatedAt, dto.toCreatedAt);
+    } else if (dto.toCreatedAt && !dto.fromCreatedAt) {
+      return LessThanOrEqual(dto.toCreatedAt);
+    } else if (!dto.toCreatedAt && dto.fromCreatedAt) {
+      return MoreThanOrEqual(dto.fromCreatedAt);
+    } else {
+      return undefined;
+    }
+  }
+
+  async findChurchJoinRequests(
     church: ChurchModel,
+    dto: GetJoinRequestDto,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel[]> {
+  ): Promise<{ data: ChurchJoinRequestModel[]; totalCount: number }> {
     const repository = this.getRepository(qr);
 
-    return repository.find({
-      where: {
-        churchId: church.id,
-      },
-      relations: {
-        user: true,
-      },
-      select: {
-        user: {
-          name: true,
-          mobilePhone: true,
+    const [data, totalCount] = await Promise.all([
+      repository.find({
+        where: {
+          churchId: church.id,
+          createdAt: this.parseCreatedAt(dto),
+          status: dto.status && In(dto.status),
         },
-      },
-    });
+        relations: {
+          user: true,
+        },
+        select: {
+          user: {
+            name: true,
+            mobilePhone: true,
+          },
+        },
+        order: {
+          [dto.order]: dto.orderDirection,
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      repository.count({
+        where: {
+          churchId: church.id,
+          createdAt: this.parseCreatedAt(dto),
+          status: dto.status && In(dto.status),
+        },
+      }),
+    ]);
+
+    return { data, totalCount };
   }
 
   async findChurchJoinRequestById(
