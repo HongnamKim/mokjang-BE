@@ -3,6 +3,7 @@ import { UserModel } from '../../../user/entity/user.entity';
 import { QueryRunner, UpdateResult } from 'typeorm';
 import { ChurchJoinRequestModel } from '../../entity/church-join-request.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
+import { GetJoinRequestDto } from '../../dto/church-join-request/get-join-request.dto';
 
 export const ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE = Symbol(
   'ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE',
@@ -22,8 +23,9 @@ export interface IChurchJoinRequestDomainService {
 
   findChurchJoinRequests(
     church: ChurchModel,
+    dto: GetJoinRequestDto,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel[]>;
+  ): Promise<{ data: ChurchJoinRequestModel[]; totalCount: number }>;
 
   findChurchJoinRequestById(
     church: ChurchModel,

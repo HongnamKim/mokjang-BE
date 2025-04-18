@@ -90,11 +90,11 @@ export const ApiDeleteChurch = () =>
 export const ApiGetChurchJoinRequest = () =>
   applyDecorators(
     ApiOperation({
-      summary: '교회 가입 신청 목록 조회 (임시)',
+      summary: '교회 가입 신청 목록 조회',
       description:
         '<h2>교회 가입 신청 목록을 조회합니다.</h2>' +
-        '<p>교회 관리자(mainAdmin, manager)만 조회 가능</p>' +
-        '<p>추후 페이징 처리 추가 예정</p>',
+        '<p>정렬 기준: 신청일자 or 처리 상태</p>' +
+        '<p>필터 조건: 신청일자 기간, 처리 상태</p>',
     }),
   );
 
@@ -138,5 +138,14 @@ export const ApiDeleteChurchJoinRequest = () =>
         '<h2>교회 가입 신청을 삭제합니다.</h2>' +
         '<p>처리 완료된 신청만 삭제 가능</p>' +
         '<p>PENDING 상태인 신청 삭제 불가능</p>',
+    }),
+  );
+
+export const ApiGetTopRequestUsers = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '상위 가입 신청수 유저 조회',
+      description:
+        '<h2>최근 일주일 간 교회 가입 신청 횟수 상위 10명의 사용자 조회</h2>',
     }),
   );

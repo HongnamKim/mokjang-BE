@@ -129,4 +129,12 @@ export class UserService {
       qr,
     );
   }
+
+  async getMyPendingJoinRequest(userId: number) {
+    const user = await this.userDomainService.findUserById(userId);
+
+    return this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
+      user,
+    );
+  }
 }
