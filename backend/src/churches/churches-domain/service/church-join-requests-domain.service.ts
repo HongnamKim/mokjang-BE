@@ -48,18 +48,20 @@ export class ChurchJoinRequestsDomainService
     return true;
   }
 
-  createChurchJoinRequest(
+  async createChurchJoinRequest(
     church: ChurchModel,
     user: UserModel,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
-    return repository.save({
+    const newRequest = await repository.save({
       church,
       user,
       status: ChurchJoinRequestStatusEnum.PENDING,
     });
+
+    return this.findMyChurchJoinRequestById(user, newRequest.id, qr);
   }
 
   findChurchJoinRequests(

@@ -145,8 +145,9 @@ export class UserDomainService implements IUserDomainService {
   async linkMemberToUser(
     member: MemberModel,
     user: UserModel,
+    qr?: QueryRunner,
   ): Promise<UserModel> {
-    const userRepository = this.getUserRepository();
+    const userRepository = this.getUserRepository(qr);
 
     await userRepository.update(
       {

@@ -28,6 +28,7 @@ import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { ApiTags } from '@nestjs/swagger';
 import { ApproveJoinRequestDto } from '../dto/church-join-request/approve-join-request.dto';
 import { ChurchJoinRequestService } from '../service/church-join-request.service';
+import { CreateJoinRequestDto } from '../dto/church-join-request/create-join-request.dto';
 
 @ApiTags('Churches:Join Requests')
 @Controller('churches')
@@ -35,17 +36,17 @@ export class ChurchJoinRequestsController {
   constructor(private readonly churchesService: ChurchJoinRequestService) {}
 
   @ApiPostChurchJoinRequest()
-  @Post(':churchId/join')
+  @Post('join')
   @UseGuards(AccessTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   postChurchJoinRequest(
     @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
-    @Param('churchId', ParseIntPipe) churchId: number,
+    @Body() dto: CreateJoinRequestDto,
     @QueryRunner() qr: QR,
   ) {
     return this.churchesService.postChurchJoinRequest(
       accessPayload,
-      churchId,
+      dto.joinCode,
       qr,
     );
   }
