@@ -84,6 +84,7 @@ export class MembersDomainService implements IMembersDomainService {
     church: ChurchModel,
     ids: number[],
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]> {
     const repository = this.getMembersRepository(qr);
 
@@ -92,6 +93,7 @@ export class MembersDomainService implements IMembersDomainService {
         churchId: church.id,
         id: In(ids),
       },
+      relations: relationOptions,
     });
 
     if (members.length !== ids.length) {
@@ -136,29 +138,6 @@ export class MembersDomainService implements IMembersDomainService {
       where: {
         id: memberId,
         churchId: church.id,
-      },
-      relations: relationOptions,
-    });
-
-    if (!member) {
-      throw new NotFoundException(MemberException.NOT_FOUND);
-    }
-
-    return member;
-  }
-
-  async findMemberModelByUserId(
-    church: ChurchModel,
-    userId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const member = await membersRepository.findOne({
-      where: {
-        churchId: church.id,
-        userId,
       },
       relations: relationOptions,
     });

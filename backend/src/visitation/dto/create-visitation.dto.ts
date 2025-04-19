@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsBoolean,
   IsDate,
   IsEnum,
@@ -71,4 +72,16 @@ export class CreateVisitationDto {
   @Type(() => VisitationDetailDto)
   @VisitationDetailValidator()
   visitationDetails: VisitationDetailDto[];
+
+  @ApiProperty({
+    description: '심방 피보고자 ID',
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  //@TransformNumberArray()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  receiverIds?: number[];
 }

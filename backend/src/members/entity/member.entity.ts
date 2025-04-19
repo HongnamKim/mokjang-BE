@@ -32,12 +32,7 @@ import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.ent
 
 @Entity()
 export class MemberModel extends BaseModel {
-  @Index()
-  @Column({ nullable: true })
-  userId: number;
-
   @OneToOne(() => UserModel, (user) => user.member)
-  @JoinColumn({ name: 'userId' })
   user: UserModel;
 
   @Column()
@@ -210,13 +205,6 @@ export class MemberModel extends BaseModel {
   )
   createdVisitations: VisitationMetaModel[];
 
-  // 보고 받을 심방
-  @ManyToMany(
-    () => VisitationMetaModel,
-    (visitationMeta) => visitationMeta.reportTo,
-  )
-  visitationReports: VisitationMetaModel[];
-
   // 참여한 심방
   @ManyToMany(
     () => VisitationMetaModel,
@@ -230,4 +218,6 @@ export class MemberModel extends BaseModel {
     (visitingDetail) => visitingDetail.member,
   )
   visitationDetails: VisitationDetailModel[];
+
+  // ------------------ 보고 -------------------------
 }

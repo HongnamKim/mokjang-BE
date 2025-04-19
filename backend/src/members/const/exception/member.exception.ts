@@ -5,4 +5,6 @@ export const MemberException = {
   ALREADY_EXIST: '이미 동일한 이름과 전화번호를 가진 교인이 존재합니다.',
   UPDATE_ERROR: '교인 업데이트 도중 에러 발생',
   DELETE_ERROR: '교인 삭제 도중 에러 발생',
+
+  ALREADY_LINKED: '해당 교인은 이미 다른 계정과 연결되어 있습니다.',
 };

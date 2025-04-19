@@ -39,12 +39,22 @@ import { ChurchModel } from '../churches/entity/church.entity';
 import { MemberModel } from '../members/entity/member.entity';
 import { VisitationDetailDto } from './dto/visittion-detail.dto';
 import { MemberException } from '../members/const/exception/member.exception';
+import {
+  IVISITATION_REPORT_DOMAIN_SERVICE,
+  IVisitationReportDomainService,
+} from '../report/report-domain/service/visitation-report-domain.service.interface';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../user/user-domain/interface/user-domain.service.interface';
 
 @Injectable()
 export class VisitationService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IUSER_DOMAIN_SERVICE)
+    private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
 
@@ -52,6 +62,9 @@ export class VisitationService {
     private readonly visitationMetaDomainService: IVisitationMetaDomainService,
     @Inject(IVISITATION_DETAIL_DOMAIN_SERVICE)
     private readonly visitationDetailDomainService: IVisitationDetailDomainService,
+
+    @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
+    private readonly visitationReportDomainService: IVisitationReportDomainService,
   ) {}
 
   async getVisitations(churchId: number, dto: GetVisitationDto) {
@@ -111,12 +124,21 @@ export class VisitationService {
       qr,
     );
 
-    const creatorMember =
-      await this.membersDomainService.findMemberModelByUserId(
+    const creatorMemberId = await this.userDomainService.getMemberIdByUserId(
+      accessPayload.id,
+      qr,
+    );
+
+    const creatorMember = await this.membersDomainService.findMemberModelById(
+      church,
+      creatorMemberId,
+      qr,
+    );
+    /*await this.membersDomainService.findMemberModelByUserId(
         church,
         accessPayload.id,
         qr,
-      );
+      );*/
 
     const instructor = await this.membersDomainService.findMemberModelById(
       church,
@@ -125,14 +147,8 @@ export class VisitationService {
       { user: true },
     );
 
-    /**
-     * TODO
-     * reportTo: 보고자 추가
-     * 알림 관련 도메인 설계 필요
-     */
-
     // 심방 진행자 검증
-    !dto.isTest && this.checkInstructorAuthorization(instructor);
+    !dto.isTest && this.checkVisitationAuthorization(instructor);
 
     const memberIds = dto.visitationDetails.map((detail) => detail.memberId);
 
@@ -153,7 +169,51 @@ export class VisitationService {
 
     await this.createVisitationDetails(visitationMeta, members, dto, qr);
 
+    if (dto.receiverIds && dto.receiverIds.length > 0) {
+      await this.createVisitationReports(
+        church,
+        instructor,
+        dto.receiverIds,
+        visitationMeta,
+        qr,
+      );
+    }
+
     return this.getVisitationById(churchId, visitationMeta.id, qr);
+  }
+
+  private async createVisitationReports(
+    church: ChurchModel,
+    sender: MemberModel,
+    receiverIds: number[],
+    visitationMeta: VisitationMetaModel,
+    qr: QueryRunner,
+  ) {
+    const receivers = await this.membersDomainService.findMembersById(
+      church,
+      receiverIds,
+      qr,
+      { user: true },
+    );
+
+    return Promise.all(
+      receivers.map(async (receiver) => {
+        // 권한 검증
+        if (
+          receiver.user.role !== UserRole.manager &&
+          receiver.user.role !== UserRole.mainAdmin
+        ) {
+          throw new ForbiddenException(VisitationException.INVALID_RECEIVER);
+        }
+
+        return this.visitationReportDomainService.createVisitationReport(
+          visitationMeta,
+          sender,
+          receiver,
+          qr,
+        );
+      }),
+    );
   }
 
   /**
@@ -227,7 +287,7 @@ export class VisitationService {
     );
   }
 
-  private checkInstructorAuthorization(instructor: MemberModel) {
+  private checkVisitationAuthorization(instructor: MemberModel) {
     if (
       !instructor.user ||
       (instructor.user.role !== UserRole.mainAdmin &&
@@ -387,7 +447,7 @@ export class VisitationService {
 
     // 새로운 심방 진행자의 권한 확인
     if (newInstructor && !dto.isTest) {
-      this.checkInstructorAuthorization(newInstructor);
+      this.checkVisitationAuthorization(newInstructor);
     }
 
     // 심방 대상자 변경

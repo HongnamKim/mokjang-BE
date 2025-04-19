@@ -1,26 +1,33 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { CreateChurchDto } from './dto/create-church.dto';
-import { JwtAccessPayload } from '../auth/type/jwt';
-import { UpdateChurchDto } from './dto/update-church.dto';
+import { CreateChurchDto } from '../dto/create-church.dto';
+import { JwtAccessPayload } from '../../auth/type/jwt';
+import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from './churches-domain/interface/churches-domain.service.interface';
+} from '../churches-domain/interface/churches-domain.service.interface';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
-} from '../user/user-domain/interface/user-domain.service.interface';
-import { UserRole } from '../user/const/user-role.enum';
-import { ChurchException } from './const/exception/church.exception';
+} from '../../user/user-domain/interface/user-domain.service.interface';
+import { UserRole } from '../../user/const/user-role.enum';
+import { ChurchException } from '../const/exception/church.exception';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../members/member-domain/service/interface/members-domain.service.interface';
 
 @Injectable()
 export class ChurchesService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   findAllChurches() {
@@ -54,6 +61,14 @@ export class ChurchesService {
       qr,
     );
 
+    const mainAdminMember = await this.membersDomainService.createMember(
+      newChurch,
+      { name: user.name, mobilePhone: user.mobilePhone },
+      qr,
+    );
+
+    await this.userDomainService.linkMemberToUser(mainAdminMember, user, qr);
+
     return newChurch;
   }
 
@@ -62,6 +77,21 @@ export class ChurchesService {
       await this.churchesDomainService.findChurchModelById(churchId);
 
     return this.churchesDomainService.updateChurch(church, dto);
+  }
+
+  async updateChurchJoinCode(
+    churchId: number,
+    newCode: string,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    await this.churchesDomainService.updateChurchJoinCode(church, newCode, qr);
+
+    return this.churchesDomainService.findChurchModelById(churchId, qr);
   }
 
   async deleteChurchById(id: number, qr?: QueryRunner) {

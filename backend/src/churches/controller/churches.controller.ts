@@ -10,28 +10,29 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ChurchesService } from './churches.service';
-import { CreateChurchDto } from './dto/create-church.dto';
-import { AccessTokenGuard } from '../auth/guard/jwt.guard';
+import { ChurchesService } from '../service/churches.service';
+import { CreateChurchDto } from '../dto/create-church.dto';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Token } from '../auth/decorator/jwt.decorator';
-import { JwtAccessPayload } from '../auth/type/jwt';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 import {
-  ChurchManagerGuard,
   ChurchMainAdminGuard,
-} from './guard/church-manager-guard.service';
-import { UpdateChurchDto } from './dto/update-church.dto';
+  ChurchManagerGuard,
+} from '../guard/church-manager-guard.service';
+import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ApiDeleteChurch,
   ApiGetAllChurches,
   ApiGetChurchById,
   ApiPatchChurch,
   ApiPostChurch,
-} from './const/swagger/churches/controller.swagger';
-import { AuthType } from '../auth/const/enum/auth-type.enum';
-import { TransactionInterceptor } from '../common/interceptor/transaction.interceptor';
-import { QueryRunner } from '../common/decorator/query-runner.decorator';
+} from '../const/swagger/churches/controller.swagger';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+import { UpdateChurchJoinCodeDto } from '../dto/update-church-join-code.dto';
 
 @Controller('churches')
 export class ChurchesController {
@@ -73,6 +74,21 @@ export class ChurchesController {
     @Body() dto: UpdateChurchDto,
   ) {
     return this.churchesService.updateChurch(churchId, dto);
+  }
+
+  @Patch(':churchId/join-code')
+  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseInterceptors(TransactionInterceptor)
+  patchChurchJoinCode(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Body() dto: UpdateChurchJoinCodeDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.churchesService.updateChurchJoinCode(
+      churchId,
+      dto.joinCode,
+      qr,
+    );
   }
 
   @ApiDeleteChurch()

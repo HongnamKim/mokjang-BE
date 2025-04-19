@@ -15,6 +15,7 @@ import { VisitationType } from '../const/visitation-type.enum';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { VisitationStatus } from '../const/visitation-status.enum';
+import { VisitationReportModel } from '../../report/entity/visitation-report.entity';
 
 @Entity()
 export class VisitationMetaModel extends BaseModel {
@@ -62,10 +63,6 @@ export class VisitationMetaModel extends BaseModel {
   @JoinColumn({ name: 'creatorId' })
   creator: MemberModel;
 
-  @ManyToMany(() => MemberModel, (member) => member.visitationReports)
-  @JoinTable()
-  reportTo: MemberModel[];
-
   @ManyToMany(() => MemberModel, (member) => member.visitationMetas)
   @JoinTable()
   members: MemberModel[];
@@ -75,4 +72,10 @@ export class VisitationMetaModel extends BaseModel {
     (visitingDetail) => visitingDetail.visitationMeta,
   )
   visitationDetails: VisitationDetailModel[];
+
+  @OneToMany(
+    () => VisitationReportModel,
+    (visitingReport) => visitingReport.visitation,
+  )
+  reports: VisitationReportModel[];
 }
