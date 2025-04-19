@@ -49,13 +49,6 @@ export interface IMembersDomainService {
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel>;
 
-  findMemberModelByUserId(
-    church: ChurchModel,
-    userId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ): Promise<MemberModel>;
-
   findDeleteMemberModelById(
     church: ChurchModel,
     memberId: number,

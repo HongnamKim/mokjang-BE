@@ -149,29 +149,6 @@ export class MembersDomainService implements IMembersDomainService {
     return member;
   }
 
-  async findMemberModelByUserId(
-    church: ChurchModel,
-    userId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const member = await membersRepository.findOne({
-      where: {
-        churchId: church.id,
-        userId,
-      },
-      relations: relationOptions,
-    });
-
-    if (!member) {
-      throw new NotFoundException(MemberException.NOT_FOUND);
-    }
-
-    return member;
-  }
-
   async findDeleteMemberModelById(
     church: ChurchModel,
     memberId: number,

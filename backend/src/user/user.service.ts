@@ -13,6 +13,11 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../members/member-domain/service/interface/members-domain.service.interface';
+import {
+  ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE,
+  IChurchJoinRequestDomainService,
+} from '../churches/churches-domain/interface/church-join-requests-domain.service.interface';
+import { ChurchJoinRequestStatusEnum } from '../churches/const/church-join-request-status.enum';
 
 @Injectable()
 export class UserService {
@@ -21,25 +26,12 @@ export class UserService {
     private readonly userDomainService: IUserDomainService,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE)
+    private readonly churchJoinRequestsDomainService: IChurchJoinRequestDomainService,
+
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
-
-    /*@InjectRepository(MemberModel)
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
-    @InjectRepository(MemberModel)
-    private readonly memberRepository: Repository<MemberModel>,
-    @InjectRepository(ChurchModel)
-    private readonly churchRepository: Repository<ChurchModel>,*/
   ) {}
-
-  /*private getMemberRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(MemberModel) : this.memberRepository;
-  }*/
-
-  /*private getChurchRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(ChurchModel) : this.churchRepository;
-  }*/
 
   async getUserById(id: number) {
     return this.userDomainService.findUserById(id);
@@ -56,22 +48,6 @@ export class UserService {
       churchId,
       qr,
     );
-    /*const church = await this.getChurchRepository(qr).findOne({
-      where: {
-        id: churchId,
-      },
-    });
-
-    if (!church) {
-      throw new NotFoundException('해당 교회를 찾을 수 없습니다.');
-    }*/
-
-    /*// 사용자 정보 업데이트
-    await this.userDomainService.updateUser(
-      user,
-      { role: UserRole.member },
-      qr,
-    );*/
 
     // 사용자 - 교회 관계 설정
     await this.userDomainService.signInChurch(
@@ -80,6 +56,8 @@ export class UserService {
       UserRole.member,
       qr,
     );
+
+    return this.userDomainService.findUserById(userId, qr);
   }
 
   async linkMemberToUser(
@@ -119,5 +97,44 @@ export class UserService {
     }
 
     return this.userDomainService.linkMemberToUser(member, user);
+  }
+
+  async getMyJoinRequest(userId: number, qr?: QueryRunner) {
+    const user = await this.userDomainService.findUserById(userId, qr);
+
+    return this.churchJoinRequestsDomainService.findMyChurchJoinRequest(
+      user,
+      qr,
+    );
+  }
+
+  async cancelMyJoinRequest(userId: number, qr?: QueryRunner) {
+    const user = await this.userDomainService.findUserById(userId, qr);
+
+    const joinRequest =
+      await this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
+        user,
+        qr,
+      );
+
+    await this.churchJoinRequestsDomainService.updateChurchJoinRequest(
+      joinRequest,
+      ChurchJoinRequestStatusEnum.CANCELED,
+      qr,
+    );
+
+    return this.churchJoinRequestsDomainService.findMyChurchJoinRequestById(
+      user,
+      joinRequest.id,
+      qr,
+    );
+  }
+
+  async getMyPendingJoinRequest(userId: number) {
+    const user = await this.userDomainService.findUserById(userId);
+
+    return this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
+      user,
+    );
   }
 }
