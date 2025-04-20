@@ -11,19 +11,20 @@ import { EducationDomainModule } from '../management/educations/service/educatio
 import { MembersDomainModule } from './member-domain/members-domain.module';
 import { ISEARCH_MEMBERS_SERVICE } from './service/interface/search-members.service.interface';
 import { FamilyRelationDomainModule } from '../family-relation/family-relation-domain/family-relation-domain.module';
+import { UserMembersController } from './controller/user-members.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([MemberModel, ChurchModel]),
     RouterModule.register([
-      { path: 'churches/:churchId/members', module: MembersModule },
+      { path: 'churches/:churchId', module: MembersModule },
     ]),
     ChurchesDomainModule,
     MembersDomainModule,
     FamilyRelationDomainModule,
     EducationDomainModule,
   ],
-  controllers: [MembersController],
+  controllers: [MembersController, UserMembersController],
   providers: [
     MembersService,
     {

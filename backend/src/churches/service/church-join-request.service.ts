@@ -161,7 +161,12 @@ export class ChurchJoinRequestService {
       throw new ConflictException(MemberException.ALREADY_LINKED);
     }
 
-    await this.userDomainService.linkMemberToUser(linkMember, joinRequest.user);
+    //await this.userDomainService.linkMemberToUser(linkMember, joinRequest.user);
+    await this.membersDomainService.linkUserToMember(
+      linkMember,
+      joinRequest.user,
+      qr,
+    );
 
     return this.churchJoinRequestsDomainService.findChurchJoinRequestById(
       church,
