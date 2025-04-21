@@ -12,6 +12,8 @@ import { MembersDomainModule } from './member-domain/members-domain.module';
 import { ISEARCH_MEMBERS_SERVICE } from './service/interface/search-members.service.interface';
 import { FamilyRelationDomainModule } from '../family-relation/family-relation-domain/family-relation-domain.module';
 import { UserMembersController } from './controller/user-members.controller';
+import { UserDomainModule } from '../user/user-domain/user-domain.module';
+import { UserMembersService } from './service/user-members.service';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { UserMembersController } from './controller/user-members.controller';
     RouterModule.register([
       { path: 'churches/:churchId', module: MembersModule },
     ]),
+    UserDomainModule,
     ChurchesDomainModule,
     MembersDomainModule,
     FamilyRelationDomainModule,
@@ -27,6 +30,7 @@ import { UserMembersController } from './controller/user-members.controller';
   controllers: [MembersController, UserMembersController],
   providers: [
     MembersService,
+    UserMembersService,
     {
       provide: ISEARCH_MEMBERS_SERVICE,
       useClass: SearchMembersService,

@@ -1,27 +1,36 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { GetManagerMemberDto } from '../dto/get-manager-member.dto';
-import { MembersService } from '../service/members.service';
-import { GetMemberDto } from '../dto/get-member.dto';
+import { GetUserMemberDto } from '../dto/get-user-member.dto';
+import { UpdateMemberRoleDto } from '../dto/role/update-member-role.dto';
+import { UserMembersService } from '../service/user-members.service';
 
 @ApiTags('Churches:User-Members')
 @Controller('user-members')
 export class UserMembersController {
-  constructor(private readonly membersService: MembersService) {}
+  constructor(private readonly userMembersService: UserMembersService) {}
 
   @Get()
   getUserMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Query() dto: GetMemberDto,
+    @Query() dto: GetUserMemberDto,
   ) {
-    return this.membersService.getUserMembers(churchId, dto);
+    return this.userMembersService.getUserMembers(churchId, dto);
   }
 
-  @Get('managers')
-  getManagerMembers(
+  @Patch(':memberId/role')
+  patchUserMemberRole(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Query() dto: GetManagerMemberDto,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Body() dto: UpdateMemberRoleDto,
   ) {
-    return this.membersService.getMembers(churchId, dto, undefined, true);
+    return this.userMembersService.updateMemberRole(churchId, memberId, dto);
   }
 }
