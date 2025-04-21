@@ -22,7 +22,7 @@ import { GetMemberDto } from '../../dto/get-member.dto';
 import { MemberPaginationResultDto } from '../../dto/member-pagination-result.dto';
 import {
   DefaultMemberRelationOption,
-  DefaultMembersSelectOption,
+  DefaultMemberSelectOption,
 } from '../../const/default-find-options.const';
 import { MemberException } from '../../const/exception/member.exception';
 import { CreateMemberDto } from '../../dto/create-member.dto';
@@ -117,7 +117,7 @@ export class MembersDomainService implements IMembersDomainService {
         churchId: church.id,
       },
       relations: DefaultMemberRelationOption,
-      select: DefaultMembersSelectOption,
+      select: DefaultMemberSelectOption,
     });
 
     if (!member) {
