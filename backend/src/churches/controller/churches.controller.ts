@@ -33,6 +33,7 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateChurchJoinCodeDto } from '../dto/update-church-join-code.dto';
+import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
 
 @Controller('churches')
 export class ChurchesController {
@@ -76,6 +77,14 @@ export class ChurchesController {
     return this.churchesService.updateChurch(churchId, dto);
   }
 
+  @ApiDeleteChurch()
+  @Delete(':churchId')
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
+    return this.churchesService.deleteChurchById(churchId);
+  }
+
   @Patch(':churchId/join-code')
   @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -91,11 +100,22 @@ export class ChurchesController {
     );
   }
 
-  @ApiDeleteChurch()
-  @Delete(':churchId')
-  @ApiBearerAuth()
+  @Patch(':churchId/main-admin')
   @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
-  deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.churchesService.deleteChurchById(churchId);
+  @UseInterceptors(TransactionInterceptor)
+  transferMainAdmin(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @Body() dto: TransferMainAdminDto,
+    @QueryRunner() qr: QR,
+  ) {
+    const mainAdminUserId = accessPayload.id;
+
+    return this.churchesService.transferMainAdmin(
+      churchId,
+      mainAdminUserId,
+      dto,
+      qr,
+    );
   }
 }
