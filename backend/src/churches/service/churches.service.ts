@@ -1,4 +1,9 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { CreateChurchDto } from '../dto/create-church.dto';
 import { JwtAccessPayload } from '../../auth/type/jwt';
@@ -17,6 +22,7 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/service/interface/members-domain.service.interface';
+import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -35,7 +41,17 @@ export class ChurchesService {
   }
 
   async getChurchById(id: number, qr?: QueryRunner) {
-    return this.churchesDomainService.findChurchById(id, qr);
+    const church = await this.churchesDomainService.findChurchById(id, qr);
+
+    /*const mainAdmin = await this.userDomainService.findMainAdminUser(
+      church,
+      qr,
+    );*/
+
+    return {
+      ...church,
+      //mainAdmin,
+    };
   }
 
   async createChurch(
@@ -98,5 +114,49 @@ export class ChurchesService {
     const church = await this.churchesDomainService.findChurchModelById(id, qr);
 
     return this.churchesDomainService.deleteChurch(church, qr);
+  }
+
+  async transferMainAdmin(
+    churchId: number,
+    mainAdminUserId: number,
+    dto: TransferMainAdminDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const mainAdminMember =
+      await this.membersDomainService.findMemberModelByUserId(
+        church,
+        mainAdminUserId,
+        qr,
+        { user: true },
+      );
+
+    const newMainAdminMember =
+      await this.membersDomainService.findMemberModelById(
+        church,
+        dto.newMainAdminMemberId,
+        qr,
+        { user: true },
+      );
+
+    if (mainAdminMember.id === newMainAdminMember.id) {
+      throw new BadRequestException(ChurchException.SAME_MAIN_ADMIN);
+    }
+
+    if (newMainAdminMember.user.role !== UserRole.manager) {
+      throw new BadRequestException(ChurchException.INVALID_NEW_MAIN_ADMIN);
+    }
+
+    await this.userDomainService.transferMainAdmin(
+      mainAdminMember.user,
+      newMainAdminMember.user,
+      qr,
+    );
+
+    return this.churchesDomainService.findChurchById(churchId, qr);
   }
 }

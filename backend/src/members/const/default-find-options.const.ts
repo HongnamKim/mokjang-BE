@@ -9,14 +9,12 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   officer: true,
   ministries: true,
-  //educations: true,
   educations: {
-    educationTerm: true /*{
-      education: true,
-    },*/,
+    educationTerm: true,
   },
   group: true,
   groupRole: true,
+  user: true,
 };
 
 export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
@@ -38,11 +36,7 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     educationTerm: {
       id: true,
       term: true,
-      educationName: true /*
-      education: {
-        id: true,
-        name: true,
-      },*/,
+      educationName: true,
     },
   },
   group: {
@@ -53,20 +47,20 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     role: true,
   },
+  user: {
+    role: true,
+  },
 };
 
 export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
-  //guidedBy: true,
   group: true,
   groupRole: true,
   ministries: true,
-  //educations: true,
   educations: {
-    educationTerm: true /*{
-      education: true,
-    }*/,
+    educationTerm: true,
   },
   officer: true,
+  user: true,
 };
 
 export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
@@ -91,23 +85,21 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  //educations: true,
   educations: {
     id: true,
     status: true,
     educationTerm: {
       id: true,
       term: true,
-      educationName: true /*
-      education: {
-        id: true,
-        name: true,
-      },*/,
+      educationName: true,
     },
   },
   officer: {
     id: true,
     name: true,
+  },
+  user: {
+    role: true,
   },
 };
 

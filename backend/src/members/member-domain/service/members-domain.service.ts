@@ -22,7 +22,7 @@ import { GetMemberDto } from '../../dto/get-member.dto';
 import { MemberPaginationResultDto } from '../../dto/member-pagination-result.dto';
 import {
   DefaultMemberRelationOption,
-  DefaultMembersSelectOption,
+  DefaultMemberSelectOption,
 } from '../../const/default-find-options.const';
 import { MemberException } from '../../const/exception/member.exception';
 import { CreateMemberDto } from '../../dto/create-member.dto';
@@ -31,6 +31,7 @@ import { OfficerModel } from '../../../management/officers/entity/officer.entity
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
+import { UserModel } from '../../../user/entity/user.entity';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -116,7 +117,7 @@ export class MembersDomainService implements IMembersDomainService {
         churchId: church.id,
       },
       relations: DefaultMemberRelationOption,
-      select: DefaultMembersSelectOption,
+      select: DefaultMemberSelectOption,
     });
 
     if (!member) {
@@ -124,6 +125,52 @@ export class MembersDomainService implements IMembersDomainService {
     }
 
     return member;
+  }
+
+  async findMemberModelByUserId(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const member = await membersRepository.findOne({
+      where: {
+        userId,
+        churchId: church.id,
+      },
+      relations: relationOptions,
+    });
+
+    if (!member) {
+      throw new NotFoundException(MemberException.NOT_FOUND);
+    }
+
+    return member;
+  }
+
+  async linkUserToMember(
+    member: MemberModel,
+    user: UserModel,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getMembersRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: member.id,
+      },
+      {
+        user: user,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException('계정 연결 중 에러 발생');
+    }
+
+    return result;
   }
 
   async findMemberModelById(
