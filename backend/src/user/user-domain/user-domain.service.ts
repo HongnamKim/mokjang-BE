@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../entity/user.entity';
@@ -14,6 +13,7 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserRole } from '../const/user-role.enum';
 import { MemberModel } from '../../members/entity/member.entity';
+import { UserException } from '../exception/user.exception';
 
 @Injectable()
 export class UserDomainService implements IUserDomainService {
@@ -40,26 +40,10 @@ export class UserDomainService implements IUserDomainService {
     });
 
     if (!user) {
-      throw new NotFoundException('존재하지 않는 유저입니다.');
+      throw new NotFoundException(UserException.NOT_FOUND);
     }
 
     return user;
-  }
-
-  async getMemberIdByUserId(id: number, qr?: QueryRunner) {
-    const userRepository = this.getUserRepository(qr);
-
-    const user = await userRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException();
-    }
-
-    return user.memberId;
   }
 
   findUserModelByOAuth(provider: string, providerId: string, qr?: QueryRunner) {
@@ -90,7 +74,7 @@ export class UserDomainService implements IUserDomainService {
     const isExistUser = await this.isExistUser(dto.provider, dto.providerId);
 
     if (isExistUser) {
-      throw new BadRequestException('이미 가입된 계정입니다.');
+      throw new BadRequestException(UserException.ALREADY_EXIST);
     }
 
     const userRepository = this.getUserRepository(qr);
@@ -115,9 +99,7 @@ export class UserDomainService implements IUserDomainService {
 
   isAbleToCreateChurch(user: UserModel): boolean {
     if (user.role !== UserRole.none) {
-      throw new BadRequestException(
-        '소속된 교회가 있을 경우, 교회를 생성할 수 없습니다.',
-      );
+      throw new BadRequestException(UserException.CANNOT_CREATE_CHURCH);
     }
 
     return true;
@@ -169,9 +151,51 @@ export class UserDomainService implements IUserDomainService {
     });
 
     if (!updatedUser) {
-      throw new InternalServerErrorException('교인 연결 중 에러 발생');
+      throw new InternalServerErrorException(UserException.UPDATE_ERROR);
     }
 
     return updatedUser;
+  }
+
+  async findMainAdminUser(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<UserModel> {
+    const userRepository = this.getUserRepository(qr);
+
+    const mainAdmin = await userRepository.findOne({
+      where: {
+        churchId: church.id,
+        role: UserRole.mainAdmin,
+      },
+      relations: {
+        member: true,
+      },
+    });
+
+    if (!mainAdmin) {
+      throw new NotFoundException(UserException.NOT_FOUND);
+    }
+
+    return mainAdmin;
+  }
+
+  async transferMainAdmin(
+    beforeMainAdmin: UserModel,
+    newMainAdmin: UserModel,
+    qr: QueryRunner,
+  ) {
+    const userRepository = this.getUserRepository(qr);
+
+    await Promise.all([
+      userRepository.update(
+        { id: beforeMainAdmin.id },
+        { role: UserRole.manager },
+      ),
+      userRepository.update(
+        { id: newMainAdmin.id },
+        { role: UserRole.mainAdmin },
+      ),
+    ]);
   }
 }

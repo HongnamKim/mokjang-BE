@@ -16,6 +16,7 @@ import { OfficerModel } from '../../../../management/officers/entity/officer.ent
 import { MinistryModel } from '../../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../../../management/groups/entity/group-role.entity';
+import { UserModel } from '../../../../user/entity/user.entity';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -48,6 +49,19 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel>;
+
+  findMemberModelByUserId(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MemberModel>,
+  ): Promise<MemberModel>;
+
+  linkUserToMember(
+    member: MemberModel,
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
 
   findDeleteMemberModelById(
     church: ChurchModel,

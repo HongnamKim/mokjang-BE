@@ -124,16 +124,17 @@ export class VisitationService {
       qr,
     );
 
-    const creatorMemberId = await this.userDomainService.getMemberIdByUserId(
+    /*const creatorMemberId = await this.userDomainService.getMemberIdByUserId(
       accessPayload.id,
       qr,
-    );
+    );*/
 
-    const creatorMember = await this.membersDomainService.findMemberModelById(
-      church,
-      creatorMemberId,
-      qr,
-    );
+    const creatorMember =
+      await this.membersDomainService.findMemberModelByUserId(
+        church,
+        accessPayload.id,
+        qr,
+      );
     /*await this.membersDomainService.findMemberModelByUserId(
         church,
         accessPayload.id,

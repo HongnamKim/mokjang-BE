@@ -51,11 +51,11 @@ export class UserModel extends BaseModel {
   @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinRequestModel;
 
-  @Index()
+  /*@Index()
   @Column({ nullable: true })
-  memberId: number;
+  memberId: number;*/
 
   @OneToOne(() => MemberModel, (member) => member.user)
-  @JoinColumn({ name: 'memberId' })
+  //@JoinColumn({ name: 'memberId' })
   member: MemberModel;
 }
