@@ -20,7 +20,7 @@ import {
   ApiRejectChurchJoinRequest,
 } from '../const/swagger/churches/controller.swagger';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../guard/church-manager-guard.service';
+import { ChurchManagerGuard } from '../guard/church-guard.service';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';

@@ -17,7 +17,7 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { CreateVisitationDto } from '../dto/create-visitation.dto';
-import { ChurchManagerGuard } from '../../churches/guard/church-manager-guard.service';
+import { ChurchManagerGuard } from '../../churches/guard/church-guard.service';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
@@ -30,7 +30,7 @@ import {
   ApiPatchVisitationDetail,
   ApiPatchVisitationMeta,
   ApiPostVisitation,
-} from '../decorator/visitation.swagger';
+} from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDto } from '../dto/update-visitation.dto';
 import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
 import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';

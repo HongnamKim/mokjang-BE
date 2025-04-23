@@ -1,11 +1,11 @@
-import { IRequestInfoDomainService } from './interface/request-info-domain.service.interface';
+import { IRequestInfoDomainService } from '../interface/request-info-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestInfoModel } from '../../entity/request-info.entity';
 import { FindOptionsRelations, QueryRunner, Repository } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetRequestInfoDto } from '../../dto/get-request-info.dto';
 import { CreateRequestInfoDto } from '../../dto/create-request-info.dto';
-import { RequestInfoRules } from '../../const/request-info.rules';
+import { RequestInfoConstraints } from '../../const/request-info.constraints';
 import { RequestLimitValidationType } from '../../types/request-limit-validation-result';
 import { DateUtils } from '../../../common/utils/date-utils.util';
 import { RequestInfoException } from '../../const/exception/request-info.exception';
@@ -126,7 +126,7 @@ export class RequestInfoDomainService implements IRequestInfoDomainService {
       churchId: church.id,
       memberId: member.id,
       requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-        RequestInfoRules.REQUEST_INFO_EXPIRE_DAYS,
+        RequestInfoConstraints.REQUEST_INFO_EXPIRE_DAYS,
       ),
     });
   }
@@ -150,7 +150,7 @@ export class RequestInfoDomainService implements IRequestInfoDomainService {
             ? () => 'requestInfoAttempts + 1'
             : 1,
         requestInfoExpiresAt: DateUtils.calculateExpiryDate(
-          RequestInfoRules.REQUEST_INFO_EXPIRE_DAYS,
+          RequestInfoConstraints.REQUEST_INFO_EXPIRE_DAYS,
         ),
       },
     );

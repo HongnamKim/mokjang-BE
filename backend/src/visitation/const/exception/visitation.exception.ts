@@ -9,6 +9,8 @@ export const VisitationException = {
     `이미 존재하는 심방 대상자입니다. 존재하는 교인 id: [${alreadyExistMember.join(', ')}]`,
   NOT_EXIST_DELETE_TARGET_MEMBER: (notExistMemberId: number[]) =>
     `삭제 대상자가 심방 대상자에 포함되어 있지 않습니다. 존재하지 않는 교인 id: [${notExistMemberId.join(', ')}]`,
+
+  MEMBER_RELATION_ERROR: '심방 대상자 불러오기 실패',
 };
 
 export const VisitationDetailException = {

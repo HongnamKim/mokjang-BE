@@ -19,9 +19,9 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import { JwtAccessPayload } from '../../auth/type/jwt';
-import { UserException } from '../../user/exception/user.exception';
+import { UserException } from '../../user/const/exception/user.exception';
 import { ApproveJoinRequestDto } from '../dto/church-join-request/approve-join-request.dto';
 import { QueryRunner } from 'typeorm';
 import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';

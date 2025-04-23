@@ -56,5 +56,5 @@ export class GetVisitationReportDto {
   })
   @IsOptional()
   @IsBoolean()
-  isRead: boolean;
+  isRead?: boolean;
 }

@@ -21,7 +21,7 @@ import { ChurchException } from '../const/exception/church.exception';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
 
 @Injectable()

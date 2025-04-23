@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MinistryModel } from '../entity/ministry.entity';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { IMINISTRIES_DOMAIN_SERVICE } from './interface/ministries-domain.service.interface';
-import { MinistriesDomainService } from './ministries-domain.service';
+import { MinistriesDomainService } from './service/ministries-domain.service';
 import { IMINISTRY_GROUPS_DOMAIN_SERVICE } from './interface/ministry-groups-domain.service.interface';
-import { MinistryGroupsDomainService } from './ministry-groups-domain.service';
+import { MinistryGroupsDomainService } from './service/ministry-groups-domain.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([MinistryModel, MinistryGroupModel])],

@@ -4,16 +4,13 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  Matches,
   MaxLength,
   Min,
 } from 'class-validator';
-import { TransformName } from '../../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
 
-export class CreateMinistryDto /*extends PickType(MinistryModel, [
-  'name',
-  'ministryGroupId',
-]) */ {
+export class CreateMinistryDto {
   @ApiProperty({
     name: 'name',
     description: '사역 이름',
@@ -22,11 +19,9 @@ export class CreateMinistryDto /*extends PickType(MinistryModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
   @MaxLength(50)
-  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
-    message: '특수문자는 사용할 수 없습니다.',
-  })
+  @IsNoSpecialChar()
   name: string;
 
   @ApiProperty({

@@ -15,7 +15,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../member-domain/service/interface/members-domain.service.interface';
+} from '../member-domain/interface/members-domain.service.interface';
 import {
   ISEARCH_MEMBERS_SERVICE,
   ISearchMembersService,
@@ -38,6 +38,8 @@ export class MembersService {
     private readonly searchMembersService: ISearchMembersService,
     @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
     private readonly familyDomainService: IFamilyRelationDomainService,
+
+    //@Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
   ) {}
 
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {

@@ -25,11 +25,11 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import {
   IMINISTRY_HISTORY_DOMAIN_SERVICE,
   IMinistryHistoryDomainService,
-} from '../member-history-domain/service/interface/ministry-history-domain.service.interface';
+} from '../member-history-domain/interface/ministry-history-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MinistryHistoryPaginationResult } from '../dto/ministry/ministry-history-pagination-result.dto';
 import { MinistryHistoryException } from '../const/exception/ministry-history.exception';

@@ -3,7 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { IVisitationDetailDomainService } from './interface/visitation-detail-domain.service.interface';
+import { IVisitationDetailDomainService } from '../interface/visitation-detail-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationDetailModel } from '../../entity/visitation-detail.entity';
 import { QueryRunner, Repository, UpdateResult } from 'typeorm';

@@ -1,14 +1,9 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationModel } from '../../entity/education.entity';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Matches,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { TransformName } from '../../../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-title.decorator';
 
 export class CreateEducationDto extends PickType(EducationModel, [
   'name',
@@ -20,11 +15,9 @@ export class CreateEducationDto extends PickType(EducationModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
   @MaxLength(50)
-  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
-    message: '특수문자는 사용할 수 없습니다.',
-  })
+  @IsNoSpecialChar()
   override name: string;
 
   @ApiProperty({

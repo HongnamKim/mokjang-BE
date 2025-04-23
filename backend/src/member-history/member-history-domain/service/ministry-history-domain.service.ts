@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { IMinistryHistoryDomainService } from './interface/ministry-history-domain.service.interface';
+import { IMinistryHistoryDomainService } from '../interface/ministry-history-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../../entity/ministry-history.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';

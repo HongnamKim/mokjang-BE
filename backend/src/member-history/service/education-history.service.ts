@@ -6,7 +6,7 @@ import { EducationStatus } from '../../management/educations/const/education-sta
 import {
   IEDUCATION_HISTORY_DOMAIN_SERVICE,
   IEducationHistoryDomainService,
-} from '../member-history-domain/service/interface/education-history-domain.service.interface';
+} from '../member-history-domain/interface/education-history-domain.service.interface';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -14,7 +14,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import { EducationHistoryPaginationResultDto } from '../dto/education/education-history-pagination-result.dto';
 
 @Injectable()
