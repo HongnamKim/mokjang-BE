@@ -217,7 +217,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         dto.numberOfSessions < educationTerm.completionCriteria
       ) {
         throw new BadRequestException(
-          '교육 회차는 이수 조건보다 크거나 같아야합니다.',
+          EducationTermException.INVALID_NUMBER_OF_SESSION,
         );
       }
     }
@@ -226,7 +226,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     if (dto.completionCriteria && !dto.numberOfSessions) {
       if (dto.completionCriteria > educationTerm.numberOfSessions) {
         throw new BadRequestException(
-          '이수 조건은 교육 회차보다 작거나 같아야합니다.',
+          EducationTermException.INVALID_NUMBER_OF_CRITERIA,
         );
       }
     }
@@ -235,7 +235,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     if (dto.startDate && !dto.endDate) {
       if (dto.startDate > educationTerm.endDate) {
         throw new BadRequestException(
-          '교육 시작일은 종료일보다 뒤일 수 없습니다.',
+          EducationTermException.INVALID_START_DATE,
         );
       }
     }
@@ -243,9 +243,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     // 종료일만 수정
     if (dto.endDate && !dto.startDate) {
       if (educationTerm.startDate > dto.endDate) {
-        throw new BadRequestException(
-          '교육 종료일은 시작일보다 앞설 수 없습니다.',
-        );
+        throw new BadRequestException(EducationTermException.INVALID_END_DATE);
       }
     }
   }

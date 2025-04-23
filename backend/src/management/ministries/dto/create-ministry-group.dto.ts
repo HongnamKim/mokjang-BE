@@ -1,13 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Matches,
-} from 'class-validator';
-import { TransformName } from '../../../churches/decorator/transform-name';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
 
 export class CreateMinistryGroupDto extends PickType(MinistryGroupModel, [
   'name',
@@ -21,10 +16,8 @@ export class CreateMinistryGroupDto extends PickType(MinistryGroupModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @TransformName()
-  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
-    message: '특수문자는 사용할 수 없습니다.',
-  })
+  @RemoveSpaces()
+  @IsNoSpecialChar()
   override name: string;
 
   @ApiProperty({

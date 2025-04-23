@@ -15,11 +15,11 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import {
   IOFFICER_HISTORY_DOMAIN_SERVICE,
   IOfficerHistoryDomainService,
-} from '../member-history-domain/service/interface/officer-history-domain.service.interface';
+} from '../member-history-domain/interface/officer-history-domain.service.interface';
 import { OfficerHistoryPaginationResultDto } from '../dto/officer/officer-history-pagination-result.dto';
 import { OfficerHistoryException } from '../const/exception/officer-history.exception';
 

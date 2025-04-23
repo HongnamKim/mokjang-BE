@@ -19,7 +19,7 @@ import { JwtAccessPayload } from '../../auth/type/jwt';
 import {
   ChurchMainAdminGuard,
   ChurchManagerGuard,
-} from '../guard/church-manager-guard.service';
+} from '../guard/church-guard.service';
 import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ApiDeleteChurch,

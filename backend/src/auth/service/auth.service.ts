@@ -13,7 +13,7 @@ import {
   AuthException,
   SignInException,
   VerifyException,
-} from '../const/exception-message/exception.message';
+} from '../const/exception/auth.exception';
 import { JwtTemporalPayload } from '../type/jwt';
 import { TestEnvironment } from '../const/enum/test-environment.enum';
 import {

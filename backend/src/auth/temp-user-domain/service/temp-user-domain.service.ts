@@ -8,6 +8,7 @@ import { TempUserModel } from '../../entity/temp-user.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { UpdateTempUserDto } from '../../../user/dto/update-temp-user.dto';
 import { ITempUserDomainService } from './interface/temp-user.service.interface';
+import { TempUserException } from '../../const/exception/auth.exception';
 
 @Injectable()
 export class TempUserDomainService implements ITempUserDomainService {
@@ -64,7 +65,7 @@ export class TempUserDomainService implements ITempUserDomainService {
     });
 
     if (!tempUser) {
-      throw new NotFoundException('존재하지 않는 임시 유저입니다.');
+      throw new NotFoundException(TempUserException.NOT_FOUND);
     }
 
     return tempUser;
@@ -74,7 +75,7 @@ export class TempUserDomainService implements ITempUserDomainService {
     const isExistTempUser = await this.isExistTempUser(provider, providerId);
 
     if (isExistTempUser) {
-      throw new BadRequestException('이미 존재하는 임시 유저입니다.');
+      throw new BadRequestException(TempUserException.ALREADY_EXIST);
     }
 
     const tempUserRepository = this.getTempUserRepository(qr);

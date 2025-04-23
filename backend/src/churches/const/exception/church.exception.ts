@@ -11,6 +11,12 @@ export const ChurchException = {
     '관리자 권한의 교인에게만 교회 최고 관리자 권한을 넘길 수 있습니다.',
 };
 
+export const ChurchAuthException = {
+  MEMBER_EXCEPTION: '해당 교회의 교인만 접근할 수 있습니다.',
+  MANAGER_EXCEPTION: '해당 교회의 관리자만 접근할 수 있습니다.',
+  MAIN_ADMIN_EXCEPTION: '해당 교회의 최고 관리자만 접근할 수 있습니다.',
+};
+
 export const ChurchJoinRequestException = {
   ALREADY_EXIST: '이미 교회 가입 신청이 존재합니다.',
   INVALID_CHURCH_CODE: '잘못된 형식의 교회 코드입니다.',

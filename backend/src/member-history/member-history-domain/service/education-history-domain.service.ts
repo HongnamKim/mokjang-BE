@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IEducationHistoryDomainService } from './interface/education-history-domain.service.interface';
+import { IEducationHistoryDomainService } from '../interface/education-history-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, QueryRunner, Repository } from 'typeorm';
 import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';

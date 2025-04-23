@@ -1,4 +1,4 @@
-import { IVisitationReportDomainService } from './visitation-report-domain.service.interface';
+import { IVisitationReportDomainService } from '../interface/visitation-report-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationReportModel } from '../../entity/visitation-report.entity';
 import {
@@ -14,7 +14,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { VisitationReportException } from '../../exception/visitation-report.exception';
+import { VisitationReportException } from '../../const/exception/visitation-report.exception';
 import { UpdateVisitationReportDto } from '../../dto/visitation-report/update-visitation-report.dto';
 
 export class VisitationReportDomainService

@@ -63,7 +63,8 @@ export class EducationDomainService implements IEducationDomainService {
       order.createdAt = 'desc';
     }
 
-    const [result, totalCount] = await Promise.all([
+    const [data, totalCount] = await Promise.all([
+      // EducationMode[]
       educationsRepository.find({
         where: {
           churchId: church.id,
@@ -73,13 +74,18 @@ export class EducationDomainService implements IEducationDomainService {
         skip: dto.take * (dto.page - 1),
       }),
 
-      educationsRepository.count({ where: { churchId: church.id } }),
+      // Count
+      educationsRepository.count({
+        where: {
+          churchId: church.id,
+        },
+      }),
     ]);
 
     return {
-      data: result,
+      data: data,
       totalCount,
-      count: result.length,
+      count: data.length,
       page: dto.page,
     };
   }

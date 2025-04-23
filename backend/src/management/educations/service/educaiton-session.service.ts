@@ -160,12 +160,6 @@ export class EducationSessionService {
         educationTerm.educationEnrollments,
         qr,
       ),
-      /*this.getSessionAttendanceRepository(qr).save(
-        educationTerm.educationEnrollments.map((enrollment) => ({
-          educationSessionId: newSession.id,
-          educationEnrollmentId: enrollment.id,
-        })),
-      ),*/
     ]);
 
     return this.educationSessionDomainService.findEducationSessionById(

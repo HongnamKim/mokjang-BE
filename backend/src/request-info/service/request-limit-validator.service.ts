@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { REQUEST_CONSTANTS } from '../const/request-info.const';
 import {
   RequestLimitValidationResult,
   RequestLimitValidationType,
@@ -8,6 +7,7 @@ import { DateUtils } from '../../common/utils/date-utils.util';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import { ConfigService } from '@nestjs/config';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { RequestInfoException } from '../const/exception/request-info.exception';
 
 @Injectable()
 export class RequestLimitValidatorService {
@@ -35,7 +35,7 @@ export class RequestLimitValidatorService {
     return {
       isValid: false,
       type: RequestLimitValidationType.ERROR,
-      error: REQUEST_CONSTANTS.ERROR_MESSAGES.DAILY_LIMIT_EXCEEDED(
+      error: RequestInfoException.DAILY_LIMIT_EXCEEDED(
         this.DAILY_REQUEST_LIMITS,
       ),
     };
@@ -56,7 +56,7 @@ export class RequestLimitValidatorService {
     return {
       isValid: false,
       type: RequestLimitValidationType.ERROR,
-      error: REQUEST_CONSTANTS.ERROR_MESSAGES.RETRY_LIMIT_EXCEEDED(
+      error: RequestInfoException.RETRY_LIMIT_EXCEEDED(
         this.DAILY_REQUEST_INFO_RETRY_LIMITS,
       ),
     };

@@ -10,7 +10,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../member-domain/service/interface/members-domain.service.interface';
+} from '../member-domain/interface/members-domain.service.interface';
 import {
   ISEARCH_MEMBERS_SERVICE,
   ISearchMembersService,
@@ -27,6 +27,7 @@ import { MemberModel } from '../entity/member.entity';
 import { UpdateMemberRoleDto } from '../dto/role/update-member-role.dto';
 import { UpdateUserDto } from '../../user/dto/update-user.dto';
 import { GetUserMemberDto } from '../dto/get-user-member.dto';
+import { MemberException } from '../const/exception/member.exception';
 
 @Injectable()
 export class UserMembersService {
@@ -90,11 +91,11 @@ export class UserMembersService {
     );
 
     if (!member.userId) {
-      throw new BadRequestException('계정 연동이 되어있지 않은 교인입니다.');
+      throw new BadRequestException(MemberException.NOT_LINKED_MEMBER);
     }
 
     if (member.user.role === dto.role) {
-      throw new BadRequestException('이미 동일한 권한입니다.');
+      throw new BadRequestException(MemberException.SAME_ROLE);
     }
 
     const user = await this.userDomainService.findUserById(member.userId);

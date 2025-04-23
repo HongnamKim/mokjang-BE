@@ -9,11 +9,11 @@ import {
 import {
   IVISITATION_META_DOMAIN_SERVICE,
   IVisitationMetaDomainService,
-} from './visitation-domain/service/interface/visitation-meta-domain.service.interface';
+} from './visitation-domain/interface/visitation-meta-domain.service.interface';
 import {
   IVISITATION_DETAIL_DOMAIN_SERVICE,
   IVisitationDetailDomainService,
-} from './visitation-domain/service/interface/visitation-detail-domain.service.interface';
+} from './visitation-domain/interface/visitation-detail-domain.service.interface';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -21,7 +21,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../members/member-domain/service/interface/members-domain.service.interface';
+} from '../members/member-domain/interface/members-domain.service.interface';
 import { UserRole } from '../user/const/user-role.enum';
 import { UpdateVisitationMetaDto } from './dto/internal/meta/update-visitation-meta.dto';
 import { QueryRunner } from 'typeorm';
@@ -42,7 +42,7 @@ import { MemberException } from '../members/const/exception/member.exception';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
-} from '../report/report-domain/service/visitation-report-domain.service.interface';
+} from '../report/report-domain/interface/visitation-report-domain.service.interface';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
@@ -124,22 +124,12 @@ export class VisitationService {
       qr,
     );
 
-    /*const creatorMemberId = await this.userDomainService.getMemberIdByUserId(
-      accessPayload.id,
-      qr,
-    );*/
-
     const creatorMember =
       await this.membersDomainService.findMemberModelByUserId(
         church,
         accessPayload.id,
         qr,
       );
-    /*await this.membersDomainService.findMemberModelByUserId(
-        church,
-        accessPayload.id,
-        qr,
-      );*/
 
     const instructor = await this.membersDomainService.findMemberModelById(
       church,
@@ -305,7 +295,9 @@ export class VisitationService {
     qr: QueryRunner,
   ) {
     if (!visitationMeta.members) {
-      throw new InternalServerErrorException('심방 대상자 불러오기 실패');
+      throw new InternalServerErrorException(
+        VisitationException.MEMBER_RELATION_ERROR,
+      );
     }
 
     let visitationMembers = [...visitationMeta.members];

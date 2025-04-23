@@ -2,6 +2,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import { GroupModel } from '../entity/group.entity';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
 
 export class CreateGroupDto extends PickType(GroupModel, [
   'name',
@@ -14,6 +15,7 @@ export class CreateGroupDto extends PickType(GroupModel, [
   })
   @IsString()
   @IsNotEmpty()
+  @IsNoSpecialChar()
   @Transform(({ value }) => value.replaceAll(' ', ''))
   override name: string;
 

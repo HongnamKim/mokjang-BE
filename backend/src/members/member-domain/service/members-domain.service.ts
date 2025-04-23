@@ -1,4 +1,4 @@
-import { IMembersDomainService } from './interface/members-domain.service.interface';
+import { IMembersDomainService } from '../interface/members-domain.service.interface';
 import {
   ConflictException,
   Injectable,
@@ -167,7 +167,7 @@ export class MembersDomainService implements IMembersDomainService {
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException('계정 연결 중 에러 발생');
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
     }
 
     return result;
@@ -214,7 +214,7 @@ export class MembersDomainService implements IMembersDomainService {
     });
 
     if (!member) {
-      throw new NotFoundException('존재하지 않는 교인입니다.');
+      throw new NotFoundException(MemberException.NOT_FOUND);
     }
 
     return member;
