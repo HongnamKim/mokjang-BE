@@ -21,7 +21,7 @@ import { ChurchException } from '../const/exception/church.exception';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
 
 @Injectable()
@@ -158,5 +158,23 @@ export class ChurchesService {
     );
 
     return this.churchesDomainService.findChurchById(churchId, qr);
+  }
+
+  async refreshMemberCount(churchId: number, qr?: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const memberCount = await this.membersDomainService.countAllMembers(
+      church,
+      qr,
+    );
+
+    const updateChurchDto: UpdateChurchDto = {
+      memberCount,
+    };
+
+    return this.churchesDomainService.updateChurch(church, updateChurchDto);
   }
 }

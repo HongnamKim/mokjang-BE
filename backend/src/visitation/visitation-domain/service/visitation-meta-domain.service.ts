@@ -3,7 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { IVisitationMetaDomainService } from './interface/visitation-meta-domain.service.interface';
+import { IVisitationMetaDomainService } from '../interface/visitation-meta-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import {

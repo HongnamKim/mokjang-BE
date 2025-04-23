@@ -16,7 +16,7 @@ import { Type } from 'class-transformer';
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationDetailValidator } from '../decorator/visitation-detail.validator';
 import { VisitationDetailDto } from './visittion-detail.dto';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 
 export class CreateVisitationDto {
   @ApiProperty({
@@ -46,7 +46,7 @@ export class CreateVisitationDto {
     maxLength: 50,
   })
   @IsString()
-  @TransformName()
+  @RemoveSpaces()
   @Length(2, 50)
   visitationTitle: string;
 

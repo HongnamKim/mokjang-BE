@@ -1,7 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { RequestInfoModel } from '../entity/request-info.entity';
 import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 
 export class ValidateRequestInfoDto extends PickType(RequestInfoModel, [
   'name',
@@ -14,7 +14,7 @@ export class ValidateRequestInfoDto extends PickType(RequestInfoModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
   @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
     message: '특수문자는 사용할 수 없습니다.',
   })

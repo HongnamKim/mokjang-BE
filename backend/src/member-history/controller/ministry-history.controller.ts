@@ -23,7 +23,7 @@ import {
   ApiGetMemberMinistry,
   ApiPatchMinistryHistory,
   ApiPostMemberMinistry,
-} from '../const/swagger/ministry/controller.swagger';
+} from '../const/swagger/ministry-history.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 

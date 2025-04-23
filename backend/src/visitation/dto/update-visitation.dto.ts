@@ -14,7 +14,7 @@ import { TransformNumberArray } from '../../common/decorator/transformer/transfo
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { VisitationType } from '../const/visitation-type.enum';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 
 export class UpdateVisitationDto {
   @ApiProperty({
@@ -43,7 +43,7 @@ export class UpdateVisitationDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
   @Length(2, 50)
   visitationTitle?: string;
 

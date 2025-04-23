@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OfficerModel } from '../entity/officer.entity';
 import { IOFFICERS_DOMAIN_SERVICE } from './interface/officers-domain.service.interface';
-import { OfficersDomainService } from './officers-domain.service';
+import { OfficersDomainService } from './service/officers-domain.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OfficerModel])],

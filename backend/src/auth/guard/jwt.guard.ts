@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthType } from '../const/enum/auth-type.enum';
-import { AuthException } from '../const/exception-message/exception.message';
+import { AuthException } from '../const/exception/auth.exception';
 import { ConfigService } from '@nestjs/config';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 import { Request } from 'express';

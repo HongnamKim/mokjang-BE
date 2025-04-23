@@ -13,13 +13,13 @@ import {
 import { ChurchesService } from '../service/churches.service';
 import { CreateChurchDto } from '../dto/create-church.dto';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import {
   ChurchMainAdminGuard,
   ChurchManagerGuard,
-} from '../guard/church-manager-guard.service';
+} from '../guard/church-guard.service';
 import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ApiDeleteChurch,
@@ -85,6 +85,9 @@ export class ChurchesController {
     return this.churchesService.deleteChurchById(churchId);
   }
 
+  @ApiOperation({
+    summary: '가입 코드 수정',
+  })
   @Patch(':churchId/join-code')
   @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -100,6 +103,9 @@ export class ChurchesController {
     );
   }
 
+  @ApiOperation({
+    summary: '최고 관리자(mainAdmin) 양도',
+  })
   @Patch(':churchId/main-admin')
   @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -117,5 +123,14 @@ export class ChurchesController {
       dto,
       qr,
     );
+  }
+
+  @ApiOperation({
+    summary: '교인 수 새로고침',
+  })
+  @Patch(':churchId/refresh-member-count')
+  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  refreshMemberCount(@Param('churchId', ParseIntPipe) churchId: number) {
+    return this.churchesService.refreshMemberCount(churchId);
   }
 }

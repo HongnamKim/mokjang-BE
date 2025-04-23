@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
+import { Transform } from 'class-transformer';
 
 export class CreateGroupRoleDto {
   @ApiProperty({
@@ -8,5 +10,7 @@ export class CreateGroupRoleDto {
   })
   @IsString()
   @IsNotEmpty()
+  @IsNoSpecialChar()
+  @Transform(({ value }) => value.replaceAll(' ', ''))
   role: string;
 }

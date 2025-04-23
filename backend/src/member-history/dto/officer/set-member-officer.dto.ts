@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { IsValidHistoryDate } from '../../decorator/is-valid-history-date.decorator';
 import { TransformStartDate } from '../../decorator/transform-start-date.decorator';
-import { TransformName } from '../../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 
 export class SetMemberOfficerDto {
   @ApiProperty({
@@ -27,7 +27,7 @@ export class SetMemberOfficerDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
   officerStartChurch: string;
 
   @ApiProperty({

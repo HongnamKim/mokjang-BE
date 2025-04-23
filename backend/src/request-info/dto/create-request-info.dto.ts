@@ -9,7 +9,7 @@ import {
   Length,
   Matches,
 } from 'class-validator';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 import { FamilyRelationConst } from '../../family-relation/family-relation-domain/const/family-relation.const';
 
 export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
@@ -23,7 +23,7 @@ export class CreateRequestInfoDto extends PickType(RequestInfoModel, [
   })
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
   @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
     message: '특수문자는 사용할 수 없습니다.',
   })

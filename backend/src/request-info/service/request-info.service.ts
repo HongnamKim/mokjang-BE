@@ -14,7 +14,6 @@ import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { SubmitRequestInfoDto } from '../dto/submit-request-info.dto';
 import { RequestLimitValidatorService } from './request-limit-validator.service';
 import { ConfigService } from '@nestjs/config';
-import { REQUEST_CONSTANTS } from '../const/request-info.const';
 import { RequestLimitValidationType } from '../types/request-limit-validation-result';
 import { MessageService } from '../../common/service/message.service';
 import {
@@ -24,7 +23,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
@@ -34,10 +33,10 @@ import { UpdateMemberDto } from '../../members/dto/update-member.dto';
 import {
   IREQUEST_INFO_DOMAIN_SERVICE,
   IRequestInfoDomainService,
-} from '../request-info-domain/service/interface/request-info-domain.service.interface';
+} from '../request-info-domain/interface/request-info-domain.service.interface';
 import { RequestInfoPaginationResultDto } from '../dto/response/request-info-pagination-result.dto';
 import { RequestInfoException } from '../const/exception/request-info.exception';
-import { RequestInfoRules } from '../const/request-info.rules';
+import { RequestInfoConstraints } from '../const/request-info.constraints';
 
 @Injectable()
 export class RequestInfoService {
@@ -279,13 +278,13 @@ export class RequestInfoService {
     // 검증 시도 횟수 초과
     if (
       validateTarget.validateAttempts ===
-      RequestInfoRules.REQUEST_INFO_VALIDATION_LIMITS /*this.VALIDATION_LIMITS*/
+      RequestInfoConstraints.REQUEST_INFO_VALIDATION_LIMITS /*this.VALIDATION_LIMITS*/
     ) {
       await this.requestInfoDomainService.deleteRequestInfo(validateTarget);
 
       throw new BadRequestException(
         RequestInfoException.VALIDATION_LIMIT_EXCEEDED(
-          RequestInfoRules.REQUEST_INFO_VALIDATION_LIMITS /*this.VALIDATION_LIMITS*/,
+          RequestInfoConstraints.REQUEST_INFO_VALIDATION_LIMITS /*this.VALIDATION_LIMITS*/,
         ),
       );
     }
@@ -300,7 +299,7 @@ export class RequestInfoService {
       );
 
       throw new UnauthorizedException(
-        REQUEST_CONSTANTS.ERROR_MESSAGES.UNAUTHORIZED,
+        RequestInfoException.INVALID_INFO_REQUEST,
       );
     }
 
@@ -354,9 +353,7 @@ export class RequestInfoService {
       dto.name !== requestInfo.name ||
       dto.mobilePhone !== requestInfo.mobilePhone
     ) {
-      throw new BadRequestException(
-        REQUEST_CONSTANTS.ERROR_MESSAGES.NOT_VALIDATED,
-      );
+      throw new BadRequestException(RequestInfoException.NOT_VALIDATED);
     }
 
     const updateDto: UpdateMemberDto = {

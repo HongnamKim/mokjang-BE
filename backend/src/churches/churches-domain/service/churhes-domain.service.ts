@@ -286,4 +286,42 @@ export class ChurchesDomainService implements IChurchesDomainService {
       )
       .map((manager) => manager.id);
   }
+
+  async incrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const churchesRepository = this.getChurchRepository(qr);
+
+    const result = await churchesRepository.increment(
+      { id: church.id },
+      'memberCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async decrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const churchesRepository = this.getChurchRepository(qr);
+
+    const result = await churchesRepository.decrement(
+      { id: church.id },
+      'memberCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
 }

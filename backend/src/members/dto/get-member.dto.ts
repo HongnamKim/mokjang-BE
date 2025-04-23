@@ -18,9 +18,9 @@ import {
   TransformNumberArray,
   TransformStringArray,
 } from '../../common/decorator/transformer/transform-array';
-import { MarriageOptions } from '../const/marriage-options.const';
+import { MarriageOptions } from '../member-domain/const/marriage-options.const';
 import { QueryBoolean } from '../../common/decorator/transformer/query-boolean.decorator';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 import { EducationStatus } from '../../management/educations/const/education-status.enum';
 
 export class GetMemberDto {
@@ -197,7 +197,7 @@ export class GetMemberDto {
     required: false,
   })
   @IsString()
-  @TransformName()
+  @RemoveSpaces()
   @IsOptional()
   name?: string;
 

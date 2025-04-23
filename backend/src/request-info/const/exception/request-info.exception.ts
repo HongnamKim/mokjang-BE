@@ -1,5 +1,5 @@
 export const RequestInfoException = {
-  FORBIDDEN: '유효한 입력 요청이 아닙니다.',
+  INVALID_INFO_REQUEST: '유효한 입력 요청이 아닙니다.',
   NOT_FOUND: '존재하지 않는 입력 요청입니다.',
   NOT_VALIDATED: '검증되지 않은 입력 요청입니다.',
   ALREADY_EXIST: '이미 존재하는 휴대전화 번호입니다.',

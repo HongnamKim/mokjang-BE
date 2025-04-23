@@ -19,7 +19,7 @@ import {
   ApiGetSessionAttendance,
   ApiLoadSessionAttendance,
   ApiPatchSessionAttendance,
-} from '../swagger/session-attendance/controller.swagger';
+} from '../const/swagger/session-attendance.swagger';
 import { SessionAttendanceService } from '../service/session-attendance.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
