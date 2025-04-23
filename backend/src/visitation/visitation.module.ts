@@ -7,6 +7,7 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { VisitationReportDomainModule } from '../report/report-domain/visitation-report-domain.module';
+import { VisitationDetailController } from './controller/visitation-detail.controller';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { VisitationReportDomainModule } from '../report/report-domain/visitation
     VisitationDomainModule,
     VisitationReportDomainModule,
   ],
-  controllers: [VisitationController],
+  controllers: [VisitationController, VisitationDetailController],
   providers: [VisitationService],
 })
 export class VisitationModule {}
