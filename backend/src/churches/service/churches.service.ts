@@ -159,4 +159,22 @@ export class ChurchesService {
 
     return this.churchesDomainService.findChurchById(churchId, qr);
   }
+
+  async refreshMemberCount(churchId: number, qr?: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const memberCount = await this.membersDomainService.countAllMembers(
+      church,
+      qr,
+    );
+
+    const updateChurchDto: UpdateChurchDto = {
+      memberCount,
+    };
+
+    return this.churchesDomainService.updateChurch(church, updateChurchDto);
+  }
 }
