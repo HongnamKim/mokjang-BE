@@ -321,7 +321,7 @@ export class VisitationService {
         church,
         visitationMeta,
         dto.deleteMemberIds,
-        visitationMembers,
+        //visitationMembers,
         qr,
       );
 
