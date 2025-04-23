@@ -37,6 +37,8 @@ export interface IMembersDomainService {
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]>;
 
+  countAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<number>;
+
   findMemberById(
     church: ChurchModel,
     memberId: number,

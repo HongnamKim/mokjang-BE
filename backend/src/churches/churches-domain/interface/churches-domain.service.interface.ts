@@ -48,4 +48,14 @@ export interface IChurchesDomainService {
     newCode: string,
     qr: QueryRunner | undefined,
   ): Promise<UpdateResult>;
+
+  incrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

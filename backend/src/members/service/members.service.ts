@@ -38,8 +38,6 @@ export class MembersService {
     private readonly searchMembersService: ISearchMembersService,
     @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
     private readonly familyDomainService: IFamilyRelationDomainService,
-
-    //@Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
   ) {}
 
   async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
@@ -88,6 +86,10 @@ export class MembersService {
       churchId,
       qr,
     );
+
+    // 교회의 교인 수 증가
+    await this.churchesDomainService.incrementMemberCount(church, qr);
+    church.memberCount++;
 
     const newMember = await this.membersDomainService.createMember(
       church,
@@ -162,6 +164,9 @@ export class MembersService {
 
     // 가족 관계 모두 삭제
     await this.familyDomainService.deleteAllFamilyRelations(targetMember, qr);
+
+    // 교회 교인 수 감소
+    await this.churchesDomainService.decrementMemberCount(church, qr);
 
     // 이벤트는 트랜잭션 처리 불가능 본 요청과 이벤트 요청은 서로 달라서 본 요청 응답이 나갈 때
     // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음

@@ -81,6 +81,16 @@ export class MembersDomainService implements IMembersDomainService {
     return resultDto;
   }
 
+  async countAllMembers(church: ChurchModel, qr?: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findMembersById(
     church: ChurchModel,
     ids: number[],
