@@ -47,4 +47,9 @@ export interface IVisitationReportDomainService {
     visitationReport: VisitationReportModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  deleteVisitationReports(
+    visitationReports: VisitationReportModel[],
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
 }

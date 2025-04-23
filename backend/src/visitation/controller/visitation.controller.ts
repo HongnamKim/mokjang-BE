@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { VisitationService } from '../visitation.service';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
@@ -27,13 +27,13 @@ import {
   ApiDeleteVisitation,
   ApiGetVisitationById,
   ApiGetVisitations,
-  ApiPatchVisitationDetail,
   ApiPatchVisitationMeta,
   ApiPostVisitation,
 } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDto } from '../dto/update-visitation.dto';
 import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
-import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
+import { AddReceiverDto } from '../dto/add-receiver.dto';
+import { DeleteReceiverDto } from '../dto/delete-receiver.dto';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -111,19 +111,41 @@ export class VisitationController {
     return this.visitationService.deleteVisitation(churchId, visitationId, qr);
   }
 
-  @ApiPatchVisitationDetail()
-  @Patch(':detailId')
-  patchVisitationDetail(
+  @ApiOperation({
+    summary: '심방 보고자 추가',
+  })
+  @Patch(':visitationId/add-receivers')
+  @UseInterceptors(TransactionInterceptor)
+  addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
-    @Param('detailId', ParseIntPipe) detailId: number,
-    @Body() dto: UpdateVisitationDetailDto,
+    @Body() dto: AddReceiverDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.visitationService.updateVisitationDetail(
+    return this.visitationService.addReportReceivers(
       churchId,
       visitationId,
-      detailId,
-      dto,
+      dto.receiverIds,
+      qr,
+    );
+  }
+
+  @ApiOperation({
+    summary: '심방 보고자 삭제',
+  })
+  @Patch(':visitationId/delete-receivers')
+  @UseInterceptors(TransactionInterceptor)
+  removeReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('visitationId', ParseIntPipe) visitationId: number,
+    @Body() dto: DeleteReceiverDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.visitationService.deleteReportReceivers(
+      churchId,
+      visitationId,
+      dto.receiverIds,
+      qr,
     );
   }
 }
