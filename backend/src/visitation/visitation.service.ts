@@ -1,5 +1,5 @@
 import {
-  ConflictException,
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -47,6 +47,8 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from '../user/user-domain/interface/user-domain.service.interface';
+import { AddConflictException } from './const/exception/add-conflict.exception';
+import { RemoveConflictException } from './const/exception/remove-conflict.exception';
 
 @Injectable()
 export class VisitationService {
@@ -304,100 +306,28 @@ export class VisitationService {
 
     // 교인이 추가되는 경우 추가할 수 있는지 확인
     if (dto.addMemberIds) {
-      const visitationMemberIds = visitationMeta.members.map(
-        (member) => member.id,
-      );
-
-      const alreadyExistMember: number[] = [];
-
-      dto.addMemberIds.forEach((memberId) => {
-        if (visitationMemberIds.includes(memberId)) {
-          alreadyExistMember.push(memberId);
-        }
-      });
-
-      if (alreadyExistMember.length > 0) {
-        throw new ConflictException(
-          VisitationException.ALREADY_EXIST_TARGET_MEMBER(alreadyExistMember),
-        );
-      }
-
-      const newMembers = await this.membersDomainService.findMembersById(
+      await this.handleAddVisitationMembers(
         church,
+        visitationMeta,
         dto.addMemberIds,
+        visitationMembers,
         qr,
-      );
-
-      // 새 심방 대상자 추가
-      visitationMembers.push(...newMembers);
-
-      await Promise.all(
-        dto.addMemberIds.map(async (memberId) => {
-          const member = await this.membersDomainService.findMemberModelById(
-            church,
-            memberId,
-            qr,
-          );
-
-          const detailDto: VisitationDetailDto = {
-            memberId: memberId,
-          };
-
-          return this.visitationDetailDomainService.createVisitationDetail(
-            visitationMeta,
-            member,
-            detailDto,
-            qr,
-          );
-        }),
       );
     }
 
     // 교인이 삭제되는 경우 삭제할 수 있는지 확인
     if (dto.deleteMemberIds) {
-      const visitationMemberIds = visitationMeta.members.map(
-        (member) => member.id,
+      await this.handleDeleteVisitationMembers(
+        church,
+        visitationMeta,
+        dto.deleteMemberIds,
+        //visitationMembers,
+        qr,
       );
 
-      const notExistMember: number[] = [];
-
-      // 심방 대상자에 존재하지 않는 id 값 필터링
-      dto.deleteMemberIds.forEach((memberId) => {
-        if (!visitationMemberIds.includes(memberId)) {
-          notExistMember.push(memberId);
-        }
-      });
-
-      if (notExistMember.length > 0) {
-        throw new ConflictException(
-          VisitationException.NOT_EXIST_DELETE_TARGET_MEMBER(notExistMember),
-        );
-      }
-
+      // 삭제되지 않고 남은 교인들
       visitationMembers = visitationMembers.filter(
         (member) => !dto.deleteMemberIds?.includes(member.id),
-      );
-
-      await Promise.all(
-        dto.deleteMemberIds.map(async (memberId) => {
-          const member = await this.membersDomainService.findMemberModelById(
-            church,
-            memberId,
-            qr,
-          );
-
-          const deleteTarget =
-            await this.visitationDetailDomainService.findVisitationDetailByMetaAndMemberId(
-              visitationMeta,
-              member,
-              qr,
-            );
-
-          await this.visitationDetailDomainService.deleteVisitationDetail(
-            deleteTarget,
-            qr,
-          );
-        }),
       );
     }
 
@@ -408,6 +338,105 @@ export class VisitationService {
     );
 
     return visitationMembers;
+  }
+
+  private async handleDeleteVisitationMembers(
+    church: ChurchModel,
+    visitationMeta: VisitationMetaModel,
+    deleteMemberIds: number[],
+    //visitationMembers: MemberModel[],
+    qr: QueryRunner,
+  ) {
+    const visitationMemberIdSet = new Set(
+      visitationMeta.members.map((member) => member.id),
+    );
+
+    const notExistMember = deleteMemberIds.filter(
+      (id) => !visitationMemberIdSet.has(id),
+    );
+
+    if (notExistMember.length > 0) {
+      throw new RemoveConflictException(
+        VisitationException.NOT_EXIST_DELETE_TARGET_MEMBER,
+        notExistMember,
+      );
+    }
+
+    await Promise.all(
+      deleteMemberIds.map(async (memberId) => {
+        const member = await this.membersDomainService.findMemberModelById(
+          church,
+          memberId,
+          qr,
+        );
+
+        const deleteTarget =
+          await this.visitationDetailDomainService.findVisitationDetailByMetaAndMemberId(
+            visitationMeta,
+            member,
+            qr,
+          );
+
+        return this.visitationDetailDomainService.deleteVisitationDetail(
+          deleteTarget,
+          qr,
+        );
+      }),
+    );
+  }
+
+  private async handleAddVisitationMembers(
+    church: ChurchModel,
+    visitationMeta: VisitationMetaModel,
+    addMemberIds: number[],
+    visitationMembers: MemberModel[],
+    qr: QueryRunner,
+  ) {
+    const visitationMemberIdSet = new Set(
+      visitationMeta.members.map((member) => member.id),
+    );
+
+    const duplicatedIds = addMemberIds.filter((id) =>
+      visitationMemberIdSet.has(id),
+    );
+
+    if (duplicatedIds.length > 0) {
+      throw new AddConflictException(
+        VisitationException.ALREADY_EXIST_TARGET_MEMBER,
+        duplicatedIds,
+      );
+    }
+
+    const newMembers = await this.membersDomainService.findMembersById(
+      church,
+      addMemberIds,
+      qr,
+    );
+
+    // 새 심방 대상자 추가
+    visitationMembers.push(...newMembers);
+
+    // 심방 세부 정보 생성 (VisitationDetailModel)
+    await Promise.all(
+      addMemberIds.map(async (memberId) => {
+        const member = await this.membersDomainService.findMemberModelById(
+          church,
+          memberId,
+          qr,
+        );
+
+        const detailDto: VisitationDetailDto = {
+          memberId: memberId,
+        };
+
+        return this.visitationDetailDomainService.createVisitationDetail(
+          visitationMeta,
+          member,
+          detailDto,
+          qr,
+        );
+      }),
+    );
   }
 
   async updateVisitationData(
@@ -533,5 +562,131 @@ export class VisitationService {
       detailData,
       dto,
     );
+  }
+
+  async addReportReceivers(
+    churchId: number,
+    visitationId: number,
+    newReceiverIds: number[],
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const visitation =
+      await this.visitationMetaDomainService.findVisitationMetaModelById(
+        church,
+        visitationId,
+        qr,
+        { instructor: true, reports: true },
+      );
+
+    const reports = visitation.reports;
+    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
+
+    const duplicated = newReceiverIds.filter((id) => oldReceiverIds.has(id));
+
+    if (duplicated.length > 0) {
+      throw new AddConflictException(
+        VisitationException.ALREADY_REPORTED_MEMBER,
+        duplicated,
+      );
+    }
+
+    const newReceivers = await this.membersDomainService.findMembersById(
+      church,
+      newReceiverIds,
+      qr,
+      { user: true },
+    );
+
+    const isAvailableReceivers = newReceivers.some((receiver) => {
+      return (
+        receiver.user &&
+        (receiver.user.role === UserRole.mainAdmin ||
+          receiver.user.role === UserRole.manager)
+      );
+    });
+
+    if (!isAvailableReceivers) {
+      throw new BadRequestException(
+        VisitationException.INVALID_REPORT_RECEIVER,
+      );
+    }
+
+    await Promise.all(
+      newReceivers.map((receiver) => {
+        return this.visitationReportDomainService.createVisitationReport(
+          visitation,
+          visitation.instructor,
+          receiver,
+          qr,
+        );
+      }),
+    );
+
+    return {
+      visitationId,
+      addedReceivers: newReceivers.map((r) => ({
+        id: r.id,
+        name: r.name,
+      })),
+      addedCount: newReceivers.length,
+    };
+  }
+
+  async deleteReportReceivers(
+    churchId: number,
+    visitationId: number,
+    deleteReceiverIds: number[],
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const visitation =
+      await this.visitationMetaDomainService.findVisitationMetaModelById(
+        church,
+        visitationId,
+        qr,
+        { instructor: true, reports: { receiver: true } },
+      );
+
+    const reports = visitation.reports;
+    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
+
+    const notExistReceivers = deleteReceiverIds.filter(
+      (id) => !oldReceiverIds.has(id),
+    );
+
+    if (notExistReceivers.length > 0) {
+      throw new RemoveConflictException(
+        VisitationException.NOT_EXIST_REPORTED_MEMBER,
+        notExistReceivers,
+      );
+    }
+
+    const deleteReports = reports.filter((report) =>
+      deleteReceiverIds.includes(report.receiverId),
+    );
+
+    const result =
+      await this.visitationReportDomainService.deleteVisitationReports(
+        deleteReports,
+        qr,
+      );
+
+    return {
+      visitationId,
+      deletedReceivers: deleteReports.map((r) => ({
+        id: r.receiver.id,
+        name: r.receiver.name,
+      })),
+      deletedCount: result.affected,
+    };
   }
 }

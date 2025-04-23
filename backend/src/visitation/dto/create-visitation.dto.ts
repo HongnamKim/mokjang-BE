@@ -79,7 +79,6 @@ export class CreateVisitationDto {
     required: false,
   })
   @IsOptional()
-  //@TransformNumberArray()
   @IsArray()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })

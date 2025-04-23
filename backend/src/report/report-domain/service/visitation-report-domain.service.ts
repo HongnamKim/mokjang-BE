@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { VisitationReportException } from '../../const/exception/visitation-report.exception';
 import { UpdateVisitationReportDto } from '../../dto/visitation-report/update-visitation-report.dto';
+import { ReportModel } from '../../entity/report.entity';
 
 export class VisitationReportDomainService
   implements IVisitationReportDomainService
@@ -176,5 +177,16 @@ export class VisitationReportDomainService
     }
 
     return result;
+  }
+
+  async deleteVisitationReports(
+    visitationReports: ReportModel[],
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const reportIds = visitationReports.map((r) => r.id);
+
+    return repository.softDelete(reportIds);
   }
 }
