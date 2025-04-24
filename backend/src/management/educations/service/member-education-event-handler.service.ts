@@ -48,7 +48,7 @@ export class MemberEducationEventHandler {
             enrollment.educationTermId,
             enrollment.id,
             qr,
-            true,
+            //true,
           ),
         ),
       );

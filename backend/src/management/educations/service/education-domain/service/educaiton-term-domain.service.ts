@@ -18,13 +18,16 @@ import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { EducationModel } from '../../../entity/education.entity';
 import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
 import { EducationTermOrderEnum } from '../../../const/order.enum';
-import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
 import { EducationTermException } from '../../../const/exception/education.exception';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { EducationStatus } from '../../../const/education-status.enum';
 import { MemberModel } from '../../../../../members/entity/member.entity';
+import {
+  DefaultMemberRelationOptions,
+  DefaultMemberSelectOptions,
+} from '../../../const/instructor-find-options.const';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -67,7 +70,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     education: EducationModel,
     dto: GetEducationTermDto,
     qr?: QueryRunner,
-  ): Promise<EducationTermPaginationResultDto> {
+  ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const order: Partial<
@@ -89,12 +92,11 @@ export class EducationTermDomainService implements IEducationTermDomainService {
           educationId: education.id,
         },
         order,
+        select: {
+          instructor: DefaultMemberSelectOptions,
+        },
         relations: {
-          instructor: {
-            officer: true,
-            group: true,
-            groupRole: true,
-          },
+          instructor: DefaultMemberRelationOptions,
         },
         take: dto.take,
         skip: dto.take * (dto.page - 1),
@@ -112,8 +114,6 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return {
       data: result,
       totalCount,
-      count: result.length,
-      page: dto.page,
     };
   }
 
@@ -134,12 +134,10 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         },
       },
       relations: {
-        instructor: {
-          group: true,
-          groupRole: true,
-          officer: true,
-        },
-        //educationSessions: true,
+        instructor: DefaultMemberRelationOptions,
+      },
+      select: {
+        instructor: DefaultMemberSelectOptions,
       },
     });
 
@@ -180,7 +178,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   }
 
   async createEducationTerm(
-    church: ChurchModel,
+    //church: ChurchModel,
     education: EducationModel,
     instructor: MemberModel | null,
     dto: CreateEducationTermDto,
@@ -323,7 +321,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       );
     }
 
-    return `educationTermId: ${educationTerm.id} deleted`;
+    return;
   }
 
   async updateEducationTermName(

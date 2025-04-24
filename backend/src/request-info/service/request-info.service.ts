@@ -64,7 +64,15 @@ export class RequestInfoService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    const result: RequestInfoPaginationResultDto = {
+    return new RequestInfoPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      totalPage,
+    );
+
+    /*const result: RequestInfoPaginationResultDto = {
       data,
       totalCount,
       page: dto.page,
@@ -72,7 +80,7 @@ export class RequestInfoService {
       totalPage,
     };
 
-    return result;
+    return result;*/
   }
 
   private async handleExistingRequest(

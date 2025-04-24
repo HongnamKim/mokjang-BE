@@ -14,6 +14,7 @@ export const EducationTermException = {
   INVALID_NUMBER_OF_CRITERIA: '이수 조건은 교육 회차보다 작거나 같아야합니다.',
   INVALID_START_DATE: '교육 시작일은 종료일보다 뒤일 수 없습니다.',
   INVALID_END_DATE: '교육 종료일은 시작일보다 앞설 수 없습니다.',
+  INVALID_INSTRUCTOR_MEMBER: '교육 진행자로 등록할 수 없는 교인입니다.',
 };
 
 export const EducationEnrollmentException = {

@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -24,6 +24,10 @@ import {
 import { CreateEducationEnrollmentDto } from '../../../dto/enrollments/create-education-enrollment.dto';
 import { UpdateEducationEnrollmentDto } from '../../../dto/enrollments/update-education-enrollment.dto';
 import { MemberModel } from '../../../../../members/entity/member.entity';
+import {
+  DefaultMemberRelationOptions,
+  DefaultMemberSelectOptions,
+} from '../../../const/instructor-find-options.const';
 
 @Injectable()
 export class EducationEnrollmentsDomainService
@@ -82,11 +86,10 @@ export class EducationEnrollmentsDomainService
           educationTermId: educationTerm.id,
         },
         relations: {
-          member: {
-            group: true,
-            groupRole: true,
-            officer: true,
-          },
+          member: DefaultMemberRelationOptions,
+        },
+        select: {
+          member: DefaultMemberSelectOptions,
         },
         order: {
           [dto.order]: dto.orderDirection,
@@ -108,9 +111,20 @@ export class EducationEnrollmentsDomainService
     return {
       data: result,
       totalCount,
-      count: result.length,
-      page: dto.page,
     };
+  }
+
+  findEducationEnrollmentModels(
+    educationTerm: EducationTermModel,
+    qr?: QueryRunner,
+  ): Promise<EducationEnrollmentModel[]> {
+    const repository = this.getEducationEnrollmentsRepository(qr);
+
+    return repository.find({
+      where: {
+        educationTermId: educationTerm.id,
+      },
+    });
   }
 
   async findMemberEducationEnrollments(memberId: number, qr?: QueryRunner) {
@@ -141,11 +155,10 @@ export class EducationEnrollmentsDomainService
         id: educationEnrollmentId,
       },
       relations: {
-        member: {
-          group: true,
-          groupRole: true,
-          officer: true,
-        },
+        member: DefaultMemberRelationOptions,
+      },
+      select: {
+        member: DefaultMemberSelectOptions,
       },
     });
 
@@ -192,8 +205,9 @@ export class EducationEnrollmentsDomainService
       member,
       qr,
     );
+
     if (isExistEnrollment) {
-      throw new BadRequestException(EducationEnrollmentException.ALREADY_EXIST);
+      throw new ConflictException(EducationEnrollmentException.ALREADY_EXIST);
     }
 
     return educationEnrollmentsRepository.save({
@@ -256,6 +270,19 @@ export class EducationEnrollmentsDomainService
     });
 
     return `educationEnrollment: ${educationEnrollment.id} deleted`;
+  }
+
+  async deleteEducationEnrollmentsCascade(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<void> {
+    const repository = this.getEducationEnrollmentsRepository(qr);
+
+    await repository.softDelete({
+      educationTermId: educationTerm.id,
+    });
+
+    return;
   }
 
   async incrementAttendanceCount(

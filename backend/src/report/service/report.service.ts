@@ -48,7 +48,15 @@ export class ReportService {
         dto,
       );
 
-    const paginationResult: VisitationReportPaginationResultDto = {
+    return new VisitationReportPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
+
+    /*const paginationResult: VisitationReportPaginationResultDto = {
       totalCount,
       data: data,
       count: dto.take,
@@ -56,7 +64,7 @@ export class ReportService {
       totalPage: Math.ceil(totalCount / dto.take),
     };
 
-    return paginationResult;
+    return paginationResult;*/
   }
 
   async getVisitationReportById(

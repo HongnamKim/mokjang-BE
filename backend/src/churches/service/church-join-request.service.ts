@@ -95,15 +95,13 @@ export class ChurchJoinRequestService {
         dto,
       );
 
-    const result: JoinRequestPaginationResult = {
+    return new JoinRequestPaginationResult(
       data,
       totalCount,
-      totalPage: Math.ceil(totalCount / dto.take),
-      count: data.length,
-      page: dto.page,
-    };
-
-    return result;
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 
   async approveChurchJoinRequest(

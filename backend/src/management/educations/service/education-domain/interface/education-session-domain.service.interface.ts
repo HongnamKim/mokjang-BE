@@ -47,7 +47,7 @@ export interface IEducationSessionDomainService {
     qr: QueryRunner,
   ): Promise<string>;
 
-  deleteEducationSessionCasCade(
+  deleteEducationSessionCascade(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<string>;

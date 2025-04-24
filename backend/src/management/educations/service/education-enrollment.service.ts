@@ -27,6 +27,7 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
+import { EducationEnrollmentPaginationResultDto } from '../dto/education-enrollment-pagination-result.dto';
 
 @Injectable()
 export class EducationEnrollmentService {
@@ -71,10 +72,19 @@ export class EducationEnrollmentService {
         qr,
       );
 
-    return this.educationEnrollmentsDomainService.findEducationEnrollments(
-      educationTerm,
-      dto,
-      qr,
+    const { data, totalCount } =
+      await this.educationEnrollmentsDomainService.findEducationEnrollments(
+        educationTerm,
+        dto,
+        qr,
+      );
+
+    return new EducationEnrollmentPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 
@@ -223,7 +233,7 @@ export class EducationEnrollmentService {
     educationTermId: number,
     educationEnrollmentId: number,
     qr: QueryRunner,
-    memberDeleted: boolean = false,
+    //memberDeleted: boolean = false,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
@@ -248,7 +258,7 @@ export class EducationEnrollmentService {
         qr,
       );
 
-    const member = memberDeleted
+    /*const member = memberDeleted
       ? await this.membersDomainService.findDeleteMemberModelById(
           church,
           targetEnrollment.memberId,
@@ -260,15 +270,9 @@ export class EducationEnrollmentService {
           targetEnrollment.memberId,
           qr,
           { educations: true },
-        );
+        );*/
 
     await Promise.all([
-      // 교인 - 교육 관계 해제
-      this.membersDomainService.endMemberEducation(
-        member,
-        educationEnrollmentId,
-        qr,
-      ),
       // 등록 인원 감소
       this.educationTermDomainService.decrementEnrollmentCount(
         educationTerm,
@@ -295,6 +299,10 @@ export class EducationEnrollmentService {
       ),
     ]);
 
-    return `educationEnrollment: ${educationEnrollmentId} deleted`;
+    return {
+      timestamp: new Date(),
+      id: targetEnrollment.id,
+      success: true,
+    };
   }
 }

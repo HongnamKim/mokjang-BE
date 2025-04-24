@@ -24,6 +24,7 @@ import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
+import { MemberPaginationResultDto } from '../dto/member-pagination-result.dto';
 
 @Injectable()
 export class MembersService {
@@ -56,13 +57,21 @@ export class MembersService {
 
     const selectOptions = this.searchMembersService.parseSelectOption(dto);
 
-    return this.membersDomainService.findMembers(
+    const { data, totalCount } = await this.membersDomainService.findMembers(
       dto,
       whereOptions,
       orderOptions,
       relationOptions,
       selectOptions,
       qr,
+    );
+
+    return new MemberPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 

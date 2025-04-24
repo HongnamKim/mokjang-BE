@@ -69,15 +69,13 @@ export class OfficerHistoryService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    const result: OfficerHistoryPaginationResultDto = {
-      data: filteredData,
+    return new OfficerHistoryPaginationResultDto(
+      filteredData,
       totalCount,
-      count: filteredData.length,
-      page: dto.page,
+      filteredData.length,
+      dto.page,
       totalPage,
-    };
-
-    return result;
+    );
   }
 
   async setMemberOfficer(

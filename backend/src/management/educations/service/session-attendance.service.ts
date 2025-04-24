@@ -27,6 +27,7 @@ import {
   IEDUCATION_SESSION_DOMAIN_SERVICE,
   IEducationSessionDomainService,
 } from './education-domain/interface/education-session-domain.service.interface';
+import { SessionAttendancePaginationResultDto } from '../dto/session-attendance-pagination-result.dto';
 
 @Injectable()
 export class SessionAttendanceService {
@@ -125,9 +126,18 @@ export class SessionAttendanceService {
       educationSessionId,
     );
 
-    return this.sessionAttendanceDomainService.findSessionAttendances(
-      educationSession,
-      dto,
+    const { data, totalCount } =
+      await this.sessionAttendanceDomainService.findSessionAttendances(
+        educationSession,
+        dto,
+      );
+
+    return new SessionAttendancePaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 
