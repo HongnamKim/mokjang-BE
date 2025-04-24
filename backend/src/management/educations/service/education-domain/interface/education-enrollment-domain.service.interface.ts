@@ -1,4 +1,3 @@
-import { EducationEnrollmentPaginationResultDto } from '../../../dto/education-enrollment-pagination-result.dto';
 import { EducationTermModel } from '../../../entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../../dto/enrollments/get-education-enrollment.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
@@ -16,7 +15,12 @@ export interface IEducationEnrollmentsDomainService {
     educationTerm: EducationTermModel,
     dto: GetEducationEnrollmentDto,
     qr?: QueryRunner,
-  ): Promise<EducationEnrollmentPaginationResultDto>;
+  ): Promise<{ data: EducationEnrollmentModel[]; totalCount: number }>;
+
+  findEducationEnrollmentModels(
+    educationTerm: EducationTermModel,
+    qr?: QueryRunner,
+  ): Promise<EducationEnrollmentModel[]>;
 
   findMemberEducationEnrollments(
     //member: MemberModel,
@@ -53,6 +57,11 @@ export interface IEducationEnrollmentsDomainService {
     educationEnrollment: EducationEnrollmentModel,
     qr: QueryRunner,
   ): Promise<string>;
+
+  deleteEducationEnrollmentsCascade(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<void>;
 
   incrementAttendanceCount(
     educationEnrollment: EducationEnrollmentModel,

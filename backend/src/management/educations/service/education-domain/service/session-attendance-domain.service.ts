@@ -11,7 +11,6 @@ import {
 import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { GetAttendanceDto } from '../../../dto/attendance/get-attendance.dto';
 import { AttendanceOrderEnum } from '../../../const/order.enum';
-import { SessionAttendancePaginationResultDto } from '../../../dto/session-attendance-pagination-result.dto';
 import {
   BadRequestException,
   InternalServerErrorException,
@@ -21,6 +20,10 @@ import { SessionAttendanceException } from '../../../const/exception/education.e
 import { UpdateAttendanceDto } from '../../../dto/attendance/update-attendance.dto';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { EducationTermModel } from '../../../entity/education-term.entity';
+import {
+  DefaultMemberRelationOptions,
+  DefaultMemberSelectOptions,
+} from '../../../const/instructor-find-options.const';
 
 export class SessionAttendanceDomainService
   implements ISessionAttendanceDomainService
@@ -103,7 +106,7 @@ export class SessionAttendanceDomainService
   async findSessionAttendances(
     educationSession: EducationSessionModel,
     dto: GetAttendanceDto,
-  ): Promise<SessionAttendancePaginationResultDto> {
+  ): Promise<{ data: SessionAttendanceModel[]; totalCount: number }> {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository();
 
     const order: Partial<
@@ -122,11 +125,20 @@ export class SessionAttendanceDomainService
         },
         relations: {
           educationEnrollment: {
-            member: {
-              group: true,
-              groupRole: true,
-              officer: true,
-            },
+            member: DefaultMemberRelationOptions,
+          },
+        },
+        select: {
+          educationEnrollment: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            memberId: true,
+            educationTermId: true,
+            status: true,
+            attendanceCount: true,
+            note: true,
+            member: DefaultMemberSelectOptions,
           },
         },
         order,
@@ -144,8 +156,6 @@ export class SessionAttendanceDomainService
     return {
       data: result,
       totalCount,
-      count: result.length,
-      page: dto.page,
     };
   }
 

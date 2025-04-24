@@ -31,7 +31,7 @@ import {
   IMinistryHistoryDomainService,
 } from '../member-history-domain/interface/ministry-history-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
-import { MinistryHistoryPaginationResult } from '../dto/ministry/ministry-history-pagination-result.dto';
+import { MinistryHistoryPaginationResultDto } from '../dto/ministry/ministry-history-pagination-result.dto';
 import { MinistryHistoryException } from '../const/exception/ministry-history.exception';
 
 @Injectable()
@@ -95,7 +95,15 @@ export class MinistryHistoryService {
         : { ...history },
     );
 
-    const output: MinistryHistoryPaginationResult = {
+    return new MinistryHistoryPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
+
+    /*const output: MinistryHistoryPaginationResult = {
       data,
       totalCount,
       count: data.length,
@@ -103,7 +111,7 @@ export class MinistryHistoryService {
       totalPage: Math.ceil(totalCount / dto.take),
     };
 
-    return output;
+    return output;*/
   }
 
   private async createCurrentMinistryGroupSnapShot(

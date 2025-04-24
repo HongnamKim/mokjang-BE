@@ -28,6 +28,7 @@ import { UpdateMemberRoleDto } from '../dto/role/update-member-role.dto';
 import { UpdateUserDto } from '../../user/dto/update-user.dto';
 import { GetUserMemberDto } from '../dto/get-user-member.dto';
 import { MemberException } from '../const/exception/member.exception';
+import { MemberPaginationResultDto } from '../dto/member-pagination-result.dto';
 
 @Injectable()
 export class UserMembersService {
@@ -65,13 +66,21 @@ export class UserMembersService {
 
     const selectOptions = this.searchMembersService.parseSelectOption(dto);
 
-    return this.membersDomainService.findMembers(
+    const { data, totalCount } = await this.membersDomainService.findMembers(
       dto,
       whereOptions,
       orderOptions,
       relationOptions,
       selectOptions,
       qr,
+    );
+
+    return new MemberPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 

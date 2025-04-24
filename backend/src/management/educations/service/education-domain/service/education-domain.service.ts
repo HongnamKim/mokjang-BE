@@ -6,11 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationModel } from '../../../entity/education.entity';
-import { IsNull, QueryRunner, Repository } from 'typeorm';
+import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationDto } from '../../../dto/education/get-education.dto';
 import { EducationOrderEnum } from '../../../const/order.enum';
-import { EducationPaginationResultDto } from '../../../dto/education-pagination-result.dto';
 import { EducationException } from '../../../const/exception/education.exception';
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
@@ -50,7 +49,7 @@ export class EducationDomainService implements IEducationDomainService {
     church: ChurchModel,
     dto: GetEducationDto,
     qr?: QueryRunner,
-  ): Promise<EducationPaginationResultDto> {
+  ) {
     const educationsRepository = this.getEducationsRepository(qr);
 
     const order: Partial<
@@ -69,6 +68,13 @@ export class EducationDomainService implements IEducationDomainService {
         where: {
           churchId: church.id,
         },
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          name: true,
+          churchId: true,
+        },
         order,
         take: dto.take,
         skip: dto.take * (dto.page - 1),
@@ -85,8 +91,6 @@ export class EducationDomainService implements IEducationDomainService {
     return {
       data: data,
       totalCount,
-      count: data.length,
-      page: dto.page,
     };
   }
 
@@ -102,7 +106,7 @@ export class EducationDomainService implements IEducationDomainService {
         churchId: church.id,
         id: educationId,
       },
-      relations: {
+      /*relations: {
         educationTerms: {
           instructor: true,
         },
@@ -111,7 +115,7 @@ export class EducationDomainService implements IEducationDomainService {
         educationTerms: {
           term: 'asc',
         },
-      },
+      },*/
     });
 
     if (!education) {
@@ -125,6 +129,7 @@ export class EducationDomainService implements IEducationDomainService {
     church: ChurchModel,
     educationId: number,
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationModel>,
   ): Promise<EducationModel> {
     const educationsRepository = this.getEducationsRepository(qr);
 
@@ -133,6 +138,7 @@ export class EducationDomainService implements IEducationDomainService {
         id: educationId,
         churchId: church.id,
       },
+      relations: relationOptions,
     });
 
     if (!education) {
@@ -203,6 +209,6 @@ export class EducationDomainService implements IEducationDomainService {
       throw new InternalServerErrorException(EducationException.DELETE_ERROR);
     }
 
-    return `educationId: ${targetEducation.id} deleted`;
+    return;
   }
 }

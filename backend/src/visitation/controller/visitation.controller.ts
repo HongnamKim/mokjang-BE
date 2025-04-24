@@ -31,7 +31,6 @@ import {
   ApiPostVisitation,
 } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDto } from '../dto/update-visitation.dto';
-import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
 import { AddReceiverDto } from '../dto/add-receiver.dto';
 import { DeleteReceiverDto } from '../dto/delete-receiver.dto';
 
@@ -45,7 +44,7 @@ export class VisitationController {
   getVisitations(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetVisitationDto,
-  ): Promise<VisitationPaginationResultDto> {
+  ) {
     return this.visitationService.getVisitations(churchId, dto);
   }
 

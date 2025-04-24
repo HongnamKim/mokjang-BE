@@ -53,16 +53,19 @@ export class EducationHistoryService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    const result: EducationHistoryPaginationResultDto = {
-      data: educationHistories,
-      totalCount,
-      count: educationHistories.length,
-      page: dto.page,
-      totalPage,
-      ...this.getEducationStatusCount(educationHistories),
-    };
+    const educationStatusCount =
+      this.getEducationStatusCount(educationHistories);
 
-    return result;
+    return new EducationHistoryPaginationResultDto(
+      educationHistories,
+      totalCount,
+      educationHistories.length,
+      dto.page,
+      totalPage,
+      educationStatusCount.inProgressCount,
+      educationStatusCount.completedCount,
+      educationStatusCount.incompleteCount,
+    );
   }
 
   private getEducationStatusCount(enrollments: EducationEnrollmentModel[]) {

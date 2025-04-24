@@ -8,7 +8,6 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { MemberModel } from '../../entity/member.entity';
-import { MemberPaginationResultDto } from '../../dto/member-pagination-result.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { CreateMemberDto } from '../../dto/create-member.dto';
 import { UpdateMemberDto } from '../../dto/update-member.dto';
@@ -28,7 +27,7 @@ export interface IMembersDomainService {
     relationOptions: FindOptionsRelations<MemberModel>,
     selectOptions: FindOptionsSelect<MemberModel>,
     qr?: QueryRunner,
-  ): Promise<MemberPaginationResultDto>;
+  ): Promise<{ data: MemberModel[]; totalCount: number }>;
 
   findMembersById(
     church: ChurchModel,
@@ -134,11 +133,11 @@ export interface IMembersDomainService {
     qr: QueryRunner,
   ): Promise<MemberModel>;
 
-  endMemberEducation(
+  /*endMemberEducation(
     member: MemberModel,
     educationEnrollmentId: number,
     qr: QueryRunner,
-  ): Promise<MemberModel>;
+  ): Promise<MemberModel>;*/
 
   startMemberGroup(
     member: MemberModel,
