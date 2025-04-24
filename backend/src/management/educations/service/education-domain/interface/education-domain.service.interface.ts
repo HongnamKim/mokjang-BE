@@ -1,7 +1,6 @@
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationDto } from '../../../dto/education/get-education.dto';
-import { QueryRunner } from 'typeorm';
-import { EducationPaginationResultDto } from '../../../dto/education-pagination-result.dto';
+import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { EducationModel } from '../../../entity/education.entity';
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
@@ -13,7 +12,7 @@ export interface IEducationDomainService {
     church: ChurchModel,
     dto: GetEducationDto,
     qr?: QueryRunner,
-  ): Promise<EducationPaginationResultDto>;
+  ): Promise<{ data: EducationModel[]; totalCount: number }>;
 
   findEducationById(
     church: ChurchModel,
@@ -25,6 +24,7 @@ export interface IEducationDomainService {
     church: ChurchModel,
     educationId: number,
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationModel>,
   ): Promise<EducationModel>;
 
   createEducation(
@@ -43,5 +43,5 @@ export interface IEducationDomainService {
   deleteEducation(
     targetEducation: EducationModel,
     qr?: QueryRunner,
-  ): Promise<string>;
+  ): Promise<void>;
 }

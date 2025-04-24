@@ -289,6 +289,11 @@ export class EducationSessionService {
       qr,
     );
 
-    return `educationSessionId: ${educationSessionId} deleted`;
+    //return `educationSessionId: ${educationSessionId} deleted`;
+    return {
+      timestamp: new Date(),
+      id: targetSession.id,
+      success: true,
+    };
   }
 }

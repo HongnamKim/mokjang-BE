@@ -49,6 +49,7 @@ import {
 } from '../user/user-domain/interface/user-domain.service.interface';
 import { AddConflictException } from './const/exception/add-conflict.exception';
 import { RemoveConflictException } from './const/exception/remove-conflict.exception';
+import { VisitationPaginationResultDto } from './dto/visitation-pagination-result.dto';
 
 @Injectable()
 export class VisitationService {
@@ -76,14 +77,22 @@ export class VisitationService {
     const { visitations, totalCount } =
       await this.visitationMetaDomainService.paginateVisitations(church, dto);
 
-    return {
+    return new VisitationPaginationResultDto(
+      visitations,
+      totalCount,
+      visitations.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
+
+    /*return {
       data: visitations,
       take: dto.take,
       page: dto.page,
       totalPage: Math.ceil(totalCount / dto.take),
       totalCount,
       count: visitations.length,
-    };
+    };*/
   }
 
   async getVisitationById(

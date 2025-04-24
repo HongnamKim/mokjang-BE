@@ -1,6 +1,5 @@
 import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { GetAttendanceDto } from '../../../dto/attendance/get-attendance.dto';
-import { SessionAttendancePaginationResultDto } from '../../../dto/session-attendance-pagination-result.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { SessionAttendanceModel } from '../../../entity/session-attendance.entity';
 import { UpdateAttendanceDto } from '../../../dto/attendance/update-attendance.dto';
@@ -43,7 +42,7 @@ export interface ISessionAttendanceDomainService {
   findSessionAttendances(
     educationSession: EducationSessionModel,
     dto: GetAttendanceDto,
-  ): Promise<SessionAttendancePaginationResultDto>;
+  ): Promise<{ data: SessionAttendanceModel[]; totalCount: number }>;
 
   findSessionAttendanceModelById(
     educationSession: EducationSessionModel,

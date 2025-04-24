@@ -19,7 +19,6 @@ import {
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetMemberDto } from '../../dto/get-member.dto';
-import { MemberPaginationResultDto } from '../../dto/member-pagination-result.dto';
 import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
@@ -68,9 +67,12 @@ export class MembersDomainService implements IMembersDomainService {
       }),
     ]);
 
-    const totalPage = Math.ceil(totalCount / dto.take);
+    return {
+      data: result,
+      totalCount,
+    };
 
-    const resultDto: MemberPaginationResultDto = {
+    /*const resultDto: MemberPaginationResultDto = {
       data: result,
       count: result.length,
       totalCount,
@@ -78,7 +80,7 @@ export class MembersDomainService implements IMembersDomainService {
       totalPage,
     };
 
-    return resultDto;
+    return resultDto;*/
   }
 
   async countAllMembers(church: ChurchModel, qr?: QueryRunner) {
@@ -437,7 +439,7 @@ export class MembersDomainService implements IMembersDomainService {
     return membersRepository.save(member);
   }
 
-  async endMemberEducation(
+  /*async endMemberEducation(
     member: MemberModel,
     educationEnrollmentId: number,
     qr: QueryRunner,
@@ -449,7 +451,7 @@ export class MembersDomainService implements IMembersDomainService {
     );
 
     return membersRepository.save(member);
-  }
+  }*/
 
   async startMemberGroup(
     member: MemberModel,
