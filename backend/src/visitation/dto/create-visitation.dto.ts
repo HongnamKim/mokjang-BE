@@ -17,7 +17,9 @@ import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationDetailValidator } from '../decorator/visitation-detail.validator';
 import { VisitationDetailDto } from './visittion-detail.dto';
 import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
+import { SanitizeDto } from '../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class CreateVisitationDto {
   @ApiProperty({
     description: 'API 테스트 시 true (심방 진행자의 권한 체크 건너뛰기)',

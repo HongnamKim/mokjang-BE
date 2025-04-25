@@ -10,7 +10,9 @@ import {
   Min,
 } from 'class-validator';
 import { EducationStatus } from '../../const/education-status.enum';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class CreateEducationEnrollmentDto extends PickType(
   EducationEnrollmentModel,
   ['memberId', 'status', 'note'],

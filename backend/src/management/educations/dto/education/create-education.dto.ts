@@ -4,7 +4,9 @@ import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-title.decorator';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class CreateEducationDto extends PickType(EducationModel, [
   'name',
   'description',
