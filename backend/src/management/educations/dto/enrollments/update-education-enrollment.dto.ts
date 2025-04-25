@@ -3,7 +3,9 @@ import { EducationEnrollmentModel } from '../../entity/education-enrollment.enti
 import { EducationStatus } from '../../const/education-status.enum';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class UpdateEducationEnrollmentDto extends PickType(
   EducationEnrollmentModel,
   ['status'],
