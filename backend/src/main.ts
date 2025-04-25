@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GetHandlerGuard } from './common/guard/get-handler.guard';
 import { TypeOrmExceptionFilter } from './common/filter/typeorm-exception.filter';
 import * as cookieParser from 'cookie-parser';
+import { XssSanitizerPipe } from './common/pipe/xss-sanitizer.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,7 +28,10 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
     }),
+    new XssSanitizerPipe(),
   );
+
+  //app.useGlobalInterceptors(new SanitizeInterceptor());
 
   app.useGlobalFilters(new TypeOrmExceptionFilter());
 

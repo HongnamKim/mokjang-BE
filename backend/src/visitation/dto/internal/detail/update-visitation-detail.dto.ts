@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class UpdateVisitationDetailDto {
   @ApiProperty({
     description: '심방 내용',
