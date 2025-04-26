@@ -55,7 +55,7 @@ export class GroupsDomainService implements IGroupsDomainService {
       where: {
         churchId: church.id,
       },
-      relations: { groupRoles: true },
+      //relations: { groupRoles: true },
       order: { createdAt: 'ASC' },
     });
   }
