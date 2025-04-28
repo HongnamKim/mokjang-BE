@@ -1,6 +1,6 @@
-import { BaseDeleteResultDto } from '../../../../common/dto/reponse/base-delete-result.dto';
+import { BaseDeleteResponseDto } from '../../../../../common/dto/reponse/base-delete-response.dto';
 
-export class GroupDeleteResultDto extends BaseDeleteResultDto {
+export class EducationDeleteResponseDto extends BaseDeleteResponseDto {
   constructor(
     public readonly timestamp: Date,
     public readonly id: number,

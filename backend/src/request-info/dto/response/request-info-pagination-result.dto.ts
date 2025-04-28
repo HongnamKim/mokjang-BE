@@ -1,4 +1,4 @@
-import { BaseOffsetPaginationResultDto } from '../../../common/dto/base-offset-pagination-result.dto';
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { RequestInfoModel } from '../../entity/request-info.entity';
 
 /*export interface RequestInfoPaginationResultDto
@@ -6,7 +6,7 @@ import { RequestInfoModel } from '../../entity/request-info.entity';
   totalPage: number;
 }*/
 
-export class RequestInfoPaginationResultDto extends BaseOffsetPaginationResultDto<RequestInfoModel> {
+export class RequestInfoPaginationResultDto extends BaseOffsetPaginationResponseDto<RequestInfoModel> {
   constructor(
     public readonly data: RequestInfoModel[],
     public readonly totalCount: number,
@@ -14,6 +14,6 @@ export class RequestInfoPaginationResultDto extends BaseOffsetPaginationResultDt
     public readonly page: number,
     public readonly totalPage: number,
   ) {
-    super(data, totalCount, count, page);
+    super(data, totalCount, count, page, totalPage);
   }
 }

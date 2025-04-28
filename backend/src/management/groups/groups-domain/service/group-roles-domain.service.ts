@@ -2,17 +2,24 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { IGroupRolesDomainService } from '../interface/groups-roles-domain.service.interface';
 import { GroupModel } from '../../entity/group.entity';
-import { CreateGroupRoleDto } from '../../dto/create-group-role.dto';
-import { QueryRunner, Repository } from 'typeorm';
+import { CreateGroupRoleDto } from '../../dto/group-role/create-group-role.dto';
+import {
+  FindOptionsOrder,
+  FindOptionsRelations,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { GroupRoleModel } from '../../entity/group-role.entity';
-import { UpdateGroupRoleDto } from '../../dto/update-group-role.dto';
+import { UpdateGroupRoleDto } from '../../dto/group-role/update-group-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupRoleException } from '../../const/exception/group-role.exception';
+import { GetGroupRoleDto } from '../../dto/group-role/get-group-role.dto';
+import { GroupRoleDomainPaginationResultDto } from '../../dto/group-role/group-role-domain-pagination-result.dto';
+import { GroupRoleOrderEnum } from '../../const/group-role-order.enum';
 
 @Injectable()
 export class GroupRolesDomainService implements IGroupRolesDomainService {
@@ -27,9 +34,41 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
       : this.groupRolesRepository;
   }
 
+  async findGroupRoles(
+    group: GroupModel,
+    dto: GetGroupRoleDto,
+  ): Promise<GroupRoleDomainPaginationResultDto> {
+    const groupRolesRepository = this.getGroupRolesRepository();
+
+    const order: FindOptionsOrder<GroupRoleModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== GroupRoleOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      groupRolesRepository.find({
+        where: {
+          groupId: group.id,
+        },
+        order,
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      groupRolesRepository.count({
+        where: {
+          groupId: group.id,
+        },
+      }),
+    ]);
+
+    return new GroupRoleDomainPaginationResultDto(data, totalCount);
+  }
+
   // TODO soft deleted 된 역할과 동일한 역할 생성 시 로직 보완 필요
   async createGroupRole(
-    churchId: number,
     group: GroupModel,
     dto: CreateGroupRoleDto,
     qr?: QueryRunner,
@@ -38,13 +77,12 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
 
     const existingGroupRole = await groupRolesRepository.findOne({
       where: {
-        churchId,
         groupId: group.id,
         role: dto.role,
       },
       withDeleted: true,
       relations: {
-        members: true,
+        //members: true,
       },
     });
 
@@ -58,37 +96,14 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
       await groupRolesRepository.remove(existingGroupRole);
     }
 
-    const result = await groupRolesRepository.insert({
+    return groupRolesRepository.save({
+      groupId: group.id,
       role: dto.role,
-      church: {
-        id: churchId,
-      },
-      group,
     });
-
-    const newRole = await groupRolesRepository.findOne({
-      where: { id: result.identifiers[0].id },
-    });
-
-    if (!newRole) {
-      throw new InternalServerErrorException(GroupRoleException.CREATE_ERROR);
-    }
-
-    return newRole;
   }
 
-  async deleteGroupRole(
-    churchId: number,
-    groupId: number,
-    roleId: number,
-  ): Promise<string> {
+  async deleteGroupRole(targetGroupRole: GroupRoleModel): Promise<void> {
     const groupRolesRepository = this.getGroupRolesRepository();
-
-    const targetGroupRole = await this.findGroupRoleById(
-      churchId,
-      groupId,
-      roleId,
-    );
 
     if (targetGroupRole.members.length > 0) {
       throw new ConflictException(
@@ -98,12 +113,34 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
 
     await groupRolesRepository.softRemove(targetGroupRole);
 
-    return `groupRoleId ${roleId} deleted`;
+    return;
+  }
+
+  async findGroupRoleModelById(
+    group: GroupModel,
+    groupRoleId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<GroupRoleModel>,
+  ) {
+    const groupRolesRepository = this.getGroupRolesRepository(qr);
+
+    const role = await groupRolesRepository.findOne({
+      where: {
+        groupId: group.id,
+        id: groupRoleId,
+      },
+      relations: relationOptions,
+    });
+
+    if (!role) {
+      throw new NotFoundException(GroupRoleException.NOT_FOUND);
+    }
+
+    return role;
   }
 
   async findGroupRoleById(
-    churchId: number,
-    groupId: number,
+    group: GroupModel,
     groupRoleId: number,
     qr?: QueryRunner,
   ): Promise<GroupRoleModel> {
@@ -111,8 +148,7 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
 
     const role = await groupRolesRepository.findOne({
       where: {
-        churchId,
-        groupId: groupId,
+        groupId: group.id,
         id: groupRoleId,
       },
       relations: {
@@ -127,43 +163,14 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
     return role;
   }
 
-  findGroupRoles(churchId: number, groupId: number): Promise<GroupRoleModel[]> {
-    const groupRolesRepository = this.getGroupRolesRepository();
-
-    return groupRolesRepository.find({
-      where: {
-        churchId,
-        groupId,
-      },
-      order: {
-        createdAt: 'ASC',
-      },
-    });
-  }
-
   async updateGroupRole(
-    churchId: number,
-    groupId: number,
-    roleId: number,
+    targetGroupRole: GroupRoleModel,
     dto: UpdateGroupRoleDto,
   ): Promise<GroupRoleModel> {
     const groupRolesRepository = this.getGroupRolesRepository();
 
-    const targetGroupRole = await groupRolesRepository.findOne({
-      where: {
-        churchId,
-        groupId,
-        id: roleId,
-      },
-    });
-
-    if (!targetGroupRole) {
-      throw new NotFoundException(GroupRoleException.NOT_FOUND);
-    }
-
     const isExistGroupRole = await this.isExistGroupRole(
-      churchId,
-      groupId,
+      targetGroupRole.groupId,
       dto.role,
     );
 
@@ -179,7 +186,6 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
   }
 
   private async isExistGroupRole(
-    churchId: number,
     groupId: number,
     role: string,
     qr?: QueryRunner,
@@ -188,7 +194,6 @@ export class GroupRolesDomainService implements IGroupRolesDomainService {
 
     const roleModel = await groupRolesRepository.findOne({
       where: {
-        churchId,
         groupId,
         role,
       },

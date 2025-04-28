@@ -1,9 +1,9 @@
 import { BaseOffsetPaginationResponseDto } from '../../../../common/dto/reponse/base-offset-pagination-response.dto';
-import { GroupModel } from '../../entity/group.entity';
+import { GroupRoleModel } from '../../entity/group-role.entity';
 
-export class GroupPaginationResultDto extends BaseOffsetPaginationResponseDto<GroupModel> {
+export class GroupRolePaginationResultDto extends BaseOffsetPaginationResponseDto<GroupRoleModel> {
   constructor(
-    public readonly data: GroupModel[],
+    public readonly data: GroupRoleModel[],
     public readonly totalCount: number,
     public readonly count: number,
     public readonly page: number,

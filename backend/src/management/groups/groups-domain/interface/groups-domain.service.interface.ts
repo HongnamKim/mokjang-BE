@@ -1,9 +1,9 @@
 import { GroupModel } from '../../entity/group.entity';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateGroupDto } from '../../dto/create-group.dto';
-import { UpdateGroupDto } from '../../dto/update-group.dto';
-import { GetGroupDto } from '../../dto/get-group.dto';
+import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import { UpdateGroupDto } from '../../dto/group/update-group.dto';
+import { GetGroupDto } from '../../dto/group/get-group.dto';
 
 export interface ParentGroup {
   id: number;

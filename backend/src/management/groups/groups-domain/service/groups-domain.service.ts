@@ -10,14 +10,21 @@ import {
   ParentGroup,
 } from '../interface/groups-domain.service.interface';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { CreateGroupDto } from '../../dto/create-group.dto';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import {
+  FindOptionsOrder,
+  FindOptionsRelations,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { GroupModel } from '../../entity/group.entity';
-import { UpdateGroupDto } from '../../dto/update-group.dto';
+import { UpdateGroupDto } from '../../dto/group/update-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
-import { GetGroupDto } from '../../dto/get-group.dto';
+import { GetGroupDto } from '../../dto/group/get-group.dto';
+import { GroupOrderEnum } from '../../const/group-order.enum';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -55,6 +62,14 @@ export class GroupsDomainService implements IGroupsDomainService {
   ): Promise<{ data: GroupModel[]; totalCount: number }> {
     const groupsRepository = this.getGroupsRepository();
 
+    const order: FindOptionsOrder<GroupModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== GroupOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
     const [data, totalCount] = await Promise.all([
       groupsRepository.find({
         where: {
@@ -62,7 +77,7 @@ export class GroupsDomainService implements IGroupsDomainService {
           parentGroupId: dto.parentGroupId === 0 ? IsNull() : dto.parentGroupId,
         },
         //relations: { groupRoles: true },
-        order: { createdAt: 'ASC' },
+        order,
         take: dto.take,
         skip: dto.take * (dto.page - 1),
       }),

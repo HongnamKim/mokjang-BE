@@ -16,7 +16,7 @@ import {
   IEducationTermDomainService,
 } from './education-domain/interface/education-term-domain.service.interface';
 import { EducationPaginationResultDto } from '../dto/education-pagination-result.dto';
-import { DeleteResponseDto } from '../../../common/dto/reponse/delete-response.dto';
+import { EducationDeleteResponseDto } from '../dto/education/response/education-delete-response.dto';
 
 @Injectable()
 export class EducationsService {
@@ -134,7 +134,7 @@ export class EducationsService {
 
     await this.educationDomainService.deleteEducation(targetEducation, qr);
 
-    return new DeleteResponseDto(
+    return new EducationDeleteResponseDto(
       new Date(),
       targetEducation.id,
       targetEducation.name,
