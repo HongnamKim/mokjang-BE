@@ -1,10 +1,10 @@
-import { BaseOffsetPaginationResultDto } from '../../../common/dto/base-offset-pagination-result.dto';
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { EducationEnrollmentModel } from '../entity/education-enrollment.entity';
 
 /*export interface EducationEnrollmentPaginationResultDto
   extends BaseOffsetPaginationResultDto<EducationEnrollmentModel> {}*/
 
-export class EducationEnrollmentPaginationResultDto extends BaseOffsetPaginationResultDto<EducationEnrollmentModel> {
+export class EducationEnrollmentPaginationResultDto extends BaseOffsetPaginationResponseDto<EducationEnrollmentModel> {
   constructor(
     public readonly data: EducationEnrollmentModel[],
     public readonly totalCount: number,
@@ -12,6 +12,6 @@ export class EducationEnrollmentPaginationResultDto extends BaseOffsetPagination
     public readonly page: number,
     public readonly totalPage: number,
   ) {
-    super(data, totalCount, count, page);
+    super(data, totalCount, count, page, totalPage);
   }
 }

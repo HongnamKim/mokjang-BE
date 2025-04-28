@@ -1,7 +1,7 @@
-import { BaseOffsetPaginationResultDto } from '../../../common/dto/base-offset-pagination-result.dto';
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
 
-export class EducationHistoryPaginationResultDto extends BaseOffsetPaginationResultDto<EducationEnrollmentModel> {
+export class EducationHistoryPaginationResultDto extends BaseOffsetPaginationResponseDto<EducationEnrollmentModel> {
   constructor(
     public readonly data: EducationEnrollmentModel[],
     public readonly totalCount: number,
@@ -12,6 +12,6 @@ export class EducationHistoryPaginationResultDto extends BaseOffsetPaginationRes
     public readonly completedCount: number,
     public readonly incompleteCount: number,
   ) {
-    super(data, totalCount, count, page);
+    super(data, totalCount, count, page, totalPage);
   }
 }

@@ -3,7 +3,6 @@ import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
 import { EducationModel } from '../../management/educations/entity/education.entity';
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
@@ -49,9 +48,6 @@ export class ChurchModel extends BaseModel {
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];
-
-  @OneToMany(() => GroupRoleModel, (groupRole) => groupRole.church)
-  groupRoles: GroupRoleModel[];
 
   @OneToMany(() => EducationModel, (education) => education.church)
   educations: EducationModel[];

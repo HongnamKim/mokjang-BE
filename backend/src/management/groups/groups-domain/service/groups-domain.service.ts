@@ -10,13 +10,21 @@ import {
   ParentGroup,
 } from '../interface/groups-domain.service.interface';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { CreateGroupDto } from '../../dto/create-group.dto';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import {
+  FindOptionsOrder,
+  FindOptionsRelations,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { GroupModel } from '../../entity/group.entity';
-import { UpdateGroupDto } from '../../dto/update-group.dto';
+import { UpdateGroupDto } from '../../dto/group/update-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
+import { GetGroupDto } from '../../dto/group/get-group.dto';
+import { GroupOrderEnum } from '../../const/group-order.enum';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -48,16 +56,40 @@ export class GroupsDomainService implements IGroupsDomainService {
     return !!existingGroup;
   }
 
-  async findGroups(church: ChurchModel): Promise<GroupModel[]> {
+  async findGroups(
+    church: ChurchModel,
+    dto: GetGroupDto,
+  ): Promise<{ data: GroupModel[]; totalCount: number }> {
     const groupsRepository = this.getGroupsRepository();
 
-    return groupsRepository.find({
-      where: {
-        churchId: church.id,
-      },
-      relations: { groupRoles: true },
-      order: { createdAt: 'ASC' },
-    });
+    const order: FindOptionsOrder<GroupModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== GroupOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      groupsRepository.find({
+        where: {
+          churchId: church.id,
+          parentGroupId: dto.parentGroupId === 0 ? IsNull() : dto.parentGroupId,
+        },
+        //relations: { groupRoles: true },
+        order,
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      groupsRepository.count({
+        where: {
+          churchId: church.id,
+          parentGroupId: dto.parentGroupId === 0 ? IsNull() : dto.parentGroupId,
+        },
+      }),
+    ]);
+
+    return { data, totalCount };
   }
 
   async findGroupModelById(
@@ -321,14 +353,10 @@ export class GroupsDomainService implements IGroupsDomainService {
     return updatedGroup;
   }
 
-  async deleteGroup(
-    churchId: number,
-    groupId: number,
-    qr: QueryRunner,
-  ): Promise<string> {
+  async deleteGroup(deleteTarget: GroupModel, qr: QueryRunner): Promise<void> {
     const groupsRepository = this.getGroupsRepository(qr);
 
-    const deleteTarget = await this.groupsRepository.findOne({
+    /*const deleteTarget = await this.groupsRepository.findOne({
       where: {
         id: groupId,
         churchId,
@@ -340,7 +368,7 @@ export class GroupsDomainService implements IGroupsDomainService {
 
     if (!deleteTarget) {
       throw new NotFoundException(GroupException.NOT_FOUND);
-    }
+    }*/
 
     if (
       deleteTarget.childGroupIds.length > 0 ||
@@ -354,7 +382,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     // 부모 그룹의 자식 그룹 ID 배열 업데이트
     await this.removeChildGroupId(deleteTarget, deleteTarget.parentGroup, qr);
 
-    return `groupId ${groupId} deleted`;
+    return;
   }
 
   async incrementMembersCount(
