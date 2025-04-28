@@ -7,26 +7,41 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { GroupsService } from '../service/groups.service';
-import { CreateGroupDto } from '../dto/create-group.dto';
-import { UpdateGroupDto } from '../dto/update-group.dto';
+import { CreateGroupDto } from '../dto/group/create-group.dto';
+import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import {
+  ApiDeleteGroup,
+  ApiGetChildGroupIds,
+  ApiGetGroupById,
+  ApiGetGroups,
+  ApiPatchGroup,
+  ApiPostGroups,
+} from '../const/swagger/group.swagger';
+import { GetGroupDto } from '../dto/group/get-group.dto';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
+  @ApiGetGroups()
   @Get()
-  getGroups(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.groupsService.getGroups(churchId);
+  getGroups(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetGroupDto,
+  ) {
+    return this.groupsService.getGroups(churchId, dto);
   }
 
+  @ApiPostGroups()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postGroup(
@@ -37,6 +52,7 @@ export class GroupsController {
     return this.groupsService.createGroup(churchId, dto, qr);
   }
 
+  @ApiGetGroupById()
   @Get(':groupId')
   getGroupById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -45,10 +61,7 @@ export class GroupsController {
     return this.groupsService.getGroupByIdWithParents(churchId, groupId);
   }
 
-  @ApiOperation({
-    summary: '그룹 수정',
-    description: '상위 그룹을 없애려는 경우 ministryGroupId 를 null 로 설정',
-  })
+  @ApiPatchGroup()
   @Patch(':groupId')
   @UseInterceptors(TransactionInterceptor)
   patchGroup(
@@ -60,6 +73,7 @@ export class GroupsController {
     return this.groupsService.updateGroup(churchId, groupId, dto, qr);
   }
 
+  @ApiDeleteGroup()
   @Delete(':groupId')
   @UseInterceptors(TransactionInterceptor)
   deleteGroup(
@@ -71,45 +85,12 @@ export class GroupsController {
     return this.groupsService.deleteGroup(churchId, groupId, qr /*cascade*/);
   }
 
+  @ApiGetChildGroupIds()
   @Get(':groupId/childGroups')
-  getGroupsCascade(
+  getChildGroupIds(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
   ) {
-    return this.groupsService.getGroupsCascade(churchId, groupId);
+    return this.groupsService.getChildGroupIds(churchId, groupId);
   }
-
-  /*@Get(':groupId/role')
-  getGroupRoles(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('groupId', ParseIntPipe) groupId: number,
-  ) {
-    return this.groupsService.getGroupRoles(churchId, groupId);
-  }
-
-  @Post(':groupId/role')
-  postGroupRole(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('groupId', ParseIntPipe) groupId: number,
-    @Body() dto: CreateGroupRoleDto,
-  ) {
-    return this.groupsService.createGroupRole(churchId, groupId, dto);
-  }
-
-  @Patch(':groupId/role/:roleId')
-  patchGroupRole(
-    @Param('groupId', ParseIntPipe) groupId: number,
-    @Param('roleId', ParseIntPipe) roleId: number,
-    @Body() dto: UpdateGroupRoleDto,
-  ) {
-    return this.groupsService.updateGroupRole(groupId, roleId, dto);
-  }
-
-  @Delete(':groupId/role/:roleId')
-  deleteGroupRole(
-    @Param('groupId', ParseIntPipe) groupId: number,
-    @Param('roleId', ParseIntPipe) roleId: number,
-  ) {
-    return this.groupsService.deleteGroupRole(groupId, roleId);
-  }*/
 }

@@ -1,8 +1,9 @@
 import { GroupModel } from '../../entity/group.entity';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateGroupDto } from '../../dto/create-group.dto';
-import { UpdateGroupDto } from '../../dto/update-group.dto';
+import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import { UpdateGroupDto } from '../../dto/group/update-group.dto';
+import { GetGroupDto } from '../../dto/group/get-group.dto';
 
 export interface ParentGroup {
   id: number;
@@ -18,7 +19,10 @@ export interface GroupModelWithParentGroups extends GroupModel {
 export const IGROUPS_DOMAIN_SERVICE = Symbol('IGROUPS_DOMAIN_SERVICE');
 
 export interface IGroupsDomainService {
-  findGroups(church: ChurchModel): Promise<GroupModel[]>;
+  findGroups(
+    church: ChurchModel,
+    dto: GetGroupDto,
+  ): Promise<{ data: GroupModel[]; totalCount: number }>;
 
   findGroupById(
     church: ChurchModel,
@@ -59,11 +63,7 @@ export interface IGroupsDomainService {
     newParentGroup: GroupModel | null,
   ): Promise<GroupModel>;
 
-  deleteGroup(
-    churchId: number,
-    groupId: number,
-    qr: QueryRunner,
-  ): Promise<string>;
+  deleteGroup(deleteTarget: GroupModel, qr: QueryRunner): Promise<void>;
 
   findChildGroupIds(group: GroupModel, qr?: QueryRunner): Promise<number[]>;
 

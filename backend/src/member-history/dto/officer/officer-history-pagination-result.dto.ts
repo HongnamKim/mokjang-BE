@@ -1,4 +1,4 @@
-import { BaseOffsetPaginationResultDto } from '../../../common/dto/base-offset-pagination-result.dto';
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { OfficerHistoryModel } from '../../entity/officer-history.entity';
 
 /*export interface OfficerHistoryPaginationResultDto
@@ -6,7 +6,7 @@ import { OfficerHistoryModel } from '../../entity/officer-history.entity';
   totalPage: number;
 }*/
 
-export class OfficerHistoryPaginationResultDto extends BaseOffsetPaginationResultDto<OfficerHistoryModel> {
+export class OfficerHistoryPaginationResultDto extends BaseOffsetPaginationResponseDto<OfficerHistoryModel> {
   constructor(
     public readonly data: OfficerHistoryModel[],
     public readonly totalCount: number,
@@ -14,6 +14,6 @@ export class OfficerHistoryPaginationResultDto extends BaseOffsetPaginationResul
     public readonly page: number,
     public readonly totalPage: number,
   ) {
-    super(data, totalCount, count, page);
+    super(data, totalCount, count, page, totalPage);
   }
 }

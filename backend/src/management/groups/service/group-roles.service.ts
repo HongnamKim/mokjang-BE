@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { CreateGroupRoleDto } from '../dto/create-group-role.dto';
-import { UpdateGroupRoleDto } from '../dto/update-group-role.dto';
+import { CreateGroupRoleDto } from '../dto/group-role/create-group-role.dto';
+import { UpdateGroupRoleDto } from '../dto/group-role/update-group-role.dto';
 import {
   IGROUP_ROLES_DOMAIN_SERVICE,
   IGroupRolesDomainService,
@@ -14,6 +14,9 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../../churches/churches-domain/interface/churches-domain.service.interface';
+import { GetGroupRoleDto } from '../dto/group-role/get-group-role.dto';
+import { GroupRolePaginationResultDto } from '../dto/response/group-role-pagination-result.dto';
+import { GroupRoleDeleteResponseDto } from '../dto/response/group-role-delete-response.dto';
 
 @Injectable()
 export class GroupRolesService {
@@ -84,8 +87,24 @@ export class GroupRolesService {
     };
   }*/
 
-  async getGroupRoles(churchId: number, groupId: number) {
-    return this.groupRoleDomainService.findGroupRoles(churchId, groupId);
+  async getGroupRoles(churchId: number, groupId: number, dto: GetGroupRoleDto) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+    );
+
+    const result = await this.groupRoleDomainService.findGroupRoles(group, dto);
+
+    return new GroupRolePaginationResultDto(
+      result.data,
+      result.totalCount,
+      result.data.length,
+      dto.page,
+      Math.ceil(result.totalCount / dto.take),
+    );
   }
 
   async getGroupRoleById(
@@ -94,9 +113,19 @@ export class GroupRolesService {
     groupRoleId: number,
     qr?: QueryRunner,
   ) {
-    return this.groupRoleDomainService.findGroupRoleById(
+    const church = await this.churchesDomainService.findChurchModelById(
       churchId,
+      qr,
+    );
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
       groupId,
+      qr,
+    );
+
+    return this.groupRoleDomainService.findGroupRoleById(
+      group,
       groupRoleId,
       qr,
     );
@@ -119,12 +148,7 @@ export class GroupRolesService {
       qr,
     );
 
-    return this.groupRoleDomainService.createGroupRole(
-      churchId,
-      group,
-      dto,
-      qr,
-    );
+    return this.groupRoleDomainService.createGroupRole(group, dto, qr);
   }
 
   async updateGroupRole(
@@ -133,19 +157,45 @@ export class GroupRolesService {
     roleId: number,
     dto: UpdateGroupRoleDto,
   ) {
-    return this.groupRoleDomainService.updateGroupRole(
-      churchId,
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
       groupId,
-      roleId,
-      dto,
     );
+
+    const groupRole = await this.groupRoleDomainService.findGroupRoleModelById(
+      group,
+      roleId,
+    );
+
+    return this.groupRoleDomainService.updateGroupRole(groupRole, dto);
   }
 
   async deleteGroupRole(churchId: number, groupId: number, roleId: number) {
-    return this.groupRoleDomainService.deleteGroupRole(
-      churchId,
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
       groupId,
+    );
+
+    const groupRole = await this.groupRoleDomainService.findGroupRoleModelById(
+      group,
       roleId,
+      undefined,
+      { members: true },
+    );
+
+    await this.groupRoleDomainService.deleteGroupRole(groupRole);
+
+    return new GroupRoleDeleteResponseDto(
+      new Date(),
+      groupRole.id,
+      groupRole.role,
+      true,
     );
   }
 }

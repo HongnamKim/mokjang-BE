@@ -1,4 +1,4 @@
-import { BaseOffsetPaginationResultDto } from '../../common/dto/base-offset-pagination-result.dto';
+import { BaseOffsetPaginationResponseDto } from '../../common/dto/reponse/base-offset-pagination-response.dto';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
 
 /*export interface VisitationPaginationResultDto
@@ -6,7 +6,7 @@ import { VisitationMetaModel } from '../entity/visitation-meta.entity';
   totalPage: number;
 }*/
 
-export class VisitationPaginationResultDto extends BaseOffsetPaginationResultDto<VisitationMetaModel> {
+export class VisitationPaginationResultDto extends BaseOffsetPaginationResponseDto<VisitationMetaModel> {
   constructor(
     public readonly data: VisitationMetaModel[],
     public readonly totalCount: number,
@@ -14,6 +14,6 @@ export class VisitationPaginationResultDto extends BaseOffsetPaginationResultDto
     public readonly page: number,
     public readonly totalPage: number,
   ) {
-    super(data, totalCount, count, page);
+    super(data, totalCount, count, page, totalPage);
   }
 }

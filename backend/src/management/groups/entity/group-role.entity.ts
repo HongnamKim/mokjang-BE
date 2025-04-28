@@ -1,7 +1,6 @@
 import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { GroupModel } from './group.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
-import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GroupHistoryModel } from '../../../member-history/entity/group-history.entity';
 
@@ -17,13 +16,6 @@ export class GroupRoleModel extends BaseModel {
 
   @ManyToOne(() => GroupModel, (group) => group.groupRoles)
   group: GroupModel;
-
-  @Index()
-  @Column()
-  churchId: number;
-
-  @ManyToOne(() => ChurchModel, (church) => church.groupRoles)
-  church: ChurchModel;
 
   @OneToMany(() => MemberModel, (member) => member.groupRole)
   members: MemberModel[];
