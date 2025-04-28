@@ -159,8 +159,9 @@ export class GroupHistoryService {
     // 그룹 역할 검증
     const groupRole = dto.groupRoleId
       ? await this.groupRolesDomainService.findGroupRoleById(
-          churchId,
-          dto.groupId,
+          //churchId,
+          //dto.groupId,
+          group,
           dto.groupRoleId,
           qr,
         )

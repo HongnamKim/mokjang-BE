@@ -1,4 +1,4 @@
-import { BaseOffsetPaginationResultDto } from '../../common/dto/base-offset-pagination-result.dto';
+import { BaseOffsetPaginationResponseDto } from '../../common/dto/reponse/base-offset-pagination-response.dto';
 import { MemberModel } from '../entity/member.entity';
 
 /*export interface MemberPaginationResultDto
@@ -6,7 +6,7 @@ import { MemberModel } from '../entity/member.entity';
   totalPage: number;
 }*/
 
-export class MemberPaginationResultDto extends BaseOffsetPaginationResultDto<MemberModel> {
+export class MemberPaginationResultDto extends BaseOffsetPaginationResponseDto<MemberModel> {
   constructor(
     public readonly data: MemberModel[],
     public readonly totalCount: number,
@@ -14,6 +14,6 @@ export class MemberPaginationResultDto extends BaseOffsetPaginationResultDto<Mem
     public readonly page: number,
     public readonly totalPage: number,
   ) {
-    super(data, totalCount, count, page);
+    super(data, totalCount, count, page, totalPage);
   }
 }
