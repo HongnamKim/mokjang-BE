@@ -10,6 +10,11 @@ import {
   IOFFICERS_DOMAIN_SERVICE,
   IOfficersDomainService,
 } from '../officer-domain/interface/officers-domain.service.interface';
+import { GetOfficersDto } from '../dto/request/get-officers.dto';
+import { OfficerPaginationResponseDto } from '../dto/response/officer-pagination-response.dto';
+import { OfficerPostResponse } from '../dto/response/officer-post-response.dto';
+import { OfficerPatchResponse } from '../dto/response/officer-patch.response.dto';
+import { OfficerDeleteResponse } from '../dto/response/officer-delete-response.dto';
 
 @Injectable()
 export class OfficersService {
@@ -20,43 +25,26 @@ export class OfficersService {
     private readonly officersDomainService: IOfficersDomainService,
   ) {}
 
-  async getOfficers(churchId: number, qr?: QueryRunner) {
+  async getOfficers(churchId: number, dto: GetOfficersDto, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
 
-    return this.officersDomainService.findOfficers(church, qr);
-  }
-
-  /*async getOfficerById(churchId: number, officerId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    return this.officersDomainService.findOfficerById(church, officerId, qr);
-
-  }*/
-
-  /*async getOfficerModelById(
-    churchId: number,
-    officerId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<OfficerModel>,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    return this.officersDomainService.findOfficerModelById(
+    const { data, totalCount } = await this.officersDomainService.findOfficers(
       church,
-      officerId,
+      dto,
       qr,
-      relationOptions,
     );
-  }*/
+
+    return new OfficerPaginationResponseDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
+  }
 
   async createOfficer(
     churchId: number,
@@ -68,7 +56,13 @@ export class OfficersService {
       qr,
     );
 
-    return this.officersDomainService.createOfficer(church, dto, qr);
+    const officer = await this.officersDomainService.createOfficer(
+      church,
+      dto,
+      qr,
+    );
+
+    return new OfficerPostResponse(officer);
   }
 
   async updateOfficer(
@@ -88,7 +82,14 @@ export class OfficersService {
       qr,
     );
 
-    return this.officersDomainService.updateOfficer(church, officer, dto, qr);
+    const updatedOfficer = await this.officersDomainService.updateOfficer(
+      church,
+      officer,
+      dto,
+      qr,
+    );
+
+    return new OfficerPatchResponse(updatedOfficer);
   }
 
   async deleteOfficer(churchId: number, officerId: number, qr?: QueryRunner) {
@@ -101,12 +102,20 @@ export class OfficersService {
       church,
       officerId,
       qr,
+      { members: true },
     );
 
-    return this.officersDomainService.deleteOfficer(officer, qr);
+    await this.officersDomainService.deleteOfficer(officer, qr);
+
+    return new OfficerDeleteResponse(
+      new Date(),
+      officer.id,
+      officer.name,
+      true,
+    );
   }
 
-  async incrementMembersCount(
+  /*async incrementMembersCount(
     churchId: number,
     officerId: number,
     qr: QueryRunner,
@@ -123,9 +132,9 @@ export class OfficersService {
     );
 
     return this.officersDomainService.incrementMembersCount(officer, qr);
-  }
+  }*/
 
-  async decrementMembersCount(
+  /*async decrementMembersCount(
     churchId: number,
     officerId: number,
     qr: QueryRunner,
@@ -142,5 +151,5 @@ export class OfficersService {
     );
 
     return this.officersDomainService.decrementMembersCount(officer, qr);
-  }
+  }*/
 }
