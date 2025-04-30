@@ -7,8 +7,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
-import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
+import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-title.decorator';
 
 export class CreateMinistryDto {
   @ApiProperty({

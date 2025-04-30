@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateMinistryGroupDto } from '../dto/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../dto/update-ministry-group.dto';
+import { CreateMinistryGroupDto } from '../dto/ministry-group/create-ministry-group.dto';
+import { UpdateMinistryGroupDto } from '../dto/ministry-group/update-ministry-group.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
