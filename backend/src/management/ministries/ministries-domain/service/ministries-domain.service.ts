@@ -1,19 +1,32 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { IMinistriesDomainService } from '../interface/ministries-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MinistryModel } from '../../entity/ministry.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  MinistryModel,
+  MinistryModelColumns,
+} from '../../entity/ministry.entity';
+import {
+  FindOptionsOrder,
+  FindOptionsRelations,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { GetMinistryDto } from '../../dto/get-ministry.dto';
-import { MinistryException } from '../../const/ministry.exception';
-import { CreateMinistryDto } from '../../dto/create-ministry.dto';
+import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
+import { MinistryException } from '../../const/exception/ministry.exception';
+import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
-import { UpdateMinistryDto } from '../../dto/update-ministry.dto';
+import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
 import { OfficersException } from '../../../officers/const/exception/officers.exception';
+import { MinistryDomainPaginationResponseDto } from '../../dto/ministry/response/ministry-domain-pagination-response.dto';
+import { MinistryOrderEnum } from '../../const/ministry-order.enum';
 
 @Injectable()
 export class MinistriesDomainService implements IMinistriesDomainService {
@@ -42,7 +55,15 @@ export class MinistriesDomainService implements IMinistriesDomainService {
         ministryGroupId: ministryGroup === null ? IsNull() : ministryGroup.id,
         name,
       },
+      withDeleted: true,
     });
+
+    // soft-deleted 된 사역일 경우 완전 삭제
+    if (ministry && ministry.deletedAt) {
+      await ministriesRepository.remove(ministry);
+
+      return false;
+    }
 
     return !!ministry;
   }
@@ -54,17 +75,36 @@ export class MinistriesDomainService implements IMinistriesDomainService {
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
-    return ministriesRepository.find({
-      where: {
-        churchId: church.id,
-        ministryGroupId:
-          dto.ministryGroupId === 0 ? IsNull() : dto.ministryGroupId,
-      },
-      order: {
-        [dto.order]: dto.orderDirection,
-        id: 'asc',
-      },
-    });
+    const order: FindOptionsOrder<MinistryModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== MinistryOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      ministriesRepository.find({
+        where: {
+          churchId: church.id,
+          ministryGroupId:
+            dto.ministryGroupId === 0 ? IsNull() : dto.ministryGroupId,
+        },
+        order,
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+
+      ministriesRepository.count({
+        where: {
+          churchId: church.id,
+          ministryGroupId:
+            dto.ministryGroupId === 0 ? IsNull() : dto.ministryGroupId,
+        },
+      }),
+    ]);
+
+    return new MinistryDomainPaginationResponseDto(data, totalCount);
   }
 
   async findMinistryModelById(
@@ -103,7 +143,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
         id: ministryId,
       },
       relations: {
-        members: true,
+        //members: true,
       },
     });
 
@@ -130,7 +170,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     );
 
     if (isExistMinistry) {
-      throw new BadRequestException(MinistryException.ALREADY_EXIST);
+      throw new ConflictException(MinistryException.ALREADY_EXIST);
     }
 
     return ministriesRepository.save({
@@ -196,7 +236,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
       throw new NotFoundException(MinistryException.NOT_FOUND);
     }
 
-    return `ministryId ${ministry.id} deleted`;
+    return;
   }
 
   async incrementMembersCount(ministry: MinistryModel, qr: QueryRunner) {
@@ -204,7 +244,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
 
     const result = await ministriesRepository.increment(
       { id: ministry.id, deletedAt: IsNull() },
-      'membersCount',
+      MinistryModelColumns.membersCount,
       1,
     );
 
@@ -218,9 +258,13 @@ export class MinistriesDomainService implements IMinistriesDomainService {
   async decrementMembersCount(ministry: MinistryModel, qr: QueryRunner) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
+    if (ministry.membersCount === 0) {
+      throw new ConflictException(MinistryException.EMPTY_MEMBER_COUNT);
+    }
+
     const result = await ministriesRepository.decrement(
       { id: ministry.id, deletedAt: IsNull() },
-      'membersCount',
+      MinistryModelColumns.membersCount,
       1,
     );
 
@@ -229,5 +273,24 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     }
 
     return true;
+  }
+
+  async refreshMembersCount(
+    ministry: MinistryModel,
+    membersCount: number,
+    qr?: QueryRunner,
+  ) {
+    const ministriesRepository = this.getMinistriesRepository(qr);
+
+    const updatedMinistry = await ministriesRepository.preload({
+      id: ministry.id,
+      membersCount: membersCount,
+    });
+
+    if (!updatedMinistry) {
+      throw new InternalServerErrorException(MinistryException.UPDATE_ERROR);
+    }
+
+    return updatedMinistry;
   }
 }

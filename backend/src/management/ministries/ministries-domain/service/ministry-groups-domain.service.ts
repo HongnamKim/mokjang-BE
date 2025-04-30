@@ -13,9 +13,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { MinistryGroupException } from '../../const/ministry-group.exception';
-import { CreateMinistryGroupDto } from '../../dto/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../../dto/update-ministry-group.dto';
+import { MinistryGroupException } from '../../const/exception/ministry-group.exception';
+import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
+import { UpdateMinistryGroupDto } from '../../dto/ministry-group/update-ministry-group.dto';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 
 @Injectable()
