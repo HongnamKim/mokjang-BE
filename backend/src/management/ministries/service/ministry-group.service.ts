@@ -11,6 +11,11 @@ import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
 } from '../ministries-domain/interface/ministry-groups-domain.service.interface';
+import { GetMinistryGroupDto } from '../dto/ministry-group/get-ministry-group.dto';
+import { MinistryGroupPaginationResultDto } from '../dto/ministry-group/response/ministry-group-pagination-result.dto';
+import { MinistryGroupPostResponseDto } from '../dto/ministry-group/response/ministry-group-post-response.dto';
+import { MinistryGroupPatchResponseDto } from '../dto/ministry-group/response/ministry-group-patch-response.dto';
+import { MinistryGroupDeleteResponseDto } from '../dto/ministry-group/response/ministry-group-delete-response.dto';
 
 @Injectable()
 export class MinistryGroupService {
@@ -21,11 +26,30 @@ export class MinistryGroupService {
     private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
   ) {}
 
-  async getMinistryGroups(churchId: number) {
+  async getMinistryGroups(churchId: number, dto: GetMinistryGroupDto) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    return this.ministryGroupsDomainService.findMinistryGroups(church);
+    const parentMinistryGroup = dto.parentMinistryGroupId
+      ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
+          church,
+          dto.parentMinistryGroupId,
+        )
+      : null;
+
+    const result = await this.ministryGroupsDomainService.findMinistryGroups(
+      church,
+      parentMinistryGroup,
+      dto,
+    );
+
+    return new MinistryGroupPaginationResultDto(
+      result.data,
+      result.totalCount,
+      result.data.length,
+      dto.page,
+      Math.ceil(result.totalCount / dto.take),
+    );
   }
 
   async getMinistryGroupModelById(
@@ -74,11 +98,23 @@ export class MinistryGroupService {
       qr,
     );
 
-    return this.ministryGroupsDomainService.createMinistryGroup(
-      church,
-      dto,
-      qr,
-    );
+    const parentMinistryGroup = dto.parentMinistryGroupId
+      ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
+          church,
+          dto.parentMinistryGroupId,
+          qr,
+        )
+      : null;
+
+    const newMinistryGroup =
+      await this.ministryGroupsDomainService.createMinistryGroup(
+        church,
+        parentMinistryGroup,
+        dto,
+        qr,
+      );
+
+    return new MinistryGroupPostResponseDto(newMinistryGroup);
   }
 
   async updateMinistryGroup(
@@ -111,13 +147,16 @@ export class MinistryGroupService {
               qr,
             ); // 새 상위 사역 그룹으로 변경
 
-    return this.ministryGroupsDomainService.updateMinistryGroup(
-      church,
-      targetMinistryGroup,
-      dto,
-      qr,
-      newParentMinistryGroup,
-    );
+    const updatedMinistryGroup =
+      await this.ministryGroupsDomainService.updateMinistryGroup(
+        church,
+        targetMinistryGroup,
+        dto,
+        qr,
+        newParentMinistryGroup,
+      );
+
+    return new MinistryGroupPatchResponseDto(updatedMinistryGroup);
   }
 
   async deleteMinistryGroup(
@@ -130,10 +169,26 @@ export class MinistryGroupService {
       qr,
     );
 
-    return this.ministryGroupsDomainService.deleteMinistryGroup(
+    const targetMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+        { parentMinistryGroup: true, ministries: true },
+      );
+
+    await this.ministryGroupsDomainService.deleteMinistryGroup(
       church,
-      ministryGroupId,
+      targetMinistryGroup,
+      //ministryGroupId,
       qr,
+    );
+
+    return new MinistryGroupDeleteResponseDto(
+      new Date(),
+      targetMinistryGroup.id,
+      targetMinistryGroup.name,
+      true,
     );
   }
 
@@ -147,7 +202,7 @@ export class MinistryGroupService {
       qr,
     );
 
-    return this.ministryGroupsDomainService.findChildMinistryGroupIds(
+    return this.ministryGroupsDomainService.findChildMinistryGroups(
       church,
       ministryGroupId,
       qr,
