@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
@@ -16,6 +17,7 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateMinistryGroupDto } from '../dto/ministry-group/update-ministry-group.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { GetMinistryGroupDto } from '../dto/ministry-group/get-ministry-group.dto';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -23,8 +25,11 @@ export class MinistryGroupsController {
   constructor(private readonly ministryGroupService: MinistryGroupService) {}
 
   @Get()
-  getMinistryGroups(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.ministryGroupService.getMinistryGroups(churchId);
+  getMinistryGroups(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetMinistryGroupDto,
+  ) {
+    return this.ministryGroupService.getMinistryGroups(churchId, dto);
   }
 
   @Post()

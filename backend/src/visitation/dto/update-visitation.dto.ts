@@ -13,7 +13,6 @@ import {
 import { TransformNumberArray } from '../../common/decorator/transformer/transform-array';
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
-import { VisitationType } from '../const/visitation-type.enum';
 import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 
 export class UpdateVisitationDto {
@@ -23,7 +22,7 @@ export class UpdateVisitationDto {
     required: false,
   })
   @IsOptional()
-  @IsEnum(VisitationType)
+  @IsEnum(VisitationStatus)
   visitationStatus?: VisitationStatus;
 
   @ApiProperty({
