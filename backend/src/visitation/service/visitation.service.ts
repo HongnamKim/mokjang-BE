@@ -4,60 +4,53 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 import {
   IVISITATION_META_DOMAIN_SERVICE,
   IVisitationMetaDomainService,
-} from './visitation-domain/interface/visitation-meta-domain.service.interface';
+} from '../visitation-domain/interface/visitation-meta-domain.service.interface';
 import {
   IVISITATION_DETAIL_DOMAIN_SERVICE,
   IVisitationDetailDomainService,
-} from './visitation-domain/interface/visitation-detail-domain.service.interface';
+} from '../visitation-domain/interface/visitation-detail-domain.service.interface';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from '../churches/churches-domain/interface/churches-domain.service.interface';
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../members/member-domain/interface/members-domain.service.interface';
-import { UserRole } from '../user/const/user-role.enum';
-import { UpdateVisitationMetaDto } from './dto/internal/meta/update-visitation-meta.dto';
+} from '../../members/member-domain/interface/members-domain.service.interface';
+import { UserRole } from '../../user/const/user-role.enum';
+import { UpdateVisitationMetaDto } from '../dto/internal/meta/update-visitation-meta.dto';
 import { QueryRunner } from 'typeorm';
-import { VisitationDetailModel } from './entity/visitation-detail.entity';
-import { VisitationMetaModel } from './entity/visitation-meta.entity';
-import { CreateVisitationDto } from './dto/create-visitation.dto';
-import { JwtAccessPayload } from '../auth/type/jwt';
-import { VisitationException } from './const/exception/visitation.exception';
-import { CreateVisitationMetaDto } from './dto/internal/meta/create-visitation-meta.dto';
-import { GetVisitationDto } from './dto/get-visitation.dto';
-import { VisitationType } from './const/visitation-type.enum';
-import { UpdateVisitationDetailDto } from './dto/internal/detail/update-visitation-detail.dto';
-import { UpdateVisitationDto } from './dto/update-visitation.dto';
-import { ChurchModel } from '../churches/entity/church.entity';
-import { MemberModel } from '../members/entity/member.entity';
-import { VisitationDetailDto } from './dto/visittion-detail.dto';
-import { MemberException } from '../members/const/exception/member.exception';
+import { VisitationDetailModel } from '../entity/visitation-detail.entity';
+import { VisitationMetaModel } from '../entity/visitation-meta.entity';
+import { CreateVisitationDto } from '../dto/create-visitation.dto';
+import { JwtAccessPayload } from '../../auth/type/jwt';
+import { VisitationException } from '../const/exception/visitation.exception';
+import { CreateVisitationMetaDto } from '../dto/internal/meta/create-visitation-meta.dto';
+import { GetVisitationDto } from '../dto/get-visitation.dto';
+import { VisitationType } from '../const/visitation-type.enum';
+import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
+import { UpdateVisitationDto } from '../dto/update-visitation.dto';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { MemberModel } from '../../members/entity/member.entity';
+import { VisitationDetailDto } from '../dto/visittion-detail.dto';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
-} from '../report/report-domain/interface/visitation-report-domain.service.interface';
-import {
-  IUSER_DOMAIN_SERVICE,
-  IUserDomainService,
-} from '../user/user-domain/interface/user-domain.service.interface';
-import { AddConflictException } from './const/exception/add-conflict.exception';
-import { RemoveConflictException } from './const/exception/remove-conflict.exception';
-import { VisitationPaginationResultDto } from './dto/visitation-pagination-result.dto';
+} from '../../report/report-domain/interface/visitation-report-domain.service.interface';
+import { AddConflictException } from '../const/exception/add-conflict.exception';
+import { RemoveConflictException } from '../const/exception/remove-conflict.exception';
+import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
+import { VisitationDetailService } from './visitation-detail.service';
 
 @Injectable()
 export class VisitationService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(IUSER_DOMAIN_SERVICE)
-    private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
 
@@ -68,6 +61,8 @@ export class VisitationService {
 
     @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
     private readonly visitationReportDomainService: IVisitationReportDomainService,
+
+    private readonly visitationDetailService: VisitationDetailService,
   ) {}
 
   async getVisitations(churchId: number, dto: GetVisitationDto) {
@@ -84,15 +79,6 @@ export class VisitationService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
-
-    /*return {
-      data: visitations,
-      take: dto.take,
-      page: dto.page,
-      totalPage: Math.ceil(totalCount / dto.take),
-      totalCount,
-      count: visitations.length,
-    };*/
   }
 
   async getVisitationById(
@@ -150,7 +136,7 @@ export class VisitationService {
     );
 
     // 심방 진행자 검증
-    !dto.isTest && this.checkVisitationAuthorization(instructor);
+    this.checkVisitationAuthorization(instructor);
 
     const memberIds = dto.visitationDetails.map((detail) => detail.memberId);
 
@@ -169,7 +155,12 @@ export class VisitationService {
       qr,
     );
 
-    await this.createVisitationDetails(visitationMeta, members, dto, qr);
+    await this.visitationDetailService.createVisitationDetails(
+      visitationMeta,
+      members,
+      dto,
+      qr,
+    );
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
       await this.createVisitationReports(
@@ -226,7 +217,7 @@ export class VisitationService {
    * @param qr 트랜잭션을 위한 QueryRunner
    * @private
    */
-  private async createVisitationDetails(
+  /*private async createVisitationDetails(
     visitationMeta: VisitationMetaModel,
     members: MemberModel[],
     dto: CreateVisitationDto,
@@ -250,7 +241,7 @@ export class VisitationService {
         );
       }),
     );
-  }
+  }*/
 
   /**
    * 심방 생성 시 심방의 메타 데이터 생성
@@ -276,7 +267,7 @@ export class VisitationService {
       visitationStatus: dto.visitationStatus,
       visitationMethod: dto.visitationMethod,
       visitationTitle: dto.visitationTitle,
-      visitationDate: dto.visitationDate,
+      visitationDate: dto.visitationStartDate,
       visitationType:
         members.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
     };
@@ -315,6 +306,12 @@ export class VisitationService {
 
     // 교인이 추가되는 경우 추가할 수 있는지 확인
     if (dto.addMemberIds) {
+      if (visitationMembers.length + dto.addMemberIds.length > 30) {
+        throw new BadRequestException(
+          VisitationException.EXCEED_VISITATION_MEMBER,
+        );
+      }
+
       await this.handleAddVisitationMembers(
         church,
         visitationMeta,
@@ -465,6 +462,19 @@ export class VisitationService {
         { members: true },
       );
 
+    // 심방 종료날짜만 변경하는 경우
+    if (!dto.visitationStartDate && dto.visitationEndDate) {
+      if (dto.visitationEndDate < targetMetaData.visitationStartDate) {
+        throw new BadRequestException('심방 종료 날짜 에러');
+      }
+    }
+    // 심방 시작날짜만 변경하는 경우
+    if (dto.visitationStartDate && !dto.visitationEndDate) {
+      if (dto.visitationStartDate > targetMetaData.visitationEndDate) {
+        throw new BadRequestException('심방 시작 날짜 에러');
+      }
+    }
+
     // 심방 진행자 변경 시
     const newInstructor =
       dto.instructorId && dto.instructorId !== targetMetaData.instructorId
@@ -477,7 +487,7 @@ export class VisitationService {
         : undefined;
 
     // 새로운 심방 진행자의 권한 확인
-    if (newInstructor && !dto.isTest) {
+    if (newInstructor) {
       this.checkVisitationAuthorization(newInstructor);
     }
 
@@ -499,7 +509,7 @@ export class VisitationService {
     }
 
     const updateVisitationMetaDto: UpdateVisitationMetaDto = {
-      visitationDate: dto.visitationDate,
+      visitationDate: dto.visitationStartDate,
       visitationMethod: dto.visitationMethod,
       visitationType,
       visitationStatus: dto.visitationStatus,

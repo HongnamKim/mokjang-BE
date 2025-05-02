@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { VisitationService } from '../visitation.service';
+import { VisitationService } from '../service/visitation.service';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
@@ -31,8 +31,8 @@ import {
   ApiPostVisitation,
 } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDto } from '../dto/update-visitation.dto';
-import { AddReceiverDto } from '../dto/add-receiver.dto';
-import { DeleteReceiverDto } from '../dto/delete-receiver.dto';
+import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
+import { DeleteReceiverDto } from '../dto/receiever/delete-receiver.dto';
 
 @ApiTags('Visitations')
 @Controller('visitations')
