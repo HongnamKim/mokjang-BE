@@ -1,7 +1,7 @@
 import { Body, Controller, Param, ParseIntPipe, Patch } from '@nestjs/common';
 import { ApiPatchVisitationDetail } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
-import { VisitationService } from '../visitation.service';
+import { VisitationService } from '../service/visitation.service';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Visitations:Details')

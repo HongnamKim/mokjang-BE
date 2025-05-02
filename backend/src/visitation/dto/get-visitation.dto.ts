@@ -10,9 +10,10 @@ import {
 } from 'class-validator';
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { TransformStringArray } from '../../common/decorator/transformer/transform-array';
-import { VisitationOrderEnum } from '../const/order.enum';
+import { VisitationOrderEnum } from '../const/visitation-order.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { VisitationType } from '../const/visitation-type.enum';
+import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
 
 export class GetVisitationDto {
   @ApiProperty({
@@ -38,12 +39,12 @@ export class GetVisitationDto {
   @ApiProperty({
     description: '정렬 기준',
     enum: VisitationOrderEnum,
-    default: VisitationOrderEnum.visitationDate,
+    default: VisitationOrderEnum.visitationStartDate,
     required: false,
   })
   @IsOptional()
   @IsEnum(VisitationOrderEnum)
-  order: VisitationOrderEnum = VisitationOrderEnum.visitationDate;
+  order: VisitationOrderEnum = VisitationOrderEnum.visitationStartDate;
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',
@@ -68,6 +69,7 @@ export class GetVisitationDto {
   })
   @IsOptional()
   @IsDate()
+  @IsAfterDate('fromVisitationDate')
   toVisitationDate?: Date;
 
   @ApiProperty({

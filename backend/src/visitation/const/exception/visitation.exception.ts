@@ -14,6 +14,7 @@ export const VisitationException = {
     '피보고자로 등록할 수 없는 교인이 포함되어 있습니다.',
   ALREADY_REPORTED_MEMBER: '이미 피보고자로 등록된 교인입니다.',
   NOT_EXIST_REPORTED_MEMBER: '삭제 대상자가 피보고자에 포함되어 있지 않습니다.',
+  EXCEED_VISITATION_MEMBER: '심방 대상자는 최대 30명까지만 등록할 수 있습니다.',
 };
 
 export const VisitationDetailException = {
