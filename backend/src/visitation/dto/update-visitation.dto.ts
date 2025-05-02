@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
-  IsBoolean,
   IsDate,
   IsEnum,
   IsNotEmpty,
@@ -14,6 +13,7 @@ import { TransformNumberArray } from '../../common/decorator/transformer/transfo
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
+import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
 
 export class UpdateVisitationDto {
   @ApiProperty({
@@ -60,7 +60,16 @@ export class UpdateVisitationDto {
   })
   @IsOptional()
   @IsDate()
-  visitationDate?: Date;
+  visitationStartDate?: Date;
+
+  @ApiProperty({
+    description: '심방 종료 날짜',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @IsAfterDate('visitationStartDate')
+  visitationEndDate?: Date;
 
   @ApiProperty({
     description: '심방 대상자 추가할 교인 ID 들',
@@ -82,11 +91,11 @@ export class UpdateVisitationDto {
   @TransformNumberArray()
   deleteMemberIds?: number[];
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: 'API 테스트 시 true (심방 진행자의 권한 체크 건너뛰기)',
     default: false,
   })
   @IsOptional()
   @IsBoolean()
-  isTest: boolean = false;
+  isTest: boolean = false;*/
 }

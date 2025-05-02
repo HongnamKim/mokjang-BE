@@ -57,7 +57,7 @@ export class VisitationMetaDomainService
 
   private parseWhereOptions(dto: GetVisitationDto) {
     return {
-      visitationDate: this.parseVisitationDate(dto),
+      visitationStartDate: this.parseVisitationDate(dto),
       visitationStatus: dto.visitationStatus && In(dto.visitationStatus),
       visitationMethod: dto.visitationMethod && In(dto.visitationMethod),
       visitationType: dto.visitationType && In(dto.visitationType),
@@ -159,7 +159,7 @@ export class VisitationMetaDomainService
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
       visitationTitle: dto.visitationTitle,
-      visitationDate: dto.visitationDate,
+      visitationStartDate: dto.visitationDate,
       //reportTo: reportTo ? reportTo : undefined,
     });
   }
