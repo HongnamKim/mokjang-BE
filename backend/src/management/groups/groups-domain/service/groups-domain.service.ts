@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  ChildGroup,
   GroupModelWithParentGroups,
   IGroupsDomainService,
   ParentGroup,
@@ -139,33 +140,35 @@ export class GroupsDomainService implements IGroupsDomainService {
     return group;
   }
 
-  async findChildGroupIds(
+  async findChildGroups(
     group: GroupModel,
     qr?: QueryRunner,
-  ): Promise<number[]> {
+  ): Promise<ChildGroup[]> {
     const groupsRepository = this.getGroupsRepository(qr);
 
     const subGroupsQuery = await groupsRepository.query(
       `
     WITH RECURSIVE group_tree AS (
       -- 초기 그룹의 직계 그룹들
-      SELECT id, "parentGroupId", 1 as level, name
+      SELECT id, "parentGroupId", 1 as depth, name
     FROM group_model
     WHERE "parentGroupId" = $1 AND "deletedAt" IS NULL 
     
     UNION ALL 
     
-    SELECT g.id, g."parentGroupId", gt.level + 1, g.name
+    SELECT g.id, g."parentGroupId", gt.depth + 1, g.name
     FROM group_model g
     INNER JOIN group_tree gt ON g."parentGroupId" = gt.id
     WHERE g."deletedAt" IS NULL
     )
-    SELECT id, level, name FROM group_tree
+    SELECT id, "parentGroupId", depth, name FROM group_tree
     `,
       [group.id],
     );
 
-    return subGroupsQuery.map((row: any) => row.id as number);
+    return subGroupsQuery;
+
+    //return subGroupsQuery.map((row: any) => row.id as number);
   }
 
   async findGroupByIdWithParents(
@@ -276,26 +279,12 @@ export class GroupsDomainService implements IGroupsDomainService {
       newParentGroup !== null && // 다른 상위 그룹을 지정
       newParentGroup.id !== targetGroup.parentGroupId // 기존 상위 그룹과 다른 경우
     ) {
-      // 계층 역전 확인
-      if (targetGroup.childGroupIds.includes(newParentGroup.id)) {
-        throw new BadRequestException(
-          GroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
-        );
-      }
-
-      const newGrandParentGroups = await this.findParentGroups(
+      await this.validateUpdateHierarchy(
         church,
         newParentGroup,
+        targetGroup,
         qr,
       );
-
-      // 새 상위 그룹의 depth 와 타겟 그룹의 depth 의 합이 5 를 넘는지 확인
-      const newDepth =
-        newGrandParentGroups.length + targetGroup.childGroupIds.length + 2;
-
-      if (newDepth >= GroupDepthConstraint.MAX_DEPTH) {
-        throw new BadRequestException(GroupException.LIMIT_DEPTH_REACHED);
-      }
     }
 
     // 계층을 이동하는 경우 (최상위 계층으로 이동 포함)
@@ -306,24 +295,6 @@ export class GroupsDomainService implements IGroupsDomainService {
         this.removeChildGroupId(targetGroup, targetGroup.parentGroup, qr),
       ]);
     }
-
-    /*if (dto.parentGroupId) {
-      // 종속 관계를 역전시키려는 경우
-      // A -> B 관계를 직접 A <- B 로 바꾸려는 경우
-      if (targetGroup.childGroupIds.includes(dto.parentGroupId)) {
-        throw new BadRequestException(
-          GroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
-        );
-      }
-
-      if (newParentGroup) {
-        // 이전 상위 그룹, 새로운 상위 그룹의 childGroupId 수정
-        await Promise.all([
-          this.appendChildGroupId(targetGroup, newParentGroup, qr),
-          this.removeChildGroupId(targetGroup, targetGroup.parentGroup, qr),
-        ]);
-      }
-    }*/
 
     const groupsRepository = this.getGroupsRepository(qr);
     // 업데이트 수행
@@ -347,7 +318,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     if (!updatedGroup) {
-      throw new InternalServerErrorException('그룹 업데이트 중 에러 발생');
+      throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
     }
 
     return updatedGroup;
@@ -521,5 +492,40 @@ export class GroupsDomainService implements IGroupsDomainService {
         childGroupId: childGroup.id,
       })
       .execute();
+  }
+
+  private async validateUpdateHierarchy(
+    church: ChurchModel,
+    targetGroup: GroupModel,
+    newParentGroup: GroupModel,
+    qr: QueryRunner,
+  ) {
+    const allChildGroups = await this.findChildGroups(targetGroup, qr);
+
+    const allChildGroupIds = allChildGroups.map((group) => group.id);
+    const maxChildGroupDepth =
+      allChildGroupIds.length > 0
+        ? Math.max(...allChildGroups.map((group) => group.depth))
+        : 0;
+
+    // 계층 역전 확인
+    if (allChildGroupIds.includes(newParentGroup.id)) {
+      throw new BadRequestException(
+        GroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
+      );
+    }
+
+    const newParentDepth = (
+      await this.findParentGroups(church, newParentGroup, qr)
+    )
+      .map((group) => group.id)
+      .push(newParentGroup.id);
+
+    // 새 상위 그룹의 depth 와 타겟 그룹의 depth 의 합이 5 를 넘는지 확인
+    const newDepth = newParentDepth + maxChildGroupDepth + 1;
+
+    if (newDepth > GroupDepthConstraint.MAX_DEPTH) {
+      throw new BadRequestException(GroupException.LIMIT_DEPTH_REACHED);
+    }
   }
 }

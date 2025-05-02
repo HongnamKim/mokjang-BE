@@ -171,6 +171,6 @@ export class GroupsService {
       qr,
     );
 
-    return this.groupsDomainService.findChildGroupIds(group, qr);
+    return this.groupsDomainService.findChildGroups(group, qr);
   }
 }

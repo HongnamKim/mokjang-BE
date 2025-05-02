@@ -1,8 +1,10 @@
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateMinistryGroupDto } from '../../dto/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../../dto/update-ministry-group.dto';
+import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
+import { UpdateMinistryGroupDto } from '../../dto/ministry-group/update-ministry-group.dto';
+import { GetMinistryGroupDto } from '../../dto/ministry-group/get-ministry-group.dto';
+import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
 
 export const IMINISTRY_GROUPS_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_GROUPS_DOMAIN_SERVICE',
@@ -22,8 +24,10 @@ export interface MinistryGroupWithParentGroups extends MinistryGroupModel {
 export interface IMinistryGroupsDomainService {
   findMinistryGroups(
     church: ChurchModel,
+    parentMinistryGroup: MinistryGroupModel | null,
+    dto: GetMinistryGroupDto,
     qr?: QueryRunner,
-  ): Promise<MinistryGroupModel[]>;
+  ): Promise<MinistryGroupDomainPaginationResponseDto>;
 
   findMinistryGroupModelById(
     church: ChurchModel,
@@ -44,7 +48,7 @@ export interface IMinistryGroupsDomainService {
     qr?: QueryRunner,
   ): Promise<ParentMinistryGroup[]>;
 
-  findChildMinistryGroupIds(
+  findChildMinistryGroups(
     church: ChurchModel,
     ministryGroupId: number,
     qr?: QueryRunner,
@@ -52,6 +56,7 @@ export interface IMinistryGroupsDomainService {
 
   createMinistryGroup(
     church: ChurchModel,
+    parentMinistryGroup: MinistryGroupModel | null,
     dto: CreateMinistryGroupDto,
     qr: QueryRunner,
   ): Promise<MinistryGroupModel>;
@@ -66,7 +71,8 @@ export interface IMinistryGroupsDomainService {
 
   deleteMinistryGroup(
     church: ChurchModel,
-    ministryGroupId: number,
+    //ministryGroupId: number,
+    targetMinistryGroup: MinistryGroupModel,
     qr: QueryRunner,
-  ): Promise<string>;
+  ): Promise<void>;
 }
