@@ -23,3 +23,10 @@ export abstract class BaseModel {
   @Exclude()
   deletedAt: Date;
 }
+
+export const BaseModelColumns = {
+  id: 'id',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt',
+};

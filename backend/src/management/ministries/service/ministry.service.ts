@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { MinistryModel } from '../entity/ministry.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateMinistryDto } from '../dto/create-ministry.dto';
-import { UpdateMinistryDto } from '../dto/update-ministry.dto';
-import { GetMinistryDto } from '../dto/get-ministry.dto';
+import { CreateMinistryDto } from '../dto/ministry/create-ministry.dto';
+import { UpdateMinistryDto } from '../dto/ministry/update-ministry.dto';
+import { GetMinistryDto } from '../dto/ministry/get-ministry.dto';
 import {
   IMINISTRIES_DOMAIN_SERVICE,
   IMinistriesDomainService,
@@ -17,6 +17,10 @@ import {
   IMinistryGroupsDomainService,
 } from '../ministries-domain/interface/ministry-groups-domain.service.interface';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
+import { MinistryOffsetPaginationResponseDto } from '../dto/ministry/response/ministry-offset-pagination-response.dto';
+import { MinistryDeleteResponseDto } from '../dto/ministry/response/ministry-delete-response.dto';
+import { MinistryPostResponseDto } from '../dto/ministry/response/ministry-post-response.dto';
+import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
 
 @Injectable()
 export class MinistryService {
@@ -35,7 +39,19 @@ export class MinistryService {
       qr,
     );
 
-    return this.ministriesDomainService.findMinistries(church, dto, qr);
+    const result = await this.ministriesDomainService.findMinistries(
+      church,
+      dto,
+      qr,
+    );
+
+    return new MinistryOffsetPaginationResponseDto(
+      result.data,
+      result.totalCount,
+      result.data.length,
+      dto.page,
+      Math.ceil(result.totalCount / dto.take),
+    );
   }
 
   async getMinistryModelById(
@@ -94,12 +110,14 @@ export class MinistryService {
         )
       : null;
 
-    return this.ministriesDomainService.createMinistry(
+    const ministry = await this.ministriesDomainService.createMinistry(
       church,
       dto,
       ministryGroup,
       qr,
     );
+
+    return new MinistryPostResponseDto(ministry);
   }
 
   async updateMinistry(
@@ -139,7 +157,7 @@ export class MinistryService {
     const newMinistryGroup: MinistryGroupModel | null =
       dto.ministryGroupId === undefined
         ? targetMinistry.ministryGroup // 변경하지 않는 경우 (기존 값 유지)
-        : dto.ministryGroupId === null
+        : dto.ministryGroupId === null || dto.ministryGroupId === 0
           ? null // 소속 사역 그룹을 없애는 경우
           : await this.ministryGroupsDomainService.findMinistryGroupModelById(
               church,
@@ -147,13 +165,15 @@ export class MinistryService {
               qr,
             ); // 새 사역 그룹으로 변경
 
-    return this.ministriesDomainService.updateMinistry(
+    const updatedMinistry = await this.ministriesDomainService.updateMinistry(
       church,
       targetMinistry,
       dto,
       qr,
       newMinistryGroup,
     );
+
+    return new MinistryPatchResponseDto(updatedMinistry);
   }
 
   async deleteMinistry(churchId: number, ministryId: number, qr: QueryRunner) {
@@ -168,6 +188,39 @@ export class MinistryService {
       qr,
     );
 
-    return this.ministriesDomainService.deleteMinistry(ministry, qr);
+    await this.ministriesDomainService.deleteMinistry(ministry, qr);
+
+    return new MinistryDeleteResponseDto(new Date(), ministry.id, true);
+  }
+
+  async refreshMinistryMemberCount(
+    churchId: number,
+    ministryId: number,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const ministry = await this.ministriesDomainService.findMinistryModelById(
+      church,
+      ministryId,
+      qr,
+      { members: true },
+    );
+
+    if (ministry.members.length === ministry.membersCount) {
+      throw new BadRequestException('');
+    }
+
+    const updatedMinistry =
+      await this.ministriesDomainService.refreshMembersCount(
+        ministry,
+        ministry.members.length,
+        qr,
+      );
+
+    return new MinistryPatchResponseDto(updatedMinistry);
   }
 }

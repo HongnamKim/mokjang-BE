@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -11,12 +12,21 @@ import {
 } from '../interface/ministry-groups-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsOrder,
+  FindOptionsRelations,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { MinistryGroupException } from '../../const/ministry-group.exception';
-import { CreateMinistryGroupDto } from '../../dto/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../../dto/update-ministry-group.dto';
+import { MinistryGroupException } from '../../const/exception/ministry-group.exception';
+import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
+import { UpdateMinistryGroupDto } from '../../dto/ministry-group/update-ministry-group.dto';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
+import { GetMinistryGroupDto } from '../../dto/ministry-group/get-ministry-group.dto';
+import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
+import { MinistryGroupOrderEnum } from '../../const/ministry-group-order.enum';
 
 @Injectable()
 export class MinistryGroupsDomainService
@@ -49,20 +59,56 @@ export class MinistryGroupsDomainService
           : IsNull(),
         name,
       },
+      withDeleted: true,
     });
+
+    if (group) {
+      if (group.deletedAt) {
+        await ministryGroupsRepository.remove(group);
+
+        return false;
+      }
+    }
 
     return !!group;
   }
 
-  async findMinistryGroups(church: ChurchModel, qr?: QueryRunner) {
+  async findMinistryGroups(
+    church: ChurchModel,
+    parentMinistryGroup: MinistryGroupModel | null,
+    dto: GetMinistryGroupDto,
+    qr?: QueryRunner,
+  ) {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
-    return ministryGroupsRepository.find({
-      where: {
-        churchId: church.id,
-      },
-      order: { createdAt: 'ASC' },
-    });
+    const order: FindOptionsOrder<MinistryGroupModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== MinistryGroupOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      ministryGroupsRepository.find({
+        where: {
+          churchId: church.id,
+          parentMinistryGroupId: parentMinistryGroup
+            ? parentMinistryGroup.id
+            : IsNull(),
+        },
+        order,
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      ministryGroupsRepository.count({
+        where: {
+          churchId: church.id,
+        },
+      }),
+    ]);
+
+    return new MinistryGroupDomainPaginationResponseDto(data, totalCount);
   }
 
   async findMinistryGroupModelById(
@@ -165,7 +211,7 @@ export class MinistryGroupsDomainService
     return result;
   }
 
-  async findChildMinistryGroupIds(
+  async findChildMinistryGroups(
     church: ChurchModel,
     ministryGroupId: number,
     qr?: QueryRunner,
@@ -182,37 +228,43 @@ export class MinistryGroupsDomainService
       `
         WITH RECURSIVE group_tree AS (
       -- 초기 그룹의 직계 그룹들
-      SELECT id, "parentMinistryGroupId", 1 as level, name
+      SELECT id, "parentMinistryGroupId", 1 as depth, name
     FROM ministry_group_model
     WHERE "parentMinistryGroupId" = $1 AND "deletedAt" IS NULL 
     
     UNION ALL 
     
-    SELECT g.id, g."parentMinistryGroupId", gt.level + 1, g.name
+    SELECT g.id, g."parentMinistryGroupId", gt.depth + 1, g.name
     FROM ministry_group_model g
     INNER JOIN group_tree gt ON g."parentMinistryGroupId" = gt.id
     WHERE g."deletedAt" IS NULL
     )
-    SELECT id, level, name FROM group_tree
+    SELECT id, depth, "parentMinistryGroupId", name FROM group_tree
         `,
       [ministryGroup.id],
     );
 
-    return subGroupsQuery.map((row: any) => row.id);
+    return subGroupsQuery;
+    /*
+    subGroupsQuery.forEach(console.log);
+    //subGroupsQuery.forEach((row) => console.log(row));
+
+    return subGroupsQuery.map((row: any) => row.id);*/
   }
 
   async createMinistryGroup(
     church: ChurchModel,
+    parentMinistryGroup: MinistryGroupModel | null,
     dto: CreateMinistryGroupDto,
     qr: QueryRunner,
   ) {
-    const parentMinistryGroup = dto.parentMinistryGroupId
+    /*const parentMinistryGroup = dto.parentMinistryGroupId
       ? await this.findMinistryGroupModelById(
           church,
           dto.parentMinistryGroupId,
           qr,
         )
-      : null;
+      : null;*/
 
     await this.checkIsAvailableName(church, parentMinistryGroup, dto.name, qr);
 
@@ -277,7 +329,7 @@ export class MinistryGroupsDomainService
     );
 
     if (isExist) {
-      throw new BadRequestException(MinistryGroupException.ALREADY_EXIST);
+      throw new ConflictException(MinistryGroupException.ALREADY_EXIST);
     }
 
     return true;
@@ -292,7 +344,7 @@ export class MinistryGroupsDomainService
   ) {
     const newName = dto.name ?? targetMinistryGroup.name;
 
-    // 사용 가능한 그룹인지 체크 --> 불가능할 경우 BadRequestException
+    // 사용 가능한 그룹인지 체크 --> 불가능할 경우 ConflictException
     await this.checkIsAvailableName(
       church,
       newParentMinistryGroup,
@@ -302,7 +354,7 @@ export class MinistryGroupsDomainService
 
     // 새로운 상위 그룹에 넣을 경우
     if (
-      newParentMinistryGroup !== null &&
+      newParentMinistryGroup &&
       newParentMinistryGroup.id !== targetMinistryGroup.parentMinistryGroupId
     ) {
       await this.validateUpdateHierarchy(
@@ -333,7 +385,6 @@ export class MinistryGroupsDomainService
     const result = await ministryGroupsRepository.update(
       {
         id: targetMinistryGroup.id,
-        deletedAt: IsNull(),
       },
       {
         name: dto.name,
@@ -357,53 +408,63 @@ export class MinistryGroupsDomainService
     newParentMinistryGroup: MinistryGroupModel,
     qr: QueryRunner,
   ) {
+    const allChildMinistryGroups = await this.findChildMinistryGroups(
+      church,
+      targetMinistryGroup.id,
+      qr,
+    );
+
+    const allChildMinistryGroupIds = allChildMinistryGroups.map(
+      (group) => group.id,
+    );
+
+    const maxChildMinistryGroupDepth =
+      allChildMinistryGroups.length > 0
+        ? Math.max(...allChildMinistryGroups.map((group) => group.depth))
+        : 0;
+
     // 계층 역전 확인
-    if (
-      targetMinistryGroup.childMinistryGroupIds.includes(
-        newParentMinistryGroup.id,
-      )
-    ) {
+    if (allChildMinistryGroupIds.includes(newParentMinistryGroup.id)) {
       throw new BadRequestException(
         MinistryGroupException.CANNOT_SET_SUBGROUP_AS_PARENT,
       );
     }
 
     //depth 확인
-    const newGrandParentMinistryGroups = await this.findParentMinistryGroups(
-      church,
-      newParentMinistryGroup.id,
-      qr,
-    );
+    const newParentsDepth = (
+      await this.findParentMinistryGroups(church, newParentMinistryGroup.id, qr)
+    )
+      .map((group) => group.id)
+      .push(newParentMinistryGroup.id);
 
     // 5 depth 초과 시 에러
-    const newDepth =
-      newGrandParentMinistryGroups.length +
-      targetMinistryGroup.childMinistryGroupIds.length +
-      2;
+    // 부모 그룹 depth + 자식 그룹 depth + 자신
+    const newDepth = newParentsDepth + maxChildMinistryGroupDepth + 1;
 
-    if (newDepth >= GroupDepthConstraint.MAX_DEPTH) {
+    if (newDepth > GroupDepthConstraint.MAX_DEPTH) {
       throw new BadRequestException(MinistryGroupException.LIMIT_DEPTH_REACHED);
     }
   }
 
   async deleteMinistryGroup(
     church: ChurchModel,
-    ministryGroupId: number,
+    targetMinistryGroup: MinistryGroupModel,
+    //ministryGroupId: number,
     qr: QueryRunner,
   ) {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
-    const ministryGroup = await this.findMinistryGroupModelById(
+    /*const ministryGroup = await this.findMinistryGroupModelById(
       church,
       ministryGroupId,
       qr,
       { parentMinistryGroup: true, ministries: true },
-    );
+    );*/
 
     // 하위 그룹 or 사역 체크
     if (
-      ministryGroup.childMinistryGroupIds.length > 0 ||
-      ministryGroup.ministries.length > 0
+      targetMinistryGroup.childMinistryGroupIds.length > 0 ||
+      targetMinistryGroup.ministries.length > 0
     ) {
       throw new BadRequestException(
         MinistryGroupException.GROUP_HAS_DEPENDENCIES,
@@ -411,17 +472,17 @@ export class MinistryGroupsDomainService
     }
 
     await ministryGroupsRepository.softDelete({
-      id: ministryGroupId,
+      id: targetMinistryGroup.id,
       deletedAt: IsNull(),
     });
 
     await this.removeChildMinistryGroupId(
-      ministryGroup.parentMinistryGroup,
-      ministryGroup,
+      targetMinistryGroup.parentMinistryGroup,
+      targetMinistryGroup,
       qr,
     );
 
-    return `ministryGroupId ${ministryGroupId} deleted`;
+    return;
   }
 
   private async appendChildMinistryGroupId(

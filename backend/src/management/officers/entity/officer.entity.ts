@@ -1,14 +1,4 @@
-import {
-  BeforeRemove,
-  BeforeSoftRemove,
-  Column,
-  Entity,
-  Index,
-  ManyToOne,
-  OneToMany,
-  Unique,
-} from 'typeorm';
-import { ConflictException } from '@nestjs/common';
+import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
@@ -39,7 +29,7 @@ export class OfficerModel extends BaseModel {
   )
   history: OfficerHistoryModel[];
 
-  @BeforeRemove()
+  /*@BeforeRemove()
   @BeforeSoftRemove()
   preventIfHasMember() {
     if (this.members.length > 0) {
@@ -49,5 +39,5 @@ export class OfficerModel extends BaseModel {
         `해당 직분을 갖고 있는 교인이 존재합니다.\n${memberNames}`,
       );
     }
-  }
+  }*/
 }

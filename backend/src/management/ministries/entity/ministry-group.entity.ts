@@ -1,9 +1,13 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { MinistryModel } from './ministry.entity';
-import { BaseModel } from '../../../common/entity/base.entity';
+import {
+  BaseModel,
+  BaseModelColumns,
+} from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @Entity()
+@Unique(['parentMinistryGroupId', 'churchId', 'name'])
 export class MinistryGroupModel extends BaseModel {
   @Column({ length: 50, comment: '사역 그룹 이름' })
   name: string;
@@ -36,14 +40,16 @@ export class MinistryGroupModel extends BaseModel {
 
   @OneToMany(() => MinistryModel, (ministry) => ministry.ministryGroup)
   ministries: MinistryModel[];
-
-  /*@BeforeRemove()
-  @BeforeSoftRemove()
-  preventIfHasChild() {
-    if (this.childMinistryGroupIds.length > 0 || this.ministries.length > 0) {
-      throw new ConflictException(
-        '해당 사역 그룹에 속한 하위 사역 그룹 또는 사역이 존재합니다.',
-      );
-    }
-  }*/
 }
+
+export const MinistryGroupModelColumns = {
+  ...BaseModelColumns,
+  name: 'name',
+  parentMinistryGroupId: 'parentMinistryGroupId',
+  parentMinistryGroup: 'parentMinistryGroup',
+  childMinistryGroupIds: 'childMinistryGroupIds',
+  childMinistryGroup: 'childMinistryGroup',
+  churchId: 'churchId',
+  church: 'church',
+  ministries: 'ministries',
+};
