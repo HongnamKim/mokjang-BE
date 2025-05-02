@@ -12,6 +12,13 @@ export interface ParentGroup {
   depth: number;
 }
 
+export interface ChildGroup {
+  id: number;
+  parentGroupId: number;
+  depth: number;
+  name: string;
+}
+
 export interface GroupModelWithParentGroups extends GroupModel {
   parentGroups: ParentGroup[];
 }
@@ -65,7 +72,7 @@ export interface IGroupsDomainService {
 
   deleteGroup(deleteTarget: GroupModel, qr: QueryRunner): Promise<void>;
 
-  findChildGroupIds(group: GroupModel, qr?: QueryRunner): Promise<number[]>;
+  findChildGroups(group: GroupModel, qr?: QueryRunner): Promise<ChildGroup[]>;
 
   incrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
 

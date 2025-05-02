@@ -440,7 +440,6 @@ export class MinistryGroupsDomainService
     // 5 depth 초과 시 에러
     // 부모 그룹 depth + 자식 그룹 depth + 자신
     const newDepth = newParentsDepth + maxChildMinistryGroupDepth + 1;
-    console.log(newDepth);
 
     if (newDepth > GroupDepthConstraint.MAX_DEPTH) {
       throw new BadRequestException(MinistryGroupException.LIMIT_DEPTH_REACHED);
