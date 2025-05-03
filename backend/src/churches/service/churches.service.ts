@@ -83,7 +83,8 @@ export class ChurchesService {
       qr,
     );
 
-    await this.userDomainService.linkMemberToUser(mainAdminMember, user, qr);
+    //await this.userDomainService.linkMemberToUser(mainAdminMember, user, qr);
+    await this.membersDomainService.linkUserToMember(mainAdminMember, user, qr);
 
     return newChurch;
   }

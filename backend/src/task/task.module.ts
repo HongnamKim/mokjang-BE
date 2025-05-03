@@ -1,0 +1,21 @@
+import { Module } from '@nestjs/common';
+import { RouterModule } from '@nestjs/core';
+import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
+import { MembersDomainModule } from '../members/member-domain/members-domain.module';
+import { TaskController } from './controller/task.controller';
+import { TaskService } from './service/task.service';
+import { TaskDomainModule } from './task-domain/task-domain.module';
+
+@Module({
+  imports: [
+    RouterModule.register([
+      { path: 'churches/:churchId/tasks', module: TaskModule },
+    ]),
+    ChurchesDomainModule,
+    MembersDomainModule,
+    TaskDomainModule,
+  ],
+  controllers: [TaskController],
+  providers: [TaskService],
+})
+export class TaskModule {}

@@ -29,6 +29,7 @@ import { OfficerHistoryModel } from '../../member-history/entity/officer-history
 import { GroupHistoryModel } from '../../member-history/entity/group-history.entity';
 import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
+import { TaskModel } from '../../task/entity/task.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -196,6 +197,8 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];
 
+  // --------------- 심방 -------------------
+
   // 진행하는 심방
   @OneToMany(
     () => VisitationMetaModel,
@@ -223,6 +226,20 @@ export class MemberModel extends BaseModel {
     (visitingDetail) => visitingDetail.member,
   )
   visitationDetails: VisitationDetailModel[];
+
+  // --------------- 심방 -------------------
+
+  // --------------- 업무 -------------------
+
+  // 생성한 업무
+  @OneToMany(() => TaskModel, (task) => task.creator)
+  createdTask: TaskModel[];
+
+  // 할당 받은 업무
+  @OneToMany(() => TaskModel, (task) => task.inCharge)
+  assignedTask: TaskModel[];
+
+  // --------------- 업무 -------------------
 
   // ------------------ 보고 -------------------------
 }
