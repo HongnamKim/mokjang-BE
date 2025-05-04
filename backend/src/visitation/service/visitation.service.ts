@@ -267,7 +267,8 @@ export class VisitationService {
       visitationStatus: dto.visitationStatus,
       visitationMethod: dto.visitationMethod,
       visitationTitle: dto.visitationTitle,
-      visitationDate: dto.visitationStartDate,
+      visitationStartDate: dto.visitationStartDate,
+      visitationEndDate: dto.visitationEndDate,
       visitationType:
         members.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
     };
@@ -465,13 +466,13 @@ export class VisitationService {
     // 심방 종료날짜만 변경하는 경우
     if (!dto.visitationStartDate && dto.visitationEndDate) {
       if (dto.visitationEndDate < targetMetaData.visitationStartDate) {
-        throw new BadRequestException('심방 종료 날짜 에러');
+        throw new BadRequestException(VisitationException.INVALID_END_DATE);
       }
     }
     // 심방 시작날짜만 변경하는 경우
     if (dto.visitationStartDate && !dto.visitationEndDate) {
       if (dto.visitationStartDate > targetMetaData.visitationEndDate) {
-        throw new BadRequestException('심방 시작 날짜 에러');
+        throw new BadRequestException(VisitationException.INVALID_START_DATE);
       }
     }
 
@@ -509,7 +510,8 @@ export class VisitationService {
     }
 
     const updateVisitationMetaDto: UpdateVisitationMetaDto = {
-      visitationDate: dto.visitationStartDate,
+      visitationStartDate: dto.visitationStartDate,
+      visitationEndDate: dto.visitationEndDate,
       visitationMethod: dto.visitationMethod,
       visitationType,
       visitationStatus: dto.visitationStatus,
