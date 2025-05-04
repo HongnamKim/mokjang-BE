@@ -18,6 +18,9 @@ import { TaskTreeEnum } from '../const/task-tree.enum';
 import { GetTaskResponseDto } from '../dto/response/get-task-response.dto';
 import { GetTasksDto } from '../dto/request/get-tasks.dto';
 import { TaskPaginationResultDto } from '../dto/response/task-pagination-result.dto';
+import { UpdateTaskDto } from '../dto/request/update-task.dto';
+import { PatchTaskResponseDto } from '../dto/response/patch-task-response.dto';
+import { DeleteTaskResponseDto } from '../dto/response/delete-task-response.dto';
 
 @Injectable()
 export class TaskService {
@@ -108,5 +111,90 @@ export class TaskService {
     const task = await this.taskDomainService.findTaskById(church, taskId);
 
     return new GetTaskResponseDto(task, new Date());
+  }
+
+  async patchTask(
+    churchId: number,
+    taskId: number,
+    dto: UpdateTaskDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetTask = await this.taskDomainService.findTaskModelById(
+      church,
+      taskId,
+      undefined,
+      qr,
+      {
+        subTasks: true,
+      },
+    );
+
+    const newInChargeMember = dto.inChargeId
+      ? await this.membersDomainService.findMemberModelById(
+          church,
+          dto.inChargeId,
+          qr,
+          { user: true },
+        )
+      : null;
+
+    newInChargeMember &&
+      this.taskDomainService.assertValidInChargeMember(newInChargeMember);
+
+    const newParentTask = dto.parentTaskId
+      ? await this.taskDomainService.findTaskModelById(
+          church,
+          dto.parentTaskId,
+          TaskTreeEnum.parent,
+          qr,
+        )
+      : null;
+
+    await this.taskDomainService.updateTask(
+      targetTask,
+      newInChargeMember,
+      newParentTask,
+      dto,
+      qr,
+    );
+
+    const updatedTask = await this.taskDomainService.findTaskById(
+      church,
+      targetTask.id,
+      qr,
+    );
+
+    return new PatchTaskResponseDto(updatedTask);
+  }
+
+  async deleteTask(churchId: number, taskId: number, qr: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetTask = await this.taskDomainService.findTaskModelById(
+      church,
+      taskId,
+      TaskTreeEnum.none,
+      qr,
+    );
+
+    // 업무 삭제
+    await this.taskDomainService.deleteTask(targetTask, qr);
+
+    // 업무 보고 삭제
+
+    return new DeleteTaskResponseDto(
+      new Date(),
+      targetTask.id,
+      targetTask.title,
+      true,
+    );
   }
 }

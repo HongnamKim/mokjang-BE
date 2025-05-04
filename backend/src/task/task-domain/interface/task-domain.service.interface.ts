@@ -1,10 +1,11 @@
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { TaskModel } from '../../entity/task.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { CreateTaskDto } from '../../dto/request/create-task.dto';
 import { GetTasksDto } from '../../dto/request/get-tasks.dto';
 import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-result.dto';
+import { UpdateTaskDto } from '../../dto/request/update-task.dto';
 
 export const ITASK_DOMAIN_SERVICE = Symbol('ITASK_DOMAIN_SERVICE');
 
@@ -39,4 +40,14 @@ export interface ITaskDomainService {
     dto: CreateTaskDto,
     qr: QueryRunner,
   ): Promise<TaskModel>;
+
+  updateTask(
+    targetTask: TaskModel,
+    newInChargeMember: MemberModel | null,
+    newParentTask: TaskModel | null,
+    dto: UpdateTaskDto,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteTask(targetTask: TaskModel, qr: QueryRunner): Promise<void>;
 }
