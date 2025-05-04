@@ -1,25 +1,51 @@
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { TaskModel } from '../entity/task.entity';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../members/const/member-find-options.const';
+
+export const TasksFindOptionsRelation: FindOptionsRelations<TaskModel> = {
+  subTasks: {
+    inCharge: MemberSummarizedRelation,
+  },
+  inCharge: MemberSummarizedRelation,
+};
+
+const SubTaskFindOptionsSelect: FindOptionsSelect<TaskModel> = {
+  id: true,
+  title: true,
+  taskStartDate: true,
+  taskEndDate: true,
+  createdAt: true,
+  updatedAt: true,
+  taskType: true,
+  taskStatus: true,
+  parentTaskId: true,
+  inCharge: MemberSummarizedSelect,
+};
+
+export const TasksFindOptionsSelect: FindOptionsSelect<TaskModel> = {
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  churchId: true,
+  taskType: true,
+  title: true,
+  taskStatus: true,
+  taskStartDate: true,
+  taskEndDate: true,
+  subTasks: SubTaskFindOptionsSelect,
+  inCharge: MemberSummarizedSelect,
+};
 
 export const TaskFindOptionsRelation: FindOptionsRelations<TaskModel> = {
   parentTask: true,
   subTasks: {
-    inCharge: {
-      officer: true,
-      group: true,
-      groupRole: true,
-    },
+    inCharge: MemberSummarizedRelation,
   },
-  inCharge: {
-    officer: true,
-    group: true,
-    groupRole: true,
-  },
-  creator: {
-    officer: true,
-    group: true,
-    groupRole: true,
-  },
+  inCharge: MemberSummarizedRelation,
+  creator: MemberSummarizedRelation,
 };
 
 export const TaskFindOptionsSelect: FindOptionsSelect<TaskModel> = {
@@ -27,61 +53,10 @@ export const TaskFindOptionsSelect: FindOptionsSelect<TaskModel> = {
     id: true,
     title: true,
     taskStatus: true,
-  },
-  subTasks: {
-    id: true,
-    title: true,
-    taskStatus: true,
     taskStartDate: true,
     taskEndDate: true,
-    inChargeId: true,
-    inCharge: {
-      id: true,
-      name: true,
-      officer: {
-        id: true,
-        name: true,
-      },
-      group: {
-        id: true,
-        name: true,
-      },
-      groupRole: {
-        id: true,
-        role: true,
-      },
-    },
   },
-  inCharge: {
-    id: true,
-    name: true,
-    officer: {
-      id: true,
-      name: true,
-    },
-    group: {
-      id: true,
-      name: true,
-    },
-    groupRole: {
-      id: true,
-      role: true,
-    },
-  },
-  creator: {
-    id: true,
-    name: true,
-    officer: {
-      id: true,
-      name: true,
-    },
-    group: {
-      id: true,
-      name: true,
-    },
-    groupRole: {
-      id: true,
-      role: true,
-    },
-  },
+  subTasks: SubTaskFindOptionsSelect,
+  inCharge: MemberSummarizedSelect,
+  creator: MemberSummarizedSelect,
 };
