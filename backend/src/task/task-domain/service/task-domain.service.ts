@@ -233,6 +233,10 @@ export class TaskDomainService implements ITaskDomainService {
     qr: QueryRunner,
   ) {
     if (newParentTask) {
+      if (newParentTask.taskType === TaskType.subTask) {
+        throw new BadRequestException(TaskException.INVALID_PARENT_TASK);
+      }
+
       // 하위 업무가 존재할 경우(자신이 상위업무) 새로운 상위 업무를 지정할 수 없음.
       if (targetTask.subTasks.length !== 0) {
         throw new ConflictException(TaskException.INVALID_CHANGE_PARENT_TASK);
