@@ -159,7 +159,8 @@ export class VisitationMetaDomainService
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
       visitationTitle: dto.visitationTitle,
-      visitationStartDate: dto.visitationDate,
+      visitationStartDate: dto.visitationStartDate,
+      visitationEndDate: dto.visitationEndDate,
       //reportTo: reportTo ? reportTo : undefined,
     });
   }

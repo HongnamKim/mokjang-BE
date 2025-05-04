@@ -10,6 +10,9 @@ export const VisitationException = {
 
   MEMBER_RELATION_ERROR: '심방 대상자 불러오기 실패',
 
+  INVALID_START_DATE: '시작 날짜는 종료 날짜보다 늦을 수 없습니다.',
+  INVALID_END_DATE: '종료 날짜는 시작 날짜를 앞설 수 없습니다.',
+
   INVALID_REPORT_RECEIVER:
     '피보고자로 등록할 수 없는 교인이 포함되어 있습니다.',
   ALREADY_REPORTED_MEMBER: '이미 피보고자로 등록된 교인입니다.',
