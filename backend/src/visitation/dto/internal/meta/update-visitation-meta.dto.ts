@@ -14,5 +14,6 @@ export class UpdateVisitationMetaDto {
 
   instructor?: MemberModel;
 
-  visitationDate?: Date;
+  visitationStartDate?: Date;
+  visitationEndDate?: Date;
 }
