@@ -1,3 +1,6 @@
 export abstract class BaseGetResponseDto<T> {
-  protected constructor(data: T, timestamp: Date = new Date()) {}
+  protected constructor(
+    public readonly data: T,
+    public readonly timestamp: Date = new Date(),
+  ) {}
 }

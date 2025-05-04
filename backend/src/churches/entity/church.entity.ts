@@ -12,6 +12,7 @@ import { RequestInfoModel } from '../../request-info/entity/request-info.entity'
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { ChurchJoinRequestModel } from './church-join-request.entity';
 import { Exclude } from 'class-transformer';
+import { TaskModel } from '../../task/entity/task.entity';
 
 @Entity()
 @Unique(['joinCode'])
@@ -72,12 +73,19 @@ export class ChurchModel extends BaseModel {
   @OneToMany(() => RequestInfoModel, (requestInfo) => requestInfo.church)
   requestInfos: RequestInfoModel[];
 
+  // 교인
   @OneToMany(() => MemberModel, (member) => member.church)
   members: MemberModel[];
 
+  // 계정 가입
   @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.church)
   joinRequests: ChurchJoinRequestModel[];
 
+  // 심방
   @OneToMany(() => VisitationMetaModel, (visitingMeta) => visitingMeta.church)
   visitations: VisitationMetaModel[];
+
+  // 업무
+  @OneToMany(() => TaskModel, (task) => task.church)
+  tasks: TaskModel[];
 }
