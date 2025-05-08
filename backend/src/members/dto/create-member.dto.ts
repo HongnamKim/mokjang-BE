@@ -18,8 +18,9 @@ import { GenderEnum } from '../const/enum/gender.enum';
 import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
 import { BaptismEnum } from '../const/enum/baptism.enum';
 import { FamilyRelationConst } from '../../family-relation/family-relation-domain/const/family-relation.const';
-import { MarriageOptions } from '../const/marriage-options.const';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { MarriageOptions } from '../member-domain/const/marriage-options.const';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../common/decorator/validator/is-title.decorator';
 
 export class CreateMemberDto {
   @ApiProperty({
@@ -37,11 +38,9 @@ export class CreateMemberDto {
     example: '교인',
   })
   @IsString()
-  @TransformName()
+  @RemoveSpaces()
   @IsNotEmpty()
-  @Matches(/^[a-zA-Z0-9가-힣 \-]+$/, {
-    message: '특수문자는 사용할 수 없습니다.',
-  })
+  @IsNoSpecialChar()
   @MaxLength(30)
   name: string;
 

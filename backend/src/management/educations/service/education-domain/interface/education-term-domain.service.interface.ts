@@ -7,7 +7,6 @@ import {
   QueryRunner,
   UpdateResult,
 } from 'typeorm';
-import { EducationTermPaginationResultDto } from '../../../dto/education-term-pagination-result.dto';
 import { EducationTermModel } from '../../../entity/education-term.entity';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
@@ -25,7 +24,7 @@ export interface IEducationTermDomainService {
     education: EducationModel,
     dto: GetEducationTermDto,
     qr?: QueryRunner,
-  ): Promise<EducationTermPaginationResultDto>;
+  ): Promise<{ data: EducationTermModel[]; totalCount: number }>;
 
   findEducationTermById(
     church: ChurchModel,
@@ -44,7 +43,7 @@ export interface IEducationTermDomainService {
   ): Promise<EducationTermModel>;
 
   createEducationTerm(
-    church: ChurchModel,
+    //church: ChurchModel,
     education: EducationModel,
     instructor: MemberModel | null,
     dto: CreateEducationTermDto,
@@ -64,7 +63,7 @@ export interface IEducationTermDomainService {
   deleteEducationTerm(
     educationTerm: EducationTermModel,
     qr?: QueryRunner,
-  ): Promise<string>;
+  ): Promise<void>;
 
   updateEducationTermName(
     education: EducationModel,

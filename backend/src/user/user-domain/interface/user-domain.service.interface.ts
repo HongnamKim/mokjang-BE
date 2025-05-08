@@ -40,5 +40,17 @@ export interface IUserDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
-  linkMemberToUser(member: MemberModel, user: UserModel): Promise<UserModel>;
+  linkMemberToUser(
+    member: MemberModel,
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<UserModel>;
+
+  findMainAdminUser(church: ChurchModel, qr?: QueryRunner): Promise<UserModel>;
+
+  transferMainAdmin(
+    beforeMainAdmin: UserModel,
+    newMainAdmin: UserModel,
+    qr: QueryRunner,
+  ): Promise<void>;
 }

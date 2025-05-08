@@ -160,12 +160,6 @@ export class EducationSessionService {
         educationTerm.educationEnrollments,
         qr,
       ),
-      /*this.getSessionAttendanceRepository(qr).save(
-        educationTerm.educationEnrollments.map((enrollment) => ({
-          educationSessionId: newSession.id,
-          educationEnrollmentId: enrollment.id,
-        })),
-      ),*/
     ]);
 
     return this.educationSessionDomainService.findEducationSessionById(
@@ -295,6 +289,11 @@ export class EducationSessionService {
       qr,
     );
 
-    return `educationSessionId: ${educationSessionId} deleted`;
+    //return `educationSessionId: ${educationSessionId} deleted`;
+    return {
+      timestamp: new Date(),
+      id: targetSession.id,
+      success: true,
+    };
   }
 }

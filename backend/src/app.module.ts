@@ -44,6 +44,11 @@ import { VisitationDetailModel } from './visitation/entity/visitation-detail.ent
 import { ReportModule } from './report/report.module';
 import { ReportModel } from './report/entity/report.entity';
 import { VisitationReportModel } from './report/entity/visitation-report.entity';
+import { ChurchJoinRequestModel } from './churches/entity/church-join-request.entity';
+import { ChurchJoinRequestStatModel } from './churches/entity/church-join-request-stat.entity';
+import { TaskModule } from './task/task.module';
+import { TaskModel } from './task/entity/task.entity';
+import { TaskReportModel } from './report/entity/task-report.entity';
 
 @Module({
   imports: [
@@ -115,6 +120,9 @@ import { VisitationReportModel } from './report/entity/visitation-report.entity'
           UserModel,
           // 교회 관련 엔티티
           ChurchModel,
+          // 교회 가입 엔티티
+          ChurchJoinRequestModel,
+          ChurchJoinRequestStatModel,
           // 교인 관련 엔티티
           RequestInfoModel,
           MemberModel,
@@ -140,9 +148,12 @@ import { VisitationReportModel } from './report/entity/visitation-report.entity'
           // 심방 관련 엔티티
           VisitationMetaModel,
           VisitationDetailModel,
-          // 업무 보고 관련 엔티티
+          // 보고 관련 엔티티
           ReportModel,
           VisitationReportModel,
+          TaskReportModel,
+          // 업무 관련 엔티티
+          TaskModel,
         ],
         synchronize: true,
       }),
@@ -161,11 +172,12 @@ import { VisitationReportModel } from './report/entity/visitation-report.entity'
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
-    ReportModule,
     FamilyRelationModule,
     MemberHistoryModule,
+    ReportModule,
     ManagementModule,
     VisitationModule,
+    TaskModule,
 
     ChurchesDomainModule,
     MembersDomainModule,

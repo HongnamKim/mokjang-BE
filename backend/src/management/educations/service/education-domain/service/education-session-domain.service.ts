@@ -35,6 +35,15 @@ export class EducationSessionDomainService
       where: {
         educationTermId: educationTerm.id,
       },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        educationTermId: true,
+        session: true,
+        sessionDate: true,
+        isDone: true,
+      },
       order: {
         session: 'asc',
       },
@@ -186,7 +195,7 @@ export class EducationSessionDomainService
     return `educationSessionId: ${educationSession.id} deleted`;
   }
 
-  async deleteEducationSessionCasCade(
+  async deleteEducationSessionCascade(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<string> {

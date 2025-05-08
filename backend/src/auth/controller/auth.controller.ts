@@ -45,6 +45,9 @@ import { AuthType } from '../const/enum/auth-type.enum';
 import { AuthCookieHelper } from '../helper/auth-cookie.helper';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 import { MobileLoginDto } from '../dto/mobile-login.dto';
+import { AuthException } from '../const/exception/auth.exception';
+import { LoginOptionEnum } from '../const/enum/login-option.enum';
+import { SsoEnum } from '../const/enum/sso.enum';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -64,7 +67,8 @@ export class AuthController {
   async loginTestAuth(
     @Query('provider') provider: string,
     @Query('providerId') providerId: string,
-    @Query('loginOption', new DefaultValuePipe('test')) loginOption: string,
+    @Query('loginOption', new DefaultValuePipe(LoginOptionEnum.test))
+    loginOption: string,
     @QueryRunner() qr: QR,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -73,14 +77,14 @@ export class AuthController {
       qr,
     );
 
-    if (loginOption === 'test') {
+    if (loginOption === LoginOptionEnum.test) {
       this.clearCookie(res);
 
       return this.authCookieHelper.handleLoginResult(loginResult, res, true);
-    } else if (loginOption === 'mobile') {
+    } else if (loginOption === LoginOptionEnum.mobile) {
       return loginResult;
     } else {
-      throw new BadRequestException('잘못된 로그인 옵션입니다.');
+      throw new BadRequestException(AuthException.INVALID_LOGIN_OPTION);
     }
   }
 
@@ -106,12 +110,12 @@ export class AuthController {
   }
 
   @ApiSSO('구글')
-  @OAuthLogin('google')
+  @OAuthLogin(SsoEnum.google)
   loginGoogle() {
     return { msg: 'google login' };
   }
 
-  @OAuthRedirect('google')
+  @OAuthRedirect(SsoEnum.google)
   async redirectGoogle(
     @OAuthUser() oauthDto: OauthDto,
     @QueryRunner() qr: QR,
@@ -125,12 +129,12 @@ export class AuthController {
   }
 
   @ApiSSO('네이버')
-  @OAuthLogin('naver')
+  @OAuthLogin(SsoEnum.naver)
   loginNaver() {
     return { msg: 'naver login' };
   }
 
-  @OAuthRedirect('naver')
+  @OAuthRedirect(SsoEnum.naver)
   async redirectNaver(
     @OAuthUser() oauthDto: OauthDto,
     @QueryRunner() qr: QR,
@@ -144,12 +148,12 @@ export class AuthController {
   }
 
   @ApiSSO('카카오')
-  @OAuthLogin('kakao')
+  @OAuthLogin(SsoEnum.kakao)
   loginKakao() {
     return { msg: 'kakao login' };
   }
 
-  @OAuthRedirect('kakao')
+  @OAuthRedirect(SsoEnum.kakao)
   async redirectKakao(
     @OAuthUser() oauthDto: OauthDto,
     @QueryRunner() qr: QR,

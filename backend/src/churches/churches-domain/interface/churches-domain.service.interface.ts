@@ -11,6 +11,12 @@ export interface IChurchesDomainService {
 
   findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel>;
 
+  findChurchModelByJoinCode(
+    joinCode: string,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel>;
+
   findChurchModelById(
     id: number,
     qr?: QueryRunner,
@@ -36,4 +42,20 @@ export interface IChurchesDomainService {
   getChurchManagerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
 
   getChurchMainAdminIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
+
+  updateChurchJoinCode(
+    church: ChurchModel,
+    newCode: string,
+    qr: QueryRunner | undefined,
+  ): Promise<UpdateResult>;
+
+  incrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

@@ -1,6 +1,6 @@
 import {
+  ArrayMaxSize,
   IsArray,
-  IsBoolean,
   IsDate,
   IsEnum,
   IsNumber,
@@ -16,16 +16,20 @@ import { Type } from 'class-transformer';
 import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationDetailValidator } from '../decorator/visitation-detail.validator';
 import { VisitationDetailDto } from './visittion-detail.dto';
-import { TransformName } from '../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
+import { SanitizeDto } from '../../common/decorator/sanitize-target.decorator';
+import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
+import { VisitationException } from '../const/exception/visitation.exception';
 
+@SanitizeDto()
 export class CreateVisitationDto {
-  @ApiProperty({
+  /*@ApiProperty({
     description: 'API 테스트 시 true (심방 진행자의 권한 체크 건너뛰기)',
     default: false,
   })
   @IsOptional()
   @IsBoolean()
-  isTest: boolean = false;
+  isTest: boolean = false;*/
 
   @ApiProperty({
     description: '심방 상태 (예약 / 완료 / 지연)',
@@ -46,7 +50,7 @@ export class CreateVisitationDto {
     maxLength: 50,
   })
   @IsString()
-  @TransformName()
+  @RemoveSpaces()
   @Length(2, 50)
   visitationTitle: string;
 
@@ -58,10 +62,17 @@ export class CreateVisitationDto {
   instructorId: number;
 
   @ApiProperty({
-    description: '심방 날짜',
+    description: '심방 시작 날짜',
   })
   @IsDate()
-  visitationDate: Date;
+  visitationStartDate: Date;
+
+  @ApiProperty({
+    description: '심방 종료 날짜',
+  })
+  @IsDate()
+  @IsAfterDate('visitationStartDate')
+  visitationEndDate: Date;
 
   @ApiProperty({
     description: '심방 세부 정보',
@@ -70,6 +81,9 @@ export class CreateVisitationDto {
   })
   @ValidateNested({ each: true })
   @Type(() => VisitationDetailDto)
+  @ArrayMaxSize(30, {
+    message: VisitationException.EXCEED_VISITATION_MEMBER,
+  })
   @VisitationDetailValidator()
   visitationDetails: VisitationDetailDto[];
 
@@ -79,7 +93,6 @@ export class CreateVisitationDto {
     required: false,
   })
   @IsOptional()
-  //@TransformNumberArray()
   @IsArray()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })

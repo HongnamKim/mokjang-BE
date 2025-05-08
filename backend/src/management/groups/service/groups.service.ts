@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateGroupDto } from '../dto/create-group.dto';
-import { UpdateGroupDto } from '../dto/update-group.dto';
+import { CreateGroupDto } from '../dto/group/create-group.dto';
+import { UpdateGroupDto } from '../dto/group/update-group.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -11,6 +11,9 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../groups-domain/interface/groups-domain.service.interface';
+import { GetGroupDto } from '../dto/group/get-group.dto';
+import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
+import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
 
 @Injectable()
 export class GroupsService {
@@ -22,11 +25,22 @@ export class GroupsService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  async getGroups(churchId: number) {
+  async getGroups(churchId: number, dto: GetGroupDto) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    return this.groupsDomainService.findGroups(church);
+    const { data, totalCount } = await this.groupsDomainService.findGroups(
+      church,
+      dto,
+    );
+
+    return new GroupPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 
   async getGroupModelById(
@@ -127,10 +141,25 @@ export class GroupsService {
   }
 
   async deleteGroup(churchId: number, groupId: number, qr: QueryRunner) {
-    return this.groupsDomainService.deleteGroup(churchId, groupId, qr);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+      qr,
+      {
+        parentGroup: true,
+      },
+    );
+
+    await this.groupsDomainService.deleteGroup(group, qr);
+
+    return new GroupDeleteResponseDto(new Date(), groupId, group.name, true);
   }
 
-  async getGroupsCascade(churchId: number, groupId: number, qr?: QueryRunner) {
+  async getChildGroupIds(churchId: number, groupId: number, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -142,44 +171,6 @@ export class GroupsService {
       qr,
     );
 
-    return this.groupsDomainService.findChildGroupIds(group, qr);
-  }
-
-  async incrementMembersCount(
-    churchId: number,
-    groupId: number,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const group = await this.groupsDomainService.findGroupById(
-      church,
-      groupId,
-      qr,
-    );
-
-    return this.groupsDomainService.incrementMembersCount(group, qr);
-  }
-
-  async decrementMembersCount(
-    churchId: number,
-    groupId: number,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const group = await this.groupsDomainService.findGroupById(
-      church,
-      groupId,
-      qr,
-    );
-
-    return this.groupsDomainService.decrementMembersCount(group, qr);
+    return this.groupsDomainService.findChildGroups(group, qr);
   }
 }

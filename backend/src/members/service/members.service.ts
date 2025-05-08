@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
-import { FindOptionsOrder, FindOptionsWhere, In, QueryRunner } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
 import { CreateMemberDto } from '../dto/create-member.dto';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import { GetMemberDto } from '../dto/get-member.dto';
@@ -15,7 +15,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../member-domain/service/interface/members-domain.service.interface';
+} from '../member-domain/interface/members-domain.service.interface';
 import {
   ISEARCH_MEMBERS_SERVICE,
   ISearchMembersService,
@@ -24,7 +24,7 @@ import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
-import { UserRole } from '../../user/const/user-role.enum';
+import { MemberPaginationResultDto } from '../dto/member-pagination-result.dto';
 
 @Injectable()
 export class MembersService {
@@ -41,12 +41,7 @@ export class MembersService {
     private readonly familyDomainService: IFamilyRelationDomainService,
   ) {}
 
-  async getMembers(
-    churchId: number,
-    dto: GetMemberDto,
-    qr?: QueryRunner,
-    findManager?: boolean,
-  ) {
+  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -55,12 +50,6 @@ export class MembersService {
     const whereOptions: FindOptionsWhere<MemberModel> =
       this.searchMembersService.parseWhereOption(church, dto);
 
-    if (findManager) {
-      whereOptions.user = {
-        role: In([UserRole.mainAdmin, UserRole.manager]),
-      };
-    }
-
     const orderOptions: FindOptionsOrder<MemberModel> =
       this.searchMembersService.parseOrderOption(dto);
 
@@ -68,13 +57,21 @@ export class MembersService {
 
     const selectOptions = this.searchMembersService.parseSelectOption(dto);
 
-    return this.membersDomainService.findMembers(
+    const { data, totalCount } = await this.membersDomainService.findMembers(
       dto,
       whereOptions,
       orderOptions,
       relationOptions,
       selectOptions,
       qr,
+    );
+
+    return new MemberPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 
@@ -99,6 +96,10 @@ export class MembersService {
       qr,
     );
 
+    // 교회의 교인 수 증가
+    await this.churchesDomainService.incrementMemberCount(church, qr);
+    church.memberCount++;
+
     const newMember = await this.membersDomainService.createMember(
       church,
       dto,
@@ -119,14 +120,6 @@ export class MembersService {
         dto.relation,
         qr,
       );
-
-      /*await this.fetchFamilyRelation(
-        churchId,
-        newMember.id,
-        dto.familyMemberId,
-        dto.relation,
-        qr,
-      );*/
     }
 
     return newMember;
@@ -181,6 +174,9 @@ export class MembersService {
     // 가족 관계 모두 삭제
     await this.familyDomainService.deleteAllFamilyRelations(targetMember, qr);
 
+    // 교회 교인 수 감소
+    await this.churchesDomainService.decrementMemberCount(church, qr);
+
     // 이벤트는 트랜잭션 처리 불가능 본 요청과 이벤트 요청은 서로 달라서 본 요청 응답이 나갈 때
     // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음
     this.eventEmitter.emit(
@@ -190,132 +186,4 @@ export class MembersService {
 
     return new ResponseDeleteDto(true, targetMember.id);
   }
-
-  /*async getFamilyRelation(
-    churchId: number,
-    memberId: number,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const member = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-      {},
-    );
-
-    //return this.familyService.getFamilyRelations(member);
-  }*/
-
-  /*async createFamilyRelation(
-    churchId: number,
-    memberId: number,
-    dto: CreateFamilyRelationDto,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const [member, familyMember] = await Promise.all([
-      this.membersDomainService.findMemberModelById(church, memberId, qr, {}),
-      this.membersDomainService.findMemberModelById(
-        church,
-        dto.familyMemberId,
-        qr,
-        {},
-      ),
-    ]);
-
-    /!*return this.familyService.createFamilyMember(
-      member,
-      familyMember,
-      dto.relation,
-      qr,
-    );*!/
-  }*/
-
-  /*async fetchFamilyRelation(
-    churchId: number,
-    memberId: number,
-    familyMemberId: number,
-    relation: string,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const [member, familyMember] = await Promise.all([
-      this.membersDomainService.findMemberModelById(church, memberId, qr, {}),
-      this.membersDomainService.findMemberModelById(
-        church,
-        familyMemberId,
-        qr,
-        {},
-      ),
-    ]);
-
-    /!*return this.familyService.fetchAndCreateFamilyRelation(
-      member,
-      familyMember,
-      relation,
-      qr,
-    );*!/
-  }*/
-
-  /*async patchFamilyRelation(
-    churchId: number,
-    memberId: number,
-    familyMemberId: number,
-    relation: string,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const [me, family] = await Promise.all([
-      this.membersDomainService.findMemberModelById(church, memberId, qr, {}),
-      this.membersDomainService.findMemberModelById(
-        church,
-        familyMemberId,
-        qr,
-        {},
-      ),
-    ]);
-
-    //return this.familyService.updateFamilyRelation(me, family, relation, qr);
-  }*/
-
-  /*async deleteFamilyRelation(
-    churchId: number,
-    memberId: number,
-    familyMemberId: number,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const [me, family] = await Promise.all([
-      this.membersDomainService.findMemberModelById(church, memberId, qr, {}),
-      this.membersDomainService.findMemberModelById(
-        church,
-        familyMemberId,
-        qr,
-        {},
-      ),
-    ]);
-
-    //return this.familyService.deleteFamilyRelation(me, family, qr);
-  }*/
 }

@@ -19,7 +19,7 @@ import {
   ApiGetEducationById,
   ApiPatchEducation,
   ApiPostEducation,
-} from '../swagger/education/controller.swagger';
+} from '../const/swagger/education.swagger';
 import { CreateEducationDto } from '../dto/education/create-education.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateEducationDto } from '../dto/education/update-education.dto';

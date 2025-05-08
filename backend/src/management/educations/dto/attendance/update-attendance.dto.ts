@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class UpdateAttendanceDto {
   @ApiProperty({
     description: '출석 여부',

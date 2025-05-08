@@ -4,7 +4,7 @@ import { OfficerHistoryController } from './controller/officer-history.controlle
 import { RouterModule } from '@nestjs/core';
 import { MinistryHistoryService } from './service/ministry-history.service';
 import { EducationHistoryController } from './controller/education-history.controller';
-import { MemberGroupController } from './controller/member-group.controller';
+import { GroupHistoryController } from './controller/group-history.controller';
 import { GroupHistoryService } from './service/group-history.service';
 import { EducationHistoryService } from './service/education-history.service';
 import { MinistryHistoryController } from './controller/ministry-history.controller';
@@ -41,7 +41,7 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
   controllers: [
     OfficerHistoryController,
     EducationHistoryController,
-    MemberGroupController,
+    GroupHistoryController,
     MinistryHistoryController,
   ],
 })

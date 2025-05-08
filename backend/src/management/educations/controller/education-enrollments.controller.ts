@@ -11,7 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { EducationsService } from '../service/educations.service';
 import { CreateEducationEnrollmentDto } from '../dto/enrollments/create-education-enrollment.dto';
 import { GetEducationEnrollmentDto } from '../dto/enrollments/get-education-enrollment.dto';
 import { QueryRunner as QR } from 'typeorm';
@@ -24,7 +23,6 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 @Controller('educations/:educationId/terms/:educationTermId/enrollments')
 export class EducationEnrollmentsController {
   constructor(
-    private readonly educationsService: EducationsService,
     private readonly educationEnrollmentsService: EducationEnrollmentService,
   ) {}
 
@@ -41,13 +39,6 @@ export class EducationEnrollmentsController {
       educationTermId,
       dto,
     );
-
-    /*return this.educationsService.getEducationEnrollments(
-      churchId,
-      educationId,
-      educationTermId,
-      dto,
-    );*/
   }
 
   @Post()

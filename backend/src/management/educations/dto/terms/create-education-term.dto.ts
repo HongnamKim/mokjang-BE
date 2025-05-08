@@ -1,8 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationTermModel } from '../../entity/education-term.entity';
 import { IsDate, IsNumber, IsOptional, Min, ValidateIf } from 'class-validator';
-import { IsAfterDate } from '../../../decorator/is-after-date.decorator';
-import { IsLessOrEqualThan } from '../../../decorator/is-less-or-equal-than.decorator';
+import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
+import { IsLessThanOrEqual } from '../../../../common/decorator/validator/is-less-or-equal-than.decorator';
 
 export class CreateEducationTermDto extends PickType(EducationTermModel, [
   'term',
@@ -37,7 +37,7 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @ValidateIf((o) => o.numberOfSessions !== undefined)
   @IsNumber()
   @Min(1)
-  @IsLessOrEqualThan('numberOfSessions')
+  @IsLessThanOrEqual('numberOfSessions')
   @IsOptional()
   override completionCriteria: number;
 

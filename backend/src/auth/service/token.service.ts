@@ -3,7 +3,7 @@ import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { AuthType } from '../const/enum/auth-type.enum';
 import { JwtPayload, JwtRefreshPayload } from '../type/jwt';
 import { ConfigService } from '@nestjs/config';
-import { AuthException } from '../const/exception-message/exception.message';
+import { AuthException } from '../const/exception/auth.exception';
 import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
 
 //import { JWT } from '../const/env.const';

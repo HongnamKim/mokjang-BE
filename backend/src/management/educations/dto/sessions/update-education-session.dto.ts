@@ -7,7 +7,9 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class UpdateEducationSessionDto {
   @ApiProperty({
     description: '교육 완료 상태',

@@ -1,4 +1,4 @@
-import { IDummyMembersDomainService } from './interface/dummy-members-domain.service.interface';
+import { IDummyMembersDomainService } from '../interface/dummy-members-domain.service.interface';
 import { CreateMemberDto } from '../../dto/create-member.dto';
 import { MemberModel } from '../../entity/member.entity';
 import { InjectRepository } from '@nestjs/typeorm';

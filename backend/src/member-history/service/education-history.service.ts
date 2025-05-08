@@ -6,7 +6,7 @@ import { EducationStatus } from '../../management/educations/const/education-sta
 import {
   IEDUCATION_HISTORY_DOMAIN_SERVICE,
   IEducationHistoryDomainService,
-} from '../member-history-domain/service/interface/education-history-domain.service.interface';
+} from '../member-history-domain/interface/education-history-domain.service.interface';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -14,7 +14,7 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import { EducationHistoryPaginationResultDto } from '../dto/education/education-history-pagination-result.dto';
 
 @Injectable()
@@ -53,16 +53,19 @@ export class EducationHistoryService {
 
     const totalPage = Math.ceil(totalCount / dto.take);
 
-    const result: EducationHistoryPaginationResultDto = {
-      data: educationHistories,
-      totalCount,
-      count: educationHistories.length,
-      page: dto.page,
-      totalPage,
-      ...this.getEducationStatusCount(educationHistories),
-    };
+    const educationStatusCount =
+      this.getEducationStatusCount(educationHistories);
 
-    return result;
+    return new EducationHistoryPaginationResultDto(
+      educationHistories,
+      totalCount,
+      educationHistories.length,
+      dto.page,
+      totalPage,
+      educationStatusCount.inProgressCount,
+      educationStatusCount.completedCount,
+      educationStatusCount.incompleteCount,
+    );
   }
 
   private getEducationStatusCount(enrollments: EducationEnrollmentModel[]) {

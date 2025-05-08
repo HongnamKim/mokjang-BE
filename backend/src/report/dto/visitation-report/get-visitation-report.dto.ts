@@ -7,7 +7,7 @@ import {
   IsOptional,
   Min,
 } from 'class-validator';
-import { VisitationOrderEnum } from '../../../visitation/const/order.enum';
+import { VisitationOrderEnum } from '../../../visitation/const/visitation-order.enum';
 import { VisitationReportOrderEnum } from '../../const/visitation-report-order.enum';
 
 export class GetVisitationReportDto {
@@ -56,5 +56,5 @@ export class GetVisitationReportDto {
   })
   @IsOptional()
   @IsBoolean()
-  isRead: boolean;
+  isRead?: boolean;
 }

@@ -10,16 +10,17 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
-import { AuthException } from '../const/exception-message/exception.message';
+import { AuthException } from '../const/exception/auth.exception';
+import { SsoEnum } from '../const/enum/sso.enum';
 
-export const OAuthLogin = (provider: string) => {
+export const OAuthLogin = (provider: SsoEnum) => {
   return applyDecorators(
     Get(`login/${provider}`),
     UseGuards(AuthGuard(provider)),
   );
 };
 
-export const OAuthRedirect = (provider: string) => {
+export const OAuthRedirect = (provider: SsoEnum) => {
   return applyDecorators(
     Get(`login/${provider}/redirect`),
     ApiExcludeEndpoint(),

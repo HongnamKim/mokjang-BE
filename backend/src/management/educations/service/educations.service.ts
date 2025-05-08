@@ -15,6 +15,8 @@ import {
   IEDUCATION_TERM_DOMAIN_SERVICE,
   IEducationTermDomainService,
 } from './education-domain/interface/education-term-domain.service.interface';
+import { EducationPaginationResultDto } from '../dto/education-pagination-result.dto';
+import { EducationDeleteResponseDto } from '../dto/education/response/education-delete-response.dto';
 
 @Injectable()
 export class EducationsService {
@@ -37,7 +39,16 @@ export class EducationsService {
       qr,
     );
 
-    return this.educationDomainService.findEducations(church, dto, qr);
+    const { data, totalCount } =
+      await this.educationDomainService.findEducations(church, dto, qr);
+
+    return new EducationPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 
   async getEducationById(
@@ -121,6 +132,13 @@ export class EducationsService {
         qr,
       );
 
-    return this.educationDomainService.deleteEducation(targetEducation, qr);
+    await this.educationDomainService.deleteEducation(targetEducation, qr);
+
+    return new EducationDeleteResponseDto(
+      new Date(),
+      targetEducation.id,
+      targetEducation.name,
+      true,
+    );
   }
 }

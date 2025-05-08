@@ -1,4 +1,4 @@
 export enum VisitationMethod {
-  IN_PERSON = 'IN_PERSON',
-  REMOTE = 'REMOTE',
+  IN_PERSON = 'inPerson',
+  REMOTE = 'remote',
 }

@@ -26,7 +26,12 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../../members/member-domain/interface/members-domain.service.interface';
+import { EducationTermPaginationResultDto } from '../dto/education-term-pagination-result.dto';
+import {
+  IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
+  IEducationEnrollmentsDomainService,
+} from './education-domain/interface/education-enrollment-domain.service.interface';
 
 @Injectable()
 export class EducationTermService {
@@ -40,6 +45,8 @@ export class EducationTermService {
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
     private readonly educationTermDomainService: IEducationTermDomainService,
+    @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly educationEnrollmentDomainService: IEducationEnrollmentsDomainService,
     @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
     private readonly educationSessionDomainService: IEducationSessionDomainService,
     @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
@@ -62,11 +69,20 @@ export class EducationTermService {
       qr,
     );
 
-    return this.educationTermDomainService.findEducationTerms(
-      church,
-      education,
-      dto,
-      qr,
+    const { data, totalCount } =
+      await this.educationTermDomainService.findEducationTerms(
+        church,
+        education,
+        dto,
+        qr,
+      );
+
+    return new EducationTermPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 
@@ -121,7 +137,7 @@ export class EducationTermService {
 
     const educationTerm =
       await this.educationTermDomainService.createEducationTerm(
-        church,
+        //church,
         education,
         instructor,
         dto,
@@ -188,8 +204,9 @@ export class EducationTermService {
         education,
         educationTermId,
         qr,
-        { educationEnrollments: true, educationSessions: true },
+        { educationSessions: true },
       );
+
     const newInstructor = dto.instructorId
       ? await this.membersDomainService.findMemberModelById(
           church,
@@ -224,9 +241,13 @@ export class EducationTermService {
 
       // 증가된 세션에 대한 출석 정보 생성
       const newSessionIds = newSessions.map((newSession) => newSession.id);
-      const enrollmentIds = educationTerm.educationEnrollments.map(
-        (enrollment) => enrollment.id,
-      );
+
+      const enrollmentIds = (
+        await this.educationEnrollmentDomainService.findEducationEnrollmentModels(
+          educationTerm,
+          qr,
+        )
+      ).map((enrollment) => enrollment.id);
 
       await this.sessionAttendanceDomainService.createAdditionalSessionAttendance(
         newSessionIds,
@@ -264,15 +285,29 @@ export class EducationTermService {
       );
 
     // 기수의 세션들 삭제
-    await this.educationSessionDomainService.deleteEducationSessionCasCade(
+    await this.educationSessionDomainService.deleteEducationSessionCascade(
       educationTerm,
       qr,
     );
 
-    return await this.educationTermDomainService.deleteEducationTerm(
+    // 기수의 교육 등록 삭제
+    await this.educationEnrollmentDomainService.deleteEducationEnrollmentsCascade(
       educationTerm,
       qr,
     );
+
+    await this.educationTermDomainService.deleteEducationTerm(
+      educationTerm,
+      qr,
+    );
+
+    return {
+      timestamp: new Date(),
+      id: educationTerm.id,
+      educationName: educationTerm.educationName,
+      term: educationTerm.term,
+      success: true,
+    };
   }
 
   async syncSessionAttendances(

@@ -3,7 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { IVisitationMetaDomainService } from './interface/visitation-meta-domain.service.interface';
+import { IVisitationMetaDomainService } from '../interface/visitation-meta-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import {
@@ -57,7 +57,7 @@ export class VisitationMetaDomainService
 
   private parseWhereOptions(dto: GetVisitationDto) {
     return {
-      visitationDate: this.parseVisitationDate(dto),
+      visitationStartDate: this.parseVisitationDate(dto),
       visitationStatus: dto.visitationStatus && In(dto.visitationStatus),
       visitationMethod: dto.visitationMethod && In(dto.visitationMethod),
       visitationType: dto.visitationType && In(dto.visitationType),
@@ -159,7 +159,8 @@ export class VisitationMetaDomainService
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
       visitationTitle: dto.visitationTitle,
-      visitationDate: dto.visitationDate,
+      visitationStartDate: dto.visitationStartDate,
+      visitationEndDate: dto.visitationEndDate,
       //reportTo: reportTo ? reportTo : undefined,
     });
   }

@@ -20,11 +20,11 @@ import {
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
-} from '../../members/member-domain/service/interface/members-domain.service.interface';
+} from '../../members/member-domain/interface/members-domain.service.interface';
 import {
   IGROUP_HISTORY_DOMAIN_SERVICE,
   IGroupHistoryDomainService,
-} from '../member-history-domain/service/interface/group-history-domain.service.interface';
+} from '../member-history-domain/interface/group-history-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import {
   IGROUP_ROLES_DOMAIN_SERVICE,
@@ -159,8 +159,9 @@ export class GroupHistoryService {
     // 그룹 역할 검증
     const groupRole = dto.groupRoleId
       ? await this.groupRolesDomainService.findGroupRoleById(
-          churchId,
-          dto.groupId,
+          //churchId,
+          //dto.groupId,
+          group,
           dto.groupRoleId,
           qr,
         )

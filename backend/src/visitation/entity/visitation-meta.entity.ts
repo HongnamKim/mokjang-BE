@@ -41,8 +41,12 @@ export class VisitationMetaModel extends BaseModel {
   visitationType: VisitationType;
 
   @Index()
-  @Column({ type: 'timestamptz', comment: '심방 일자' })
-  visitationDate: Date;
+  @Column({ type: 'timestamptz', comment: '심방 시작 일자' })
+  visitationStartDate: Date;
+
+  @Index()
+  @Column({ type: 'timestamptz', comment: '심방 종료 일자' })
+  visitationEndDate: Date;
 
   @Column({ length: 50, comment: '심방 제목' })
   visitationTitle: string;

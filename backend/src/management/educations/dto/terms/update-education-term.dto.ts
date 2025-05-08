@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
-import { IsLessOrEqualThan } from '../../../decorator/is-less-or-equal-than.decorator';
-import { IsAfterDate } from '../../../decorator/is-after-date.decorator';
+import { IsLessThanOrEqual } from '../../../../common/decorator/validator/is-less-or-equal-than.decorator';
+import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
 import { TransformStartDate } from '../../../../member-history/decorator/transform-start-date.decorator';
 import { TransformEndDate } from '../../../../member-history/decorator/transform-end-date.decorator';
 
@@ -35,7 +35,7 @@ export class UpdateEducationTermDto {
   @IsNumber()
   @Min(1)
   //@ValidateIf((o) => o.numberOfSessions !== undefined)
-  @IsLessOrEqualThan('numberOfSessions')
+  @IsLessThanOrEqual('numberOfSessions')
   completionCriteria: number;
 
   @ApiProperty({

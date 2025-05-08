@@ -1,23 +1,37 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { GroupsService } from './groups.service';
-import { CreateGroupRoleDto } from '../dto/create-group-role.dto';
-import { UpdateGroupRoleDto } from '../dto/update-group-role.dto';
+import { CreateGroupRoleDto } from '../dto/group-role/create-group-role.dto';
+import { UpdateGroupRoleDto } from '../dto/group-role/update-group-role.dto';
 import {
   IGROUP_ROLES_DOMAIN_SERVICE,
   IGroupRolesDomainService,
 } from '../groups-domain/interface/groups-roles-domain.service.interface';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../groups-domain/interface/groups-domain.service.interface';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
+import { GetGroupRoleDto } from '../dto/group-role/get-group-role.dto';
+import { GroupRolePaginationResultDto } from '../dto/response/group-role-pagination-result.dto';
+import { GroupRoleDeleteResponseDto } from '../dto/response/group-role-delete-response.dto';
 
 @Injectable()
 export class GroupRolesService {
   constructor(
-    private readonly groupsService: GroupsService,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
 
     @Inject(IGROUP_ROLES_DOMAIN_SERVICE)
     private readonly groupRoleDomainService: IGroupRolesDomainService,
   ) {}
 
-  async createRoleForAllGroups(churchId: number, dto: CreateGroupRoleDto) {
+  /*async createRoleForAllGroups(churchId: number, dto: CreateGroupRoleDto) {
     const leafGroups = (await this.groupsService.getGroups(churchId))
       .filter((group) => !group.childGroupIds.length)
       .map((group) => ({ id: group.id, name: group.name }));
@@ -71,22 +85,26 @@ export class GroupRolesService {
       successResults,
       failedResults,
     };
-  }
+  }*/
 
-  async getGroupRoles(churchId: number, groupId: number) {
-    return this.groupRoleDomainService.findGroupRoles(churchId, groupId);
+  async getGroupRoles(churchId: number, groupId: number, dto: GetGroupRoleDto) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
 
-    /*const groupRolesRepository = this.getGroupRolesRepository();
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+    );
 
-    return groupRolesRepository.find({
-      where: {
-        churchId,
-        groupId,
-      },
-      order: {
-        createdAt: 'ASC',
-      },
-    });*/
+    const result = await this.groupRoleDomainService.findGroupRoles(group, dto);
+
+    return new GroupRolePaginationResultDto(
+      result.data,
+      result.totalCount,
+      result.data.length,
+      dto.page,
+      Math.ceil(result.totalCount / dto.take),
+    );
   }
 
   async getGroupRoleById(
@@ -95,31 +113,22 @@ export class GroupRolesService {
     groupRoleId: number,
     qr?: QueryRunner,
   ) {
-    return this.groupRoleDomainService.findGroupRoleById(
+    const church = await this.churchesDomainService.findChurchModelById(
       churchId,
-      groupId,
-      groupRoleId,
       qr,
     );
 
-    /*const groupRolesRepository = this.getGroupRolesRepository(qr);
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+      qr,
+    );
 
-    const role = await groupRolesRepository.findOne({
-      where: {
-        churchId,
-        groupId,
-        id: groupRoleId,
-      },
-      relations: {
-        members: true,
-      },
-    });
-
-    if (!role) {
-      throw new NotFoundException('해당 그룹에 존재하지 않는 역할입니다.');
-    }
-
-    return role;*/
+    return this.groupRoleDomainService.findGroupRoleById(
+      group,
+      groupRoleId,
+      qr,
+    );
   }
 
   async createGroupRole(
@@ -128,54 +137,18 @@ export class GroupRolesService {
     dto: CreateGroupRoleDto,
     qr?: QueryRunner,
   ) {
-    const group = await this.groupsService.getGroupModelById(
+    const church = await this.churchesDomainService.findChurchModelById(
       churchId,
+      qr,
+    );
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
       groupId,
       qr,
     );
 
-    return this.groupRoleDomainService.createGroupRole(
-      churchId,
-      group,
-      dto,
-      qr,
-    );
-
-    /*const group = await this.groupsService.getGroupModelById(churchId, groupId);
-
-    const groupRolesRepository = this.getGroupRolesRepository(qr);
-
-    const existingGroup = await groupRolesRepository.findOne({
-      where: {
-        churchId,
-        groupId,
-        role: dto.role,
-      },
-      withDeleted: true,
-      relations: {
-        members: true,
-      },
-    });
-
-    if (existingGroup) {
-      if (!existingGroup.deletedAt) {
-        throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
-      }
-
-      await groupRolesRepository.remove(existingGroup);
-    }
-
-    const result = await groupRolesRepository.insert({
-      role: dto.role,
-      church: {
-        id: churchId,
-      },
-      group,
-    });
-
-    return groupRolesRepository.findOne({
-      where: { id: result.identifiers[0].id },
-    });*/
+    return this.groupRoleDomainService.createGroupRole(group, dto, qr);
   }
 
   async updateGroupRole(
@@ -184,68 +157,45 @@ export class GroupRolesService {
     roleId: number,
     dto: UpdateGroupRoleDto,
   ) {
-    return this.groupRoleDomainService.updateGroupRole(
-      churchId,
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
       groupId,
+    );
+
+    const groupRole = await this.groupRoleDomainService.findGroupRoleModelById(
+      group,
       roleId,
-      dto,
     );
 
-    /*const groupRolesRepository = this.getGroupRolesRepository();
-
-    const isExist = !!(await groupRolesRepository.findOne({
-      where: {
-        churchId,
-        groupId,
-        role: dto.role,
-      },
-    }));
-
-    if (isExist) {
-      throw new BadRequestException('해당 그룹에 이미 존재하는 역할입니다.');
-    }
-
-    const result = await groupRolesRepository.update(
-      {
-        id: roleId,
-        churchId,
-        groupId,
-      },
-      {
-        role: dto.role,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 그룹 내 역할을 찾을 수 없습니다.');
-    }
-
-    return groupRolesRepository.findOne({
-      where: {
-        id: roleId,
-        churchId,
-        groupId: groupId,
-      },
-    });*/
+    return this.groupRoleDomainService.updateGroupRole(groupRole, dto);
   }
 
   async deleteGroupRole(churchId: number, groupId: number, roleId: number) {
-    return this.groupRoleDomainService.deleteGroupRole(
-      churchId,
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
       groupId,
-      roleId,
     );
 
-    /*const groupRolesRepository = this.getGroupRolesRepository();
-
-    const targetGroupRole = await this.getGroupRoleById(
-      churchId,
-      groupId,
+    const groupRole = await this.groupRoleDomainService.findGroupRoleModelById(
+      group,
       roleId,
+      undefined,
+      { members: true },
     );
 
-    await groupRolesRepository.softRemove(targetGroupRole);
+    await this.groupRoleDomainService.deleteGroupRole(groupRole);
 
-    return `groupRoleId ${roleId} deleted`;*/
+    return new GroupRoleDeleteResponseDto(
+      new Date(),
+      groupRole.id,
+      groupRole.role,
+      true,
+    );
   }
 }

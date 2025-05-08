@@ -1,15 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
-import { TransformName } from '../../../churches/decorator/transform-name';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
 
 export class CreateOfficerDto {
   @ApiProperty({
     name: 'name',
-    description: '생성하고자 하는 이름',
+    description:
+      '<p>직분 이름</p>' + '<p>특수문자 불가, 띄어쓰기 사용 시 제거</p>',
     example: '장로',
   })
   @IsString()
   @IsNotEmpty()
-  @TransformName()
+  @RemoveSpaces()
+  @IsNoSpecialChar()
   name: string;
 }

@@ -1,4 +1,4 @@
 export enum VisitationType {
-  SINGLE = 'SINGLE',
-  GROUP = 'GROUP',
+  SINGLE = 'single',
+  GROUP = 'group',
 }

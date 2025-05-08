@@ -14,7 +14,9 @@ export class CreateVisitationMetaDto {
 
   instructor: MemberModel;
 
-  visitationDate: Date;
+  visitationStartDate: Date;
+
+  visitationEndDate: Date;
 
   creator: MemberModel;
 }

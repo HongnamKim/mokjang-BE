@@ -3,11 +3,17 @@ import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { OfficerModel } from '../../entity/officer.entity';
 import { CreateOfficerDto } from '../../dto/create-officer.dto';
 import { UpdateOfficerDto } from '../../dto/update-officer.dto';
+import { GetOfficersDto } from '../../dto/request/get-officers.dto';
+import { OfficerDomainPaginationResultDto } from '../../dto/officer-domain-pagination-result.dto';
 
 export const IOFFICERS_DOMAIN_SERVICE = Symbol('IOFFICERS_DOMAIN_SERVICE');
 
 export interface IOfficersDomainService {
-  findOfficers(church: ChurchModel, qr?: QueryRunner): Promise<OfficerModel[]>;
+  findOfficers(
+    church: ChurchModel,
+    dto: GetOfficersDto,
+    qr?: QueryRunner,
+  ): Promise<OfficerDomainPaginationResultDto>;
 
   findOfficerById(
     church: ChurchModel,
@@ -35,7 +41,7 @@ export interface IOfficersDomainService {
     qr?: QueryRunner,
   ): Promise<OfficerModel>;
 
-  deleteOfficer(officer: OfficerModel, qr?: QueryRunner): Promise<string>;
+  deleteOfficer(officer: OfficerModel, qr?: QueryRunner): Promise<void>;
 
   incrementMembersCount(
     officer: OfficerModel,

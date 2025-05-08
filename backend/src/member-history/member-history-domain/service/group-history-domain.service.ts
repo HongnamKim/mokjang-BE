@@ -1,4 +1,4 @@
-import { IGroupHistoryDomainService } from './interface/group-history-domain.service.interface';
+import { IGroupHistoryDomainService } from '../interface/group-history-domain.service.interface';
 import {
   BadRequestException,
   ConflictException,
