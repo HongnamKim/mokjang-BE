@@ -1,5 +1,5 @@
 import { ConflictException, HttpStatus } from '@nestjs/common';
-import { HttpStatusText } from '../../../common/const/http-status-text.const';
+import { HttpStatusText } from '../const/http-status-text.const';
 
 export class RemoveConflictException extends ConflictException {
   constructor(message: string, notExistIds: number[]) {

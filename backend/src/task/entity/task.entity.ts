@@ -11,6 +11,7 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 import { TaskStatus } from '../const/task-status.enum';
 import { MemberModel } from '../../members/entity/member.entity';
 import { TaskType } from '../const/task-type.enum';
+import { TaskReportModel } from '../../report/entity/task-report.entity';
 
 @Entity()
 export class TaskModel extends BaseModel {
@@ -70,14 +71,8 @@ export class TaskModel extends BaseModel {
   @JoinColumn({ name: 'creatorId' })
   creator: MemberModel;
 
-  /*
-  추가할 컬럼
-  == 1. 담당자 --> ManyToMany
-  == 2. 생성자 --> ManyToOne
-  3. 보고서 --> OneToMany
-  == 4. 하위 업무 --> OneToMany
-  == 5. 상위 업무 --> ManyToOne
-   */
+  @OneToMany(() => TaskReportModel, (taskReport) => taskReport.task)
+  reports: TaskReportModel[];
 }
 
 export const TaskModelColumns = {

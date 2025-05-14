@@ -1,6 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { TaskModel } from '../../entity/task.entity';
 import {
+  IsArray,
   IsDate,
   IsEnum,
   IsNotEmpty,
@@ -15,6 +16,7 @@ import { RemoveSpaces } from '../../../common/decorator/transformer/remove-space
 import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator';
 import { TaskStatus } from '../../const/task-status.enum';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
+import { Transform } from 'class-transformer';
 
 @SanitizeDto()
 export class CreateTaskDto extends PickType(TaskModel, [
@@ -83,4 +85,16 @@ export class CreateTaskDto extends PickType(TaskModel, [
   @IsNumber()
   @Min(1)
   override inChargeId: number;
+
+  @ApiProperty({
+    description: '업무 피보고자 ID',
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Transform(({ value }) => Array.from(new Set(value)))
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  receiverIds: number[];
 }

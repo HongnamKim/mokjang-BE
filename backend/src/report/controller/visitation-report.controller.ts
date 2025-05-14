@@ -14,12 +14,19 @@ import { VisitationReportService } from '../service/visitation-report.service';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateVisitationReportDto } from '../dto/visitation-report/update-visitation-report.dto';
+import {
+  ApiDeleteVisitationReport,
+  ApiGetVisitationReportById,
+  ApiGetVisitationReports,
+  ApiPatchVisitationReport,
+} from '../const/swagger/visitation-report.swagger';
 
 @ApiTags('Churches:Members:Reports:Visitations')
 @Controller('visitations')
 export class VisitationReportController {
   constructor(private readonly reportService: VisitationReportService) {}
 
+  @ApiGetVisitationReports()
   @Get()
   getVisitationReports(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -29,6 +36,7 @@ export class VisitationReportController {
     return this.reportService.getVisitationReport(churchId, memberId, dto);
   }
 
+  @ApiGetVisitationReportById()
   @Get(':visitationReportId')
   getVisitationReportById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -44,6 +52,7 @@ export class VisitationReportController {
     );
   }
 
+  @ApiPatchVisitationReport()
   @Patch(':visitationReportId')
   patchVisitationReport(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -59,6 +68,7 @@ export class VisitationReportController {
     );
   }
 
+  @ApiDeleteVisitationReport()
   @Delete(':visitationReportId')
   deleteVisitationReport(
     @Param('churchId', ParseIntPipe) churchId: number,

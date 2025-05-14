@@ -132,7 +132,7 @@ export class VisitationReportDomainService
       throw new NotFoundException(VisitationReportException.NOT_FOUND);
     }
 
-    report.isRead = true;
+    isRead && (report.isRead = true);
 
     isRead && repository.save(report);
 
