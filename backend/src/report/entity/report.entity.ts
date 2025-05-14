@@ -6,7 +6,7 @@ import { Column, Entity, Index, ManyToOne, TableInheritance } from 'typeorm';
 @TableInheritance({ column: { type: 'varchar', name: 'reportType' } })
 export abstract class ReportModel extends BaseModel {
   @Index()
-  @Column()
+  @Column({ nullable: true })
   senderId: number;
 
   @ManyToOne(() => MemberModel)

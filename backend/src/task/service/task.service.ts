@@ -112,7 +112,7 @@ export class TaskService {
       qr,
     );
 
-    if (dto.receiverIds.length > 0 && inChargeMember) {
+    if (dto.receiverIds.length > 0) {
       await this.handleAddTaskReport(church, newTask.id, dto.receiverIds, qr);
     }
 
