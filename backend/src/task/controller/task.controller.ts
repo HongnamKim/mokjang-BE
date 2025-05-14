@@ -25,12 +25,16 @@ import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { GetTasksDto } from '../dto/request/get-tasks.dto';
 import { UpdateTaskDto } from '../dto/request/update-task.dto';
 import {
+  ApiAddReportReceivers,
+  ApiDeleteReportReceiver,
   ApiDeleteTask,
   ApiGetTaskById,
   ApiGetTasks,
   ApiPatchTask,
   ApiPostTask,
 } from '../const/swagger/task.swagger';
+import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
+import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
 
 @ApiTags('Tasks')
 @Controller()
@@ -89,5 +93,34 @@ export class TaskController {
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.deleteTask(churchId, taskId, qr);
+  }
+
+  @ApiAddReportReceivers()
+  @Patch(':taskId/add-receivers')
+  @UseInterceptors(TransactionInterceptor)
+  addReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Body() dto: AddTaskReportReceiverDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.taskService.addTaskReportReceivers(churchId, taskId, dto, qr);
+  }
+
+  @ApiDeleteReportReceiver()
+  @Patch(':taskId/delete-receivers')
+  @UseInterceptors(TransactionInterceptor)
+  deleteReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Body() dto: DeleteTaskReportReceiverDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.taskService.deleteTaskReportReceivers(
+      churchId,
+      taskId,
+      dto,
+      qr,
+    );
   }
 }
