@@ -99,7 +99,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     const reports = receivers.map((receiver) =>
       repository.create({
         task: task,
-        sender,
+        senderId: sender ? sender.id : undefined,
         receiver,
         reportedAt: new Date(),
         isRead: false,

@@ -41,7 +41,7 @@ export class VisitationReportDomainService
 
     return repository.save({
       visitation,
-      sender,
+      senderId: sender ? sender.id : undefined,
       receiver,
       reportedAt: new Date(),
       isRead: false,
