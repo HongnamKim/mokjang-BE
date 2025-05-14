@@ -5,6 +5,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
 import { TaskController } from './controller/task.controller';
 import { TaskService } from './service/task.service';
 import { TaskDomainModule } from './task-domain/task-domain.module';
+import { TaskReportDomainModule } from '../report/report-domain/task-report-domain.module';
 
 @Module({
   imports: [
@@ -14,6 +15,8 @@ import { TaskDomainModule } from './task-domain/task-domain.module';
     ChurchesDomainModule,
     MembersDomainModule,
     TaskDomainModule,
+
+    TaskReportDomainModule,
   ],
   controllers: [TaskController],
   providers: [TaskService],

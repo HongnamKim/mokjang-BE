@@ -41,8 +41,8 @@ import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
 } from '../../report/report-domain/interface/visitation-report-domain.service.interface';
-import { AddConflictException } from '../const/exception/add-conflict.exception';
-import { RemoveConflictException } from '../const/exception/remove-conflict.exception';
+import { AddConflictException } from '../../common/exception/add-conflict.exception';
+import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
 import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
 import { VisitationDetailService } from './visitation-detail.service';
 
@@ -623,7 +623,7 @@ export class VisitationService {
       { user: true },
     );
 
-    const isAvailableReceivers = newReceivers.some((receiver) => {
+    const isAvailableReceivers = newReceivers.every((receiver) => {
       return (
         receiver.user &&
         (receiver.user.role === UserRole.mainAdmin ||

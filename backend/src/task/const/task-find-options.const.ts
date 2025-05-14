@@ -46,6 +46,7 @@ export const TaskFindOptionsRelation: FindOptionsRelations<TaskModel> = {
   },
   inCharge: MemberSummarizedRelation,
   creator: MemberSummarizedRelation,
+  reports: { receiver: MemberSummarizedRelation },
 };
 
 export const TaskFindOptionsSelect: FindOptionsSelect<TaskModel> = {
@@ -59,4 +60,10 @@ export const TaskFindOptionsSelect: FindOptionsSelect<TaskModel> = {
   subTasks: SubTaskFindOptionsSelect,
   inCharge: MemberSummarizedSelect,
   creator: MemberSummarizedSelect,
+  reports: {
+    id: true,
+    isRead: true,
+    isConfirmed: true,
+    receiver: MemberSummarizedSelect,
+  },
 };

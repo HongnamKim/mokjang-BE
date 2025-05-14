@@ -21,6 +21,15 @@ import { TaskPaginationResultDto } from '../dto/response/task-pagination-result.
 import { UpdateTaskDto } from '../dto/request/update-task.dto';
 import { PatchTaskResponseDto } from '../dto/response/patch-task-response.dto';
 import { DeleteTaskResponseDto } from '../dto/response/delete-task-response.dto';
+import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
+import { TaskReportException } from '../../report/const/exception/task-report.exception';
+import {
+  ITASK_REPORT_DOMAIN_SERVICE,
+  ITaskReportDomainService,
+} from '../../report/report-domain/interface/task-report-domain.service.interface';
+import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
+import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class TaskService {
@@ -32,6 +41,8 @@ export class TaskService {
 
     @Inject(ITASK_DOMAIN_SERVICE)
     private readonly taskDomainService: ITaskDomainService,
+    @Inject(ITASK_REPORT_DOMAIN_SERVICE)
+    private readonly taskReportDomainService: ITaskReportDomainService,
   ) {}
 
   async getTasks(churchId: number, dto: GetTasksDto, qr?: QueryRunner) {
@@ -100,6 +111,10 @@ export class TaskService {
       dto,
       qr,
     );
+
+    if (dto.receiverIds.length > 0 && inChargeMember) {
+      await this.handleAddTaskReport(church, newTask.id, dto.receiverIds, qr);
+    }
 
     return new PostTaskResponseDto(newTask, new Date());
   }
@@ -183,12 +198,17 @@ export class TaskService {
       taskId,
       TaskTreeEnum.none,
       qr,
+      { reports: true },
     );
 
     // 업무 삭제
     await this.taskDomainService.deleteTask(targetTask, qr);
 
     // 업무 보고 삭제
+    await this.taskReportDomainService.deleteTaskReports(
+      targetTask.reports,
+      qr,
+    );
 
     return new DeleteTaskResponseDto(
       new Date(),
@@ -196,5 +216,108 @@ export class TaskService {
       targetTask.title,
       true,
     );
+  }
+
+  async addTaskReportReceivers(
+    churchId: number,
+    taskId: number,
+    dto: AddTaskReportReceiverDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    return this.handleAddTaskReport(church, taskId, dto.receiverIds, qr);
+  }
+
+  private async handleAddTaskReport(
+    church: ChurchModel,
+    taskId: number,
+    newReceiverIds: number[],
+    qr: QueryRunner,
+  ) {
+    const task = await this.taskDomainService.findTaskModelById(
+      church,
+      taskId,
+      TaskTreeEnum.none,
+      qr,
+      { inCharge: true, reports: true },
+    );
+
+    const newReceivers = await this.membersDomainService.findMembersById(
+      church,
+      newReceiverIds,
+      qr,
+      { user: true },
+    );
+
+    await this.taskReportDomainService.createTaskReports(
+      task,
+      task.inCharge,
+      newReceivers,
+      qr,
+    );
+
+    return {
+      taskId: task.id,
+      addReceivers: newReceivers.map((receiver) => ({
+        id: receiver.id,
+        name: receiver.name,
+      })),
+      addedCount: newReceivers.length,
+    };
+  }
+
+  async deleteTaskReportReceivers(
+    churchId: number,
+    taskId: number,
+    dto: DeleteTaskReportReceiverDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const task = await this.taskDomainService.findTaskModelById(
+      church,
+      taskId,
+      TaskTreeEnum.none,
+      qr,
+      { reports: { receiver: true } },
+    );
+
+    const reports = task.reports;
+    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
+
+    const notExistReceiverIds = dto.receiverIds.filter(
+      (id) => !oldReceiverIds.has(id),
+    );
+
+    if (notExistReceiverIds.length > 0) {
+      throw new RemoveConflictException(
+        TaskReportException.NOT_EXIST_REPORTED_MEMBER,
+        notExistReceiverIds,
+      );
+    }
+
+    const deleteReports = reports.filter((report) =>
+      dto.receiverIds.includes(report.receiverId),
+    );
+
+    const result = await this.taskReportDomainService.deleteTaskReports(
+      deleteReports,
+      qr,
+    );
+
+    return {
+      taskId,
+      deletedReceivers: deleteReports.map((r) => ({
+        id: r.receiverId,
+        name: r.receiver.name,
+      })),
+      deletedCount: result.affected,
+    };
   }
 }
