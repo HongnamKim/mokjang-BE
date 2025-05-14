@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { VisitationOrderEnum } from '../../../visitation/const/visitation-order.enum';
 import { VisitationReportOrderEnum } from '../../const/visitation-report-order.enum';
+import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
 
 export class GetVisitationReportDto {
   @ApiProperty({
@@ -55,6 +56,7 @@ export class GetVisitationReportDto {
     required: false,
   })
   @IsOptional()
+  @QueryBoolean()
   @IsBoolean()
   isRead?: boolean;
 }

@@ -1,0 +1,27 @@
+import { ConflictException, HttpStatus } from '@nestjs/common';
+import { HttpStatusText } from '../const/http-status-text.const';
+
+export class AddConflictException extends ConflictException {
+  constructor(message: string, conflictIds: number[]) {
+    super({
+      message,
+      conflictIds,
+      error: HttpStatusText[HttpStatus.CONFLICT],
+      statusCode: HttpStatus.CONFLICT,
+    });
+  }
+}
+
+export class AddConflictExceptionV2 extends ConflictException {
+  constructor(
+    message: string,
+    conflicts: { receiverId: number; reason: string }[],
+  ) {
+    super({
+      message,
+      conflicts,
+      error: HttpStatusText[HttpStatus.CONFLICT],
+      statusCode: HttpStatus.CONFLICT,
+    });
+  }
+}
