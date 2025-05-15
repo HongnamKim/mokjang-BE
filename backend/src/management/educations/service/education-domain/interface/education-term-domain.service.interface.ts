@@ -9,9 +9,8 @@ import {
 } from 'typeorm';
 import { EducationTermModel } from '../../../entity/education-term.entity';
 import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
-import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
-import { EducationStatus } from '../../../const/education-status.enum';
+import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
 import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
@@ -43,8 +42,8 @@ export interface IEducationTermDomainService {
   ): Promise<EducationTermModel>;
 
   createEducationTerm(
-    //church: ChurchModel,
     education: EducationModel,
+    creator: MemberModel,
     instructor: MemberModel | null,
     dto: CreateEducationTermDto,
     qr: QueryRunner,
@@ -52,13 +51,11 @@ export interface IEducationTermDomainService {
 
   updateEducationTerm(
     education: EducationModel,
-    educationTerm: EducationTermModel & {
-      educationEnrollments: EducationEnrollmentModel[];
-    },
+    educationTerm: EducationTermModel,
     newInstructor: MemberModel | null,
     dto: UpdateEducationTermDto,
     qr: QueryRunner,
-  ): Promise<EducationTermModel>;
+  ): Promise<UpdateResult>;
 
   deleteEducationTerm(
     educationTerm: EducationTermModel,
@@ -83,13 +80,13 @@ export interface IEducationTermDomainService {
 
   incrementEducationStatusCount(
     educationTerm: EducationTermModel,
-    status: EducationStatus,
+    status: EducationEnrollmentStatus,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
   decrementEducationStatusCount(
     educationTerm: EducationTermModel,
-    status: EducationStatus,
+    status: EducationEnrollmentStatus,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

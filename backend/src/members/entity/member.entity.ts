@@ -173,8 +173,8 @@ export class MemberModel extends BaseModel {
   )
   educations: EducationEnrollmentModel[];
 
-  @OneToMany(() => EducationTermModel, (term) => term.instructor)
-  instructingEducation: EducationTermModel[];
+  @OneToMany(() => EducationTermModel, (term) => term.inCharge)
+  inChargeEducationTerm: EducationTermModel[];
 
   @Index()
   @Column({ comment: '그룹 ID', nullable: true })

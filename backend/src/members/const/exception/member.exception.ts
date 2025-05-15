@@ -11,4 +11,6 @@ export const MemberException = {
   NOT_LINKED_MEMBER: '계정 연동이 되어있지 않은 교인입니다.',
 
   SAME_ROLE: '이미 동일한 권한입니다.',
+
+  USER_ERROR: '교인의 계정 정보 불러오기 실패',
 };
