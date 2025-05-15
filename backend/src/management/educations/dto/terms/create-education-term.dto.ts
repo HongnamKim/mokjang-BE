@@ -1,16 +1,15 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationTermModel } from '../../entity/education-term.entity';
-import { IsDate, IsNumber, IsOptional, Min, ValidateIf } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
-import { IsLessThanOrEqual } from '../../../../common/decorator/validator/is-less-or-equal-than.decorator';
 
 export class CreateEducationTermDto extends PickType(EducationTermModel, [
   'term',
-  'numberOfSessions',
-  'completionCriteria',
+  //'numberOfSessions',
+  //'completionCriteria',
   'startDate',
   'endDate',
-  'instructorId',
+  'inChargeId',
 ]) {
   @ApiProperty({
     description: '기수',
@@ -20,16 +19,16 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @Min(1)
   term: number;
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '총 몇 회의 교육으로 이루어졌는지 (최소값: 1)',
     minimum: 1,
     default: 1,
   })
   @IsNumber()
   @Min(1)
-  override numberOfSessions: number = 1;
+  override numberOfSessions: number = 1;*/
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '수료 기준 출석 횟수 (선택값)',
     minimum: 1,
     required: false,
@@ -39,7 +38,7 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @Min(1)
   @IsLessThanOrEqual('numberOfSessions')
   @IsOptional()
-  override completionCriteria: number;
+  override completionCriteria: number;*/
 
   @ApiProperty({
     description: '교육회차 시작일',
@@ -63,5 +62,5 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @IsNumber()
   @Min(1)
   @IsOptional()
-  override instructorId: number;
+  override inChargeId: number;
 }

@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
-import { IsLessThanOrEqual } from '../../../../common/decorator/validator/is-less-or-equal-than.decorator';
+import { IsDate, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
 import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
 import { TransformStartDate } from '../../../../member-history/decorator/transform-start-date.decorator';
 import { TransformEndDate } from '../../../../member-history/decorator/transform-end-date.decorator';
+import { EducationStatus } from '../../const/education-status.enum';
 
 export class UpdateEducationTermDto {
   @ApiProperty({
@@ -17,26 +17,13 @@ export class UpdateEducationTermDto {
   term: number;
 
   @ApiProperty({
-    description: '총 몇 회의 교육으로 이루어졌는지 (최소값: 1)',
-    minimum: 1,
-    default: 1,
-  })
-  @IsNumber()
-  @Min(1)
-  @IsOptional()
-  numberOfSessions: number;
-
-  @ApiProperty({
-    description: '수료 기준 출석 횟수 (선택값)',
-    minimum: 1,
+    description: '교육 진행 상태',
+    enum: EducationStatus,
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
-  //@ValidateIf((o) => o.numberOfSessions !== undefined)
-  @IsLessThanOrEqual('numberOfSessions')
-  completionCriteria: number;
+  @IsEnum(EducationStatus)
+  status: EducationStatus;
 
   @ApiProperty({
     description: '교육회차 시작일',
@@ -52,7 +39,6 @@ export class UpdateEducationTermDto {
   @IsOptional()
   @IsDate()
   @TransformEndDate()
-  //@ValidateIf((o) => o.startDate !== undefined)
   @IsAfterDate('startDate')
   endDate: Date;
 
@@ -64,5 +50,27 @@ export class UpdateEducationTermDto {
   @IsNumber()
   @Min(1)
   @IsOptional()
-  instructorId: number;
+  inChargeId: number;
+
+  /*@ApiProperty({
+    description: '총 몇 회의 교육으로 이루어졌는지 (최소값: 1)',
+    minimum: 1,
+    default: 1,
+  })
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  numberOfSessions: number;*/
+
+  /*@ApiProperty({
+    description: '수료 기준 출석 횟수 (선택값)',
+    minimum: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  //@ValidateIf((o) => o.numberOfSessions !== undefined)
+  @IsLessThanOrEqual('numberOfSessions')
+  completionCriteria: number;*/
 }
