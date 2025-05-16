@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
-import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { TaskStatus } from '../../const/task-status.enum';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
 

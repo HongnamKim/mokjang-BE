@@ -21,11 +21,11 @@ import {
 } from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { EducationModel } from '../../../entity/education.entity';
-import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
+import { GetEducationTermDto } from '../../../dto/terms/request/get-education-term.dto';
 import { EducationTermOrderEnum } from '../../../const/order.enum';
 import { EducationTermException } from '../../../const/exception/education.exception';
-import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
+import { CreateEducationTermDto } from '../../../dto/terms/request/create-education-term.dto';
+import { UpdateEducationTermDto } from '../../../dto/terms/request/update-education-term.dto';
 import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
 import { MemberModel } from '../../../../../members/entity/member.entity';
 import {

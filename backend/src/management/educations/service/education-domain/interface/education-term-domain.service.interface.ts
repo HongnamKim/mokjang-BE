@@ -1,6 +1,6 @@
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { EducationModel } from '../../../entity/education.entity';
-import { GetEducationTermDto } from '../../../dto/terms/get-education-term.dto';
+import { GetEducationTermDto } from '../../../dto/terms/request/get-education-term.dto';
 import {
   FindOptionsRelations,
   FindOptionsSelect,
@@ -8,8 +8,8 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { EducationTermModel } from '../../../entity/education-term.entity';
-import { CreateEducationTermDto } from '../../../dto/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../../../dto/terms/update-education-term.dto';
+import { CreateEducationTermDto } from '../../../dto/terms/request/create-education-term.dto';
+import { UpdateEducationTermDto } from '../../../dto/terms/request/update-education-term.dto';
 import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
 import { MemberModel } from '../../../../../members/entity/member.entity';
 
