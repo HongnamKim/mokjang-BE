@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
-import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
+import { GetEducationTermDto } from '../dto/terms/request/get-education-term.dto';
+import { CreateEducationTermDto } from '../dto/terms/request/create-education-term.dto';
+import { UpdateEducationTermDto } from '../dto/terms/request/update-education-term.dto';
 import {
   IEDUCATION_TERM_DOMAIN_SERVICE,
   IEducationTermDomainService,

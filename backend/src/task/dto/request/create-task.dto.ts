@@ -11,7 +11,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator';
 import { TaskStatus } from '../../const/task-status.enum';

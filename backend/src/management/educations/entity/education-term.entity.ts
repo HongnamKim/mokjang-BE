@@ -18,6 +18,9 @@ export class EducationTermModel extends BaseModel {
   @Column({ comment: '교육 이름' })
   educationName: string;
 
+  @Column({ default: '' })
+  content: string;
+
   @ManyToOne(() => EducationModel, (education) => education.educationTerms)
   education!: EducationModel;
 

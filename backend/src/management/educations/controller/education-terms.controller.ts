@@ -12,9 +12,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
-import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
+import { GetEducationTermDto } from '../dto/terms/request/get-education-term.dto';
+import { CreateEducationTermDto } from '../dto/terms/request/create-education-term.dto';
+import { UpdateEducationTermDto } from '../dto/terms/request/update-education-term.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { EducationTermService } from '../service/education-term.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';

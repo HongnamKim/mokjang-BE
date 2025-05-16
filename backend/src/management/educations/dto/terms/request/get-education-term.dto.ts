@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EducationTermOrderEnum } from '../../const/order.enum';
+import { EducationTermOrderEnum } from '../../../const/order.enum';
 import { IsEnum } from 'class-validator';
-import { BaseOffsetPaginationRequestDto } from '../../../../common/dto/request/base-offset-pagination-request.dto';
+import { BaseOffsetPaginationRequestDto } from '../../../../../common/dto/request/base-offset-pagination-request.dto';
 
 export class GetEducationTermDto extends BaseOffsetPaginationRequestDto<EducationTermOrderEnum> {
   @ApiProperty({
