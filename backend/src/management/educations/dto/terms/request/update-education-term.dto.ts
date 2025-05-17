@@ -13,7 +13,7 @@ import { TransformEndDate } from '../../../../../member-history/decorator/transf
 import { EducationStatus } from '../../../const/education-status.enum';
 import { PlainTextMaxLength } from '../../../../../common/decorator/validator/plain-text-max-length.validator';
 import { SanitizeDto } from '../../../../../common/decorator/sanitize-target.decorator';
-import { IsNotNull } from '../../../../../common/decorator/validator/is-not.null.validator';
+import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
 
 @SanitizeDto()
 export class UpdateEducationTermDto {
@@ -31,7 +31,7 @@ export class UpdateEducationTermDto {
     description: '내용',
     required: false,
   })
-  @IsNotNull()
+  @IsOptionalNotNull()
   @IsString()
   @PlainTextMaxLength(500)
   content?: string;
