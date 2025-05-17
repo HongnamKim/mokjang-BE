@@ -17,12 +17,18 @@ import {
 } from './education-domain/interface/education-term-domain.service.interface';
 import { EducationPaginationResultDto } from '../dto/education-pagination-result.dto';
 import { EducationDeleteResponseDto } from '../dto/education/response/education-delete-response.dto';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/interface/members-domain.service.interface';
 
 @Injectable()
 export class EducationsService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchDomainService: IChurchesDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
     @Inject(IEDUCATION_DOMAIN_SERVICE)
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
@@ -69,6 +75,7 @@ export class EducationsService {
   }
 
   async createEducation(
+    userId: number,
     churchId: number,
     dto: CreateEducationDto,
     qr?: QueryRunner,
@@ -78,7 +85,19 @@ export class EducationsService {
       qr,
     );
 
-    return this.educationDomainService.createEducation(church, dto, qr);
+    const creatorMember =
+      await this.membersDomainService.findMemberModelByUserId(
+        church,
+        userId,
+        qr,
+      );
+
+    return this.educationDomainService.createEducation(
+      church,
+      creatorMember,
+      dto,
+      qr,
+    );
   }
 
   async updateEducation(

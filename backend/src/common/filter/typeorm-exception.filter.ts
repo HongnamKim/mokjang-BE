@@ -5,6 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
+import { CommonException } from '../const/exception/common.exception';
 
 const ErrorType = {
   BAD_REQUEST: 'Bad Request',
@@ -34,6 +35,10 @@ export class TypeOrmExceptionFilter implements ExceptionFilter {
       statusCode = HttpStatus.BAD_REQUEST;
       errorType = ErrorType.BAD_REQUEST;
       message = '허용된 데이터 길이를 초과하였습니다.';
+    } else if (error.code === '23502') {
+      statusCode = HttpStatus.BAD_REQUEST;
+      errorType = ErrorType.BAD_REQUEST;
+      message = CommonException.NOT_NULL(error.column);
     }
 
     response.status(HttpStatus.BAD_REQUEST).json({

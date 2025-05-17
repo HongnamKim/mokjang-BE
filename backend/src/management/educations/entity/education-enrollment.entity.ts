@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { EducationTermModel } from './education-term.entity';
-import { EducationStatus } from '../const/education-status.enum';
+import { EducationEnrollmentStatus } from '../const/education-status.enum';
 import { SessionAttendanceModel } from './session-attendance.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
@@ -23,11 +23,11 @@ export class EducationEnrollmentModel extends BaseModel {
 
   @Index()
   @Column({
-    enum: EducationStatus,
+    enum: EducationEnrollmentStatus,
     comment: '교육 상태 (수료중/수료/미수료)',
-    default: EducationStatus.IN_PROGRESS,
+    default: EducationEnrollmentStatus.IN_PROGRESS,
   })
-  status: EducationStatus;
+  status: EducationEnrollmentStatus;
 
   @Column({ default: 0, comment: '출석 횟수' })
   attendanceCount: number;

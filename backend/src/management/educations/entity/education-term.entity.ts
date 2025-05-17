@@ -2,8 +2,12 @@ import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { EducationModel } from './education.entity';
 import { EducationSessionModel } from './education-session.entity';
 import { EducationEnrollmentModel } from './education-enrollment.entity';
-import { BaseModel } from '../../../common/entity/base.entity';
+import {
+  BaseModel,
+  BaseModelColumns,
+} from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { EducationStatus } from '../const/education-status.enum';
 
 @Entity()
 export class EducationTermModel extends BaseModel {
@@ -11,21 +15,30 @@ export class EducationTermModel extends BaseModel {
   @Index()
   educationId: number;
 
-  @Column({ comment: '교육 이름', nullable: true })
+  @Column({ comment: '교육 이름' })
   educationName: string;
+
+  @Column({ default: '' })
+  content: string;
 
   @ManyToOne(() => EducationModel, (education) => education.educationTerms)
   education!: EducationModel;
+
+  @Column({ nullable: true })
+  creatorId: number;
+
+  @ManyToOne(() => MemberModel)
+  creator: MemberModel;
 
   @Column({ comment: '교육 기수' })
   @Index()
   term: number; // 기수
 
-  @Column({ comment: '총 교육 회차' })
-  numberOfSessions: number; // 총 교육 회차
+  @Column({ default: EducationStatus.RESERVE })
+  status: EducationStatus;
 
-  @Column({ type: 'int', nullable: true, comment: '수료 기준 출석 횟수' })
-  completionCriteria: number | null;
+  @Column({ comment: '총 교육 회차', default: 0 })
+  numberOfSessions: number; // 총 교육 회차
 
   @Column({ type: 'timestamptz', comment: '기수 시작일' })
   startDate: Date;
@@ -35,10 +48,10 @@ export class EducationTermModel extends BaseModel {
 
   @Index()
   @Column({ type: 'int', comment: '교육 진행자 ID', nullable: true })
-  instructorId!: number | null;
+  inChargeId!: number | null;
 
-  @ManyToOne(() => MemberModel, (member) => member.instructingEducation)
-  instructor!: MemberModel;
+  @ManyToOne(() => MemberModel, (member) => member.inChargeEducationTerm)
+  inCharge!: MemberModel;
 
   @OneToMany(() => EducationSessionModel, (session) => session.educationTerm)
   educationSessions: EducationSessionModel[];
@@ -63,4 +76,30 @@ export class EducationTermModel extends BaseModel {
     (enrollment) => enrollment.educationTerm,
   )
   educationEnrollments: EducationEnrollmentModel[];
+
+  //@Column({ type: 'int', nullable: true, comment: '수료 기준 출석 횟수' })
+  //completionCriteria: number | null;
 }
+
+export const EducationTermColumns = {
+  ...BaseModelColumns,
+  educationId: 'educationId',
+  education: 'education',
+  educationName: 'educationName',
+  creatorId: 'creatorId',
+  creator: 'creator',
+  term: 'term',
+  status: 'status',
+  numberOfSessions: 'numberOfSessions',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  inChargeId: 'inChargeId',
+  inCharge: 'inCharge',
+  educationSessions: 'educationSessions',
+  isDoneCount: 'isDoneCount',
+  enrollmentCount: 'enrollmentCount',
+  inProgressCount: 'inProgressCount',
+  completedCount: 'completedCount',
+  incompleteCount: 'incompleteCount',
+  educationEnrollments: 'educationEnrollments',
+};

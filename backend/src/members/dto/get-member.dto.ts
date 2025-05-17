@@ -21,7 +21,7 @@ import {
 import { MarriageOptions } from '../member-domain/const/marriage-options.const';
 import { QueryBoolean } from '../../common/decorator/transformer/query-boolean.decorator';
 import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
-import { EducationStatus } from '../../management/educations/const/education-status.enum';
+import { EducationEnrollmentStatus } from '../../management/educations/const/education-status.enum';
 
 export class GetMemberDto {
   @ApiProperty({
@@ -356,14 +356,14 @@ export class GetMemberDto {
 
   @ApiProperty({
     description: '교육이수 상태',
-    enum: EducationStatus,
+    enum: EducationEnrollmentStatus,
     required: false,
     isArray: true,
   })
   @TransformStringArray()
-  @IsEnum(EducationStatus, { each: true })
+  @IsEnum(EducationEnrollmentStatus, { each: true })
   @IsOptional()
-  educationStatus?: EducationStatus[];
+  educationStatus?: EducationEnrollmentStatus[];
 
   @ApiProperty({
     name: 'baptism',

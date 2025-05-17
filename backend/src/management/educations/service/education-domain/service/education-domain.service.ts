@@ -14,6 +14,11 @@ import { EducationException } from '../../../const/exception/education.exception
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
 import { IEducationDomainService } from '../interface/education-domain.service.interface';
+import { MemberModel } from '../../../../../members/entity/member.entity';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../../../members/const/member-find-options.const';
 
 @Injectable()
 export class EducationDomainService implements IEducationDomainService {
@@ -106,16 +111,12 @@ export class EducationDomainService implements IEducationDomainService {
         churchId: church.id,
         id: educationId,
       },
-      /*relations: {
-        educationTerms: {
-          instructor: true,
-        },
+      relations: {
+        creator: MemberSummarizedRelation,
       },
-      order: {
-        educationTerms: {
-          term: 'asc',
-        },
-      },*/
+      select: {
+        creator: MemberSummarizedSelect,
+      },
     });
 
     if (!education) {
@@ -150,6 +151,7 @@ export class EducationDomainService implements IEducationDomainService {
 
   async createEducation(
     church: ChurchModel,
+    creatorMember: MemberModel,
     dto: CreateEducationDto,
     qr?: QueryRunner,
   ) {
@@ -164,6 +166,7 @@ export class EducationDomainService implements IEducationDomainService {
     return educationsRepository.save({
       name: dto.name,
       description: dto.description,
+      creatorId: creatorMember.id,
       churchId: church.id,
     });
   }
