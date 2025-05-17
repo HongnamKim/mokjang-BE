@@ -1,10 +1,11 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationModel } from '../../entity/education.entity';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
+import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
+import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 
 @SanitizeDto()
 export class CreateEducationDto extends PickType(EducationModel, [
@@ -23,13 +24,11 @@ export class CreateEducationDto extends PickType(EducationModel, [
   override name: string;
 
   @ApiProperty({
-    description: '교육 설명 (최대 300자, 빈 문자열 허용)',
-    maxLength: 300,
+    description: '교육 설명 (최대 500자(서식 제외), 빈 문자열 허용)',
     required: false,
   })
+  @IsOptionalNotNull()
   @IsString()
-  @MaxLength(300)
-  @Transform(({ value }) => value?.trim() ?? '')
-  @IsOptional()
+  @PlainTextMaxLength(500)
   override description: string;
 }

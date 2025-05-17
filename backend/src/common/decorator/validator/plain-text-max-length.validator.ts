@@ -17,7 +17,8 @@ export function PlainTextMaxLength(
       options: validatorOptions,
       validator: {
         validate(value: any, args: ValidationArguments) {
-          if (typeof value !== 'string') return false;
+          if (value === null || value === undefined) return true;
+          if (typeof value !== 'string') return true;
 
           const plainText = value.replace(/<[^>]*>/g, '').trim(); // 태그 제거
 

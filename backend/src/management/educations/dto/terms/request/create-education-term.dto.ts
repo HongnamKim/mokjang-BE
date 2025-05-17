@@ -4,7 +4,7 @@ import { IsDate, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { IsAfterDate } from '../../../../../common/decorator/validator/is-after-date.decorator';
 import { SanitizeDto } from '../../../../../common/decorator/sanitize-target.decorator';
 import { PlainTextMaxLength } from '../../../../../common/decorator/validator/plain-text-max-length.validator';
-import { IsNotNull } from '../../../../../common/decorator/validator/is-not.null.validator';
+import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
 
 @SanitizeDto()
 export class CreateEducationTermDto extends PickType(EducationTermModel, [
@@ -26,7 +26,7 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
     description: '내용',
     required: false,
   })
-  @IsNotNull()
+  @IsOptionalNotNull()
   @IsString()
   @PlainTextMaxLength(500)
   override content: string;
