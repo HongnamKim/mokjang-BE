@@ -107,7 +107,7 @@ export const HardDeleteMemberRelationOptions: FindOptionsRelations<MemberModel> 
   {
     ...DefaultMemberRelationOption,
     guiding: true,
-    instructingEducation: true,
+    inChargeEducationTerm: true,
     ministryHistory: true,
     officerHistory: true,
     groupHistory: true,

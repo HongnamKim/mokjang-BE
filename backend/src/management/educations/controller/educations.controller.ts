@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -25,6 +26,11 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateEducationDto } from '../dto/education/update-education.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service';
+import { Token } from '../../../auth/decorator/jwt.decorator';
+import { AuthType } from '../../../auth/const/enum/auth-type.enum';
+import { JwtAccessPayload } from '../../../auth/type/jwt';
 
 @ApiTags('Management:Educations')
 @Controller('educations')
@@ -42,13 +48,16 @@ export class EducationsController {
 
   @ApiPostEducation()
   @Post()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducation(
+    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateEducationDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.createEducation(churchId, dto, qr);
+    const userId = accessPayload.id;
+    return this.educationsService.createEducation(userId, churchId, dto, qr);
   }
 
   @ApiGetEducationById()

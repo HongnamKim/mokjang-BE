@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
-import { IsNoSpecialChar } from '../../../common/decorator/validator/is-title.decorator';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 
 export class CreateOfficerDto {
   @ApiProperty({
