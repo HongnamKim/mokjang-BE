@@ -10,3 +10,9 @@ export enum EducationStatus {
   DONE = 'done',
   PENDING = 'pending',
 }
+
+export enum EducationSessionStatus {
+  RESERVE = 'reserve',
+  DONE = 'done',
+  PENDING = 'pending',
+}

@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -15,12 +16,17 @@ import { UpdateEducationSessionDto } from '../dto/sessions/update-education-sess
 import { EducationSessionService } from '../service/educaiton-session.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { CreateEducationSessionDto } from '../dto/sessions/request/create-education-session.dto';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service';
+import { AuthType } from '../../../auth/const/enum/auth-type.enum';
+import { JwtAccessPayload } from '../../../auth/type/jwt';
+import { Token } from '../../../auth/decorator/jwt.decorator';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
 export class EducationSessionsController {
   constructor(
-    //private readonly educationsService: EducationsService
     private readonly educationSessionsService: EducationSessionService,
   ) {}
 
@@ -36,34 +42,30 @@ export class EducationSessionsController {
       educationId,
       educationTermId,
     );
-    /*return this.educationsService.getEducationSessions(
-      churchId,
-      educationId,
-      educationTermId,
-    );*/
   }
 
   @ApiOperation({ summary: '교육 회차 생성' })
   @Post()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationSession(
+    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Body() dto: CreateEducationSessionDto,
     @QueryRunner() qr: QR,
   ) {
+    const userId = accessPayload.id;
+
     return this.educationSessionsService.createSingleEducationSession(
+      userId,
       churchId,
       educationId,
       educationTermId,
+      dto,
       qr,
     );
-    /*return this.educationsService.createSingleEducationSession(
-      churchId,
-      educationId,
-      educationTermId,
-      qr,
-    );*/
   }
 
   @ApiOperation({ summary: '특정 교육 회차 조회' })
@@ -80,12 +82,6 @@ export class EducationSessionsController {
       educationTermId,
       educationSessionId,
     );
-    /*return this.educationsService.getEducationSessionById(
-      churchId,
-      educationId,
-      educationTermId,
-      educationSessionId,
-    );*/
   }
 
   @ApiOperation({ summary: '교육 진행 내용 업데이트' })
@@ -107,14 +103,6 @@ export class EducationSessionsController {
       dto,
       qr,
     );
-    /*return this.educationsService.updateEducationSession(
-      churchId,
-      educationId,
-      educationTermId,
-      educationSessionId,
-      dto,
-      qr,
-    );*/
   }
 
   @ApiOperation({
@@ -138,13 +126,5 @@ export class EducationSessionsController {
       educationSessionId,
       qr,
     );
-
-    /*return this.educationsService.deleteEducationSessions(
-      churchId,
-      educationId,
-      educationTermId,
-      educationSessionId,
-      qr,
-    );*/
   }
 }

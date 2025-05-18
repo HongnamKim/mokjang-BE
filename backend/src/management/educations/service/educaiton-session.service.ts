@@ -25,12 +25,21 @@ import {
   ISESSION_ATTENDANCE_DOMAIN_SERVICE,
   ISessionAttendanceDomainService,
 } from './education-domain/interface/session-attendance-domain.service.interface';
+import { CreateEducationSessionDto } from '../dto/sessions/request/create-education-session.dto';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/interface/members-domain.service.interface';
+import { PostEducationSessionResponseDto } from '../dto/sessions/response/post-education-session-response.dto';
 
 @Injectable()
 export class EducationSessionService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
+
     @Inject(IEDUCATION_DOMAIN_SERVICE)
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
@@ -122,9 +131,11 @@ export class EducationSessionService {
   }
 
   async createSingleEducationSession(
+    creatorMemberId: number,
     churchId: number,
     educationId: number,
     educationTermId: number,
+    dto: CreateEducationSessionDto,
     qr: QueryRunner,
   ) {
     const { church, education } = await this.getEducationInfo(
@@ -141,9 +152,28 @@ export class EducationSessionService {
         { educationEnrollments: true },
       );
 
+    const creatorMember =
+      await this.membersDomainService.findMemberModelByUserId(
+        church,
+        creatorMemberId,
+        qr,
+      );
+
+    const inCharge = dto.inChargeId
+      ? await this.membersDomainService.findMemberModelById(
+          church,
+          dto.inChargeId,
+          qr,
+          { user: true },
+        )
+      : null;
+
     const newSession =
       await this.educationSessionDomainService.createSingleEducationSession(
         educationTerm,
+        creatorMember,
+        dto,
+        inCharge,
         qr,
       );
 
@@ -162,11 +192,14 @@ export class EducationSessionService {
       ),
     ]);
 
-    return this.educationSessionDomainService.findEducationSessionById(
-      educationTerm,
-      newSession.id,
-      qr,
-    );
+    const session =
+      await this.educationSessionDomainService.findEducationSessionById(
+        educationTerm,
+        newSession.id,
+        qr,
+      );
+
+    return new PostEducationSessionResponseDto(session);
   }
 
   async updateEducationSession(

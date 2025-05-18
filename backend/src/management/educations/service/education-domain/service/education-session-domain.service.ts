@@ -4,12 +4,21 @@ import { EducationSessionModel } from '../../../entity/education-session.entity'
 import { MoreThan, QueryRunner, Repository } from 'typeorm';
 import { EducationTermModel } from '../../../entity/education-term.entity';
 import {
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { EducationSessionException } from '../../../const/exception/education.exception';
 import { UpdateEducationSessionDto } from '../../../dto/sessions/update-education-session.dto';
 import { session } from 'passport';
+import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-education-session.dto';
+import { MemberModel } from '../../../../../members/entity/member.entity';
+import { MemberException } from '../../../../../members/const/exception/member.exception';
+import { UserRole } from '../../../../../user/const/user-role.enum';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../../../members/const/member-find-options.const';
 
 export class EducationSessionDomainService
   implements IEducationSessionDomainService
@@ -35,14 +44,23 @@ export class EducationSessionDomainService
       where: {
         educationTermId: educationTerm.id,
       },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+      },
       select: {
         id: true,
         createdAt: true,
         updatedAt: true,
         educationTermId: true,
         session: true,
-        sessionDate: true,
-        isDone: true,
+        name: true,
+        inChargeId: true,
+        inCharge: MemberSummarizedSelect,
+        startDate: true,
+        endDate: true,
+        status: true,
+        //isDone: true,
+        //sessionDate: true,
       },
       order: {
         session: 'asc',
@@ -106,11 +124,40 @@ export class EducationSessionDomainService
     );
   }
 
+  private assertValidInCharge(inCharge: MemberModel) {
+    if (!inCharge.userId) {
+      throw new ConflictException(EducationSessionException.UNLINKED_IN_CHARGE);
+    }
+
+    // 담당자 조회 시 user 정보 join X
+    if (!inCharge.user) {
+      throw new InternalServerErrorException(MemberException.USER_ERROR);
+    }
+
+    if (
+      inCharge.user.role !== UserRole.mainAdmin &&
+      inCharge.user.role !== UserRole.manager
+    ) {
+      throw new ConflictException(
+        EducationSessionException.INVALID_IN_CHARGE_ROLE,
+      );
+    }
+  }
+
   async createSingleEducationSession(
     educationTerm: EducationTermModel,
+    creatorMember: MemberModel,
+    dto: CreateEducationSessionDto,
+    inCharge: MemberModel | null,
     qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
+
+    if (!educationTerm.canAddSession()) {
+      throw new ConflictException(
+        EducationSessionException.EXCEED_MAX_SESSION_NUMBER,
+      );
+    }
 
     const lastSession = await educationSessionsRepository.findOne({
       where: {
@@ -123,9 +170,18 @@ export class EducationSessionDomainService
 
     const newSessionNumber = lastSession ? lastSession.session + 1 : 1;
 
+    inCharge && this.assertValidInCharge(inCharge);
+
     return educationSessionsRepository.save({
+      creatorId: creatorMember.id,
+      educationTermId: educationTerm.id,
       session: newSessionNumber,
-      educationTerm,
+      name: dto.name,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      inChargeId: inCharge ? inCharge.id : undefined,
+      content: dto.content,
+      status: dto.status,
     });
   }
 
