@@ -2,6 +2,8 @@ import { EducationTermModel } from '../../../entity/education-term.entity';
 import { QueryRunner, UpdateResult } from 'typeorm';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { UpdateEducationSessionDto } from '../../../dto/sessions/update-education-session.dto';
+import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-education-session.dto';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_DOMAIN_SERVICE',
@@ -33,6 +35,9 @@ export interface IEducationSessionDomainService {
 
   createSingleEducationSession(
     educationTerm: EducationTermModel,
+    creatorMember: MemberModel,
+    dto: CreateEducationSessionDto,
+    inCharge: MemberModel | null,
     qr: QueryRunner,
   ): Promise<EducationSessionModel>;
 

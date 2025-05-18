@@ -72,7 +72,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       member.user.role !== UserRole.mainAdmin
     ) {
       throw new ConflictException(
-        EducationTermException.INVALID_IN_CHARGE_MEMBER,
+        EducationTermException.INVALID_IN_CHARGE_ROLE,
       );
     }
   }
