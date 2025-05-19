@@ -1,3 +1,5 @@
 export const EducationConstraints = {
-  MAX_SESSION_NUMBER: 1,
+  MAX_SESSION_NAME_LENGTH: 50,
+  MAX_SESSION_NUMBER: 30,
+  MAX_SESSION_CONTENT_LENGTH: 1000,
 };

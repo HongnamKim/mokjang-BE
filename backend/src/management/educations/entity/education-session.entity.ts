@@ -23,21 +23,18 @@ export class EducationSessionModel extends BaseModel {
   @Column({
     default: '',
     comment: '교육 진행 내용 (plain text 1000자)',
-    nullable: true,
   })
   content: string;
 
   @Column({
     type: 'timestamptz',
     comment: '교육 회차 시작 날까',
-    nullable: true,
   })
   startDate: Date;
 
   @Column({
     type: 'timestamptz',
     comment: '교육 회차 종료 날짜',
-    nullable: true,
   })
   endDate: Date;
 
@@ -60,17 +57,9 @@ export class EducationSessionModel extends BaseModel {
   )
   sessionAttendances: SessionAttendanceModel[];
 
-  @Column({ nullable: true })
+  @Column()
   creatorId: number;
 
   @ManyToOne(() => MemberModel)
   creator: MemberModel;
-
-  // ------------------ 없어질 column ------------------
-
-  @Column({ type: 'timestamptz', comment: '교육 진행 날짜', nullable: true })
-  sessionDate: Date;
-
-  @Column({ default: false, comment: '교육 진행 여부' })
-  isDone: boolean;
 }

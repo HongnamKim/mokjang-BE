@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { UpdateEducationSessionDto } from '../dto/sessions/update-education-session.dto';
+import { UpdateEducationSessionDto } from '../dto/sessions/request/update-education-session.dto';
 import {
   IEDUCATION_SESSION_DOMAIN_SERVICE,
   IEducationSessionDomainService,
@@ -31,6 +31,12 @@ import {
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
 import { PostEducationSessionResponseDto } from '../dto/sessions/response/post-education-session-response.dto';
+import { GetEducationSessionDto } from '../dto/sessions/request/get-education-session.dto';
+import { EducationSessionPaginationResponseDto } from '../dto/sessions/response/education-session-pagination-response.dto';
+import { GetEducationSessionResponseDto } from '../dto/sessions/response/get-education-session-response.dto';
+import { EducationSessionStatus } from '../const/education-status.enum';
+import { PatchEducationSessionResponseDto } from '../dto/sessions/response/patch-education-session-response.dto';
+import { DeleteSessionResponseDto } from '../dto/sessions/response/delete-education-session-response.dto';
 
 @Injectable()
 export class EducationSessionService {
@@ -97,6 +103,7 @@ export class EducationSessionService {
     churchId: number,
     educationId: number,
     educationTermId: number,
+    dto: GetEducationSessionDto,
   ) {
     const educationTerm = await this.getEducationTerm(
       churchId,
@@ -104,8 +111,18 @@ export class EducationSessionService {
       educationTermId,
     );
 
-    return this.educationSessionDomainService.findEducationSessions(
-      educationTerm,
+    const { data, totalCount } =
+      await this.educationSessionDomainService.findEducationSessions(
+        educationTerm,
+        dto,
+      );
+
+    return new EducationSessionPaginationResponseDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
     );
   }
 
@@ -123,11 +140,14 @@ export class EducationSessionService {
       qr,
     );
 
-    return this.educationSessionDomainService.findEducationSessionById(
-      educationTerm,
-      educationSessionId,
-      qr,
-    );
+    const session =
+      await this.educationSessionDomainService.findEducationSessionById(
+        educationTerm,
+        educationSessionId,
+        qr,
+      );
+
+    return new GetEducationSessionResponseDto(session);
   }
 
   async createSingleEducationSession(
@@ -183,13 +203,15 @@ export class EducationSessionService {
         educationTerm,
         qr,
       ),
-
       // 세션 출석 정보 생성
       this.sessionAttendanceDomainService.createSessionAttendance(
         newSession,
         educationTerm.educationEnrollments,
         qr,
       ),
+      // 완료 상태 회차를 만들 경우 isDoneCount 증가
+      dto.status === EducationSessionStatus.DONE &&
+        this.educationTermDomainService.incrementDoneCount(educationTerm, qr),
     ]);
 
     const session =
@@ -210,15 +232,31 @@ export class EducationSessionService {
     dto: UpdateEducationSessionDto,
     qr: QueryRunner,
   ) {
-    const educationTerm = await this.getEducationTerm(
+    const { church, education } = await this.getEducationInfo(
       churchId,
       educationId,
-      educationTermId,
       qr,
     );
 
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        church,
+        education,
+        educationTermId,
+        qr,
+      );
+
+    const inCharge = dto.inChargeId
+      ? await this.membersDomainService.findMemberModelById(
+          church,
+          dto.inChargeId,
+          qr,
+          { user: true },
+        )
+      : null;
+
     const targetSession =
-      await this.educationSessionDomainService.findEducationSessionById(
+      await this.educationSessionDomainService.findEducationSessionModelById(
         educationTerm,
         educationSessionId,
         qr,
@@ -229,25 +267,41 @@ export class EducationSessionService {
     --> dto.isDone = true -> isDoneCount 변화 X
     --> dto.isDone = false -> isDoneCount 감소
     */
-    if (dto.isDone !== undefined && dto.isDone !== targetSession.isDone) {
-      if (dto.isDone) {
-        await this.educationTermDomainService.incrementDoneCount(
+    if (dto.status) {
+      if (
+        targetSession.status === EducationSessionStatus.DONE &&
+        dto.status !== EducationSessionStatus.DONE
+      ) {
+        await this.educationTermDomainService.decrementDoneCount(
           educationTerm,
           qr,
         );
-      } else if (!dto.isDone) {
-        await this.educationTermDomainService.decrementDoneCount(
+      } else if (
+        targetSession.status !== EducationSessionStatus.DONE &&
+        dto.status === EducationSessionStatus.DONE
+      ) {
+        await this.educationTermDomainService.incrementDoneCount(
           educationTerm,
           qr,
         );
       }
     }
 
-    return this.educationSessionDomainService.updateEducationSession(
+    await this.educationSessionDomainService.updateEducationSession(
       targetSession,
       dto,
+      inCharge,
       qr,
     );
+
+    const updatedSession =
+      await this.educationSessionDomainService.findEducationSessionById(
+        educationTerm,
+        educationSessionId,
+        qr,
+      );
+
+    return new PatchEducationSessionResponseDto(updatedSession);
   }
 
   async deleteEducationSessions(
@@ -265,10 +319,11 @@ export class EducationSessionService {
     );
 
     const targetSession =
-      await this.educationSessionDomainService.findEducationSessionById(
+      await this.educationSessionDomainService.findEducationSessionModelById(
         educationTerm,
         educationSessionId,
         qr,
+        { sessionAttendances: true },
       );
 
     await Promise.all([
@@ -292,7 +347,7 @@ export class EducationSessionService {
       ),
     ]);
 
-    if (targetSession.isDone) {
+    if (targetSession.status === EducationSessionStatus.DONE) {
       await this.educationTermDomainService.decrementDoneCount(
         educationTerm,
         qr,
@@ -301,11 +356,9 @@ export class EducationSessionService {
 
     // 해당 세션 하위의 출석 정보 삭제
     // 삭제할 세션에 출석한 교육 대상자 ID
-    const attended =
-      await this.sessionAttendanceDomainService.findAttendedSessionAttendances(
-        targetSession,
-        qr,
-      );
+    const attended = targetSession.sessionAttendances.filter(
+      (attendance) => attendance.isPresent,
+    );
 
     const attendedEnrollmentIds = attended.map(
       (attendance) => attendance.educationEnrollmentId,
@@ -322,11 +375,14 @@ export class EducationSessionService {
       qr,
     );
 
-    //return `educationSessionId: ${educationSessionId} deleted`;
-    return {
-      timestamp: new Date(),
-      id: targetSession.id,
-      success: true,
-    };
+    return new DeleteSessionResponseDto(
+      new Date(),
+      targetSession.id,
+      educationTerm.educationName,
+      educationTerm.term,
+      targetSession.session,
+      targetSession.name,
+      true,
+    );
   }
 }
