@@ -1,7 +1,4 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
-import { EducationSessionModel } from '../../../entity/education-session.entity';
-import { EducationSessionStatus } from '../../../const/education-status.enum';
-import { SanitizeDto } from '../../../../../common/decorator/sanitize-target.decorator';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDate,
   IsEnum,
@@ -12,69 +9,71 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { SanitizeDto } from '../../../../../common/decorator/sanitize-target.decorator';
+import { EducationSessionStatus } from '../../../const/education-status.enum';
+import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
 import { RemoveSpaces } from '../../../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../../../common/decorator/validator/is-no-special-char.validator';
 import { IsAfterDate } from '../../../../../common/decorator/validator/is-after-date.decorator';
-import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
 import { PlainTextMaxLength } from '../../../../../common/decorator/validator/plain-text-max-length.validator';
 import { EducationConstraints } from '../../../const/education-constraints.const';
 
 @SanitizeDto()
-export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
-  'name',
-  'startDate',
-  'endDate',
-  'inChargeId',
-  'content',
-  'status',
-]) {
+export class UpdateEducationSessionDto {
   @ApiProperty({
     description: '교육 회차명',
-    maxLength: EducationConstraints.MAX_SESSION_CONTENT_LENGTH,
+    maxLength: 50,
+    required: false,
   })
+  @IsOptionalNotNull()
   @IsString()
   @IsNotEmpty()
   @RemoveSpaces()
   @IsNoSpecialChar()
-  @MaxLength(EducationConstraints.MAX_SESSION_NAME_LENGTH)
-  override name: string;
+  @MaxLength(50)
+  name?: string;
 
   @ApiProperty({
     description: '시작 날짜',
+    required: false,
   })
+  @IsOptionalNotNull()
   @IsDate()
-  override startDate: Date;
+  startDate?: Date;
 
   @ApiProperty({
     description: '종료 날짜',
+    required: false,
   })
+  @IsOptionalNotNull()
   @IsDate()
   @IsAfterDate('startDate')
-  override endDate: Date;
+  endDate?: Date;
 
   @ApiProperty({
-    description: '담당자 교인 ID',
+    description: '담당자 교인 ID (담당자 삭제 시 null)',
     required: false,
   })
   @IsOptional()
   @IsNumber()
   @Min(1)
-  override inChargeId: number;
+  inChargeId?: number;
 
   @ApiProperty({
-    description: '내용',
-    default: '',
+    description: '교육 진행 내용 (최대 1000자, 빈 문자열 허용)',
+    required: false,
   })
   @IsOptionalNotNull()
   @IsString()
   @PlainTextMaxLength(EducationConstraints.MAX_SESSION_CONTENT_LENGTH)
-  override content: string;
+  content?: string;
 
   @ApiProperty({
     description: '진행 상태',
     enum: EducationSessionStatus,
-    default: EducationSessionStatus.RESERVE,
+    required: false,
   })
+  @IsOptionalNotNull()
   @IsEnum(EducationSessionStatus)
-  override status: EducationSessionStatus = EducationSessionStatus.RESERVE;
+  status?: EducationSessionStatus;
 }

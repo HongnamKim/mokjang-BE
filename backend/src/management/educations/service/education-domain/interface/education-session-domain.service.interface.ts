@@ -1,9 +1,11 @@
 import { EducationTermModel } from '../../../entity/education-term.entity';
-import { QueryRunner, UpdateResult } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
-import { UpdateEducationSessionDto } from '../../../dto/sessions/update-education-session.dto';
+import { UpdateEducationSessionDto } from '../../../dto/sessions/request/update-education-session.dto';
 import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-education-session.dto';
 import { MemberModel } from '../../../../../members/entity/member.entity';
+import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
+import { GetEducationSessionDto } from '../../../dto/sessions/request/get-education-session.dto';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_DOMAIN_SERVICE',
@@ -12,8 +14,16 @@ export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
 export interface IEducationSessionDomainService {
   findEducationSessions(
     educationTerm: EducationTermModel,
+    dto: GetEducationSessionDto,
     qr?: QueryRunner,
-  ): Promise<EducationSessionModel[]>;
+  ): Promise<EducationSessionDomainPaginationResultDto>;
+
+  findEducationSessionModelById(
+    educationTerm: EducationTermModel,
+    educationSessionId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationSessionModel>,
+  ): Promise<EducationSessionModel>;
 
   findEducationSessionById(
     educationTerm: EducationTermModel,
@@ -44,13 +54,14 @@ export interface IEducationSessionDomainService {
   updateEducationSession(
     educationSession: EducationSessionModel,
     dto: UpdateEducationSessionDto,
+    inCharge: MemberModel | null,
     qr: QueryRunner,
-  ): Promise<EducationSessionModel>;
+  ): Promise<UpdateResult>;
 
   deleteEducationSession(
     educationSession: EducationSessionModel,
     qr: QueryRunner,
-  ): Promise<string>;
+  ): Promise<void>;
 
   deleteEducationSessionCascade(
     educationTerm: EducationTermModel,

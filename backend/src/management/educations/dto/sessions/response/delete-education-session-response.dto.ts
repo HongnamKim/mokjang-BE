@@ -2,13 +2,13 @@ import { BaseDeleteResponseDto } from '../../../../../common/dto/reponse/base-de
 
 export class DeleteSessionResponseDto extends BaseDeleteResponseDto {
   constructor(
-    timestamp: Date,
-    id: number,
-    educationName: string,
-    educationTerm: number,
-    educationSession: number,
-    sessionName: string,
-    success: boolean,
+    public readonly timestamp: Date,
+    public readonly id: number,
+    public readonly educationName: string,
+    public readonly educationTerm: number,
+    public readonly educationSession: number,
+    public readonly sessionName: string,
+    public readonly success: boolean,
   ) {
     super(timestamp, id, success);
   }

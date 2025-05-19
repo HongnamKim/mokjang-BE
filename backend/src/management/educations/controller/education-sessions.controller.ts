@@ -7,12 +7,13 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
-import { UpdateEducationSessionDto } from '../dto/sessions/update-education-session.dto';
+import { UpdateEducationSessionDto } from '../dto/sessions/request/update-education-session.dto';
 import { EducationSessionService } from '../service/educaiton-session.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -22,6 +23,7 @@ import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service
 import { AuthType } from '../../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../../auth/type/jwt';
 import { Token } from '../../../auth/decorator/jwt.decorator';
+import { GetEducationSessionDto } from '../dto/sessions/request/get-education-session.dto';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
@@ -36,11 +38,13 @@ export class EducationSessionsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Query() dto: GetEducationSessionDto,
   ) {
     return this.educationSessionsService.getEducationSessions(
       churchId,
       educationId,
       educationTermId,
+      dto,
     );
   }
 

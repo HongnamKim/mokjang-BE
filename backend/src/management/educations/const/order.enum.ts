@@ -10,6 +10,12 @@ export enum EducationTermOrderEnum {
   updatedAt = 'updatedAt',
 }
 
+export enum EducationSessionOrderEnum {
+  session = 'session',
+  createdAt = 'createdAt',
+  updatedAt = 'updatedAt',
+}
+
 export enum EducationEnrollmentOrderEnum {
   memberId = 'memberId',
   status = 'status',

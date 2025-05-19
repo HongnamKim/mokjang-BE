@@ -41,6 +41,8 @@ export const EducationSessionException = {
   INVALID_IN_CHARGE_ROLE:
     '관리자 권한의 교인만 교육 회차의 담당자로 지정할 수 있습니다.',
   EXCEED_MAX_SESSION_NUMBER: `최대 교육 회차를 초과했습니다. (최대 ${EducationConstraints.MAX_SESSION_NUMBER}회 생성 가능)`,
+  INVALID_START_DATE: '회차 시작일은 종료일보다 뒤일 수 없습니다.',
+  INVALID_END_DATE: '회차 종료일은 시작일보다 앞설 수 없습니다.',
 };
 
 export const SessionAttendanceException = {
