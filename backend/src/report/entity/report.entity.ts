@@ -5,12 +5,12 @@ import { Column, Entity, Index, ManyToOne, TableInheritance } from 'typeorm';
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'reportType' } })
 export abstract class ReportModel extends BaseModel {
-  @Index()
+  /*@Index()
   @Column({ nullable: true })
   senderId: number;
 
   @ManyToOne(() => MemberModel)
-  sender: MemberModel;
+  sender: MemberModel;*/
 
   @Index()
   @Column()
@@ -19,7 +19,7 @@ export abstract class ReportModel extends BaseModel {
   @ManyToOne(() => MemberModel)
   receiver: MemberModel;
 
-  @Column({ type: 'timestamp', default: new Date() })
+  @Column({ type: 'timestamptz', default: new Date() })
   reportedAt: Date;
 
   @Column({ default: false })

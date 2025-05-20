@@ -18,7 +18,7 @@ export interface ITaskReportDomainService {
 
   createTaskReports(
     task: TaskModel,
-    sender: MemberModel,
+    //sender: MemberModel,
     receivers: MemberModel[],
     qr: QueryRunner,
   ): Promise<TaskReportModel[]>;
