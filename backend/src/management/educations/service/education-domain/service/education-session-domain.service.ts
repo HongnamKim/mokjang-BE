@@ -135,10 +135,19 @@ export class EducationSessionDomainService
       relations: {
         inCharge: MemberSummarizedRelation,
         creator: MemberSummarizedRelation,
+        reports: {
+          receiver: MemberSummarizedRelation,
+        },
       },
       select: {
         inCharge: MemberSummarizedSelect,
         creator: MemberSummarizedSelect,
+        reports: {
+          id: true,
+          isRead: true,
+          isConfirmed: true,
+          receiver: MemberSummarizedSelect,
+        },
       },
     });
 

@@ -4,6 +4,8 @@ import { SessionAttendanceModel } from './session-attendance.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { EducationSessionStatus } from '../const/education-status.enum';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { EducationSessionReportModel } from '../../../report/entity/education-session-report.entity';
+import { MAX_RECEIVER_COUNT } from '../../../report/const/report.constraints';
 
 @Entity()
 export class EducationSessionModel extends BaseModel {
@@ -62,4 +64,14 @@ export class EducationSessionModel extends BaseModel {
 
   @ManyToOne(() => MemberModel)
   creator: MemberModel;
+
+  @OneToMany(
+    () => EducationSessionReportModel,
+    (report) => report.educationSession,
+  )
+  reports: EducationSessionReportModel[];
+
+  canAddReport(newReceivers: number[] | MemberModel[]) {
+    return this.reports.length + newReceivers.length > MAX_RECEIVER_COUNT;
+  }
 }

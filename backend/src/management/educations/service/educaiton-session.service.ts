@@ -37,6 +37,10 @@ import { GetEducationSessionResponseDto } from '../dto/sessions/response/get-edu
 import { EducationSessionStatus } from '../const/education-status.enum';
 import { PatchEducationSessionResponseDto } from '../dto/sessions/response/patch-education-session-response.dto';
 import { DeleteSessionResponseDto } from '../dto/sessions/response/delete-education-session-response.dto';
+import {
+  IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
+  IEducationSessionReportDomainService,
+} from '../../../report/report-domain/interface/education-session-report-domain.service.interface';
 
 @Injectable()
 export class EducationSessionService {
@@ -56,6 +60,9 @@ export class EducationSessionService {
     private readonly educationEnrollmentsDomainService: IEducationEnrollmentsDomainService,
     @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
     private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
+
+    @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
+    private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
   ) {}
 
   private async getEducationTerm(
@@ -220,6 +227,23 @@ export class EducationSessionService {
         newSession.id,
         qr,
       );
+
+    if (dto.receiverIds.length > 0) {
+      const receiver = await this.membersDomainService.findMemberModelById(
+        church,
+        dto.receiverIds[0],
+        qr,
+        { user: true },
+      );
+
+      await this.educationSessionReportDomainService.createSingleReport(
+        education,
+        educationTerm,
+        session,
+        receiver,
+        qr,
+      );
+    }
 
     return new PostEducationSessionResponseDto(session);
   }

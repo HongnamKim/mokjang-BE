@@ -77,4 +77,13 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   })
   @IsEnum(EducationSessionStatus)
   override status: EducationSessionStatus = EducationSessionStatus.RESERVE;
+
+  @ApiProperty({
+    description: '피보고자 ID',
+    isArray: true,
+  })
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  receiverIds: number[];
 }
