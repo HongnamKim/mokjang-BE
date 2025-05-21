@@ -41,6 +41,13 @@ import {
   IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
   IEducationSessionReportDomainService,
 } from '../../../report/report-domain/interface/education-session-report-domain.service.interface';
+import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { EducationTermModel } from '../entity/education-term.entity';
+import { EducationModel } from '../entity/education.entity';
+import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
+import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
+import { EducationSessionReportException } from '../../../report/const/exception/education-session-report.exception';
 
 @Injectable()
 export class EducationSessionService {
@@ -408,5 +415,145 @@ export class EducationSessionService {
       targetSession.name,
       true,
     );
+  }
+
+  async addReportReceivers(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    educationSessionId: number,
+    dto: AddEducationSessionReportDto,
+    qr: QueryRunner,
+  ) {
+    const { church, education } = await this.getEducationInfo(
+      churchId,
+      educationId,
+      qr,
+    );
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        church,
+        education,
+        educationTermId,
+        qr,
+      );
+
+    return this.handleAddTaskReport(
+      church,
+      education,
+      educationTerm,
+      educationSessionId,
+      dto.receiverIds,
+      qr,
+    );
+  }
+
+  private async handleAddTaskReport(
+    church: ChurchModel,
+    education: EducationModel,
+    educationTerm: EducationTermModel,
+    educationSessionId: number,
+    newReceiverIds: number[],
+    qr: QueryRunner,
+  ) {
+    const newReceivers = await this.membersDomainService.findMembersById(
+      church,
+      newReceiverIds,
+      qr,
+      { user: true },
+    );
+
+    const educationSession =
+      await this.educationSessionDomainService.findEducationSessionModelById(
+        educationTerm,
+        educationSessionId,
+        qr,
+        { reports: true },
+      );
+
+    await this.educationSessionReportDomainService.createEducationSessionReports(
+      education,
+      educationTerm,
+      educationSession,
+      newReceivers,
+      qr,
+    );
+
+    return {
+      educationId: education.id,
+      educationTermId: educationTerm.id,
+      educationSessionId: educationSession.id,
+      addReceivers: newReceivers.map((receiver) => ({
+        id: receiver.id,
+        name: receiver.name,
+      })),
+      addedCount: newReceivers.length,
+    };
+  }
+
+  async deleteEducationSessionReportReceivers(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    educationSessionId: number,
+    dto: DeleteEducationSessionReportDto,
+    qr: QueryRunner,
+  ) {
+    const { church, education } = await this.getEducationInfo(
+      churchId,
+      educationId,
+      qr,
+    );
+
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        church,
+        education,
+        educationTermId,
+        qr,
+      );
+
+    const educationSession =
+      await this.educationSessionDomainService.findEducationSessionModelById(
+        educationTerm,
+        educationSessionId,
+        qr,
+        { reports: { receiver: true } },
+      );
+
+    const reports = educationSession.reports;
+    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
+
+    const notExistReceiverIds = dto.receiverIds.filter(
+      (newReceiverId) => !oldReceiverIds.has(newReceiverId),
+    );
+
+    if (notExistReceiverIds.length > 0) {
+      throw new RemoveConflictException(
+        EducationSessionReportException.NOT_EXIST_REPORTED_MEMBER,
+        notExistReceiverIds,
+      );
+    }
+
+    const deleteReports = reports.filter((report) =>
+      dto.receiverIds.includes(report.receiverId),
+    );
+
+    const result =
+      await this.educationSessionReportDomainService.deleteEducationSessionReports(
+        deleteReports,
+        qr,
+      );
+
+    return {
+      educationId: education.id,
+      educationTermId: educationTerm.id,
+      educationSessionId: educationSession.id,
+      addReceivers: deleteReports.map((report) => ({
+        id: report.receiver.id,
+        name: report.receiver.name,
+      })),
+      addedCount: result.affected,
+    };
   }
 }

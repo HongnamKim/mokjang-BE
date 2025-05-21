@@ -7,16 +7,25 @@ import {
 import { IEducationSessionReportDomainService } from '../interface/education-session-report-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationSessionReportModel } from '../../entity/education-session-report.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsOrder,
+  FindOptionsRelations,
+  QueryRunner,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationSessionReportException } from '../../const/exception/education-session-report.exception';
 import { EducationModel } from '../../../management/educations/entity/education.entity';
 import { EducationTermModel } from '../../../management/educations/entity/education-term.entity';
 import { EducationSessionModel } from '../../../management/educations/entity/education-session.entity';
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
-import { MemberException } from '../../../members/const/exception/member.exception';
 import { UserRole } from '../../../user/const/user-role.enum';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
+import { GetEducationSessionReportDto } from '../../dto/education-report/session/request/get-education-session-report.dto';
+import { EducationSessionReportDomainPaginationResultDto } from '../../dto/education-report/session/response/education-session-report-domain-pagination-result.dto';
+import { EducationSessionReportOrderEnum } from '../../const/education-session-report-order.enum';
+import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
 
 @Injectable()
 export class EducationSessionReportDomainService
@@ -52,6 +61,44 @@ export class EducationSessionReportDomainService
         EducationSessionReportException.EXCEED_RECEIVERS(),
       );
     }
+  }
+
+  async findEducationSessionReports(
+    receiver: MemberModel,
+    dto: GetEducationSessionReportDto,
+  ): Promise<EducationSessionReportDomainPaginationResultDto> {
+    const repository = this.getRepository();
+
+    const order: FindOptionsOrder<EducationSessionReportModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== EducationSessionReportOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      repository.find({
+        where: {
+          receiverId: receiver.id,
+          isRead: dto.isRead && dto.isRead,
+          isConfirmed: dto.isConfirmed && dto.isConfirmed,
+        },
+        order,
+      }),
+      repository.count({
+        where: {
+          receiverId: receiver.id,
+          isRead: dto.isRead && dto.isRead,
+          isConfirmed: dto.isConfirmed && dto.isConfirmed,
+        },
+      }),
+    ]);
+
+    return new EducationSessionReportDomainPaginationResultDto(
+      data,
+      totalCount,
+    );
   }
 
   async createSingleReport(
@@ -121,6 +168,8 @@ export class EducationSessionReportDomainService
           receiverId: receiver.id,
           reason: '이미 피보고자로 지정된 교인입니다.',
         });
+
+        continue;
       }
 
       // 피보고자의 가입 여부
@@ -129,12 +178,17 @@ export class EducationSessionReportDomainService
           receiverId: receiver.id,
           reason: '계정 가입되지 않은 교인입니다.',
         });
+
+        continue;
       }
 
       if (!receiver.user) {
-        throw new InternalServerErrorException(MemberException.USER_ERROR);
+        failed.push({
+          receiverId: receiver.id,
+          reason: '계정 가입되지 않은 교인',
+        });
+        continue;
       }
-
       if (
         receiver.user.role !== UserRole.mainAdmin &&
         receiver.user.role !== UserRole.manager
@@ -165,6 +219,29 @@ export class EducationSessionReportDomainService
     return repository.save(reports);
   }
 
+  async findEducationSessionReportModelById(
+    receiver: MemberModel,
+    reportId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationSessionReportModel>,
+  ): Promise<EducationSessionReportModel> {
+    const repository = this.getRepository(qr);
+
+    const report = await repository.findOne({
+      where: {
+        receiverId: receiver.id,
+        id: reportId,
+      },
+      relations: relationOptions,
+    });
+
+    if (!report) {
+      throw new NotFoundException(EducationSessionReportException.NOT_FOUND);
+    }
+
+    return report;
+  }
+
   async findEducationSessionReportById(
     receiver: MemberModel,
     reportId: number,
@@ -191,5 +268,41 @@ export class EducationSessionReportDomainService
     }
 
     return report;
+  }
+
+  async updateEducationSessionReport(
+    targetReport: EducationSessionReportModel,
+    dto: UpdateEducationSessionReportDto,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: targetReport.id,
+      },
+      {
+        ...dto,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationSessionReportException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  deleteEducationSessionReports(
+    deleteReports: EducationSessionReportModel[],
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const reportIds = deleteReports.map((r) => r.id);
+
+    return repository.softDelete(reportIds);
   }
 }

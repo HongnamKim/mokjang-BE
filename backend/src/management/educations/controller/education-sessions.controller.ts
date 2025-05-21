@@ -24,6 +24,8 @@ import { AuthType } from '../../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../../auth/type/jwt';
 import { Token } from '../../../auth/decorator/jwt.decorator';
 import { GetEducationSessionDto } from '../dto/sessions/request/get-education-session.dto';
+import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
+import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
@@ -128,6 +130,48 @@ export class EducationSessionsController {
       educationId,
       educationTermId,
       educationSessionId,
+      qr,
+    );
+  }
+
+  @ApiOperation({})
+  @UseInterceptors(TransactionInterceptor)
+  @Patch(':educationSessionId/add-receivers')
+  addReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
+    @Body() dto: AddEducationSessionReportDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.educationSessionsService.addReportReceivers(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      dto,
+      qr,
+    );
+  }
+
+  @ApiOperation({})
+  @UseInterceptors(TransactionInterceptor)
+  @Patch(':educationSessionId/delete-receivers')
+  deleteReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
+    @Body() dto: DeleteEducationSessionReportDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.educationSessionsService.deleteEducationSessionReportReceivers(
+      churchId,
+      educationId,
+      educationTermId,
+      educationSessionId,
+      dto,
       qr,
     );
   }
