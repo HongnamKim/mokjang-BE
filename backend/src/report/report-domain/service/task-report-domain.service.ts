@@ -52,13 +52,13 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     }
 
     if (reports.length + newReceiverIds.length > MAX_RECEIVER_COUNT) {
-      throw new ConflictException(TaskReportException.EXCEED_RECEIVERS);
+      throw new ConflictException(TaskReportException.EXCEED_RECEIVERS());
     }
   }
 
   async createTaskReports(
     task: TaskModel,
-    sender: MemberModel,
+    //sender: MemberModel,
     receivers: MemberModel[],
     qr: QueryRunner,
   ) {
@@ -99,7 +99,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     const reports = receivers.map((receiver) =>
       repository.create({
         task: task,
-        senderId: sender ? sender.id : undefined,
+        //senderId: sender ? sender.id : undefined,
         receiver,
         reportedAt: new Date(),
         isRead: false,
@@ -175,11 +175,11 @@ export class TaskReportDomainService implements ITaskReportDomainService {
         receiverId: receiver.id,
       },
       relations: {
-        sender: MemberSummarizedRelation,
+        //sender: MemberSummarizedRelation,
         task: { inCharge: MemberSummarizedRelation },
       },
       select: {
-        sender: MemberSummarizedSelect,
+        //sender: MemberSummarizedSelect,
         task: {
           title: true,
           taskStatus: true,
@@ -194,9 +194,10 @@ export class TaskReportDomainService implements ITaskReportDomainService {
       throw new NotFoundException(TaskReportException.NOT_FOUND);
     }
 
-    checkIsRead && (report.isRead = true);
-
-    checkIsRead && repository.save(report);
+    if (checkIsRead) {
+      report.isRead = true;
+      await repository.save(report);
+    }
 
     return report;
   }

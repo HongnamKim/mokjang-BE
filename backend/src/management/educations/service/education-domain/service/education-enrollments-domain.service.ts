@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EducationEnrollmentModel } from '../../../entity/education-enrollment.entity';
 import {
   FindOptionsRelations,
+  ILike,
   In,
   IsNull,
   QueryRunner,
@@ -84,6 +85,9 @@ export class EducationEnrollmentsDomainService
       educationEnrollmentsRepository.find({
         where: {
           educationTermId: educationTerm.id,
+          member: {
+            name: dto.memberName && ILike(`%${dto.memberName}%`),
+          },
         },
         relations: {
           member: DefaultMemberRelationOptions,
@@ -104,6 +108,9 @@ export class EducationEnrollmentsDomainService
       educationEnrollmentsRepository.count({
         where: {
           educationTermId: educationTerm.id,
+          member: {
+            name: dto.memberName && ILike(`%${dto.memberName}%`),
+          },
         },
       }),
     ]);

@@ -15,6 +15,8 @@ import {
 import {
   FindOptionsRelations,
   FindOptionsSelect,
+  ILike,
+  In,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -34,12 +36,15 @@ import {
 } from '../../../../../members/const/member-find-options.const';
 import { UserRole } from '../../../../../user/const/user-role.enum';
 import { MemberException } from '../../../../../members/const/exception/member.exception';
+import { EducationSessionModel } from '../../../entity/education-session.entity';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
   constructor(
     @InjectRepository(EducationTermModel)
     private readonly educationTermsRepository: Repository<EducationTermModel>,
+    @InjectRepository(EducationSessionModel)
+    private readonly educationSessionsRepository: Repository<EducationSessionModel>,
   ) {}
 
   private CountColumnMap = {
@@ -54,6 +59,12 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return qr
       ? qr.manager.getRepository(EducationTermModel)
       : this.educationTermsRepository;
+  }
+
+  private getEducationSessionRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository(EducationSessionModel)
+      : this.educationSessionsRepository;
   }
 
   private assertValidateInChargeMember(member: MemberModel) {
@@ -72,7 +83,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       member.user.role !== UserRole.mainAdmin
     ) {
       throw new ConflictException(
-        EducationTermException.INVALID_IN_CHARGE_MEMBER,
+        EducationTermException.INVALID_IN_CHARGE_ROLE,
       );
     }
   }
@@ -94,6 +105,24 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return !!educationTerm;
   }
 
+  private async getTermIdsBySession(
+    dto: GetEducationTermDto,
+    qr?: QueryRunner,
+  ) {
+    const educationSessionRepository = this.getEducationSessionRepository(qr);
+
+    const sessions = await educationSessionRepository.find({
+      where: {
+        inChargeId: dto.sessionInChargeId,
+        name: dto.sessionName && ILike(`%${dto.sessionName}%`),
+      },
+    });
+
+    return Array.from(
+      new Set(sessions.map((session) => session.educationTermId)),
+    );
+  }
+
   async findEducationTerms(
     church: ChurchModel,
     education: EducationModel,
@@ -112,13 +141,17 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       order.createdAt = 'desc';
     }
 
+    const termIds = await this.getTermIdsBySession(dto, qr);
+
     const [result, totalCount] = await Promise.all([
       educationTermsRepository.find({
         where: {
+          id: termIds ? In(termIds) : undefined,
           education: {
             churchId: church.id,
           },
           educationId: education.id,
+          inChargeId: dto.termInChargeId,
         },
         order,
         select: {
@@ -149,10 +182,12 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       }),
       educationTermsRepository.count({
         where: {
+          id: termIds ? In(termIds) : undefined,
           education: {
             churchId: church.id,
           },
           educationId: education.id,
+          inChargeId: dto.termInChargeId,
         },
       }),
     ]);

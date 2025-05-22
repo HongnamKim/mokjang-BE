@@ -243,7 +243,7 @@ export class TaskService {
       taskId,
       TaskTreeEnum.none,
       qr,
-      { inCharge: true, reports: true },
+      { /* inCharge: true, */ reports: true },
     );
 
     const newReceivers = await this.membersDomainService.findMembersById(
@@ -255,7 +255,7 @@ export class TaskService {
 
     await this.taskReportDomainService.createTaskReports(
       task,
-      task.inCharge,
+      //task.inCharge,
       newReceivers,
       qr,
     );

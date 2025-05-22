@@ -1,6 +1,15 @@
-import { IsEnum, IsIn, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { EducationEnrollmentOrderEnum } from '../../const/order.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class GetEducationEnrollmentDto {
   @ApiProperty({
@@ -41,4 +50,13 @@ export class GetEducationEnrollmentDto {
   @IsOptional()
   @IsIn(['asc', 'desc', 'ASC', 'DESC'])
   orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'asc';
+
+  @ApiProperty({
+    description: '수강 교인 이름',
+    required: false,
+  })
+  @IsOptionalNotNull()
+  @IsString()
+  @IsNotEmpty()
+  memberName?: string;
 }
