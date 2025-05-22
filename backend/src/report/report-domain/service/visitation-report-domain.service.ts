@@ -33,7 +33,7 @@ export class VisitationReportDomainService
 
   createVisitationReport(
     visitation: VisitationMetaModel,
-    sender: MemberModel,
+    //sender: MemberModel,
     receiver: MemberModel,
     qr: QueryRunner,
   ) {
@@ -41,7 +41,7 @@ export class VisitationReportDomainService
 
     return repository.save({
       visitation,
-      senderId: sender ? sender.id : undefined,
+      //senderId: sender ? sender.id : undefined,
       receiver,
       reportedAt: new Date(),
       isRead: false,
@@ -116,11 +116,11 @@ export class VisitationReportDomainService
         id: reportId,
       },
       relations: {
-        sender: {
+        /*sender: {
           officer: true,
           group: true,
           groupRole: true,
-        },
+        },*/
         visitation: {
           instructor: true,
           members: true,
@@ -132,9 +132,14 @@ export class VisitationReportDomainService
       throw new NotFoundException(VisitationReportException.NOT_FOUND);
     }
 
-    isRead && (report.isRead = true);
+    if (isRead) {
+      report.isRead = true;
+      await repository.save(report);
+    }
 
-    isRead && repository.save(report);
+    /*isRead && (report.isRead = true);
+
+    isRead && repository.save(report);*/
 
     return report;
   }

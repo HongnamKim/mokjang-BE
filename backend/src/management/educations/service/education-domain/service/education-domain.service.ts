@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationModel } from '../../../entity/education.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  ILike,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationDto } from '../../../dto/education/get-education.dto';
 import { EducationOrderEnum } from '../../../const/order.enum';
@@ -72,6 +78,7 @@ export class EducationDomainService implements IEducationDomainService {
       educationsRepository.find({
         where: {
           churchId: church.id,
+          name: dto.name && ILike(`%${dto.name}%`),
         },
         select: {
           id: true,
@@ -89,6 +96,7 @@ export class EducationDomainService implements IEducationDomainService {
       educationsRepository.count({
         where: {
           churchId: church.id,
+          name: dto.name && ILike(`%${dto.name}%`),
         },
       }),
     ]);

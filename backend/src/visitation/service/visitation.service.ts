@@ -165,7 +165,7 @@ export class VisitationService {
     if (dto.receiverIds && dto.receiverIds.length > 0) {
       await this.createVisitationReports(
         church,
-        instructor,
+        //instructor,
         dto.receiverIds,
         visitationMeta,
         qr,
@@ -177,7 +177,7 @@ export class VisitationService {
 
   private async createVisitationReports(
     church: ChurchModel,
-    sender: MemberModel,
+    //sender: MemberModel,
     receiverIds: number[],
     visitationMeta: VisitationMetaModel,
     qr: QueryRunner,
@@ -201,7 +201,7 @@ export class VisitationService {
 
         return this.visitationReportDomainService.createVisitationReport(
           visitationMeta,
-          sender,
+          //sender,
           receiver,
           qr,
         );
@@ -601,7 +601,7 @@ export class VisitationService {
         church,
         visitationId,
         qr,
-        { instructor: true, reports: true },
+        { /*instructor: true,*/ reports: true },
       );
 
     const reports = visitation.reports;
@@ -641,7 +641,7 @@ export class VisitationService {
       newReceivers.map((receiver) => {
         return this.visitationReportDomainService.createVisitationReport(
           visitation,
-          visitation.instructor,
+          //visitation.instructor,
           receiver,
           qr,
         );

@@ -18,7 +18,7 @@ export interface IVisitationReportDomainService {
 
   createVisitationReport(
     visitation: VisitationMetaModel,
-    sender: MemberModel,
+    //sender: MemberModel,
     receiver: MemberModel,
     qr: QueryRunner,
   ): Promise<VisitationReportModel>;

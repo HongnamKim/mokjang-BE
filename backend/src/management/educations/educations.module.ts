@@ -14,6 +14,7 @@ import { MemberEducationEventHandler } from './service/member-education-event-ha
 import { EducationDomainModule } from './service/education-domain/education-domain.module';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
+import { EducationSessionReportDomainModule } from '../../report/report-domain/education-session-report-domain.module';
 
 @Module({
   imports: [
@@ -27,6 +28,8 @@ import { MembersDomainModule } from '../../members/member-domain/members-domain.
     MembersDomainModule,
     ChurchesDomainModule,
     EducationDomainModule,
+
+    EducationSessionReportDomainModule,
   ],
   controllers: [
     EducationsController,
