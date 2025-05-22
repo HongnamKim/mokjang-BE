@@ -2,19 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-naver';
 import { ConfigService } from '@nestjs/config';
-import { OauthDto } from '../dto/auth/oauth.dto';
-import { NAVER_OAUTH } from '../const/env.const';
+import { OauthDto } from '../dto/oauth.dto';
+import { ENV_VARIABLE_KEY } from '../../common/const/env.const';
+//import { NAVER_OAUTH } from '../const/env.const';
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
   constructor(private readonly configService: ConfigService) {
     super({
-      clientID: configService.getOrThrow<string>(NAVER_OAUTH.NAVER_CLIENT_ID),
+      clientID: configService.getOrThrow<string>(
+        ENV_VARIABLE_KEY.NAVER_CLIENT_ID,
+      ),
       clientSecret: configService.getOrThrow<string>(
-        NAVER_OAUTH.NAVER_CLIENT_SECRET,
+        ENV_VARIABLE_KEY.NAVER_CLIENT_SECRET,
       ),
       callbackURL: configService.getOrThrow<string>(
-        NAVER_OAUTH.NAVER_CALLBACK_URL,
+        ENV_VARIABLE_KEY.NAVER_CALLBACK_URL,
       ),
     });
   }

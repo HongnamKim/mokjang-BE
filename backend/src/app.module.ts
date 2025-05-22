@@ -2,37 +2,54 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { ChurchesModule } from './churches/churches.module';
 import { ChurchModel } from './churches/entity/church.entity';
-import { RequestInfoModel } from './churches/request-info/entity/request-info.entity';
-import { MemberModel } from './churches/members/entity/member.entity';
-import { RequestInfoModule } from './churches/request-info/request-info.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MembersModule } from './churches/members/members.module';
-import { MembersManagementModule } from './churches/members-management/members-management.module';
-import { OfficerModel } from './churches/management/entity/officer/officer.entity';
-import { MinistryModel } from './churches/management/entity/ministry/ministry.entity';
-import { GroupModel } from './churches/management/entity/group/group.entity';
-import { ManagementModule } from './churches/management/management.module';
-import { FamilyModel } from './churches/members/entity/family.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
-import { UserModel } from './auth/entity/user.entity';
-import { GroupRoleModel } from './churches/management/entity/group/group-role.entity';
-import { GroupHistoryModel } from './churches/members-management/entity/group-history.entity';
-import { EducationModel } from './churches/management/entity/education/education.entity';
-import { EducationTermModel } from './churches/management/entity/education/education-term.entity';
-import { EducationSessionModel } from './churches/management/entity/education/education-session.entity';
-import { SessionAttendanceModel } from './churches/management/entity/education/session-attendance.entity';
-import { EducationEnrollmentModel } from './churches/management/entity/education/education-enrollment.entity';
-import { MinistryGroupModel } from './churches/management/entity/ministry/ministry-group.entity';
-import { MinistryHistoryModel } from './churches/members-management/entity/ministry-history.entity';
-import { OfficerHistoryModel } from './churches/members-management/entity/officer-history.entity';
+import { UserModel } from './user/entity/user.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
+import { UserModule } from './user/user.module';
+import { ChurchesModule } from './churches/churches.module';
+import { EducationModel } from './management/educations/entity/education.entity';
+import { EducationTermModel } from './management/educations/entity/education-term.entity';
+import { EducationSessionModel } from './management/educations/entity/education-session.entity';
+import { SessionAttendanceModel } from './management/educations/entity/session-attendance.entity';
+import { EducationEnrollmentModel } from './management/educations/entity/education-enrollment.entity';
+import { OfficerModel } from './management/officers/entity/officer.entity';
+import { MinistryModel } from './management/ministries/entity/ministry.entity';
+import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
+import { GroupModel } from './management/groups/entity/group.entity';
+import { GroupRoleModel } from './management/groups/entity/group-role.entity';
+import { ManagementModule } from './management/management.module';
+import { MemberModel } from './members/entity/member.entity';
+import { FamilyRelationModel } from './family-relation/entity/family-relation.entity';
+import { MembersModule } from './members/members.module';
+import { MembersDomainModule } from './members/member-domain/members-domain.module';
+import { ChurchesDomainModule } from './churches/churches-domain/churches-domain.module';
+import { FamilyRelationModule } from './family-relation/family-relation.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ENV_VARIABLE_KEY } from './common/const/env.const';
+import { RequestInfoModel } from './request-info/entity/request-info.entity';
+import { RequestInfoModule } from './request-info/request-info.module';
+import { OfficerHistoryModel } from './member-history/entity/officer-history.entity';
+import { MinistryHistoryModel } from './member-history/entity/ministry-history.entity';
+import { GroupHistoryModel } from './member-history/entity/group-history.entity';
+import { MemberHistoryModule } from './member-history/member-history.module';
+import { VisitationModule } from './visitation/visitation.module';
+import { VisitationMetaModel } from './visitation/entity/visitation-meta.entity';
+import { VisitationDetailModel } from './visitation/entity/visitation-detail.entity';
+import { ReportModule } from './report/report.module';
+import { ReportModel } from './report/entity/report.entity';
+import { VisitationReportModel } from './report/entity/visitation-report.entity';
+import { ChurchJoinRequestModel } from './churches/entity/church-join-request.entity';
+import { ChurchJoinRequestStatModel } from './churches/entity/church-join-request-stat.entity';
+import { TaskModule } from './task/task.module';
+import { TaskModel } from './task/entity/task.entity';
+import { TaskReportModel } from './report/entity/task-report.entity';
+import { EducationSessionReportModel } from './report/entity/education-session-report.entity';
 
 @Module({
   imports: [
@@ -40,6 +57,8 @@ import { DummyDataService } from './dummy-data.service';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
+        // 배포환경
+        NODE_ENV: Joi.string().required(),
         // DB
         DB_TYPE: Joi.string().valid('postgres').required(),
         DB_HOST: Joi.string().required(),
@@ -56,6 +75,8 @@ import { DummyDataService } from './dummy-data.service';
         PROTOCOL: Joi.string().required(),
         HOST: Joi.string().required(),
         PORT: Joi.number().required(),
+        CLIENT_HOST: Joi.string().required(),
+        CLIENT_PORT: Joi.number().required(),
         // 메시지 API
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
@@ -100,10 +121,13 @@ import { DummyDataService } from './dummy-data.service';
           UserModel,
           // 교회 관련 엔티티
           ChurchModel,
+          // 교회 가입 엔티티
+          ChurchJoinRequestModel,
+          ChurchJoinRequestStatModel,
           // 교인 관련 엔티티
           RequestInfoModel,
           MemberModel,
-          FamilyModel,
+          FamilyRelationModel,
           // 교육 관련 엔티티
           EducationModel,
           EducationTermModel,
@@ -122,17 +146,43 @@ import { DummyDataService } from './dummy-data.service';
           GroupModel,
           GroupRoleModel,
           GroupHistoryModel,
+          // 심방 관련 엔티티
+          VisitationMetaModel,
+          VisitationDetailModel,
+          // 보고 관련 엔티티
+          ReportModel,
+          VisitationReportModel,
+          TaskReportModel,
+          EducationSessionReportModel,
+          // 업무 관련 엔티티
+          TaskModel,
         ],
         synchronize: false,
       }),
       inject: [ConfigService],
     }),
+    JwtModule.registerAsync({
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.getOrThrow(ENV_VARIABLE_KEY.JWT_SECRET),
+      }),
+      inject: [ConfigService],
+    }),
+    //CommonModule,
     AuthModule,
+    UserModule,
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
-    MembersManagementModule,
+    FamilyRelationModule,
+    MemberHistoryModule,
+    ReportModule,
     ManagementModule,
+    VisitationModule,
+    TaskModule,
+
+    ChurchesDomainModule,
+    MembersDomainModule,
   ],
   controllers: [AppController],
   providers: [

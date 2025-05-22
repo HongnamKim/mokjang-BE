@@ -1,32 +1,30 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  OneToMany,
-  OneToOne,
-  Unique,
-} from 'typeorm';
-import { RequestInfoModel } from '../request-info/entity/request-info.entity';
-import { MemberModel } from '../members/entity/member.entity';
-import { GroupModel } from '../management/entity/group/group.entity';
-import { OfficerModel } from '../management/entity/officer/officer.entity';
-import { MinistryModel } from '../management/entity/ministry/ministry.entity';
-import { UserModel } from '../../auth/entity/user.entity';
+import { Column, Entity, OneToMany, Unique } from 'typeorm';
+import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
-import { GroupRoleModel } from '../management/entity/group/group-role.entity';
-import { EducationModel } from '../management/entity/education/education.entity';
-import { MinistryGroupModel } from '../management/entity/ministry/ministry-group.entity';
+import { GroupModel } from '../../management/groups/entity/group.entity';
+import { EducationModel } from '../../management/educations/entity/education.entity';
+import { OfficerModel } from '../../management/officers/entity/officer.entity';
+import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
+import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
+import { MemberModel } from '../../members/entity/member.entity';
+import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
+import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
+import { ChurchJoinRequestModel } from './church-join-request.entity';
+import { Exclude } from 'class-transformer';
+import { TaskModel } from '../../task/entity/task.entity';
 
 @Entity()
-//@Unique(['name', 'identifyNumber'])
+@Unique(['joinCode'])
 export class ChurchModel extends BaseModel {
   @Column()
   name: string;
 
   @Column({ nullable: true })
   identifyNumber: string;
+
+  @Column({ nullable: true, length: 20 })
+  joinCode: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -43,22 +41,14 @@ export class ChurchModel extends BaseModel {
   @Column({ enum: MemberSize, nullable: true })
   memberSize: MemberSize;
 
-  @Index()
-  @Column({ nullable: true })
-  mainAdminId: number;
+  @Column({ default: 0 })
+  memberCount: number;
 
-  @JoinColumn()
-  @OneToOne(() => UserModel, (user) => user.adminChurch)
-  mainAdmin: UserModel;
-
-  @OneToMany(() => UserModel, (user) => user.managingChurch)
-  subAdmins: UserModel[];
+  @OneToMany(() => UserModel, (user) => user.church)
+  users: UserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];
-
-  @OneToMany(() => GroupRoleModel, (groupRole) => groupRole.church)
-  groupRoles: GroupRoleModel[];
 
   @OneToMany(() => EducationModel, (education) => education.church)
   educations: EducationModel[];
@@ -73,14 +63,29 @@ export class ChurchModel extends BaseModel {
   ministries: MinistryModel[];
 
   @Column({ default: 0 })
+  @Exclude()
   dailyRequestAttempts: number;
 
   @Column({ default: new Date('1900-01-01'), type: 'timestamptz' })
+  @Exclude()
   lastRequestDate: Date;
 
   @OneToMany(() => RequestInfoModel, (requestInfo) => requestInfo.church)
   requestInfos: RequestInfoModel[];
 
+  // 교인
   @OneToMany(() => MemberModel, (member) => member.church)
   members: MemberModel[];
+
+  // 계정 가입
+  @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.church)
+  joinRequests: ChurchJoinRequestModel[];
+
+  // 심방
+  @OneToMany(() => VisitationMetaModel, (visitingMeta) => visitingMeta.church)
+  visitations: VisitationMetaModel[];
+
+  // 업무
+  @OneToMany(() => TaskModel, (task) => task.church)
+  tasks: TaskModel[];
 }
