@@ -7,7 +7,7 @@ import {
   BaseModelColumns,
 } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { EducationStatus } from '../const/education-status.enum';
+import { EducationTermStatus } from '../const/education-status.enum';
 import { EducationConstraints } from '../const/education-constraints.const';
 
 @Entity()
@@ -35,8 +35,8 @@ export class EducationTermModel extends BaseModel {
   @Index()
   term: number; // 기수
 
-  @Column({ default: EducationStatus.RESERVE })
-  status: EducationStatus;
+  @Column({ default: EducationTermStatus.RESERVE })
+  status: EducationTermStatus;
 
   @Column({ comment: '총 교육 회차', default: 0 })
   numberOfSessions: number; // 총 교육 회차
