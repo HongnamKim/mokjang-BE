@@ -10,7 +10,7 @@ import {
 import { IsAfterDate } from '../../../../../common/decorator/validator/is-after-date.decorator';
 import { TransformStartDate } from '../../../../../member-history/decorator/transform-start-date.decorator';
 import { TransformEndDate } from '../../../../../member-history/decorator/transform-end-date.decorator';
-import { EducationStatus } from '../../../const/education-status.enum';
+import { EducationTermStatus } from '../../../const/education-status.enum';
 import { PlainTextMaxLength } from '../../../../../common/decorator/validator/plain-text-max-length.validator';
 import { SanitizeDto } from '../../../../../common/decorator/sanitize-target.decorator';
 import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
@@ -38,12 +38,12 @@ export class UpdateEducationTermDto {
 
   @ApiProperty({
     description: '교육 진행 상태',
-    enum: EducationStatus,
+    enum: EducationTermStatus,
     required: false,
   })
   @IsOptional()
-  @IsEnum(EducationStatus)
-  status: EducationStatus;
+  @IsEnum(EducationTermStatus)
+  status: EducationTermStatus;
 
   @ApiProperty({
     description: '교육회차 시작일',
