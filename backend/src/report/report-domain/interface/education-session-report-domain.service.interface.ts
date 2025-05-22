@@ -32,13 +32,13 @@ export interface IEducationSessionReportDomainService {
     relationOptions?: FindOptionsRelations<EducationSessionReportModel>,
   ): Promise<EducationSessionReportModel>;
 
-  createSingleReport(
+  /*createSingleReport(
     education: EducationModel,
     educationTerm: EducationTermModel,
     educationSession: EducationSessionModel,
     receiver: MemberModel,
     qr: QueryRunner,
-  ): Promise<EducationSessionReportModel>;
+  ): Promise<EducationSessionReportModel>;*/
 
   createEducationSessionReports(
     education: EducationModel,
@@ -50,6 +50,12 @@ export interface IEducationSessionReportDomainService {
 
   deleteEducationSessionReports(
     deleteReports: EducationSessionReportModel[],
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  delete(
+    educationSessionId: number,
+    deleteReceiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 

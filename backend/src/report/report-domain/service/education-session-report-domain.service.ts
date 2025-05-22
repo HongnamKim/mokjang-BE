@@ -26,6 +26,8 @@ import { GetEducationSessionReportDto } from '../../dto/education-report/session
 import { EducationSessionReportDomainPaginationResultDto } from '../../dto/education-report/session/response/education-session-report-domain-pagination-result.dto';
 import { EducationSessionReportOrderEnum } from '../../const/education-session-report-order.enum';
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
+import { MemberException } from '../../../members/const/exception/member.exception';
+import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
 
 @Injectable()
 export class EducationSessionReportDomainService
@@ -101,7 +103,7 @@ export class EducationSessionReportDomainService
     );
   }
 
-  async createSingleReport(
+  /*async createSingleReport(
     education: EducationModel,
     educationTerm: EducationTermModel,
     educationSession: EducationSessionModel,
@@ -113,7 +115,7 @@ export class EducationSessionReportDomainService
     this.assertCanAddReceivers(educationSession, [receiver]);
 
     if (!receiver.userId) {
-      throw new ConflictException('계정 가입되지 않음');
+      throw new UnauthorizedException(MemberException.NOT_LINKED_MEMBER);
     } else if (!receiver.user) {
       throw new InternalServerErrorException('계정 정보 불러오기 실패');
     } else if (
@@ -142,7 +144,7 @@ export class EducationSessionReportDomainService
       educationTermId: educationTerm.id,
       educationId: education.id,
     });
-  }
+  }*/
 
   async createEducationSessionReports(
     education: EducationModel,
@@ -151,7 +153,9 @@ export class EducationSessionReportDomainService
     receivers: MemberModel[],
     qr: QueryRunner,
   ) {
-    educationSession.canAddReport(receivers);
+    //educationSession.canAddReport(receivers);
+
+    this.assertCanAddReceivers(educationSession, receivers);
 
     const repository = this.getRepository(qr);
 
@@ -166,7 +170,7 @@ export class EducationSessionReportDomainService
       if (oldReceiverIds.has(receiver.id)) {
         failed.push({
           receiverId: receiver.id,
-          reason: '이미 피보고자로 지정된 교인입니다.',
+          reason: EducationSessionReportException.ALREADY_REPORTED_MEMBER,
         });
 
         continue;
@@ -176,7 +180,7 @@ export class EducationSessionReportDomainService
       if (!receiver.userId) {
         failed.push({
           receiverId: receiver.id,
-          reason: '계정 가입되지 않은 교인입니다.',
+          reason: MemberException.NOT_LINKED_MEMBER,
         });
 
         continue;
@@ -185,7 +189,7 @@ export class EducationSessionReportDomainService
       if (!receiver.user) {
         failed.push({
           receiverId: receiver.id,
-          reason: '계정 가입되지 않은 교인',
+          reason: MemberException.NOT_LINKED_MEMBER,
         });
         continue;
       }
@@ -195,13 +199,17 @@ export class EducationSessionReportDomainService
       ) {
         failed.push({
           receiverId: receiver.id,
-          reason: '관리자 권한의 교인만 피보고자로 등록 가능',
+          reason:
+            EducationSessionReportException.INVALID_RECEIVER_AUTHORIZATION,
         });
       }
     }
 
     if (failed.length > 0) {
-      throw new AddConflictExceptionV2('피보고자 추가 실패', failed);
+      throw new AddConflictExceptionV2(
+        EducationSessionReportException.FAIL_ADD_REPORT_RECEIVERS,
+        failed,
+      );
     }
 
     const reports = receivers.map((receiver) =>
@@ -304,5 +312,39 @@ export class EducationSessionReportDomainService
     const reportIds = deleteReports.map((r) => r.id);
 
     return repository.softDelete(reportIds);
+  }
+
+  async delete(
+    educationSessionId: number,
+    deleteReceiverIds: number[],
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const reports = await repository.find({
+      where: {
+        educationSessionId,
+      },
+    });
+
+    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
+    const notExistReceiverIds = deleteReceiverIds.filter(
+      (id) => !oldReceiverIds.has(id),
+    );
+
+    if (notExistReceiverIds.length > 0) {
+      throw new RemoveConflictException(
+        EducationSessionReportException.NOT_EXIST_REPORTED_MEMBER,
+        notExistReceiverIds,
+      );
+    }
+
+    const deleteReports = reports.filter((report) =>
+      deleteReceiverIds.includes(report.receiverId),
+    );
+
+    const deleteReportIds = deleteReports.map((report) => report.id);
+
+    return repository.softDelete(deleteReportIds);
   }
 }

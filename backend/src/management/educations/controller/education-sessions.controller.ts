@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { UpdateEducationSessionDto } from '../dto/sessions/request/update-education-session.dto';
 import { EducationSessionService } from '../service/educaiton-session.service';
@@ -26,6 +26,15 @@ import { Token } from '../../../auth/decorator/jwt.decorator';
 import { GetEducationSessionDto } from '../dto/sessions/request/get-education-session.dto';
 import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
 import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
+import {
+  ApiAddReportReceivers,
+  ApiDeleteEducationSession,
+  ApiDeleteReportReceivers,
+  ApiGetEducationSessionById,
+  ApiGetEducationSessions,
+  ApiPatchEducationSession,
+  ApiPostEducationSessions,
+} from '../const/swagger/education-session.swagger';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
@@ -34,7 +43,7 @@ export class EducationSessionsController {
     private readonly educationSessionsService: EducationSessionService,
   ) {}
 
-  @ApiOperation({ summary: '교육 회차 조회' })
+  @ApiGetEducationSessions()
   @Get()
   getEducationSessions(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -50,7 +59,7 @@ export class EducationSessionsController {
     );
   }
 
-  @ApiOperation({ summary: '교육 회차 생성' })
+  @ApiPostEducationSessions()
   @Post()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -74,7 +83,7 @@ export class EducationSessionsController {
     );
   }
 
-  @ApiOperation({ summary: '특정 교육 회차 조회' })
+  @ApiGetEducationSessionById()
   @Get(':educationSessionId')
   getEducationSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -90,7 +99,7 @@ export class EducationSessionsController {
     );
   }
 
-  @ApiOperation({ summary: '교육 진행 내용 업데이트' })
+  @ApiPatchEducationSession()
   @Patch(':educationSessionId')
   @UseInterceptors(TransactionInterceptor)
   patchEducationSession(
@@ -111,11 +120,7 @@ export class EducationSessionsController {
     );
   }
 
-  @ApiOperation({
-    summary: '교육 회차 삭제',
-    description:
-      '회차 삭제 시 다른 회차들의 넘버링 자동 수정, 해당 기수의 회차 개수 자동 수정',
-  })
+  @ApiDeleteEducationSession()
   @Delete(':educationSessionId')
   @UseInterceptors(TransactionInterceptor)
   deleteEducationSession(
@@ -134,7 +139,7 @@ export class EducationSessionsController {
     );
   }
 
-  @ApiOperation({})
+  @ApiAddReportReceivers()
   @UseInterceptors(TransactionInterceptor)
   @Patch(':educationSessionId/add-receivers')
   addReportReceivers(
@@ -155,7 +160,7 @@ export class EducationSessionsController {
     );
   }
 
-  @ApiOperation({})
+  @ApiDeleteReportReceivers()
   @UseInterceptors(TransactionInterceptor)
   @Patch(':educationSessionId/delete-receivers')
   deleteReportReceivers(
