@@ -46,8 +46,6 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { EducationTermModel } from '../entity/education-term.entity';
 import { EducationModel } from '../entity/education.entity';
 import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
-import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
-import { EducationSessionReportException } from '../../../report/const/exception/education-session-report.exception';
 
 @Injectable()
 export class EducationSessionService {
@@ -228,29 +226,23 @@ export class EducationSessionService {
         this.educationTermDomainService.incrementDoneCount(educationTerm, qr),
     ]);
 
+    if (dto.receiverIds && dto.receiverIds.length > 0) {
+      await this.handleAddTaskReport(
+        church,
+        education,
+        educationTerm,
+        newSession.id,
+        dto.receiverIds,
+        qr,
+      );
+    }
+
     const session =
       await this.educationSessionDomainService.findEducationSessionById(
         educationTerm,
         newSession.id,
         qr,
       );
-
-    if (dto.receiverIds.length > 0) {
-      const receiver = await this.membersDomainService.findMemberModelById(
-        church,
-        dto.receiverIds[0],
-        qr,
-        { user: true },
-      );
-
-      await this.educationSessionReportDomainService.createSingleReport(
-        education,
-        educationTerm,
-        session,
-        receiver,
-        qr,
-      );
-    }
 
     return new PostEducationSessionResponseDto(session);
   }
@@ -354,13 +346,19 @@ export class EducationSessionService {
         educationTerm,
         educationSessionId,
         qr,
-        { sessionAttendances: true },
+        { sessionAttendances: true, reports: true },
       );
 
     await Promise.all([
       // 세션 삭제
       this.educationSessionDomainService.deleteEducationSession(
         targetSession,
+        qr,
+      ),
+
+      // 세션의 보고 삭제
+      this.educationSessionReportDomainService.deleteEducationSessionReports(
+        targetSession.reports,
         qr,
       ),
 
@@ -521,7 +519,13 @@ export class EducationSessionService {
         { reports: { receiver: true } },
       );
 
-    const reports = educationSession.reports;
+    const result = await this.educationSessionReportDomainService.delete(
+      educationSession.id,
+      dto.receiverIds,
+      qr,
+    );
+
+    /*const reports = educationSession.reports;
     const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
 
     const notExistReceiverIds = dto.receiverIds.filter(
@@ -543,16 +547,18 @@ export class EducationSessionService {
       await this.educationSessionReportDomainService.deleteEducationSessionReports(
         deleteReports,
         qr,
-      );
+      );*/
 
     return {
       educationId: education.id,
       educationTermId: educationTerm.id,
       educationSessionId: educationSession.id,
-      addReceivers: deleteReports.map((report) => ({
-        id: report.receiver.id,
-        name: report.receiver.name,
-      })),
+      addReceivers: educationSession.reports
+        .filter((report) => dto.receiverIds.includes(report.receiverId))
+        .map((report) => ({
+          id: report.receiver.id,
+          name: report.receiver.name,
+        })),
       addedCount: result.affected,
     };
   }

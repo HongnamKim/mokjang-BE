@@ -12,6 +12,12 @@ import { EducationSessionReportService } from '../service/education-session-repo
 import { GetEducationSessionReportDto } from '../dto/education-report/session/request/get-education-session-report.dto';
 import { UpdateEducationSessionReportDto } from '../dto/education-report/session/request/update-education-session-report.dto';
 import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiDeleteEducationSessionReport,
+  ApiGetEducationSessionReportById,
+  ApiGetEducationSessionReports,
+  ApiPatchEducationSessionReport,
+} from '../const/swagger/education-session-report.swagger';
 
 @ApiTags('Churches:Members:Reports:Education-Sessions')
 @Controller('education-session')
@@ -20,6 +26,7 @@ export class EducationSessionReportController {
     private readonly educationSessionReportService: EducationSessionReportService,
   ) {}
 
+  @ApiGetEducationSessionReports()
   @Get()
   getEducationSessionReport(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -33,6 +40,7 @@ export class EducationSessionReportController {
     );
   }
 
+  @ApiGetEducationSessionReportById()
   @Get(':educationSessionReportId')
   getEducationSessionReportById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -46,6 +54,7 @@ export class EducationSessionReportController {
     );
   }
 
+  @ApiPatchEducationSessionReport()
   @Patch(':educationSessionReportId')
   patchEducationSessionReport(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -61,6 +70,7 @@ export class EducationSessionReportController {
     );
   }
 
+  @ApiDeleteEducationSessionReport()
   @Delete(':educationSessionReportId')
   deleteEducationSessionReport(
     @Param('churchId', ParseIntPipe) churchId: number,
