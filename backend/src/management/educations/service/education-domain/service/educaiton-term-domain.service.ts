@@ -141,7 +141,10 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       order.createdAt = 'desc';
     }
 
-    const termIds = await this.getTermIdsBySession(dto, qr);
+    const termIds =
+      dto.sessionInChargeId || dto.sessionName
+        ? await this.getTermIdsBySession(dto, qr)
+        : undefined;
 
     const [result, totalCount] = await Promise.all([
       educationTermsRepository.find({
