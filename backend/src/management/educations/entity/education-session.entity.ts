@@ -19,7 +19,7 @@ export class EducationSessionModel extends BaseModel {
   session: number; // 회차
 
   @Column({ default: '기본 제목', comment: '교육 회차명' })
-  name: string;
+  title: string;
 
   @Column({
     default: '',

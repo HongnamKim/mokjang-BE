@@ -31,7 +31,7 @@ export class UpdateEducationSessionDto {
   @RemoveSpaces()
   @IsNoSpecialChar()
   @MaxLength(50)
-  name?: string;
+  title?: string;
 
   @ApiProperty({
     description: '시작 날짜',
