@@ -5,6 +5,7 @@ import {
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { TaskReportModel } from '../entity/task-report.entity';
 import { EducationSessionReportModel } from '../entity/education-session-report.entity';
+import { VisitationReportModel } from '../entity/visitation-report.entity';
 
 export const BaseReportFindOptionsSelect = {
   id: true,
@@ -26,6 +27,52 @@ export const TaskReportsFindOptionsRelation: FindOptionsRelations<TaskReportMode
   {
     task: {
       inCharge: MemberSummarizedRelation,
+    },
+  };
+
+export const VisitationReportsFindOptionsRelation: FindOptionsRelations<VisitationReportModel> =
+  {
+    visitation: {
+      inCharge: MemberSummarizedRelation,
+    },
+  };
+
+export const VisitationReportFindOptionsRelation: FindOptionsRelations<VisitationReportModel> =
+  {
+    visitation: {
+      members: MemberSummarizedRelation,
+      inCharge: MemberSummarizedRelation,
+    },
+  };
+
+export const VisitationReportsFindOptionsSelect: FindOptionsSelect<VisitationReportModel> =
+  {
+    ...BaseReportFindOptionsSelect,
+    visitation: {
+      id: true,
+      status: true,
+      visitationMethod: true,
+      visitationType: true,
+      startDate: true,
+      endDate: true,
+      title: true,
+      inCharge: MemberSummarizedSelect,
+    },
+  };
+
+export const VisitationReportFindOptionsSelect: FindOptionsSelect<VisitationReportModel> =
+  {
+    ...BaseReportFindOptionsSelect,
+    visitation: {
+      id: true,
+      status: true,
+      visitationMethod: true,
+      visitationType: true,
+      startDate: true,
+      endDate: true,
+      title: true,
+      inCharge: MemberSummarizedSelect,
+      members: MemberSummarizedSelect,
     },
   };
 

@@ -9,7 +9,7 @@ export const VisitationRelationOptions: FindOptionsRelations<VisitationMetaModel
       group: true,
       groupRole: true,
     },
-    instructor: {
+    inCharge: {
       officer: true,
       group: true,
       groupRole: true,
@@ -45,7 +45,7 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
       role: true,
     },
   },
-  instructor: {
+  inCharge: {
     id: true,
     name: true,
     officer: {

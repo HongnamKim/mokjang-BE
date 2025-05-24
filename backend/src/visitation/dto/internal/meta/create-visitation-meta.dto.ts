@@ -4,19 +4,19 @@ import { VisitationStatus } from '../../../const/visitation-status.enum';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
 export class CreateVisitationMetaDto {
-  visitationStatus: VisitationStatus;
+  status: VisitationStatus;
 
   visitationMethod: VisitationMethod;
 
   visitationType: VisitationType;
 
-  visitationTitle: string;
+  title: string;
 
-  instructor: MemberModel;
+  inCharge: MemberModel;
 
-  visitationStartDate: Date;
+  startDate: Date;
 
-  visitationEndDate: Date;
+  endDate: Date;
 
   creator: MemberModel;
 }
