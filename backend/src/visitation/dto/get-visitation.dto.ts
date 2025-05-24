@@ -111,7 +111,7 @@ export class GetVisitationDto {
   })
   @IsOptional()
   @IsString()
-  visitationTitle?: string;
+  title?: string;
 
   @ApiProperty({
     description: '심방 진행자의 교인 ID',
@@ -120,5 +120,5 @@ export class GetVisitationDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  instructorId?: number;
+  inChargeId?: number;
 }

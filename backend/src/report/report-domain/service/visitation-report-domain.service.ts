@@ -2,6 +2,7 @@ import { IVisitationReportDomainService } from '../interface/visitation-report-d
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationReportModel } from '../../entity/visitation-report.entity';
 import {
+  FindOptionsOrder,
   FindOptionsRelations,
   QueryRunner,
   Repository,
@@ -17,6 +18,13 @@ import {
 import { VisitationReportException } from '../../const/exception/visitation-report.exception';
 import { UpdateVisitationReportDto } from '../../dto/visitation-report/update-visitation-report.dto';
 import { ReportModel } from '../../entity/report.entity';
+import { VisitationReportOrderEnum } from '../../const/visitation-report-order.enum';
+import {
+  VisitationReportFindOptionsRelation,
+  VisitationReportFindOptionsSelect,
+  VisitationReportsFindOptionsRelation,
+  VisitationReportsFindOptionsSelect,
+} from '../../const/report-find-options.const';
 
 export class VisitationReportDomainService
   implements IVisitationReportDomainService
@@ -56,17 +64,23 @@ export class VisitationReportDomainService
   ) {
     const repository = this.getRepository(qr);
 
+    const order: FindOptionsOrder<VisitationReportModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== VisitationReportOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
     const [data, totalCount] = await Promise.all([
       repository.find({
         where: {
           receiverId: receiver.id,
           isRead: dto.isRead,
         },
-        order: {
-          [dto.order]: dto.orderDirection,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
+        relations: VisitationReportsFindOptionsRelation,
+        select: VisitationReportsFindOptionsSelect,
+        order,
       }),
       repository.count({
         where: {
@@ -115,17 +129,8 @@ export class VisitationReportDomainService
         receiverId: receiver.id,
         id: reportId,
       },
-      relations: {
-        /*sender: {
-          officer: true,
-          group: true,
-          groupRole: true,
-        },*/
-        visitation: {
-          instructor: true,
-          members: true,
-        },
-      },
+      relations: VisitationReportFindOptionsRelation,
+      select: VisitationReportFindOptionsSelect,
     });
 
     if (!report) {

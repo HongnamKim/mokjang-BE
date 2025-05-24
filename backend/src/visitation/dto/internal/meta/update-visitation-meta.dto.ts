@@ -4,16 +4,16 @@ import { VisitationType } from '../../../const/visitation-type.enum';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
 export class UpdateVisitationMetaDto {
-  visitationStatus?: VisitationStatus;
+  status?: VisitationStatus;
 
   visitationMethod?: VisitationMethod;
 
   visitationType?: VisitationType;
 
-  visitationTitle?: string;
+  title?: string;
 
-  instructor?: MemberModel;
+  inCharge?: MemberModel;
 
-  visitationStartDate?: Date;
-  visitationEndDate?: Date;
+  startDate?: Date;
+  endDate?: Date;
 }

@@ -17,16 +17,17 @@ import { TaskModel } from '../../../task/entity/task.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { TaskReportException } from '../../const/exception/task-report.exception';
 import { TaskReportDomainPaginationResultDto } from '../../dto/task-report/task-report-domain-pagination-result.dto';
-import {
-  MemberSummarizedRelation,
-  MemberSummarizedSelect,
-} from '../../../members/const/member-find-options.const';
 import { GetTaskReportDto } from '../../dto/task-report/get-task-report.dto';
 import { TaskReportOrderEnum } from '../../const/task-report-order.enum';
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
 import { UserRole } from '../../../user/const/user-role.enum';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { UpdateTaskReportDto } from '../../dto/task-report/request/update-task-report.dto';
+import {
+  TaskReportFindOptionsSelect,
+  TaskReportsFindOptionsRelation,
+  TaskReportsFindOptionsSelect,
+} from '../../const/report-find-options.const';
 
 @Injectable()
 export class TaskReportDomainService implements ITaskReportDomainService {
@@ -133,20 +134,8 @@ export class TaskReportDomainService implements ITaskReportDomainService {
           isConfirmed: dto.isConfirmed && dto.isConfirmed,
         },
         order,
-        /*relations: {
-          task: {
-            inCharge: MemberSummarizedRelation,
-          },
-        },
-        select: {
-          task: {
-            id: true,
-            title: true,
-            taskStartDate: true,
-            taskEndDate: true,
-            inCharge: MemberSummarizedSelect,
-          },
-        },*/
+        relations: TaskReportsFindOptionsRelation,
+        select: TaskReportsFindOptionsSelect,
       }),
       repository.count({
         where: {
@@ -165,7 +154,6 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     reportId: number,
     checkIsRead: boolean,
     qr?: QueryRunner,
-    //relationOptions?: FindOptionsRelations<TaskReportModel>,
   ) {
     const repository = this.getTaskReportRepository(qr);
 
@@ -174,20 +162,8 @@ export class TaskReportDomainService implements ITaskReportDomainService {
         id: reportId,
         receiverId: receiver.id,
       },
-      relations: {
-        //sender: MemberSummarizedRelation,
-        task: { inCharge: MemberSummarizedRelation },
-      },
-      select: {
-        //sender: MemberSummarizedSelect,
-        task: {
-          title: true,
-          taskStatus: true,
-          taskStartDate: true,
-          taskEndDate: true,
-          inCharge: MemberSummarizedSelect,
-        },
-      },
+      relations: TaskReportsFindOptionsRelation,
+      select: TaskReportFindOptionsSelect,
     });
 
     if (!report) {

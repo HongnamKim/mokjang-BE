@@ -21,7 +21,7 @@ import { EducationConstraints } from '../../../const/education-constraints.const
 
 @SanitizeDto()
 export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
-  'name',
+  'title',
   'startDate',
   'endDate',
   'inChargeId',
@@ -37,7 +37,7 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   @RemoveSpaces()
   @IsNoSpecialChar()
   @MaxLength(EducationConstraints.MAX_SESSION_NAME_LENGTH)
-  override name: string;
+  override title: string;
 
   @ApiProperty({
     description: '시작 날짜',

@@ -206,9 +206,9 @@ export class MemberModel extends BaseModel {
   // 진행하는 심방
   @OneToMany(
     () => VisitationMetaModel,
-    (visitationMeta) => visitationMeta.instructor,
+    (visitationMeta) => visitationMeta.inCharge,
   )
-  instructingVisitations: VisitationMetaModel[];
+  inChargingVisitations: VisitationMetaModel[];
 
   // 생성한 심방
   @OneToMany(

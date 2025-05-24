@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { GetVisitationReportDto } from '../dto/visitation-report/get-visitation-report.dto';
@@ -20,6 +21,7 @@ import {
   ApiGetVisitationReports,
   ApiPatchVisitationReport,
 } from '../const/swagger/visitation-report.swagger';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 
 @ApiTags('Churches:Members:Reports:Visitations')
 @Controller('visitations')
@@ -38,6 +40,7 @@ export class VisitationReportController {
 
   @ApiGetVisitationReportById()
   @Get(':visitationReportId')
+  @UseInterceptors(TransactionInterceptor)
   getVisitationReportById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
