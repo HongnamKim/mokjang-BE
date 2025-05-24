@@ -30,6 +30,7 @@ import { GroupHistoryModel } from '../../member-history/entity/group-history.ent
 import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { TaskModel } from '../../task/entity/task.entity';
+import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -173,8 +174,11 @@ export class MemberModel extends BaseModel {
   )
   educations: EducationEnrollmentModel[];
 
-  @OneToMany(() => EducationTermModel, (term) => term.instructor)
-  instructingEducation: EducationTermModel[];
+  @OneToMany(() => EducationTermModel, (term) => term.inCharge)
+  inChargeEducationTerm: EducationTermModel[];
+
+  @OneToMany(() => EducationSessionModel, (session) => session.inCharge)
+  inChargeEducationSession: EducationSessionModel[];
 
   @Index()
   @Column({ comment: '그룹 ID', nullable: true })

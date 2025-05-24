@@ -49,6 +49,7 @@ import { ChurchJoinRequestStatModel } from './churches/entity/church-join-reques
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
 import { TaskReportModel } from './report/entity/task-report.entity';
+import { EducationSessionReportModel } from './report/entity/education-session-report.entity';
 
 @Module({
   imports: [
@@ -152,6 +153,7 @@ import { TaskReportModel } from './report/entity/task-report.entity';
           ReportModel,
           VisitationReportModel,
           TaskReportModel,
+          EducationSessionReportModel,
           // 업무 관련 엔티티
           TaskModel,
         ],

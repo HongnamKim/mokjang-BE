@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
-import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
+import { GetEducationTermDto } from '../dto/terms/request/get-education-term.dto';
+import { CreateEducationTermDto } from '../dto/terms/request/create-education-term.dto';
+import { UpdateEducationTermDto } from '../dto/terms/request/update-education-term.dto';
 import {
   IEDUCATION_TERM_DOMAIN_SERVICE,
   IEducationTermDomainService,
@@ -27,11 +27,15 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
-import { EducationTermPaginationResultDto } from '../dto/education-term-pagination-result.dto';
+import { EducationTermPaginationResultDto } from '../dto/terms/response/education-term-pagination-result.dto';
 import {
   IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
   IEducationEnrollmentsDomainService,
 } from './education-domain/interface/education-enrollment-domain.service.interface';
+import { DeleteEducationTermResponseDto } from '../dto/terms/response/delete-education-term-response.dto';
+import { PatchEducationTermResponseDto } from '../dto/terms/response/patch-education-term-response.dto';
+import { PostEducationTermResponseDto } from '../dto/terms/response/post-education-term-response.dto';
+import { GetEducationTermResponseDto } from '../dto/terms/response/get-education-term-response.dto';
 
 @Injectable()
 export class EducationTermService {
@@ -102,15 +106,19 @@ export class EducationTermService {
       qr,
     );
 
-    return this.educationTermDomainService.findEducationTermById(
-      church,
-      education,
-      educationTermId,
-      qr,
-    );
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermById(
+        church,
+        education,
+        educationTermId,
+        qr,
+      );
+
+    return new GetEducationTermResponseDto(educationTerm);
   }
 
   async createEducationTerm(
+    creatorUserId: number,
     churchId: number,
     educationId: number,
     dto: CreateEducationTermDto,
@@ -121,17 +129,25 @@ export class EducationTermService {
       qr,
     );
 
+    const creatorMember =
+      await this.membersDomainService.findMemberModelByUserId(
+        church,
+        creatorUserId,
+        qr,
+      );
+
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
       qr,
     );
 
-    const instructor = dto.instructorId
+    const instructor = dto.inChargeId
       ? await this.membersDomainService.findMemberModelById(
           church,
-          dto.instructorId,
+          dto.inChargeId,
           qr,
+          { user: true },
         )
       : null;
 
@@ -139,19 +155,29 @@ export class EducationTermService {
       await this.educationTermDomainService.createEducationTerm(
         //church,
         education,
+        creatorMember,
         instructor,
         dto,
         qr,
       );
 
     // 회차에 맞게 EducationSession 생성
-    await this.educationSessionDomainService.createEducationSessions(
+    /*await this.educationSessionDomainService.createEducationSessions(
       educationTerm,
       educationTerm.numberOfSessions,
       qr,
-    );
+    );*/
 
-    return educationTerm;
+    //return educationTerm;
+    const createdEducationTerm =
+      await this.educationTermDomainService.findEducationTermById(
+        church,
+        education,
+        educationTerm.id,
+        qr,
+      );
+
+    return new PostEducationTermResponseDto(createdEducationTerm);
   }
 
   async updateEducationTerm(
@@ -193,41 +219,52 @@ export class EducationTermService {
       churchId,
       qr,
     );
+
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
       qr,
     );
+
     const educationTerm =
       await this.educationTermDomainService.findEducationTermModelById(
         church,
         education,
         educationTermId,
         qr,
-        { educationSessions: true },
       );
 
-    const newInstructor = dto.instructorId
+    const newInstructor = dto.inChargeId
       ? await this.membersDomainService.findMemberModelById(
           church,
-          dto.instructorId,
+          dto.inChargeId,
           qr,
+          { user: true },
         )
       : null;
 
+    await this.educationTermDomainService.updateEducationTerm(
+      education,
+      educationTerm,
+      newInstructor,
+      dto,
+      qr,
+    );
+
     const updatedEducationTerm =
-      await this.educationTermDomainService.updateEducationTerm(
+      await this.educationTermDomainService.findEducationTermById(
+        church,
         education,
-        educationTerm,
-        newInstructor,
-        dto,
+        educationTermId,
         qr,
       );
+
+    return new PatchEducationTermResponseDto(updatedEducationTerm);
 
     // 회차 수정 시
     // 회차 감소 --> 회차 삭제 X, 수동 삭제
     // 회차 증가 --> 회차 생성
-    if (
+    /*if (
       dto.numberOfSessions &&
       dto.numberOfSessions > educationTerm.educationSessions.length
     ) {
@@ -254,9 +291,9 @@ export class EducationTermService {
         enrollmentIds,
         qr,
       );
-    }
+    }*/
 
-    return updatedEducationTerm;
+    //return updatedEducationTerm;
   }
 
   async deleteEducationTerm(
@@ -301,13 +338,13 @@ export class EducationTermService {
       qr,
     );
 
-    return {
-      timestamp: new Date(),
-      id: educationTerm.id,
-      educationName: educationTerm.educationName,
-      term: educationTerm.term,
-      success: true,
-    };
+    return new DeleteEducationTermResponseDto(
+      new Date(),
+      educationTerm.id,
+      educationTerm.educationName,
+      educationTerm.term,
+      true,
+    );
   }
 
   async syncSessionAttendances(

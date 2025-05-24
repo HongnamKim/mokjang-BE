@@ -41,5 +41,5 @@ export abstract class BaseOffsetPaginationRequestDto<TOrder> {
   })
   @IsIn(['asc', 'desc', 'ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC';
+  orderDirection: 'ASC' | 'DESC' | 'asc' | 'desc';
 }

@@ -94,13 +94,12 @@ export class SessionAttendanceDomainService
   ) {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
-    return (
-      await sessionAttendanceRepository.find({
-        where: {
-          educationSessionId: educationSession.id,
-        },
-      })
-    ).filter((attendance) => attendance.isPresent);
+    return await sessionAttendanceRepository.find({
+      where: {
+        educationSessionId: educationSession.id,
+        isPresent: true,
+      },
+    });
   }
 
   async findSessionAttendances(

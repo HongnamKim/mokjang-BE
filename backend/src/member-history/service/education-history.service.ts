@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
-import { EducationStatus } from '../../management/educations/const/education-status.enum';
+import { EducationEnrollmentStatus } from '../../management/educations/const/education-status.enum';
 import {
   IEDUCATION_HISTORY_DOMAIN_SERVICE,
   IEducationHistoryDomainService,
@@ -73,13 +73,13 @@ export class EducationHistoryService {
       (acc, enrollment) => ({
         inProgressCount:
           acc.inProgressCount +
-          (enrollment.status === EducationStatus.IN_PROGRESS ? 1 : 0),
+          (enrollment.status === EducationEnrollmentStatus.IN_PROGRESS ? 1 : 0),
         completedCount:
           acc.completedCount +
-          (enrollment.status === EducationStatus.COMPLETED ? 1 : 0),
+          (enrollment.status === EducationEnrollmentStatus.COMPLETED ? 1 : 0),
         incompleteCount:
           acc.incompleteCount +
-          (enrollment.status === EducationStatus.INCOMPLETE ? 1 : 0),
+          (enrollment.status === EducationEnrollmentStatus.INCOMPLETE ? 1 : 0),
       }),
       { inProgressCount: 0, completedCount: 0, incompleteCount: 0 },
     );

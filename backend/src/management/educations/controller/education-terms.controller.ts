@@ -8,25 +8,37 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GetEducationTermDto } from '../dto/terms/get-education-term.dto';
-import { CreateEducationTermDto } from '../dto/terms/create-education-term.dto';
-import { UpdateEducationTermDto } from '../dto/terms/update-education-term.dto';
+import { ApiTags } from '@nestjs/swagger';
+import { GetEducationTermDto } from '../dto/terms/request/get-education-term.dto';
+import { CreateEducationTermDto } from '../dto/terms/request/create-education-term.dto';
+import { UpdateEducationTermDto } from '../dto/terms/request/update-education-term.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { EducationTermService } from '../service/education-term.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import {
+  ApiDeleteEducationTerm,
+  ApiGetEducationTermById,
+  ApiGetEducationTerms,
+  ApiPatchEducationTerm,
+  ApiPostEducationTerms,
+  ApiSyncAttendance,
+} from '../const/swagger/education-term.swagger';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service';
+import { Token } from '../../../auth/decorator/jwt.decorator';
+import { AuthType } from '../../../auth/const/enum/auth-type.enum';
+import { JwtAccessPayload } from '../../../auth/type/jwt';
 
 @ApiTags('Management:Educations:Terms')
 @Controller('educations/:educationId/terms')
 export class EducationTermsController {
   constructor(private readonly educationTermService: EducationTermService) {}
 
-  @ApiOperation({
-    summary: '교육 기수 조회',
-  })
+  @ApiGetEducationTerms()
   @Get()
   getEducationTerms(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -40,18 +52,20 @@ export class EducationTermsController {
     );
   }
 
-  @ApiOperation({
-    summary: '교육 기수 생성',
-  })
+  @ApiPostEducationTerms()
   @Post()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationTerms(
-    @Param('churchId', ParseIntPipe) churchId: number,
+    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @Param('churchId', ParseIntPipe)
+    churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Body() dto: CreateEducationTermDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.createEducationTerm(
+      accessPayload.id,
       churchId,
       educationId,
       dto,
@@ -59,9 +73,7 @@ export class EducationTermsController {
     );
   }
 
-  @ApiOperation({
-    summary: '특정 기수 조회',
-  })
+  @ApiGetEducationTermById()
   @Get(':educationTermId')
   getEducationTermById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -75,9 +87,7 @@ export class EducationTermsController {
     );
   }
 
-  @ApiOperation({
-    summary: '교육 기수 수정',
-  })
+  @ApiPatchEducationTerm()
   @Patch(':educationTermId')
   @UseInterceptors(TransactionInterceptor)
   patchEducationTerm(
@@ -96,10 +106,10 @@ export class EducationTermsController {
     );
   }
 
-  @ApiOperation({ summary: '교육 기수 삭제' })
+  @ApiDeleteEducationTerm()
   @UseInterceptors(TransactionInterceptor)
   @Delete(':educationTermId')
-  deleteEducationTerm(
+  async deleteEducationTerm(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
@@ -113,12 +123,7 @@ export class EducationTermsController {
     );
   }
 
-  @ApiOperation({
-    summary: '교육 기수의 출석 정보 동기화',
-    description:
-      '<p><h2>해당 기수의 누락된 출석 정보를 동기화합니다.</h2></p>' +
-      '<p>누락된 출석 정보가 없을 경우 BadRequestException</p>',
-  })
+  @ApiSyncAttendance()
   @Post(':educationTermId/sync-attendance')
   @UseInterceptors(TransactionInterceptor)
   syncAttendance(

@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsIn, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 import { EducationOrderEnum } from '../../const/order.enum';
+import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
+import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
 
 export class GetEducationDto {
   @ApiProperty({
@@ -39,4 +49,15 @@ export class GetEducationDto {
   @IsIn(['asc', 'desc', 'ASC', 'DESC'])
   @IsOptional()
   orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'asc';
+
+  @ApiProperty({
+    description: '교육명',
+    required: false,
+  })
+  @IsOptionalNotNull()
+  @IsString()
+  @Length(2, 50)
+  @IsNoSpecialChar()
+  @RemoveSpaces()
+  name?: string;
 }

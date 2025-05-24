@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationModel } from '../../../entity/education.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  ILike,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationDto } from '../../../dto/education/get-education.dto';
 import { EducationOrderEnum } from '../../../const/order.enum';
@@ -14,6 +20,11 @@ import { EducationException } from '../../../const/exception/education.exception
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
 import { IEducationDomainService } from '../interface/education-domain.service.interface';
+import { MemberModel } from '../../../../../members/entity/member.entity';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../../../members/const/member-find-options.const';
 
 @Injectable()
 export class EducationDomainService implements IEducationDomainService {
@@ -67,6 +78,7 @@ export class EducationDomainService implements IEducationDomainService {
       educationsRepository.find({
         where: {
           churchId: church.id,
+          name: dto.name && ILike(`%${dto.name}%`),
         },
         select: {
           id: true,
@@ -84,6 +96,7 @@ export class EducationDomainService implements IEducationDomainService {
       educationsRepository.count({
         where: {
           churchId: church.id,
+          name: dto.name && ILike(`%${dto.name}%`),
         },
       }),
     ]);
@@ -106,16 +119,12 @@ export class EducationDomainService implements IEducationDomainService {
         churchId: church.id,
         id: educationId,
       },
-      /*relations: {
-        educationTerms: {
-          instructor: true,
-        },
+      relations: {
+        creator: MemberSummarizedRelation,
       },
-      order: {
-        educationTerms: {
-          term: 'asc',
-        },
-      },*/
+      select: {
+        creator: MemberSummarizedSelect,
+      },
     });
 
     if (!education) {
@@ -150,6 +159,7 @@ export class EducationDomainService implements IEducationDomainService {
 
   async createEducation(
     church: ChurchModel,
+    creatorMember: MemberModel,
     dto: CreateEducationDto,
     qr?: QueryRunner,
   ) {
@@ -164,6 +174,7 @@ export class EducationDomainService implements IEducationDomainService {
     return educationsRepository.save({
       name: dto.name,
       description: dto.description,
+      creatorId: creatorMember.id,
       churchId: church.id,
     });
   }

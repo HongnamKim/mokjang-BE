@@ -1,5 +1,5 @@
-import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
-import { EducationTermModel } from '../entity/education-term.entity';
+import { BaseOffsetPaginationResponseDto } from '../../../../../common/dto/reponse/base-offset-pagination-response.dto';
+import { EducationTermModel } from '../../../entity/education-term.entity';
 
 /*export interface EducationTermPaginationResultDto
   extends BaseOffsetPaginationResultDto<EducationTermModel> {

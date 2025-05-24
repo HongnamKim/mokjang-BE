@@ -9,7 +9,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { EducationStatus } from '../../const/education-status.enum';
+import { EducationEnrollmentStatus } from '../../const/education-status.enum';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
 @SanitizeDto()
@@ -26,13 +26,13 @@ export class CreateEducationEnrollmentDto extends PickType(
 
   @ApiProperty({
     description: '교육 상태 (수료중/수료/미수료)',
-    enum: EducationStatus,
-    default: EducationStatus.IN_PROGRESS,
+    enum: EducationEnrollmentStatus,
+    default: EducationEnrollmentStatus.IN_PROGRESS,
     required: false,
   })
   @IsOptional()
-  @IsEnum(EducationStatus)
-  status: EducationStatus = EducationStatus.IN_PROGRESS;
+  @IsEnum(EducationEnrollmentStatus)
+  status: EducationEnrollmentStatus = EducationEnrollmentStatus.IN_PROGRESS;
 
   @ApiProperty({
     description: '비고',
