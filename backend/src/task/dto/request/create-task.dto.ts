@@ -22,10 +22,10 @@ import { Transform } from 'class-transformer';
 export class CreateTaskDto extends PickType(TaskModel, [
   'parentTaskId',
   'title',
-  'taskStatus',
-  'taskStartDate',
-  'taskEndDate',
-  'comment',
+  'status',
+  'startDate',
+  'endDate',
+  'content',
   'inChargeId',
 ]) {
   @ApiProperty({
@@ -54,28 +54,28 @@ export class CreateTaskDto extends PickType(TaskModel, [
     default: TaskStatus.RESERVE,
   })
   @IsEnum(TaskStatus)
-  override taskStatus: TaskStatus = TaskStatus.RESERVE;
+  override status: TaskStatus = TaskStatus.RESERVE;
 
   @ApiProperty({
     description: '업무 시작 일자',
   })
   @IsDate()
-  override taskStartDate: Date;
+  override startDate: Date;
 
   @ApiProperty({
     description: '업무 종료 일자',
   })
   @IsDate()
   @IsAfterDate('taskStartDate')
-  override taskEndDate: Date;
+  override endDate: Date;
 
   @ApiProperty({
-    description: '업무 내용 코멘트',
+    description: '업무 내용',
     required: false,
   })
   @IsOptional()
   @IsString()
-  comment: string;
+  override content: string;
 
   @ApiProperty({
     description: '업무 담당자 ID',

@@ -14,6 +14,7 @@ import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
+import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
 
 export class UpdateVisitationDto {
   @ApiProperty({
@@ -23,7 +24,7 @@ export class UpdateVisitationDto {
   })
   @IsOptional()
   @IsEnum(VisitationStatus)
-  visitationStatus?: VisitationStatus;
+  status?: VisitationStatus;
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
@@ -43,8 +44,9 @@ export class UpdateVisitationDto {
   @IsString()
   @IsNotEmpty()
   @RemoveSpaces()
+  @IsNoSpecialChar()
   @Length(2, 50)
-  visitationTitle?: string;
+  title?: string;
 
   @ApiProperty({
     description: '심방 진행자 교인 ID',
@@ -52,7 +54,7 @@ export class UpdateVisitationDto {
   })
   @IsOptional()
   @IsNumber()
-  instructorId?: number;
+  inChargeId?: number;
 
   @ApiProperty({
     description: '심방 날짜',
@@ -60,7 +62,7 @@ export class UpdateVisitationDto {
   })
   @IsOptional()
   @IsDate()
-  visitationStartDate?: Date;
+  startDate?: Date;
 
   @ApiProperty({
     description: '심방 종료 날짜',
@@ -69,7 +71,7 @@ export class UpdateVisitationDto {
   @IsOptional()
   @IsDate()
   @IsAfterDate('visitationStartDate')
-  visitationEndDate?: Date;
+  endDate?: Date;
 
   @ApiProperty({
     description: '심방 대상자 추가할 교인 ID 들',

@@ -114,7 +114,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     const sessions = await educationSessionRepository.find({
       where: {
         inChargeId: dto.sessionInChargeId,
-        name: dto.sessionName && ILike(`%${dto.sessionName}%`),
+        title: dto.sessionName && ILike(`%${dto.sessionName}%`),
       },
     });
 

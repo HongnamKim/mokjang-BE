@@ -410,7 +410,7 @@ export class EducationSessionService {
       educationTerm.educationName,
       educationTerm.term,
       targetSession.session,
-      targetSession.name,
+      targetSession.title,
       true,
     );
   }

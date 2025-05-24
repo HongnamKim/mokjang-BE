@@ -28,6 +28,11 @@ import { EducationSessionReportOrderEnum } from '../../const/education-session-r
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
 import { MemberException } from '../../../members/const/exception/member.exception';
 import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
+import {
+  EducationReportFindOptionsSelect,
+  EducationReportsFindOptionsRelation,
+  EducationReportsFindOptionsSelect,
+} from '../../const/report-find-options.const';
 
 @Injectable()
 export class EducationSessionReportDomainService
@@ -87,6 +92,8 @@ export class EducationSessionReportDomainService
           isConfirmed: dto.isConfirmed && dto.isConfirmed,
         },
         order,
+        relations: EducationReportsFindOptionsRelation,
+        select: EducationReportsFindOptionsSelect,
       }),
       repository.count({
         where: {
@@ -263,6 +270,8 @@ export class EducationSessionReportDomainService
         receiverId: receiver.id,
         id: reportId,
       },
+      relations: EducationReportsFindOptionsRelation,
+      select: EducationReportFindOptionsSelect,
     });
 
     if (!report) {

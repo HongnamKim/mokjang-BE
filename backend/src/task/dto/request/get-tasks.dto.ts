@@ -58,7 +58,7 @@ export class GetTasksDto extends BaseOffsetPaginationRequestDto<TaskOrder> {
   })
   @IsOptional()
   @IsEnum(TaskStatus)
-  taskStatus?: TaskStatus;
+  status?: TaskStatus;
 
   @ApiProperty({
     description: '업무 담당자 ID',
