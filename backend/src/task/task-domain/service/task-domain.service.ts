@@ -77,8 +77,8 @@ export class TaskDomainService implements ITaskDomainService {
           churchId: church.id,
           taskType: TaskType.parent,
           title: dto.title && Like(`%${dto.title}%`),
-          taskStartDate: this.parseTaskDate(dto),
-          taskStatus: dto.taskStatus,
+          startDate: this.parseTaskDate(dto),
+          status: dto.taskStatus,
           inChargeId: dto.inChargeId,
         },
         relations: TasksFindOptionsRelation,
@@ -92,8 +92,8 @@ export class TaskDomainService implements ITaskDomainService {
           churchId: church.id,
           taskType: TaskType.parent,
           title: dto.title && Like(`%${dto.title}%`),
-          taskStartDate: this.parseTaskDate(dto),
-          taskStatus: dto.taskStatus,
+          startDate: this.parseTaskDate(dto),
+          status: dto.taskStatus,
           inChargeId: dto.inChargeId,
         },
       }),
@@ -200,24 +200,24 @@ export class TaskDomainService implements ITaskDomainService {
       inChargeId: inChargeMember ? inChargeMember.id : undefined,
       parentTaskId: parentTask ? parentTask.id : undefined,
       taskType: parentTask ? TaskType.subTask : TaskType.parent,
-      title: dto.title,
-      taskStatus: dto.taskStatus,
-      taskStartDate: dto.taskStartDate,
-      taskEndDate: dto.taskEndDate,
-      comment: dto.comment,
+      name: dto.title,
+      status: dto.status,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      content: dto.content,
     });
   }
 
   private assertValidTaskDate(targetTask: TaskModel, dto: UpdateTaskDto) {
     // 시작 날짜 변경 시
-    if (dto.taskStartDate && !dto.taskEndDate) {
-      if (dto.taskStartDate > targetTask.taskEndDate) {
+    if (dto.startDate && !dto.endDate) {
+      if (dto.startDate > targetTask.endDate) {
         throw new ConflictException(TaskException.INVALID_START_DATE);
       }
     }
     // 종료 날짜 변경 시
-    else if (!dto.taskStartDate && dto.taskEndDate) {
-      if (targetTask.taskStartDate > dto.taskEndDate) {
+    else if (!dto.startDate && dto.endDate) {
+      if (targetTask.startDate > dto.endDate) {
         throw new ConflictException(TaskException.INVALID_END_DATE);
       }
     } else {
@@ -261,10 +261,10 @@ export class TaskDomainService implements ITaskDomainService {
         inChargeId: newInChargeMember ? newInChargeMember.id : undefined,
         parentTaskId: newParentTask ? newParentTask.id : undefined,
         title: dto.title,
-        taskStatus: dto.taskStatus,
-        taskStartDate: dto.taskStartDate,
-        taskEndDate: dto.taskEndDate,
-        comment: dto.comment,
+        status: dto.status,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        content: dto.content,
       },
     );
 
