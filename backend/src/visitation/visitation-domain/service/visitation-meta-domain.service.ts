@@ -61,8 +61,8 @@ export class VisitationMetaDomainService
       visitationStatus: dto.visitationStatus && In(dto.visitationStatus),
       visitationMethod: dto.visitationMethod && In(dto.visitationMethod),
       visitationType: dto.visitationType && In(dto.visitationType),
-      visitationTitle: dto.visitationTitle && ILike(`%${dto.visitationTitle}%`),
-      instructorId: dto.instructorId,
+      visitationTitle: dto.title && ILike(`%${dto.title}%`),
+      instructorId: dto.inChargeId,
     };
   }
 
@@ -146,22 +146,20 @@ export class VisitationMetaDomainService
     dto: CreateVisitationMetaDto,
     members: MemberModel[],
     qr: QueryRunner,
-    reportTo?: MemberModel,
   ) {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
 
     return visitationMetaRepository.save({
       churchId: church.id,
-      instructor: dto.instructor,
+      inCharge: dto.inCharge,
       members,
       creator: dto.creator,
-      visitationStatus: dto.visitationStatus,
+      status: dto.status,
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
-      visitationTitle: dto.visitationTitle,
-      visitationStartDate: dto.visitationStartDate,
-      visitationEndDate: dto.visitationEndDate,
-      //reportTo: reportTo ? reportTo : undefined,
+      title: dto.title,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
     });
   }
 

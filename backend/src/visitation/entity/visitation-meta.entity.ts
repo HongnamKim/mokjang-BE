@@ -32,7 +32,7 @@ export class VisitationMetaModel extends BaseModel {
     comment: '심방 상태 (예약 / 완료 / 지연)',
     default: VisitationStatus.RESERVE,
   })
-  visitationStatus: VisitationStatus;
+  status: VisitationStatus;
 
   @Column({ enum: VisitationMethod, comment: '심방 방식 (대면 / 비대면)' })
   visitationMethod: VisitationMethod;
@@ -41,23 +41,31 @@ export class VisitationMetaModel extends BaseModel {
   visitationType: VisitationType;
 
   @Index()
-  @Column({ type: 'timestamptz', comment: '심방 시작 일자' })
-  visitationStartDate: Date;
+  @Column({
+    type: 'timestamptz',
+    comment: '심방 시작 일자',
+    default: new Date('2025-01-01'),
+  })
+  startDate: Date;
 
   @Index()
-  @Column({ type: 'timestamptz', comment: '심방 종료 일자' })
-  visitationEndDate: Date;
+  @Column({
+    type: 'timestamptz',
+    comment: '심방 종료 일자',
+    default: new Date('2025-01-01'),
+  })
+  endDate: Date;
 
   @Column({ length: 50, comment: '심방 제목' })
-  visitationTitle: string;
+  title: string;
 
   @Index()
-  @Column({ comment: '심방 진행자 ID' })
-  instructorId: number;
+  @Column({ comment: '심방 진행자 ID', nullable: true })
+  inChargeId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.instructingVisitations)
+  @ManyToOne(() => MemberModel, (member) => member.inChargingVisitations)
   @JoinColumn({ name: 'instructorId' })
-  instructor: MemberModel;
+  inCharge: MemberModel;
 
   @Index()
   @Column({ comment: '심방 생성자 ID' })

@@ -20,23 +20,16 @@ import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 import { SanitizeDto } from '../../common/decorator/sanitize-target.decorator';
 import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
 import { VisitationException } from '../const/exception/visitation.exception';
+import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
 
 @SanitizeDto()
 export class CreateVisitationDto {
-  /*@ApiProperty({
-    description: 'API 테스트 시 true (심방 진행자의 권한 체크 건너뛰기)',
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isTest: boolean = false;*/
-
   @ApiProperty({
     description: '심방 상태 (예약 / 완료 / 지연)',
     enum: VisitationStatus,
   })
   @IsEnum(VisitationStatus)
-  visitationStatus: VisitationStatus;
+  status: VisitationStatus;
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
@@ -51,28 +44,29 @@ export class CreateVisitationDto {
   })
   @IsString()
   @RemoveSpaces()
+  @IsNoSpecialChar()
   @Length(2, 50)
-  visitationTitle: string;
+  title: string;
 
   @ApiProperty({
     description: '심방 진행자 ID',
   })
   @IsNumber()
   @Min(1)
-  instructorId: number;
+  inChargeId: number;
 
   @ApiProperty({
     description: '심방 시작 날짜',
   })
   @IsDate()
-  visitationStartDate: Date;
+  startDate: Date;
 
   @ApiProperty({
     description: '심방 종료 날짜',
   })
   @IsDate()
-  @IsAfterDate('visitationStartDate')
-  visitationEndDate: Date;
+  @IsAfterDate('startDate')
+  endDate: Date;
 
   @ApiProperty({
     description: '심방 세부 정보',
