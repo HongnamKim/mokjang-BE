@@ -114,7 +114,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     const sessions = await educationSessionRepository.find({
       where: {
         inChargeId: dto.sessionInChargeId,
-        title: dto.sessionName && ILike(`%${dto.sessionName}%`),
+        title: dto.sessionTitle && ILike(`%${dto.sessionTitle}%`),
       },
     });
 
@@ -142,7 +142,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     const termIds =
-      dto.sessionInChargeId || dto.sessionName
+      dto.sessionInChargeId || dto.sessionTitle
         ? await this.getTermIdsBySession(dto, qr)
         : undefined;
 

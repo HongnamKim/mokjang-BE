@@ -49,12 +49,12 @@ export class TaskDomainService implements ITaskDomainService {
   }
 
   private parseTaskDate(dto: GetTasksDto) {
-    if (dto.fromTaskStartDate && !dto.toTaskStartDate) {
-      return MoreThanOrEqual(dto.fromTaskStartDate);
-    } else if (!dto.fromTaskStartDate && dto.toTaskStartDate) {
-      return LessThanOrEqual(dto.toTaskStartDate);
-    } else if (dto.fromTaskStartDate && dto.toTaskStartDate) {
-      return Between(dto.fromTaskStartDate, dto.toTaskStartDate);
+    if (dto.fromStartDate && !dto.toStartDate) {
+      return MoreThanOrEqual(dto.fromStartDate);
+    } else if (!dto.fromStartDate && dto.toStartDate) {
+      return LessThanOrEqual(dto.toStartDate);
+    } else if (dto.fromStartDate && dto.toStartDate) {
+      return Between(dto.fromStartDate, dto.toStartDate);
     } else {
       return undefined;
     }

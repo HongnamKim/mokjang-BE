@@ -9,6 +9,7 @@ import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import {
   Between,
   FindOptionsRelations,
+  FindOptionsWhere,
   ILike,
   In,
   LessThanOrEqual,
@@ -44,25 +45,27 @@ export class VisitationMetaDomainService
   }
 
   private parseVisitationDate(dto: GetVisitationDto) {
-    if (dto.fromVisitationDate && !dto.toVisitationDate) {
-      return MoreThanOrEqual(dto.fromVisitationDate);
-    } else if (!dto.fromVisitationDate && dto.toVisitationDate) {
-      return LessThanOrEqual(dto.toVisitationDate);
-    } else if (dto.fromVisitationDate && dto.toVisitationDate) {
-      return Between(dto.fromVisitationDate, dto.toVisitationDate);
+    if (dto.fromStartDate && !dto.toStartDate) {
+      return MoreThanOrEqual(dto.fromStartDate);
+    } else if (!dto.fromStartDate && dto.toStartDate) {
+      return LessThanOrEqual(dto.toStartDate);
+    } else if (dto.fromStartDate && dto.toStartDate) {
+      return Between(dto.fromStartDate, dto.toStartDate);
     } else {
       return undefined;
     }
   }
 
-  private parseWhereOptions(dto: GetVisitationDto) {
+  private parseWhereOptions(
+    dto: GetVisitationDto,
+  ): FindOptionsWhere<VisitationMetaModel> {
     return {
-      visitationStartDate: this.parseVisitationDate(dto),
-      visitationStatus: dto.visitationStatus && In(dto.visitationStatus),
+      startDate: this.parseVisitationDate(dto),
+      status: dto.status && In(dto.status),
       visitationMethod: dto.visitationMethod && In(dto.visitationMethod),
       visitationType: dto.visitationType && In(dto.visitationType),
-      visitationTitle: dto.title && ILike(`%${dto.title}%`),
-      instructorId: dto.inChargeId,
+      title: dto.title && ILike(`%${dto.title}%`),
+      inChargeId: dto.inChargeId,
     };
   }
 
