@@ -80,8 +80,6 @@ export class EducationSessionDomainService
           startDate: true,
           endDate: true,
           status: true,
-          //isDone: true,
-          //sessionDate: true,
         },
         order,
         take: dto.take,

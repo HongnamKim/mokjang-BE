@@ -18,12 +18,12 @@ export class GetTasksDto extends BaseOffsetPaginationRequestDto<TaskOrder> {
   @ApiProperty({
     description: '정렬 조건',
     enum: TaskOrder,
-    default: TaskOrder.taskStartDate,
+    default: TaskOrder.startDate,
     required: false,
   })
   @IsOptional()
   @IsEnum(TaskOrder)
-  order: TaskOrder = TaskOrder.taskStartDate;
+  order: TaskOrder = TaskOrder.startDate;
 
   @ApiProperty({
     description: '업무 제목',
@@ -41,7 +41,7 @@ export class GetTasksDto extends BaseOffsetPaginationRequestDto<TaskOrder> {
   })
   @IsOptional()
   @IsDate()
-  fromTaskStartDate?: Date;
+  fromStartDate?: Date;
 
   @ApiProperty({
     description: '업무 시작 날짜 ~ 까지',
@@ -50,7 +50,7 @@ export class GetTasksDto extends BaseOffsetPaginationRequestDto<TaskOrder> {
   @IsOptional()
   @IsDate()
   @IsAfterDate('fromTaskStartDate')
-  toTaskStartDate?: Date;
+  toStartDate?: Date;
 
   @ApiProperty({
     description: '업무 상태 (예정 / 진행중 / 완료 / 지연)',
