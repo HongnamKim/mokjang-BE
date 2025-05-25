@@ -41,7 +41,7 @@ export class GetEducationTermDto extends BaseOffsetPaginationRequestDto<Educatio
   @Length(2, 50)
   @IsNoSpecialChar()
   @RemoveSpaces()
-  sessionName?: string;
+  sessionTitle?: string;
 
   @ApiProperty({
     description: '세션 담당자 ID',
