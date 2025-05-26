@@ -36,6 +36,7 @@ import { DeleteEducationTermResponseDto } from '../dto/terms/response/delete-edu
 import { PatchEducationTermResponseDto } from '../dto/terms/response/patch-education-term-response.dto';
 import { PostEducationTermResponseDto } from '../dto/terms/response/post-education-term-response.dto';
 import { GetEducationTermResponseDto } from '../dto/terms/response/get-education-term-response.dto';
+import { GetInProgressEducationTermDto } from '../dto/terms/request/get-in-progress-education-term.dto';
 
 @Injectable()
 export class EducationTermService {
@@ -77,6 +78,32 @@ export class EducationTermService {
       await this.educationTermDomainService.findEducationTerms(
         church,
         education,
+        dto,
+        qr,
+      );
+
+    return new EducationTermPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
+  }
+
+  async getInProgressEducationTerms(
+    churchId: number,
+    dto: GetInProgressEducationTermDto,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const { data, totalCount } =
+      await this.educationTermDomainService.findInProgressEducationTerms(
+        church,
         dto,
         qr,
       );
