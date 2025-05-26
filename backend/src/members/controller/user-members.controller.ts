@@ -25,6 +25,14 @@ export class UserMembersController {
     return this.userMembersService.getUserMembers(churchId, dto);
   }
 
+  @Get(':memberId')
+  getUserMemberById(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+  ) {
+    return this.userMembersService.getUserMemberById(churchId, memberId);
+  }
+
   @Patch(':memberId/role')
   patchUserMemberRole(
     @Param('churchId', ParseIntPipe) churchId: number,

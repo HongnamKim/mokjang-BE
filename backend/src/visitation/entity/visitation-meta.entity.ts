@@ -64,7 +64,7 @@ export class VisitationMetaModel extends BaseModel {
   inChargeId: number;
 
   @ManyToOne(() => MemberModel, (member) => member.inChargingVisitations)
-  @JoinColumn({ name: 'instructorId' })
+  @JoinColumn({ name: 'inChargeId' })
   inCharge: MemberModel;
 
   @Index()

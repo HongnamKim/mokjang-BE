@@ -33,6 +33,7 @@ export const TaskReportsFindOptionsRelation: FindOptionsRelations<TaskReportMode
 export const VisitationReportsFindOptionsRelation: FindOptionsRelations<VisitationReportModel> =
   {
     visitation: {
+      members: MemberSummarizedRelation,
       inCharge: MemberSummarizedRelation,
     },
   };
@@ -57,6 +58,7 @@ export const VisitationReportsFindOptionsSelect: FindOptionsSelect<VisitationRep
       endDate: true,
       title: true,
       inCharge: MemberSummarizedSelect,
+      members: MemberSummarizedSelect,
     },
   };
 
