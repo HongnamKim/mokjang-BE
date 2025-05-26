@@ -12,6 +12,7 @@ import { CreateEducationTermDto } from '../../../dto/terms/request/create-educat
 import { UpdateEducationTermDto } from '../../../dto/terms/request/update-education-term.dto';
 import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
 import { MemberModel } from '../../../../../members/entity/member.entity';
+import { GetInProgressEducationTermDto } from '../../../dto/terms/request/get-in-progress-education-term.dto';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',
@@ -109,4 +110,10 @@ export interface IEducationTermDomainService {
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findInProgressEducationTerms(
+    church: ChurchModel,
+    dto: GetInProgressEducationTermDto,
+    qr?: QueryRunner,
+  ): Promise<{ data: EducationTermModel[]; totalCount: number }>;
 }

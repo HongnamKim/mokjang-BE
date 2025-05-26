@@ -200,7 +200,7 @@ export class TaskDomainService implements ITaskDomainService {
       inChargeId: inChargeMember ? inChargeMember.id : undefined,
       parentTaskId: parentTask ? parentTask.id : undefined,
       taskType: parentTask ? TaskType.subTask : TaskType.parent,
-      name: dto.title,
+      title: dto.title,
       status: dto.status,
       startDate: dto.startDate,
       endDate: dto.endDate,
