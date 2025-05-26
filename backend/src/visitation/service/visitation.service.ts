@@ -130,7 +130,7 @@ export class VisitationService {
 
     const instructor = await this.membersDomainService.findMemberModelById(
       church,
-      dto.instructorId,
+      dto.inChargeId,
       qr,
       { user: true },
     );
@@ -263,12 +263,12 @@ export class VisitationService {
   ) {
     const createVisitationMetaDto: CreateVisitationMetaDto = {
       creator,
-      instructor,
-      visitationStatus: dto.visitationStatus,
+      inCharge: instructor,
+      status: dto.status,
       visitationMethod: dto.visitationMethod,
-      visitationTitle: dto.visitationTitle,
-      visitationStartDate: dto.visitationStartDate,
-      visitationEndDate: dto.visitationEndDate,
+      title: dto.title,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
       visitationType:
         members.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
     };
@@ -464,24 +464,24 @@ export class VisitationService {
       );
 
     // 심방 종료날짜만 변경하는 경우
-    if (!dto.visitationStartDate && dto.visitationEndDate) {
-      if (dto.visitationEndDate < targetMetaData.visitationStartDate) {
+    if (!dto.startDate && dto.endDate) {
+      if (dto.endDate < targetMetaData.startDate) {
         throw new BadRequestException(VisitationException.INVALID_END_DATE);
       }
     }
     // 심방 시작날짜만 변경하는 경우
-    if (dto.visitationStartDate && !dto.visitationEndDate) {
-      if (dto.visitationStartDate > targetMetaData.visitationEndDate) {
+    if (dto.startDate && !dto.endDate) {
+      if (dto.startDate > targetMetaData.endDate) {
         throw new BadRequestException(VisitationException.INVALID_START_DATE);
       }
     }
 
     // 심방 진행자 변경 시
     const newInstructor =
-      dto.instructorId && dto.instructorId !== targetMetaData.instructorId
+      dto.inChargeId && dto.inChargeId !== targetMetaData.inChargeId
         ? await this.membersDomainService.findMemberModelById(
             church,
-            dto.instructorId,
+            dto.inChargeId,
             qr,
             { user: true },
           )
@@ -510,13 +510,13 @@ export class VisitationService {
     }
 
     const updateVisitationMetaDto: UpdateVisitationMetaDto = {
-      visitationStartDate: dto.visitationStartDate,
-      visitationEndDate: dto.visitationEndDate,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
       visitationMethod: dto.visitationMethod,
       visitationType,
-      visitationStatus: dto.visitationStatus,
-      visitationTitle: dto.visitationTitle,
-      instructor: newInstructor,
+      status: dto.status,
+      title: dto.title,
+      inCharge: newInstructor,
     };
 
     await this.visitationMetaDomainService.updateVisitationMetaData(
@@ -674,7 +674,7 @@ export class VisitationService {
         church,
         visitationId,
         qr,
-        { instructor: true, reports: { receiver: true } },
+        { inCharge: true, reports: { receiver: true } },
       );
 
     const reports = visitation.reports;

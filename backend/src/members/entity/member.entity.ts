@@ -31,6 +31,7 @@ import { VisitationDetailModel } from '../../visitation/entity/visitation-detail
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
+import { PermissionTemplateModel } from '../../permission/entity/permission-template.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -41,6 +42,9 @@ export class MemberModel extends BaseModel {
   @OneToOne(() => UserModel, (user) => user.member)
   @JoinColumn({ name: 'userId' })
   user: UserModel;
+
+  @ManyToOne(() => PermissionTemplateModel, (template) => template.members)
+  permissionTemplate: PermissionTemplateModel;
 
   @Column()
   @Index()
@@ -206,9 +210,9 @@ export class MemberModel extends BaseModel {
   // 진행하는 심방
   @OneToMany(
     () => VisitationMetaModel,
-    (visitationMeta) => visitationMeta.instructor,
+    (visitationMeta) => visitationMeta.inCharge,
   )
-  instructingVisitations: VisitationMetaModel[];
+  inChargingVisitations: VisitationMetaModel[];
 
   // 생성한 심방
   @OneToMany(

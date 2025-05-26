@@ -86,6 +86,8 @@ export class ChurchesService {
     //await this.userDomainService.linkMemberToUser(mainAdminMember, user, qr);
     await this.membersDomainService.linkUserToMember(mainAdminMember, user, qr);
 
+    // TODO 교회 생성 시 기본 PermissionPreset 생성
+
     return newChurch;
   }
 

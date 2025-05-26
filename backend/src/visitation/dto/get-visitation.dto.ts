@@ -39,12 +39,12 @@ export class GetVisitationDto {
   @ApiProperty({
     description: '정렬 기준',
     enum: VisitationOrderEnum,
-    default: VisitationOrderEnum.visitationStartDate,
+    default: VisitationOrderEnum.startDate,
     required: false,
   })
   @IsOptional()
   @IsEnum(VisitationOrderEnum)
-  order: VisitationOrderEnum = VisitationOrderEnum.visitationStartDate;
+  order: VisitationOrderEnum = VisitationOrderEnum.startDate;
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',
@@ -61,7 +61,7 @@ export class GetVisitationDto {
   })
   @IsOptional()
   @IsDate()
-  fromVisitationDate?: Date;
+  fromStartDate?: Date;
 
   @ApiProperty({
     description: '심방 날짜 ~ 까지',
@@ -70,7 +70,7 @@ export class GetVisitationDto {
   @IsOptional()
   @IsDate()
   @IsAfterDate('fromVisitationDate')
-  toVisitationDate?: Date;
+  toStartDate?: Date;
 
   @ApiProperty({
     description: '심방 상태 (예약 / 완료 / 지연)',
@@ -81,7 +81,7 @@ export class GetVisitationDto {
   @IsOptional()
   @TransformStringArray()
   @IsEnum(VisitationStatus, { each: true })
-  visitationStatus?: VisitationStatus[];
+  status?: VisitationStatus[];
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
@@ -111,7 +111,7 @@ export class GetVisitationDto {
   })
   @IsOptional()
   @IsString()
-  visitationTitle?: string;
+  title?: string;
 
   @ApiProperty({
     description: '심방 진행자의 교인 ID',
@@ -120,5 +120,5 @@ export class GetVisitationDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  instructorId?: number;
+  inChargeId?: number;
 }

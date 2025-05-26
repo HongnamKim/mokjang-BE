@@ -117,4 +117,16 @@ export class UserMembersService {
 
     return this.membersDomainService.findMemberById(church, memberId);
   }
+
+  async getUserMemberById(churchId: number, memberId: number) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    return this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      undefined,
+      { permissionTemplate: { permissionUnits: true } },
+    );
+  }
 }

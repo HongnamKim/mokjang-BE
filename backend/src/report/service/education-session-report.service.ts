@@ -147,7 +147,7 @@ export class EducationSessionReportService {
       deleteTarget.educationId,
       deleteTarget.educationTermId,
       deleteTarget.educationSessionId,
-      deleteTarget.educationSession.name,
+      deleteTarget.educationSession.title,
       true,
     );
   }

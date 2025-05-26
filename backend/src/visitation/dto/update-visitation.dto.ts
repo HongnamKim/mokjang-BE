@@ -14,6 +14,8 @@ import { VisitationStatus } from '../const/visitation-status.enum';
 import { VisitationMethod } from '../const/visitation-method.enum';
 import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
 import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
+import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
+import { IsOptionalNotNull } from '../../common/decorator/validator/is-optional-not.null.validator';
 
 export class UpdateVisitationDto {
   @ApiProperty({
@@ -21,16 +23,16 @@ export class UpdateVisitationDto {
     enum: VisitationStatus,
     required: false,
   })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsEnum(VisitationStatus)
-  visitationStatus?: VisitationStatus;
+  status?: VisitationStatus;
 
   @ApiProperty({
     description: '심방 방식 (대면 / 비대면)',
     enum: VisitationMethod,
     required: false,
   })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsEnum(VisitationMethod)
   visitationMethod?: VisitationMethod;
 
@@ -39,12 +41,13 @@ export class UpdateVisitationDto {
     maxLength: 50,
     required: false,
   })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsString()
   @IsNotEmpty()
   @RemoveSpaces()
+  @IsNoSpecialChar()
   @Length(2, 50)
-  visitationTitle?: string;
+  title?: string;
 
   @ApiProperty({
     description: '심방 진행자 교인 ID',
@@ -52,24 +55,24 @@ export class UpdateVisitationDto {
   })
   @IsOptional()
   @IsNumber()
-  instructorId?: number;
+  inChargeId?: number;
 
   @ApiProperty({
     description: '심방 날짜',
     required: false,
   })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsDate()
-  visitationStartDate?: Date;
+  startDate?: Date;
 
   @ApiProperty({
     description: '심방 종료 날짜',
     required: false,
   })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsDate()
   @IsAfterDate('visitationStartDate')
-  visitationEndDate?: Date;
+  endDate?: Date;
 
   @ApiProperty({
     description: '심방 대상자 추가할 교인 ID 들',
@@ -90,12 +93,4 @@ export class UpdateVisitationDto {
   @IsArray()
   @TransformNumberArray()
   deleteMemberIds?: number[];
-
-  /*@ApiProperty({
-    description: 'API 테스트 시 true (심방 진행자의 권한 체크 건너뛰기)',
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isTest: boolean = false;*/
 }
