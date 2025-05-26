@@ -31,11 +31,16 @@ import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service
 import { Token } from '../../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../../auth/type/jwt';
+import { EducationTermService } from '../service/education-term.service';
+import { GetInProgressEducationTermDto } from '../dto/terms/request/get-in-progress-education-term.dto';
 
 @ApiTags('Management:Educations')
 @Controller('educations')
 export class EducationsController {
-  constructor(private readonly educationsService: EducationsService) {}
+  constructor(
+    private readonly educationsService: EducationsService,
+    private readonly educationTermService: EducationTermService,
+  ) {}
 
   @ApiGetEducation()
   @Get()
@@ -58,6 +63,14 @@ export class EducationsController {
   ) {
     const userId = accessPayload.id;
     return this.educationsService.createEducation(userId, churchId, dto, qr);
+  }
+
+  @Get('in-progress')
+  getInProgressEducations(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetInProgressEducationTermDto,
+  ) {
+    return this.educationTermService.getInProgressEducationTerms(churchId, dto);
   }
 
   @ApiGetEducationById()
