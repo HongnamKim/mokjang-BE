@@ -45,8 +45,11 @@ export class UserModel extends BaseModel {
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
-  @Column({ enum: UserRole, default: UserRole.none })
+  @Column({ enum: UserRole, default: UserRole.NONE })
   role: UserRole;
+
+  @Column({ nullable: true, comment: '교회 가입일' })
+  churchJoinedAt: Date;
 
   @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinRequestModel;

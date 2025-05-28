@@ -143,7 +143,7 @@ export class ChurchJoinRequestService {
     await this.userDomainService.signInChurch(
       joinRequest.user,
       church,
-      UserRole.member,
+      UserRole.MANAGER,
       qr,
     );
 

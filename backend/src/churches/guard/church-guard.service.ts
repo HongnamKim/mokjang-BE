@@ -65,7 +65,7 @@ export class ChurchManagerGuard implements CanActivate {
 }
 
 @Injectable()
-export class ChurchMainAdminGuard implements CanActivate {
+export class ChurchOwnerGuard implements CanActivate {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -78,10 +78,10 @@ export class ChurchMainAdminGuard implements CanActivate {
 
     const churchId = parseInt(req.params.churchId);
 
-    const mainAdminIds =
-      await this.churchesDomainService.getChurchMainAdminIds(churchId);
+    const ownerIds =
+      await this.churchesDomainService.getChurchOwnerIds(churchId);
 
-    if (!mainAdminIds.includes(token.id)) {
+    if (!ownerIds.includes(token.id)) {
       throw new ForbiddenException(ChurchAuthException.MAIN_ADMIN_EXCEPTION);
     }
 

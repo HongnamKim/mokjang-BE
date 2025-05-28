@@ -22,7 +22,7 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
-import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
+import { TransferOwnerDto } from '../dto/transfer-owner.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -64,7 +64,7 @@ export class ChurchesService {
       qr,
     );
 
-    if (user.role !== UserRole.none) {
+    if (user.role !== UserRole.NONE) {
       throw new ForbiddenException(ChurchException.NOT_ALLOWED_TO_CREATE);
     }
 
@@ -73,7 +73,7 @@ export class ChurchesService {
     await this.userDomainService.signInChurch(
       user,
       newChurch,
-      UserRole.mainAdmin,
+      UserRole.OWNER,
       qr,
     );
 
@@ -119,10 +119,10 @@ export class ChurchesService {
     return this.churchesDomainService.deleteChurch(church, qr);
   }
 
-  async transferMainAdmin(
+  async transferOwner(
     churchId: number,
     mainAdminUserId: number,
-    dto: TransferMainAdminDto,
+    dto: TransferOwnerDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -130,7 +130,7 @@ export class ChurchesService {
       qr,
     );
 
-    const mainAdminMember =
+    const oldOwnerMember =
       await this.membersDomainService.findMemberModelByUserId(
         church,
         mainAdminUserId,
@@ -138,25 +138,24 @@ export class ChurchesService {
         { user: true },
       );
 
-    const newMainAdminMember =
-      await this.membersDomainService.findMemberModelById(
-        church,
-        dto.newMainAdminMemberId,
-        qr,
-        { user: true },
-      );
+    const newOwnerMember = await this.membersDomainService.findMemberModelById(
+      church,
+      dto.newOwnerMemberId,
+      qr,
+      { user: true },
+    );
 
-    if (mainAdminMember.id === newMainAdminMember.id) {
+    if (oldOwnerMember.id === newOwnerMember.id) {
       throw new BadRequestException(ChurchException.SAME_MAIN_ADMIN);
     }
 
-    if (newMainAdminMember.user.role !== UserRole.manager) {
-      throw new BadRequestException(ChurchException.INVALID_NEW_MAIN_ADMIN);
+    if (newOwnerMember.user.role !== UserRole.MANAGER) {
+      throw new BadRequestException(ChurchException.INVALID_NEW_OWNER);
     }
 
-    await this.userDomainService.transferMainAdmin(
-      mainAdminMember.user,
-      newMainAdminMember.user,
+    await this.userDomainService.transferOwner(
+      oldOwnerMember.user,
+      newOwnerMember.user,
       qr,
     );
 

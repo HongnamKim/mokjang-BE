@@ -236,7 +236,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     );
   }
 
-  async getChurchMainAdminIds(
+  async getChurchOwnerIds(
     churchId: number,
     qr?: QueryRunner,
   ): Promise<number[]> {
@@ -256,7 +256,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return church.users
-      .filter((user) => user.role === UserRole.mainAdmin)
+      .filter((user) => user.role === UserRole.OWNER)
       .map((admin) => admin.id);
   }
 
@@ -282,7 +282,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return church.users
       .filter(
         (user) =>
-          user.role === UserRole.manager || user.role === UserRole.mainAdmin,
+          user.role === UserRole.MANAGER || user.role === UserRole.OWNER,
       )
       .map((manager) => manager.id);
   }

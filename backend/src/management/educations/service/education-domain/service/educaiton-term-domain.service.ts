@@ -13,6 +13,7 @@ import {
   EducationTermModel,
 } from '../../../entity/education-term.entity';
 import {
+  FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsSelect,
   ILike,
@@ -28,7 +29,10 @@ import { EducationTermOrderEnum } from '../../../const/order.enum';
 import { EducationTermException } from '../../../const/exception/education.exception';
 import { CreateEducationTermDto } from '../../../dto/terms/request/create-education-term.dto';
 import { UpdateEducationTermDto } from '../../../dto/terms/request/update-education-term.dto';
-import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
+import {
+  EducationEnrollmentStatus,
+  EducationTermStatus,
+} from '../../../const/education-status.enum';
 import { MemberModel } from '../../../../../members/entity/member.entity';
 import {
   MemberSummarizedRelation,
@@ -37,6 +41,7 @@ import {
 import { UserRole } from '../../../../../user/const/user-role.enum';
 import { MemberException } from '../../../../../members/const/exception/member.exception';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
+import { GetInProgressEducationTermDto } from '../../../dto/terms/request/get-in-progress-education-term.dto';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -79,8 +84,8 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     if (
-      member.user.role !== UserRole.manager &&
-      member.user.role !== UserRole.mainAdmin
+      member.user.role !== UserRole.MANAGER &&
+      member.user.role !== UserRole.OWNER
     ) {
       throw new ConflictException(
         EducationTermException.INVALID_IN_CHARGE_ROLE,
@@ -121,6 +126,72 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return Array.from(
       new Set(sessions.map((session) => session.educationTermId)),
     );
+  }
+
+  async findInProgressEducationTerms(
+    church: ChurchModel,
+    dto: GetInProgressEducationTermDto,
+    qr?: QueryRunner,
+  ): Promise<{
+    data: EducationTermModel[];
+    totalCount: number;
+  }> {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const order: FindOptionsOrder<EducationTermModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== EducationTermOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      educationTermsRepository.find({
+        where: {
+          education: {
+            churchId: church.id,
+          },
+          status: EducationTermStatus.IN_PROGRESS,
+        },
+        order,
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          educationId: true,
+          educationName: true,
+          creatorId: true,
+          term: true,
+          status: true,
+          numberOfSessions: true,
+          startDate: true,
+          endDate: true,
+          inChargeId: true,
+          isDoneCount: true,
+          enrollmentCount: true,
+          inProgressCount: true,
+          completedCount: true,
+          incompleteCount: true,
+          inCharge: MemberSummarizedSelect,
+        },
+        relations: {
+          inCharge: MemberSummarizedRelation,
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      educationTermsRepository.count({
+        where: {
+          education: {
+            churchId: church.id,
+          },
+          status: EducationTermStatus.IN_PROGRESS,
+        },
+      }),
+    ]);
+
+    return { data, totalCount };
   }
 
   async findEducationTerms(

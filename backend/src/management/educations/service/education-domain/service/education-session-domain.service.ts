@@ -18,7 +18,6 @@ import {
 } from '@nestjs/common';
 import { EducationSessionException } from '../../../const/exception/education.exception';
 import { UpdateEducationSessionDto } from '../../../dto/sessions/request/update-education-session.dto';
-import { session } from 'passport';
 import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-education-session.dto';
 import { MemberModel } from '../../../../../members/entity/member.entity';
 import { MemberException } from '../../../../../members/const/exception/member.exception';
@@ -204,8 +203,8 @@ export class EducationSessionDomainService
     }
 
     if (
-      inCharge.user.role !== UserRole.mainAdmin &&
-      inCharge.user.role !== UserRole.manager
+      inCharge.user.role !== UserRole.OWNER &&
+      inCharge.user.role !== UserRole.MANAGER
     ) {
       throw new ConflictException(
         EducationSessionException.INVALID_IN_CHARGE_ROLE,

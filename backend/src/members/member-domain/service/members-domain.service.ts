@@ -175,6 +175,7 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         user: user,
+        isPermissionActive: true,
       },
     );
 

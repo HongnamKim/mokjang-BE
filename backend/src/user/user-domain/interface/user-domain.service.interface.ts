@@ -48,7 +48,7 @@ export interface IUserDomainService {
 
   findMainAdminUser(church: ChurchModel, qr?: QueryRunner): Promise<UserModel>;
 
-  transferMainAdmin(
+  transferOwner(
     beforeMainAdmin: UserModel,
     newMainAdmin: UserModel,
     qr: QueryRunner,
