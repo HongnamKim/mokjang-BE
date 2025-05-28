@@ -193,8 +193,8 @@ export class VisitationService {
       receivers.map(async (receiver) => {
         // 권한 검증
         if (
-          receiver.user.role !== UserRole.manager &&
-          receiver.user.role !== UserRole.mainAdmin
+          receiver.user.role !== UserRole.MANAGER &&
+          receiver.user.role !== UserRole.OWNER
         ) {
           throw new ForbiddenException(VisitationException.INVALID_RECEIVER);
         }
@@ -284,8 +284,8 @@ export class VisitationService {
   private checkVisitationAuthorization(instructor: MemberModel) {
     if (
       !instructor.user ||
-      (instructor.user.role !== UserRole.mainAdmin &&
-        instructor.user.role !== UserRole.manager)
+      (instructor.user.role !== UserRole.OWNER &&
+        instructor.user.role !== UserRole.MANAGER)
     ) {
       throw new ForbiddenException(VisitationException.INVALID_INSTRUCTOR);
     }
@@ -626,8 +626,8 @@ export class VisitationService {
     const isAvailableReceivers = newReceivers.every((receiver) => {
       return (
         receiver.user &&
-        (receiver.user.role === UserRole.mainAdmin ||
-          receiver.user.role === UserRole.manager)
+        (receiver.user.role === UserRole.OWNER ||
+          receiver.user.role === UserRole.MANAGER)
       );
     });
 

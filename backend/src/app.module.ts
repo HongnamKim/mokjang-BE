@@ -54,6 +54,7 @@ import { PermissionModule } from './permission/permission.module';
 import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
 import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
 import { PermissionTemplateModel } from './permission/entity/permission-template.entity';
+import { ManagerModule } from './manager/manager.module';
 
 @Module({
   imports: [
@@ -181,6 +182,7 @@ import { PermissionTemplateModel } from './permission/entity/permission-template
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
+    ManagerModule,
     PermissionModule,
     FamilyRelationModule,
     MemberHistoryModule,

@@ -98,7 +98,7 @@ export class UserDomainService implements IUserDomainService {
   }
 
   isAbleToCreateChurch(user: UserModel): boolean {
-    if (user.role !== UserRole.none) {
+    if (user.role !== UserRole.NONE) {
       throw new BadRequestException(UserException.CANNOT_CREATE_CHURCH);
     }
 
@@ -120,6 +120,7 @@ export class UserDomainService implements IUserDomainService {
       {
         church: church,
         role,
+        churchJoinedAt: new Date(),
       },
     );
   }
@@ -166,7 +167,7 @@ export class UserDomainService implements IUserDomainService {
     const mainAdmin = await userRepository.findOne({
       where: {
         churchId: church.id,
-        role: UserRole.mainAdmin,
+        role: UserRole.OWNER,
       },
       relations: {
         member: true,
@@ -180,7 +181,7 @@ export class UserDomainService implements IUserDomainService {
     return mainAdmin;
   }
 
-  async transferMainAdmin(
+  async transferOwner(
     beforeMainAdmin: UserModel,
     newMainAdmin: UserModel,
     qr: QueryRunner,
@@ -190,12 +191,9 @@ export class UserDomainService implements IUserDomainService {
     await Promise.all([
       userRepository.update(
         { id: beforeMainAdmin.id },
-        { role: UserRole.manager },
+        { role: UserRole.MANAGER },
       ),
-      userRepository.update(
-        { id: newMainAdmin.id },
-        { role: UserRole.mainAdmin },
-      ),
+      userRepository.update({ id: newMainAdmin.id }, { role: UserRole.OWNER }),
     ]);
   }
 }

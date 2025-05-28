@@ -151,8 +151,8 @@ export class TaskDomainService implements ITaskDomainService {
     }
 
     if (
-      inChargeMember.user.role !== UserRole.mainAdmin &&
-      inChargeMember.user.role !== UserRole.manager
+      inChargeMember.user.role !== UserRole.OWNER &&
+      inChargeMember.user.role !== UserRole.MANAGER
     ) {
       throw new ConflictException(TaskException.INVALID_IN_CHARGE_MEMBER);
     }

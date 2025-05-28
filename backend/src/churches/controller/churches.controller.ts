@@ -17,7 +17,7 @@ import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import {
-  ChurchMainAdminGuard,
+  ChurchOwnerGuard,
   ChurchManagerGuard,
 } from '../guard/church-guard.service';
 import { UpdateChurchDto } from '../dto/update-church.dto';
@@ -33,7 +33,7 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateChurchJoinCodeDto } from '../dto/update-church-join-code.dto';
-import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
+import { TransferOwnerDto } from '../dto/transfer-owner.dto';
 
 @Controller('churches')
 export class ChurchesController {
@@ -69,7 +69,7 @@ export class ChurchesController {
   @ApiPatchChurch()
   @Patch(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   patchChurch(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: UpdateChurchDto,
@@ -80,7 +80,7 @@ export class ChurchesController {
   @ApiDeleteChurch()
   @Delete(':churchId')
   @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.deleteChurchById(churchId);
   }
@@ -89,7 +89,7 @@ export class ChurchesController {
     summary: '가입 코드 수정',
   })
   @Patch(':churchId/join-code')
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   @UseInterceptors(TransactionInterceptor)
   patchChurchJoinCode(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -104,32 +104,27 @@ export class ChurchesController {
   }
 
   @ApiOperation({
-    summary: '최고 관리자(mainAdmin) 양도',
+    summary: '교회 생성자(owner) 양도',
   })
-  @Patch(':churchId/main-admin')
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @Patch(':churchId/owner')
+  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   @UseInterceptors(TransactionInterceptor)
   transferMainAdmin(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
-    @Body() dto: TransferMainAdminDto,
+    @Body() dto: TransferOwnerDto,
     @QueryRunner() qr: QR,
   ) {
-    const mainAdminUserId = accessPayload.id;
+    const ownerUserId = accessPayload.id;
 
-    return this.churchesService.transferMainAdmin(
-      churchId,
-      mainAdminUserId,
-      dto,
-      qr,
-    );
+    return this.churchesService.transferOwner(churchId, ownerUserId, dto, qr);
   }
 
   @ApiOperation({
     summary: '교인 수 새로고침',
   })
   @Patch(':churchId/refresh-member-count')
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   refreshMemberCount(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.refreshMemberCount(churchId);
   }

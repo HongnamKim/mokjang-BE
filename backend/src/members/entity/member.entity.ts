@@ -43,7 +43,14 @@ export class MemberModel extends BaseModel {
   @JoinColumn({ name: 'userId' })
   user: UserModel;
 
+  @Column({ nullable: true })
+  isPermissionActive: boolean;
+
+  @Column({ nullable: true })
+  permissionTemplateId: number | null;
+
   @ManyToOne(() => PermissionTemplateModel, (template) => template.members)
+  @JoinColumn({ name: 'permissionTemplateId' })
   permissionTemplate: PermissionTemplateModel;
 
   @Column()

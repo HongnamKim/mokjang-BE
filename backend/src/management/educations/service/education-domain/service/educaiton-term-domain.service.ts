@@ -84,8 +84,8 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     if (
-      member.user.role !== UserRole.manager &&
-      member.user.role !== UserRole.mainAdmin
+      member.user.role !== UserRole.MANAGER &&
+      member.user.role !== UserRole.OWNER
     ) {
       throw new ConflictException(
         EducationTermException.INVALID_IN_CHARGE_ROLE,
