@@ -1,6 +1,6 @@
 import {
   BadRequestException,
-  ForbiddenException,
+  ConflictException,
   Inject,
   Injectable,
 } from '@nestjs/common';
@@ -16,19 +16,25 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from '../../user/user-domain/interface/user-domain.service.interface';
-import { UserRole } from '../../user/const/user-role.enum';
+import { ChurchUserRole, UserRole } from '../../user/const/user-role.enum';
 import { ChurchException } from '../const/exception/church.exception';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
 import { TransferOwnerDto } from '../dto/transfer-owner.dto';
+import {
+  ICHURCH_USER_DOMAIN_SERVICE,
+  IChurchUserDomainService,
+} from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
 
 @Injectable()
 export class ChurchesService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(ICHURCH_USER_DOMAIN_SERVICE)
+    private readonly churchUserDomainService: IChurchUserDomainService,
 
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
@@ -43,14 +49,8 @@ export class ChurchesService {
   async getChurchById(id: number, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchById(id, qr);
 
-    /*const mainAdmin = await this.userDomainService.findMainAdminUser(
-      church,
-      qr,
-    );*/
-
     return {
       ...church,
-      //mainAdmin,
     };
   }
 
@@ -59,32 +59,44 @@ export class ChurchesService {
     dto: CreateChurchDto,
     qr: QueryRunner,
   ) {
-    const user = await this.userDomainService.findUserById(
+    const ownerUser = await this.userDomainService.findUserById(
       accessPayload.id,
       qr,
     );
 
-    if (user.role !== UserRole.NONE) {
-      throw new ForbiddenException(ChurchException.NOT_ALLOWED_TO_CREATE);
+    if (ownerUser.role !== UserRole.NONE) {
+      throw new ConflictException(
+        '소속된 교회가 있는 사용자는 교회를 생성할 수 없습니다.',
+      );
     }
 
-    const newChurch = await this.churchesDomainService.createChurch(dto, qr);
-
-    await this.userDomainService.signInChurch(
-      user,
-      newChurch,
-      UserRole.OWNER,
+    const newChurch = await this.churchesDomainService.createChurch(
+      dto,
+      ownerUser,
       qr,
     );
 
-    const mainAdminMember = await this.membersDomainService.createMember(
+    const ownerMember = await this.membersDomainService.createMember(
       newChurch,
-      { name: user.name, mobilePhone: user.mobilePhone },
+      { name: ownerUser.name, mobilePhone: ownerUser.mobilePhone },
       qr,
     );
 
-    //await this.userDomainService.linkMemberToUser(mainAdminMember, user, qr);
-    await this.membersDomainService.linkUserToMember(mainAdminMember, user, qr);
+    await this.churchUserDomainService.createChurchUser(
+      newChurch,
+      ownerUser,
+      ownerMember,
+      ChurchUserRole.OWNER,
+      qr,
+    );
+
+    await this.userDomainService.updateUser(
+      ownerUser,
+      {
+        role: UserRole.OWNER,
+      },
+      qr,
+    );
 
     // TODO 교회 생성 시 기본 PermissionPreset 생성
 
@@ -121,7 +133,6 @@ export class ChurchesService {
 
   async transferOwner(
     churchId: number,
-    mainAdminUserId: number,
     dto: TransferOwnerDto,
     qr: QueryRunner,
   ) {
@@ -130,32 +141,73 @@ export class ChurchesService {
       qr,
     );
 
-    const oldOwnerMember =
-      await this.membersDomainService.findMemberModelByUserId(
-        church,
-        mainAdminUserId,
-        qr,
-        { user: true },
-      );
+    const oldOwnerUser = await this.userDomainService.findUserById(
+      church.ownerUserId,
+      qr,
+    );
 
     const newOwnerMember = await this.membersDomainService.findMemberModelById(
       church,
       dto.newOwnerMemberId,
       qr,
-      { user: true },
     );
 
-    if (oldOwnerMember.id === newOwnerMember.id) {
+    const oldOwnerChurchUser =
+      await this.churchUserDomainService.findChurchUserByUser(
+        church,
+        oldOwnerUser,
+        qr,
+      );
+
+    const newOwnerChurchUser =
+      await this.churchUserDomainService.findChurchUserByMember(
+        church,
+        newOwnerMember,
+        qr,
+      );
+
+    const newOwnerUser = await this.userDomainService.findUserById(
+      newOwnerChurchUser.userId,
+      qr,
+    );
+
+    if (oldOwnerChurchUser.userId === newOwnerChurchUser.userId) {
       throw new BadRequestException(ChurchException.SAME_MAIN_ADMIN);
     }
 
-    if (newOwnerMember.user.role !== UserRole.MANAGER) {
+    if (newOwnerChurchUser.role !== ChurchUserRole.MANAGER) {
       throw new BadRequestException(ChurchException.INVALID_NEW_OWNER);
     }
 
-    await this.userDomainService.transferOwner(
-      oldOwnerMember.user,
-      newOwnerMember.user,
+    await this.churchesDomainService.transferOwner(
+      church,
+      newOwnerChurchUser,
+      qr,
+    );
+
+    await this.userDomainService.updateUser(
+      oldOwnerUser,
+      {
+        role: UserRole.MEMBER,
+      },
+      qr,
+    );
+
+    await this.userDomainService.updateUser(
+      newOwnerUser,
+      { role: UserRole.OWNER },
+      qr,
+    );
+
+    await this.churchUserDomainService.updateChurchUserRole(
+      oldOwnerChurchUser,
+      ChurchUserRole.MANAGER,
+      qr,
+    );
+
+    await this.churchUserDomainService.updateChurchUserRole(
+      newOwnerChurchUser,
+      ChurchUserRole.OWNER,
       qr,
     );
 
