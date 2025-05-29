@@ -17,9 +17,11 @@ import {
 import { ChurchModel } from '../../entity/church.entity';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRole } from '../../../user/const/user-role.enum';
+import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 import { ChurchException } from '../../const/exception/church.exception';
+import { UserModel } from '../../../user/entity/user.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -40,6 +42,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
 
   async createChurch(
     dto: CreateChurchDto,
+    ownerUser: UserModel,
     qr: QueryRunner,
   ): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository(qr);
@@ -57,6 +60,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
 
     return churchRepository.save({
       ...dto,
+      ownerUserId: ownerUser.id,
       joinCode: await this.generateUniqueChurchCode(churchRepository),
     });
   }
@@ -236,6 +240,29 @@ export class ChurchesDomainService implements IChurchesDomainService {
     );
   }
 
+  async transferOwner(
+    church: ChurchModel,
+    newOwnerChurchUser: ChurchUserModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: church.id,
+      },
+      {
+        ownerUserId: newOwnerChurchUser.userId,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
   async getChurchOwnerIds(
     churchId: number,
     qr?: QueryRunner,
@@ -246,18 +273,13 @@ export class ChurchesDomainService implements IChurchesDomainService {
       where: {
         id: churchId,
       },
-      relations: {
-        users: true,
-      },
     });
 
     if (!church) {
       throw new NotFoundException(ChurchException.NOT_FOUND);
     }
 
-    return church.users
-      .filter((user) => user.role === UserRole.OWNER)
-      .map((admin) => admin.id);
+    return [church.ownerUserId];
   }
 
   async getChurchManagerIds(
@@ -271,7 +293,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
         id: churchId,
       },
       relations: {
-        users: true,
+        churchUsers: true,
       },
     });
 
@@ -279,10 +301,11 @@ export class ChurchesDomainService implements IChurchesDomainService {
       throw new NotFoundException(ChurchException.NOT_FOUND);
     }
 
-    return church.users
+    return church.churchUsers
       .filter(
         (user) =>
-          user.role === UserRole.MANAGER || user.role === UserRole.OWNER,
+          user.role === ChurchUserRole.MANAGER ||
+          user.role === ChurchUserRole.OWNER,
       )
       .map((manager) => manager.id);
   }

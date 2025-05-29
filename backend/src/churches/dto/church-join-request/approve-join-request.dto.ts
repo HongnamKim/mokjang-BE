@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, Min } from 'class-validator';
+import { Equals, IsEnum, IsNumber, Min } from 'class-validator';
+import {
+  AssignableChurchUserRole,
+  ChurchUserRole,
+  UserRole,
+} from '../../../user/const/user-role.enum';
 
 export class ApproveJoinRequestDto {
   @ApiProperty({
@@ -9,4 +14,12 @@ export class ApproveJoinRequestDto {
   @IsNumber()
   @Min(1)
   linkMemberId: number;
+
+  @ApiProperty({
+    description: 'UserRole',
+    enum: AssignableChurchUserRole,
+  })
+  @IsEnum(AssignableChurchUserRole)
+  @Equals(ChurchUserRole.MANAGER)
+  userRole: ChurchUserRole;
 }

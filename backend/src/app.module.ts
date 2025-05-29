@@ -55,6 +55,8 @@ import { PermissionUnitModel } from './permission/entity/permission-unit.entity'
 import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
 import { PermissionTemplateModel } from './permission/entity/permission-template.entity';
 import { ManagerModule } from './manager/manager.module';
+import { ChurchUserModule } from './church-user/church-user.module';
+import { ChurchUserModel } from './church-user/entity/church-user.entity';
 
 @Module({
   imports: [
@@ -127,6 +129,7 @@ import { ManagerModule } from './manager/manager.module';
           // 교회 관련 엔티티
           ChurchModel,
           // 교회 가입 엔티티
+          ChurchUserModel,
           ChurchJoinRequestModel,
           ChurchJoinRequestStatModel,
           // 교인 관련 엔티티
@@ -182,6 +185,7 @@ import { ManagerModule } from './manager/manager.module';
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
+    ChurchUserModule,
     ManagerModule,
     PermissionModule,
     FamilyRelationModule,

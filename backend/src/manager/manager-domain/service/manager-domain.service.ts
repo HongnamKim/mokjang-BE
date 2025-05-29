@@ -63,7 +63,7 @@ export class ManagerDomainService implements IManagerDomainService {
         where: {
           churchId: church.id,
           user: {
-            churchId: church.id,
+            //churchId: church.id,
             role: In([UserRole.MANAGER, UserRole.OWNER]),
           },
           name: dto.name && ILike(`%${dto.name}%`),
@@ -99,7 +99,7 @@ export class ManagerDomainService implements IManagerDomainService {
         churchId: church.id,
         id: managerId,
         user: {
-          churchId: church.id,
+          //churchId: church.id,
           role: In([UserRole.MANAGER, UserRole.OWNER]),
         },
       },
@@ -125,7 +125,7 @@ export class ManagerDomainService implements IManagerDomainService {
         churchId: church.id,
         id: managerId,
         user: {
-          churchId: church.id,
+          //churchId: church.id,
           role: In([UserRole.MANAGER, UserRole.OWNER]),
         },
       },

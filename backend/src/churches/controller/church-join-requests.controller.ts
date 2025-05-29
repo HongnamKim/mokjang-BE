@@ -20,7 +20,6 @@ import {
   ApiRejectChurchJoinRequest,
 } from '../const/swagger/churches/controller.swagger';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../guard/church-guard.service';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
@@ -36,7 +35,9 @@ import { GetJoinRequestDto } from '../dto/church-join-request/get-join-request.d
 @ApiTags('Churches:Join Requests')
 @Controller('churches')
 export class ChurchJoinRequestsController {
-  constructor(private readonly churchesService: ChurchJoinRequestService) {}
+  constructor(
+    private readonly churchJoinRequestService: ChurchJoinRequestService,
+  ) {}
 
   @ApiPostChurchJoinRequest()
   @Post('join')
@@ -47,7 +48,7 @@ export class ChurchJoinRequestsController {
     @Body() dto: CreateJoinRequestDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.postChurchJoinRequest(
+    return this.churchJoinRequestService.postChurchJoinRequest(
       accessPayload,
       dto.joinCode,
       qr,
@@ -56,17 +57,17 @@ export class ChurchJoinRequestsController {
 
   @ApiGetChurchJoinRequest()
   @Get(':churchId/join')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getChurchJoinRequests(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetJoinRequestDto,
   ) {
-    return this.churchesService.getChurchJoinRequests(churchId, dto);
+    return this.churchJoinRequestService.getChurchJoinRequests(churchId, dto);
   }
 
   @ApiApproveChurchJoinRequest()
   @Patch(':churchId/join/:joinId/approve')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   approveChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -74,7 +75,9 @@ export class ChurchJoinRequestsController {
     @Body() dto: ApproveJoinRequestDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.approveChurchJoinRequest(
+    //return dto;
+
+    return this.churchJoinRequestService.approveChurchJoinRequest(
       churchId,
       joinId,
       dto,
@@ -84,27 +87,33 @@ export class ChurchJoinRequestsController {
 
   @ApiRejectChurchJoinRequest()
   @Patch(':churchId/join/:joinId/reject')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   rejectChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,
   ) {
-    return this.churchesService.rejectChurchJoinRequest(churchId, joinId);
+    return this.churchJoinRequestService.rejectChurchJoinRequest(
+      churchId,
+      joinId,
+    );
   }
 
   @ApiDeleteChurchJoinRequest()
   @Delete(':churchId/join/:joinId')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   deleteChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,
   ) {
-    return this.churchesService.deleteChurchJoinRequest(churchId, joinId);
+    return this.churchJoinRequestService.deleteChurchJoinRequest(
+      churchId,
+      joinId,
+    );
   }
 
   @ApiGetTopRequestUsers()
   @Get(':churchId/join/stats')
   getTopRequestUsers() {
-    return this.churchesService.getTopRequestUsers();
+    return this.churchJoinRequestService.getTopRequestUsers();
   }
 }

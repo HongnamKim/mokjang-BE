@@ -19,7 +19,7 @@ export const ManagersFindOptionsSelect: FindOptionsSelect<MemberModel> = {
     title: true,
   },
   user: {
-    churchJoinedAt: true,
+    //churchJoinedAt: true,
     role: true,
   },
 };
@@ -39,7 +39,7 @@ export const ManagerFindOptionsSelect: FindOptionsSelect<MemberModel> = {
     permissionUnits: true,
   },
   user: {
-    churchJoinedAt: true,
+    //churchJoinedAt: true,
     role: true,
   },
 };

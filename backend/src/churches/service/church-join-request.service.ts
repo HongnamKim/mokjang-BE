@@ -27,13 +27,16 @@ import { QueryRunner } from 'typeorm';
 import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
 import { ChurchJoinRequestException } from '../const/exception/church.exception';
 import { UserRole } from '../../user/const/user-role.enum';
-import { MemberException } from '../../members/const/exception/member.exception';
 import {
   ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE,
   IChurchJoinRequestStatsDomainService,
 } from '../churches-domain/interface/church-join-request-stats-domain.service.interface';
 import { GetJoinRequestDto } from '../dto/church-join-request/get-join-request.dto';
 import { JoinRequestPaginationResult } from '../dto/church-join-request/join-request-pagination-result.dto';
+import {
+  ICHURCH_USER_DOMAIN_SERVICE,
+  IChurchUserDomainService,
+} from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
 
 @Injectable()
 export class ChurchJoinRequestService {
@@ -44,6 +47,8 @@ export class ChurchJoinRequestService {
     private readonly churchJoinRequestsDomainService: IChurchJoinRequestDomainService,
     @Inject(ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE)
     private readonly churchJoinRequestStatsDomainService: IChurchJoinRequestStatsDomainService,
+    @Inject(ICHURCH_USER_DOMAIN_SERVICE)
+    private readonly churchUserDomainService: IChurchUserDomainService,
 
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
@@ -59,9 +64,16 @@ export class ChurchJoinRequestService {
     const userId = accessPayload.id;
     const user = await this.userDomainService.findUserById(userId);
 
-    if (user.church) {
+    /**
+     * ChurchUserModel 조회로 소속된 교회가 있는지 확인
+     */
+    if (user.role !== UserRole.NONE) {
       throw new ConflictException(UserException.ALREADY_JOINED);
     }
+
+    /*if (user.church) {
+      throw new ConflictException(UserException.ALREADY_JOINED);
+    }*/
 
     await this.churchJoinRequestStatsDomainService.increaseAttemptsCount(
       user,
@@ -139,30 +151,29 @@ export class ChurchJoinRequestService {
       qr,
     );
 
-    // user - church 연결
-    await this.userDomainService.signInChurch(
-      joinRequest.user,
-      church,
-      UserRole.MANAGER,
-      qr,
-    );
-
     // user - member 연결
     const linkMember = await this.membersDomainService.findMemberModelById(
       church,
       dto.linkMemberId,
       qr,
-      { user: true },
+      //{ user: true },
     );
 
-    if (linkMember.user) {
+    /*if (linkMember.user) {
       throw new ConflictException(MemberException.ALREADY_LINKED);
-    }
+    }*/
 
-    //await this.userDomainService.linkMemberToUser(linkMember, joinRequest.user);
-    await this.membersDomainService.linkUserToMember(
-      linkMember,
+    await this.churchUserDomainService.createChurchUser(
+      church,
       joinRequest.user,
+      linkMember,
+      dto.userRole,
+      qr,
+    );
+
+    await this.userDomainService.updateUser(
+      joinRequest.user,
+      { role: UserRole.MEMBER },
       qr,
     );
 

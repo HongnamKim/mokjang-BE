@@ -32,6 +32,7 @@ import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.ent
 import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { PermissionTemplateModel } from '../../permission/entity/permission-template.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -42,6 +43,9 @@ export class MemberModel extends BaseModel {
   @OneToOne(() => UserModel, (user) => user.member)
   @JoinColumn({ name: 'userId' })
   user: UserModel;
+
+  @OneToOne(() => ChurchUserModel, (churchUser) => churchUser.member)
+  churchUser: ChurchUserModel;
 
   @Column({ nullable: true })
   isPermissionActive: boolean;

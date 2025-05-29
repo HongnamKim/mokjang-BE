@@ -111,13 +111,10 @@ export class ChurchesController {
   @UseInterceptors(TransactionInterceptor)
   transferMainAdmin(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @Body() dto: TransferOwnerDto,
     @QueryRunner() qr: QR,
   ) {
-    const ownerUserId = accessPayload.id;
-
-    return this.churchesService.transferOwner(churchId, ownerUserId, dto, qr);
+    return this.churchesService.transferOwner(churchId, dto, qr);
   }
 
   @ApiOperation({
