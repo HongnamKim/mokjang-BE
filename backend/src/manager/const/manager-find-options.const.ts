@@ -1,45 +1,30 @@
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
-import { MemberModel } from '../../members/entity/member.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../members/const/member-find-options.const';
 
-export const ManagersFindOptionsRelations: FindOptionsRelations<MemberModel> = {
-  ...MemberSummarizedRelation,
-  permissionTemplate: true,
-  user: true,
-};
+export const ManagersFindOptionsRelations: FindOptionsRelations<ChurchUserModel> =
+  {
+    member: MemberSummarizedRelation,
+    permissionTemplate: true,
+  };
 
-export const ManagersFindOptionsSelect: FindOptionsSelect<MemberModel> = {
-  ...MemberSummarizedSelect,
-  isPermissionActive: true,
+export const ManagersFindOptionsSelect: FindOptionsSelect<ChurchUserModel> = {
+  member: MemberSummarizedSelect,
   permissionTemplate: {
     id: true,
     title: true,
   },
-  user: {
-    //churchJoinedAt: true,
-    role: true,
-  },
 };
 
-export const ManagerFindOptionsRelations: FindOptionsRelations<MemberModel> = {
-  ...MemberSummarizedRelation,
-  permissionTemplate: { permissionUnits: true },
-  user: true,
-};
+export const ManagerFindOptionsRelations: FindOptionsRelations<ChurchUserModel> =
+  {
+    member: MemberSummarizedRelation,
+    permissionTemplate: { permissionUnits: true },
+  };
 
-export const ManagerFindOptionsSelect: FindOptionsSelect<MemberModel> = {
-  ...MemberSummarizedSelect,
-  isPermissionActive: true,
-  permissionTemplate: {
-    id: true,
-    title: true,
-    permissionUnits: true,
-  },
-  user: {
-    //churchJoinedAt: true,
-    role: true,
-  },
+export const ManagerFindOptionsSelect: FindOptionsSelect<ChurchUserModel> = {
+  member: MemberSummarizedSelect,
 };

@@ -4,10 +4,6 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
-  IMANAGER_DOMAIN_SERVICE,
-  IManagerDomainService,
-} from '../manager-domain/service/interface/manager-domain.service.interface';
 import { QueryRunner } from 'typeorm';
 import { ManagerPaginationResponseDto } from '../dto/response/manager-pagination-response.dto';
 import { PatchManagerResponseDto } from '../dto/response/patch-manager-response.dto';
@@ -17,6 +13,10 @@ import {
   IPERMISSION_DOMAIN_SERVICE,
   IPermissionDomainService,
 } from '../../permission/permission-domain/service/interface/permission-domain.service.interface';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../manager-domain/service/interface/manager-domain.service.interface';
 
 @Injectable()
 export class ManagerService {
@@ -162,10 +162,11 @@ export class ManagerService {
 
     await this.managerDomainService.unassignPermissionTemplate(manager, qr);
 
-    await this.permissionDomainService.decrementMemberCount(
-      manager.permissionTemplate,
-      qr,
-    );
+    manager.permissionTemplate &&
+      (await this.permissionDomainService.decrementMemberCount(
+        manager.permissionTemplate,
+        qr,
+      ));
 
     const updatedManager = await this.managerDomainService.findManagerById(
       church,

@@ -7,13 +7,9 @@ import { RouterModule } from '@nestjs/core';
 import { SearchMembersService } from './service/search-members.service';
 import { ChurchModel } from '../churches/entity/church.entity';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
-import { EducationDomainModule } from '../management/educations/service/education-domain/education-domain.module';
 import { MembersDomainModule } from './member-domain/members-domain.module';
 import { ISEARCH_MEMBERS_SERVICE } from './service/interface/search-members.service.interface';
 import { FamilyRelationDomainModule } from '../family-relation/family-relation-domain/family-relation-domain.module';
-import { UserMembersController } from './controller/user-members.controller';
-import { UserDomainModule } from '../user/user-domain/user-domain.module';
-import { UserMembersService } from './service/user-members.service';
 
 @Module({
   imports: [
@@ -21,21 +17,18 @@ import { UserMembersService } from './service/user-members.service';
     RouterModule.register([
       { path: 'churches/:churchId', module: MembersModule },
     ]),
-    UserDomainModule,
     ChurchesDomainModule,
     MembersDomainModule,
     FamilyRelationDomainModule,
-    EducationDomainModule,
   ],
-  controllers: [MembersController, UserMembersController],
+  controllers: [MembersController],
   providers: [
     MembersService,
-    UserMembersService,
     {
       provide: ISEARCH_MEMBERS_SERVICE,
       useClass: SearchMembersService,
     },
   ],
-  exports: [MembersService],
+  exports: [],
 })
 export class MembersModule {}

@@ -1,8 +1,8 @@
 import { BasePatchResponseDto } from '../../../common/dto/reponse/base-patch-response.dto';
-import { MemberModel } from '../../../members/entity/member.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
-export class PatchManagerResponseDto extends BasePatchResponseDto<MemberModel> {
-  constructor(data: MemberModel) {
+export class PatchManagerResponseDto extends BasePatchResponseDto<ChurchUserModel> {
+  constructor(data: ChurchUserModel) {
     super(data);
   }
 }

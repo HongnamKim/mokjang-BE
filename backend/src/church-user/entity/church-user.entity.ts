@@ -12,7 +12,6 @@ import { UserModel } from '../../user/entity/user.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionTemplateModel } from '../../permission/entity/permission-template.entity';
-import { PermissionUnitModel } from '../../permission/entity/permission-unit.entity';
 
 @Entity()
 export class ChurchUserModel extends BaseModel {
@@ -47,7 +46,7 @@ export class ChurchUserModel extends BaseModel {
   @Column({ nullable: true })
   permissionTemplateId: number | null;
 
-  @ManyToOne(() => PermissionUnitModel)
+  @ManyToOne(() => PermissionTemplateModel)
   @JoinColumn({ name: 'permissionTemplateId' })
   permissionTemplate: PermissionTemplateModel;
 
