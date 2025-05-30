@@ -1,44 +1,44 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MemberModel } from '../../../members/entity/member.entity';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { GetManagersDto } from '../../dto/request/get-managers.dto';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsWhere,
   ILike,
   In,
+  IsNull,
   QueryRunner,
   Repository,
   UpdateResult,
 } from 'typeorm';
-import { IManagerDomainService } from './interface/manager-domain.service.interface';
-import { ChurchModel } from '../../../churches/entity/church.entity';
-import { GetManagersDto } from '../../dto/request/get-managers.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { ManagerOrder } from '../../const/manager-order.enum';
+import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { ManagerDomainPaginationResultDto } from '../dto/manager-domain-pagination-result.dto';
-import { UserRole } from '../../../user/const/user-role.enum';
-import { MemberOrderCriteria } from '../../const/manager-order.enum';
+import { IManagerDomainService } from './interface/manager-domain.service.interface';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { ManagerException } from '../../exception/manager.exception';
+import { PermissionTemplateModel } from '../../../permission/entity/permission-template.entity';
 import {
   ManagerFindOptionsRelations,
   ManagerFindOptionsSelect,
   ManagersFindOptionsRelations,
   ManagersFindOptionsSelect,
 } from '../../const/manager-find-options.const';
-import { ManagerException } from '../../exception/manager.exception';
-import { PermissionTemplateModel } from '../../../permission/entity/permission-template.entity';
 
-@Injectable()
 export class ManagerDomainService implements IManagerDomainService {
   constructor(
-    @InjectRepository(MemberModel)
-    private readonly membersRepository: Repository<MemberModel>,
+    @InjectRepository(ChurchUserModel)
+    private readonly repository: Repository<ChurchUserModel>,
   ) {}
 
-  private getManagerRepository(qr?: QueryRunner) {
-    return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
+  private getRepository(qr?: QueryRunner) {
+    return qr ? qr.manager.getRepository(ChurchUserModel) : this.repository;
   }
 
   async findManagers(
@@ -46,40 +46,34 @@ export class ManagerDomainService implements IManagerDomainService {
     dto: GetManagersDto,
     qr?: QueryRunner,
   ): Promise<ManagerDomainPaginationResultDto> {
-    const repository = this.getManagerRepository(qr);
+    const repository = this.getRepository(qr);
 
-    const order: FindOptionsOrder<MemberModel> = {};
+    const orderOptions: FindOptionsOrder<ChurchUserModel> = {
+      [dto.order]: dto.orderDirection,
+    };
 
-    if (MemberOrderCriteria.includes(dto.order)) {
-      // 정렬 기준이 MemberModel 에 속할 경우
-      order[dto.order] = dto.orderDirection;
-    } else {
-      // 정렬 기준이 UserModel 에 속할 경우
-      order['user'] = { [dto.order]: dto.orderDirection };
+    if (dto.order !== ManagerOrder.CREATED_AT) {
+      orderOptions.createdAt = 'asc';
     }
+
+    const whereOptions: FindOptionsWhere<ChurchUserModel> = {
+      churchId: church.id,
+      role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+      leftAt: IsNull(),
+      member: {
+        name: dto.name && ILike(`%${dto.name}%`),
+      },
+    };
 
     const [data, totalCount] = await Promise.all([
       repository.find({
-        where: {
-          churchId: church.id,
-          user: {
-            //churchId: church.id,
-            role: In([UserRole.MANAGER, UserRole.OWNER]),
-          },
-          name: dto.name && ILike(`%${dto.name}%`),
-        },
+        where: whereOptions,
+        order: orderOptions,
         relations: ManagersFindOptionsRelations,
         select: ManagersFindOptionsSelect,
-        order,
       }),
       repository.count({
-        where: {
-          churchId: church.id,
-          user: {
-            role: In([UserRole.MANAGER, UserRole.OWNER]),
-          },
-          name: dto.name && ILike(`%${dto.name}%`),
-        },
+        where: whereOptions,
       }),
     ]);
 
@@ -90,72 +84,68 @@ export class ManagerDomainService implements IManagerDomainService {
     church: ChurchModel,
     managerId: number,
     qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ): Promise<MemberModel> {
-    const repository = this.getManagerRepository(qr);
+    relationOptions?: FindOptionsRelations<ChurchUserModel>,
+  ): Promise<ChurchUserModel> {
+    const repository = this.getRepository(qr);
 
-    const manager = await repository.findOne({
+    const churchUser = await repository.findOne({
       where: {
         churchId: church.id,
-        id: managerId,
-        user: {
-          //churchId: church.id,
-          role: In([UserRole.MANAGER, UserRole.OWNER]),
-        },
+        memberId: managerId,
+        leftAt: IsNull(),
       },
-      relations: { ...relationOptions, user: true },
+      relations: relationOptions,
     });
 
-    if (!manager) {
+    if (!churchUser) {
       throw new NotFoundException(ManagerException.NOT_FOUND);
     }
 
-    return manager;
+    return churchUser;
   }
 
   async findManagerById(
     church: ChurchModel,
     managerId: number,
     qr?: QueryRunner,
-  ): Promise<MemberModel> {
-    const repository = this.getManagerRepository(qr);
+  ): Promise<ChurchUserModel> {
+    const repository = this.getRepository(qr);
 
-    const manager = await repository.findOne({
+    const churchUser = await repository.findOne({
       where: {
         churchId: church.id,
-        id: managerId,
-        user: {
-          //churchId: church.id,
-          role: In([UserRole.MANAGER, UserRole.OWNER]),
-        },
+        memberId: managerId,
+        leftAt: IsNull(),
       },
       relations: ManagerFindOptionsRelations,
       select: ManagerFindOptionsSelect,
     });
 
-    if (!manager) {
+    if (!churchUser) {
       throw new NotFoundException(ManagerException.NOT_FOUND);
     }
 
-    return manager;
+    return churchUser;
   }
 
   async updatePermissionActive(
-    manager: MemberModel,
+    churchUser: ChurchUserModel,
     activity: boolean,
     qr?: QueryRunner,
-  ) {
-    const repository = this.getManagerRepository(qr);
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
 
-    if (manager.user.role !== UserRole.MANAGER) {
-      throw new BadRequestException(
-        '관리자 권한의 교인만 활성 상태를 변경할 수 있습니다.',
-      );
+    if (churchUser.role !== ChurchUserRole.MANAGER) {
+      throw new BadRequestException(ManagerException.CANNOT_CHANGE_ACTIVITY);
     }
 
     const result = await repository.update(
-      { id: manager.id },
-      { isPermissionActive: activity },
+      {
+        id: churchUser.id,
+      },
+      {
+        isPermissionActive: activity,
+      },
     );
 
     if (result.affected === 0) {
@@ -166,21 +156,28 @@ export class ManagerDomainService implements IManagerDomainService {
   }
 
   async assignPermissionTemplate(
-    manager: MemberModel,
+    churchUser: ChurchUserModel,
     permissionTemplate: PermissionTemplateModel,
     qr: QueryRunner,
   ): Promise<UpdateResult> {
-    const repository = this.getManagerRepository(qr);
-
-    if (manager.user.role !== UserRole.MANAGER) {
+    if (churchUser.role === ChurchUserRole.OWNER) {
       throw new BadRequestException(
-        '관리자 권한의 교인에게만 권한 유형을 부여할 수 있습니다.',
+        ManagerException.CANNOT_ASSIGN_PERMISSION_OWNER,
       );
     }
+    if (churchUser.role !== ChurchUserRole.MANAGER) {
+      throw new BadRequestException(ManagerException.CANNOT_ASSIGN_PERMISSION);
+    }
+
+    const repository = this.getRepository(qr);
 
     const result = await repository.update(
-      { id: manager.id },
-      { permissionTemplateId: permissionTemplate.id },
+      {
+        id: churchUser.id,
+      },
+      {
+        permissionTemplateId: permissionTemplate.id,
+      },
     );
 
     if (result.affected === 0) {
@@ -191,18 +188,18 @@ export class ManagerDomainService implements IManagerDomainService {
   }
 
   async unassignPermissionTemplate(
-    manager: MemberModel,
+    churchUser: ChurchUserModel,
     qr: QueryRunner,
   ): Promise<UpdateResult> {
-    const repository = this.getManagerRepository(qr);
-
-    if (!manager.permissionTemplate) {
-      throw new BadRequestException('부여된 권한 유형이 없습니다.');
-    }
+    const repository = this.getRepository(qr);
 
     const result = await repository.update(
-      { id: manager.id },
-      { permissionTemplateId: null },
+      {
+        id: churchUser.id,
+      },
+      {
+        permissionTemplateId: null,
+      },
     );
 
     if (result.affected === 0) {

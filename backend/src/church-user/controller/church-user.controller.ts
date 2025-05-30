@@ -41,6 +41,7 @@ export class ChurchUserController {
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '교회 가입 교인의 role 변경',
     description:
       '<h2>현개 개발 범위 외의 기능</h2>' +
@@ -62,17 +63,23 @@ export class ChurchUserController {
     summary: '계정 - 교인 정보 연결',
   })
   @Patch(':userId/link-member')
-  linkMember() {}
+  linkMember() {
+    return '개발 전';
+  }
 
   @ApiOperation({
     summary: '계정 - 교인 정보 연결 해제',
   })
   @Patch(':userId/unlink-member')
-  unlinkMember() {}
+  unlinkMember() {
+    return '개발 전';
+  }
 
   @ApiOperation({
     summary: '교회 계정 가입 취소',
   })
   @Patch(':userId/leave-church')
-  leaveChurch() {}
+  leaveChurch() {
+    return '개발 전';
+  }
 }

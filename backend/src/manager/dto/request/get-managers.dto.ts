@@ -6,13 +6,14 @@ import { IsOptionalNotNull } from '../../../common/decorator/validator/is-option
 
 export class GetManagersDto extends BaseOffsetPaginationRequestDto<ManagerOrder> {
   @ApiProperty({
-    description: '정렬 기준 (교회가입일 / 생성일 / 수정일)',
-    default: ManagerOrder.CHURCH_JOINED_AT,
+    description:
+      '정렬 기준 (교회가입일 / 교인 Role / 생성일(교회가입) / 수정일(교회가입))',
+    default: ManagerOrder.JOINED_AT,
     enum: ManagerOrder,
   })
   @IsOptional()
   @IsEnum(ManagerOrder)
-  order: ManagerOrder = ManagerOrder.CHURCH_JOINED_AT;
+  order: ManagerOrder = ManagerOrder.JOINED_AT;
 
   @ApiProperty({
     description: '관리자 이름',

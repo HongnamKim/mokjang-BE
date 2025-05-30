@@ -6,12 +6,10 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
-  OneToMany,
 } from 'typeorm';
 import { BaseModel, BaseModelColumns } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { PermissionUnitModel } from './permission-unit.entity';
-import { MemberModel } from '../../members/entity/member.entity';
 
 @Entity()
 export class PermissionTemplateModel extends BaseModel {
@@ -32,9 +30,6 @@ export class PermissionTemplateModel extends BaseModel {
   @ManyToMany(() => PermissionUnitModel, (unit) => unit.permissionTemplates)
   @JoinTable()
   permissionUnits: PermissionUnitModel[];
-
-  @OneToMany(() => MemberModel, (member) => member.permissionTemplate)
-  members: MemberModel[];
 }
 
 export const PermissionTemplateColumns = {
