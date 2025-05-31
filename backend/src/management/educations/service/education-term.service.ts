@@ -23,10 +23,6 @@ import {
   ISESSION_ATTENDANCE_DOMAIN_SERVICE,
   ISessionAttendanceDomainService,
 } from './education-domain/interface/session-attendance-domain.service.interface';
-import {
-  IMEMBERS_DOMAIN_SERVICE,
-  IMembersDomainService,
-} from '../../../members/member-domain/interface/members-domain.service.interface';
 import { EducationTermPaginationResultDto } from '../dto/terms/response/education-term-pagination-result.dto';
 import {
   IEDUCATION_ENROLLMENT_DOMAIN_SERVICE,
@@ -37,12 +33,18 @@ import { PatchEducationTermResponseDto } from '../dto/terms/response/patch-educa
 import { PostEducationTermResponseDto } from '../dto/terms/response/post-education-term-response.dto';
 import { GetEducationTermResponseDto } from '../dto/terms/response/get-education-term-response.dto';
 import { GetInProgressEducationTermDto } from '../dto/terms/request/get-in-progress-education-term.dto';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
 
 @Injectable()
 export class EducationTermService {
   constructor(
-    @Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,
+    /*@Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,*/
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -156,12 +158,18 @@ export class EducationTermService {
       qr,
     );
 
-    const creatorMember =
-      await this.membersDomainService.findMemberModelByUserId(
+    const creatorMember = (
+      await this.managerDomainService.findManagerByUserId(
         church,
         creatorUserId,
         qr,
-      );
+      )
+    ).member;
+    /*await this.membersDomainService.findMemberModelByUserId(
+        church,
+        creatorUserId,
+        qr,
+      );*/
 
     const education = await this.educationDomainService.findEducationModelById(
       church,
@@ -169,13 +177,20 @@ export class EducationTermService {
       qr,
     );
 
-    const instructor = dto.inChargeId
-      ? await this.membersDomainService.findMemberModelById(
+    const inCharge = dto.inChargeId
+      ? /*await this.membersDomainService.findMemberModelById(
           church,
           dto.inChargeId,
           qr,
           { user: true },
-        )
+        )*/
+        (
+          await this.managerDomainService.findManagerById(
+            church,
+            dto.inChargeId,
+            qr,
+          )
+        ).member
       : null;
 
     const educationTerm =
@@ -183,7 +198,7 @@ export class EducationTermService {
         //church,
         education,
         creatorMember,
-        instructor,
+        inCharge,
         dto,
         qr,
       );
@@ -261,19 +276,26 @@ export class EducationTermService {
         qr,
       );
 
-    const newInstructor = dto.inChargeId
-      ? await this.membersDomainService.findMemberModelById(
+    const newInCharge = dto.inChargeId
+      ? /*await this.membersDomainService.findMemberModelById(
           church,
           dto.inChargeId,
           qr,
           { user: true },
-        )
+        )*/
+        (
+          await this.managerDomainService.findManagerModelById(
+            church,
+            dto.inChargeId,
+            qr,
+          )
+        ).member
       : null;
 
     await this.educationTermDomainService.updateEducationTerm(
       education,
       educationTerm,
-      newInstructor,
+      newInCharge,
       dto,
       qr,
     );

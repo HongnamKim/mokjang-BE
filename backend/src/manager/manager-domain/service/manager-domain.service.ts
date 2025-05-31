@@ -92,9 +92,35 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         memberId: managerId,
+        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
         leftAt: IsNull(),
       },
       relations: relationOptions,
+    });
+
+    if (!churchUser) {
+      throw new NotFoundException(ManagerException.NOT_FOUND);
+    }
+
+    return churchUser;
+  }
+
+  async findManagerByUserId(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const churchUser = await repository.findOne({
+      where: {
+        churchId: church.id,
+        userId: userId,
+        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+        leftAt: IsNull(),
+      },
+      relations: ManagerFindOptionsRelations,
+      select: ManagerFindOptionsSelect,
     });
 
     if (!churchUser) {
@@ -115,6 +141,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         memberId: managerId,
+        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
         leftAt: IsNull(),
       },
       relations: ManagerFindOptionsRelations,
