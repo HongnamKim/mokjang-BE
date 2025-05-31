@@ -18,17 +18,20 @@ import {
 import { EducationPaginationResultDto } from '../dto/education-pagination-result.dto';
 import { EducationDeleteResponseDto } from '../dto/education/response/education-delete-response.dto';
 import {
-  IMEMBERS_DOMAIN_SERVICE,
-  IMembersDomainService,
-} from '../../../members/member-domain/interface/members-domain.service.interface';
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
 
 @Injectable()
 export class EducationsService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchDomainService: IChurchesDomainService,
-    @Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,
+    /*@Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,*/
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
+
     @Inject(IEDUCATION_DOMAIN_SERVICE)
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
@@ -85,12 +88,14 @@ export class EducationsService {
       qr,
     );
 
-    const creatorMember =
-      await this.membersDomainService.findMemberModelByUserId(
+    const creatorMember = (
+      await this.managerDomainService.findManagerByUserId(church, userId, qr)
+    ).member;
+    /*await this.membersDomainService.findMemberModelByUserId(
         church,
         userId,
         qr,
-      );
+      );*/
 
     return this.educationDomainService.createEducation(
       church,

@@ -21,6 +21,12 @@ export interface IManagerDomainService {
     relationOptions?: FindOptionsRelations<ChurchUserModel>,
   ): Promise<ChurchUserModel>;
 
+  findManagerByUserId(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel>;
+
   findManagerById(
     church: ChurchModel,
     managerId: number,

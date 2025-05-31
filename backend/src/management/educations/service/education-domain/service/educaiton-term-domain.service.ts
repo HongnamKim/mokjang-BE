@@ -353,7 +353,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       throw new BadRequestException(EducationTermException.ALREADY_EXIST);
     }
 
-    inCharge && this.assertValidateInChargeMember(inCharge);
+    //inCharge && this.assertValidateInChargeMember(inCharge);
 
     return educationTermsRepository.save({
       educationId: education.id,
