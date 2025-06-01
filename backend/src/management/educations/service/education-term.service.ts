@@ -158,13 +158,11 @@ export class EducationTermService {
       qr,
     );
 
-    const creatorMember = (
-      await this.managerDomainService.findManagerByUserId(
-        church,
-        creatorUserId,
-        qr,
-      )
-    ).member;
+    const creatorMember = await this.managerDomainService.findManagerByUserId(
+      church,
+      creatorUserId,
+      qr,
+    );
     /*await this.membersDomainService.findMemberModelByUserId(
         church,
         creatorUserId,
@@ -184,13 +182,11 @@ export class EducationTermService {
           qr,
           { user: true },
         )*/
-        (
-          await this.managerDomainService.findManagerById(
-            church,
-            dto.inChargeId,
-            qr,
-          )
-        ).member
+        await this.managerDomainService.findManagerById(
+          church,
+          dto.inChargeId,
+          qr,
+        )
       : null;
 
     const educationTerm =
@@ -283,13 +279,11 @@ export class EducationTermService {
           qr,
           { user: true },
         )*/
-        (
-          await this.managerDomainService.findManagerModelById(
-            church,
-            dto.inChargeId,
-            qr,
-          )
-        ).member
+        await this.managerDomainService.findManagerModelById(
+          church,
+          dto.inChargeId,
+          qr,
+        )
       : null;
 
     await this.educationTermDomainService.updateEducationTerm(
