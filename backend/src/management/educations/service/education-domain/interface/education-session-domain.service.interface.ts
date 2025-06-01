@@ -3,9 +3,9 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { UpdateEducationSessionDto } from '../../../dto/sessions/request/update-education-session.dto';
 import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-education-session.dto';
-import { MemberModel } from '../../../../../members/entity/member.entity';
 import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
 import { GetEducationSessionDto } from '../../../dto/sessions/request/get-education-session.dto';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_DOMAIN_SERVICE',
@@ -45,16 +45,16 @@ export interface IEducationSessionDomainService {
 
   createSingleEducationSession(
     educationTerm: EducationTermModel,
-    creatorMember: MemberModel,
+    creatorMember: ChurchUserModel, //MemberModel,
     dto: CreateEducationSessionDto,
-    inCharge: MemberModel | null,
+    inCharge: ChurchUserModel | null, //MemberModel | null,
     qr: QueryRunner,
   ): Promise<EducationSessionModel>;
 
   updateEducationSession(
     educationSession: EducationSessionModel,
     dto: UpdateEducationSessionDto,
-    inCharge: MemberModel | null,
+    inCharge: ChurchUserModel | null, //MemberModel | null,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

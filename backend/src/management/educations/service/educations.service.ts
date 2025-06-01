@@ -27,8 +27,6 @@ export class EducationsService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchDomainService: IChurchesDomainService,
-    /*@Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,*/
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
 
@@ -88,14 +86,11 @@ export class EducationsService {
       qr,
     );
 
-    const creatorMember = (
-      await this.managerDomainService.findManagerByUserId(church, userId, qr)
-    ).member;
-    /*await this.membersDomainService.findMemberModelByUserId(
-        church,
-        userId,
-        qr,
-      );*/
+    const creatorMember = await this.managerDomainService.findManagerByUserId(
+      church,
+      userId,
+      qr,
+    );
 
     return this.educationDomainService.createEducation(
       church,
