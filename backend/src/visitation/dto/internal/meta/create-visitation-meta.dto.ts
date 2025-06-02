@@ -1,7 +1,7 @@
 import { VisitationMethod } from '../../../const/visitation-method.enum';
 import { VisitationType } from '../../../const/visitation-type.enum';
 import { VisitationStatus } from '../../../const/visitation-status.enum';
-import { MemberModel } from '../../../../members/entity/member.entity';
+import { ChurchUserModel } from '../../../../church-user/entity/church-user.entity';
 
 export class CreateVisitationMetaDto {
   status: VisitationStatus;
@@ -12,11 +12,11 @@ export class CreateVisitationMetaDto {
 
   title: string;
 
-  inCharge: MemberModel;
+  inCharge: ChurchUserModel; //MemberModel;
 
   startDate: Date;
 
   endDate: Date;
 
-  creator: MemberModel;
+  creator: ChurchUserModel; //MemberModel;
 }

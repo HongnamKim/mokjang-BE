@@ -60,7 +60,7 @@ export class VisitationController {
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.createVisitation(
-      accessPayload,
+      accessPayload.id,
       churchId,
       dto,
       qr,
