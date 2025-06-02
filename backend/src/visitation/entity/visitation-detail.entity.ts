@@ -24,9 +24,9 @@ export class VisitationDetailModel extends BaseModel {
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   visitationContent: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   visitationPray: string;
 }

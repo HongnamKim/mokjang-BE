@@ -8,6 +8,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
 import { VisitationReportDomainModule } from '../report/report-domain/visitation-report-domain.module';
 import { VisitationDetailController } from './controller/visitation-detail.controller';
 import { VisitationDetailService } from './service/visitation-detail.service';
+import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { VisitationDetailService } from './service/visitation-detail.service';
       { path: 'churches/:churchId', module: VisitationModule },
     ]),
     ChurchesDomainModule,
+    ManagerDomainModule,
     MembersDomainModule,
 
     VisitationDomainModule,

@@ -6,7 +6,13 @@ import {
 import { IVisitationDetailDomainService } from '../interface/visitation-detail-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationDetailModel } from '../../entity/visitation-detail.entity';
-import { QueryRunner, Repository, UpdateResult } from 'typeorm';
+import {
+  FindOptionsRelations,
+  In,
+  QueryRunner,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import {
@@ -32,20 +38,63 @@ export class VisitationDetailDomainService
       : this.repository;
   }
 
-  async createVisitationDetail(
+  async createAddedMemberDetails(
     metaData: VisitationMetaModel,
-    member: MemberModel,
-    dto: VisitationDetailDto,
+    //memberIds: number[],
+    members: MemberModel[],
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
-    return repository.save({
-      visitationMeta: metaData,
-      member,
-      visitationContent: dto.visitationContent,
-      visitationPray: dto.visitationPray,
+    const details = repository.create(
+      members.map((member) => ({
+        visitationMeta: metaData,
+        memberId: member.id,
+      })),
+    );
+
+    await repository.save(details);
+  }
+
+  async deleteRemovedMemberDetails(
+    metaData: VisitationMetaModel,
+    memberIds: number[],
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    await repository.softDelete({
+      visitationMetaId: metaData.id,
+      memberId: In(memberIds),
     });
+  }
+
+  async createVisitationDetails(
+    metaData: VisitationMetaModel,
+    members: MemberModel[],
+    dto: VisitationDetailDto[],
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const details = repository.create(
+      members.map((member) => {
+        const detail = dto.find((detail) => detail.memberId === member.id);
+
+        if (!detail) {
+          throw new InternalServerErrorException();
+        }
+
+        return {
+          visitationMetaId: metaData.id,
+          memberId: member.id,
+          visitationContent: detail.visitationContent,
+          visitationPray: detail.visitationPray,
+        };
+      }),
+    );
+
+    return repository.save(details);
   }
 
   async findVisitationDetailByMetaAndMemberId(
@@ -60,6 +109,8 @@ export class VisitationDetailDomainService
         memberId: member.id,
         visitationMetaId: metaData.id,
       },
+      relations: VisitationDetailRelationOptions,
+      select: VisitationDetailSelectOptions,
     });
 
     if (!detailData) {
@@ -72,6 +123,7 @@ export class VisitationDetailDomainService
   async findVisitationDetailsByMetaId(
     metaData: VisitationMetaModel,
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<VisitationDetailModel>,
   ) {
     const repository = this.getRepository(qr);
 
@@ -79,53 +131,8 @@ export class VisitationDetailDomainService
       where: {
         visitationMetaId: metaData.id,
       },
-      relations: VisitationDetailRelationOptions,
-      select: VisitationDetailSelectOptions,
+      relations: relationOptions,
     });
-  }
-
-  async findVisitationDetailById(
-    visitationMeta: VisitationMetaModel,
-    visitationDetailId: number,
-    qr?: QueryRunner,
-  ): Promise<VisitationDetailModel> {
-    const repository = this.getRepository(qr);
-
-    const detail = await repository.findOne({
-      where: {
-        visitationMetaId: visitationMeta.id,
-        id: visitationDetailId,
-      },
-      relations: VisitationDetailRelationOptions,
-      select: VisitationDetailSelectOptions,
-    });
-
-    if (!detail) {
-      throw new NotFoundException(VisitationDetailException.NOT_FOUND);
-    }
-
-    return detail;
-  }
-
-  async findVisitationDetailModelById(
-    visitationMeta: VisitationMetaModel,
-    visitationDetailId: number,
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getRepository(qr);
-
-    const visitationDetail = await repository.findOne({
-      where: {
-        visitationMetaId: visitationMeta.id,
-        id: visitationDetailId,
-      },
-    });
-
-    if (!visitationDetail) {
-      throw new NotFoundException(VisitationDetailException.NOT_FOUND);
-    }
-
-    return visitationDetail;
   }
 
   async updateVisitationDetail(
@@ -153,11 +160,7 @@ export class VisitationDetailDomainService
       );
     }
 
-    return this.findVisitationDetailById(
-      visitationMeta,
-      visitationDetail.id,
-      qr,
-    );
+    return result;
   }
 
   async deleteVisitationDetailsCascade(
@@ -169,22 +172,5 @@ export class VisitationDetailDomainService
     return repository.softDelete({
       visitationMetaId: metaData.id,
     });
-  }
-
-  async deleteVisitationDetail(
-    visitationDetail: VisitationDetailModel,
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getRepository(qr);
-
-    const result = await repository.softDelete(visitationDetail.id);
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        VisitationDetailException.DELETE_ERROR,
-      );
-    }
-
-    return result;
   }
 }

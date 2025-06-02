@@ -1,4 +1,6 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -28,6 +30,11 @@ import {
   VisitationRelationOptions,
   VisitationSelectOptions,
 } from '../../const/visitation-find-options.const';
+import { ChurchUserRole } from '../../../user/const/user-role.enum';
+import { MemberException } from '../../../members/const/exception/member.exception';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { ManagerException } from '../../../manager/exception/manager.exception';
+import { UpdateVisitationDto } from '../../dto/update-visitation.dto';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -144,19 +151,78 @@ export class VisitationMetaDomainService
     return metaData;
   }
 
+  private assertValidCreator(creator: ChurchUserModel) {
+    if (!creator.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('심방 생성자'),
+      );
+    }
+
+    if (!creator.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
+    }
+
+    if (
+      creator.role !== ChurchUserRole.OWNER &&
+      creator.role !== ChurchUserRole.MANAGER
+    ) {
+      throw new ForbiddenException(VisitationException.INVALID_CREATOR);
+    }
+  }
+
+  private assertValidInCharge(inCharge: ChurchUserModel) {
+    if (!inCharge.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('심방 생성자'),
+      );
+    }
+
+    if (!inCharge.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
+    }
+
+    if (
+      inCharge.role !== ChurchUserRole.OWNER &&
+      inCharge.role !== ChurchUserRole.MANAGER
+    ) {
+      throw new ForbiddenException(VisitationException.INVALID_IN_CHARGE);
+    }
+  }
+
+  private assertValidDate(
+    targetMetaData: VisitationMetaModel,
+    dto: UpdateVisitationMetaDto,
+  ) {
+    // 심방 종료날짜만 변경하는 경우
+    if (!dto.startDate && dto.endDate) {
+      if (dto.endDate < targetMetaData.startDate) {
+        throw new BadRequestException(VisitationException.INVALID_END_DATE);
+      }
+    }
+    // 심방 시작날짜만 변경하는 경우
+    if (dto.startDate && !dto.endDate) {
+      if (dto.startDate > targetMetaData.endDate) {
+        throw new BadRequestException(VisitationException.INVALID_START_DATE);
+      }
+    }
+  }
+
   async createVisitationMetaData(
     church: ChurchModel,
     dto: CreateVisitationMetaDto,
     members: MemberModel[],
     qr: QueryRunner,
   ) {
+    this.assertValidCreator(dto.creator);
+    this.assertValidInCharge(dto.inCharge);
+
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
 
     return visitationMetaRepository.save({
       churchId: church.id,
-      inCharge: dto.inCharge,
+      inCharge: dto.inCharge.member,
       members,
-      creator: dto.creator,
+      creator: dto.creator.member,
       status: dto.status,
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
@@ -184,6 +250,12 @@ export class VisitationMetaDomainService
     qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
+
+    if (dto.inCharge) {
+      this.assertValidInCharge(dto.inCharge);
+    }
+
+    this.assertValidDate(visitationMetaData, dto);
 
     const result = await visitationMetaRepository.update(
       {

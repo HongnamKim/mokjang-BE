@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
   IsArray,
   IsDate,
   IsEnum,
@@ -71,10 +72,10 @@ export class UpdateVisitationDto {
   })
   @IsOptionalNotNull()
   @IsDate()
-  @IsAfterDate('visitationStartDate')
+  @IsAfterDate('startDate')
   endDate?: Date;
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '심방 대상자 추가할 교인 ID 들',
     isArray: true,
     required: false,
@@ -92,5 +93,16 @@ export class UpdateVisitationDto {
   @IsOptional()
   @IsArray()
   @TransformNumberArray()
-  deleteMemberIds?: number[];
+  deleteMemberIds?: number[];*/
+
+  @ApiProperty({
+    description: '심방 대상자 교인 ID',
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @TransformNumberArray()
+  memberIds?: number[];
 }
