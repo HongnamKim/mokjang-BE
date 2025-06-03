@@ -50,6 +50,13 @@ import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
 import { TaskReportModel } from './report/entity/task-report.entity';
 import { EducationSessionReportModel } from './report/entity/education-session-report.entity';
+import { PermissionModule } from './permission/permission.module';
+import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
+import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
+import { PermissionTemplateModel } from './permission/entity/permission-template.entity';
+import { ManagerModule } from './manager/manager.module';
+import { ChurchUserModule } from './church-user/church-user.module';
+import { ChurchUserModel } from './church-user/entity/church-user.entity';
 
 @Module({
   imports: [
@@ -122,6 +129,7 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
           // 교회 관련 엔티티
           ChurchModel,
           // 교회 가입 엔티티
+          ChurchUserModel,
           ChurchJoinRequestModel,
           ChurchJoinRequestStatModel,
           // 교인 관련 엔티티
@@ -156,6 +164,9 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
           EducationSessionReportModel,
           // 업무 관련 엔티티
           TaskModel,
+          // 권한 관련
+          PermissionUnitModel,
+          PermissionTemplateModel,
         ],
         synchronize: true,
       }),
@@ -174,6 +185,9 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
     ChurchesModule,
     RequestInfoModule,
     MembersModule,
+    ChurchUserModule,
+    ManagerModule,
+    PermissionModule,
     FamilyRelationModule,
     MemberHistoryModule,
     ReportModule,
@@ -183,6 +197,7 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
 
     ChurchesDomainModule,
     MembersDomainModule,
+    PermissionDomainModule,
   ],
   controllers: [AppController],
   providers: [

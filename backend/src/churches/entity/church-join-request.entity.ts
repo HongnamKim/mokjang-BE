@@ -22,7 +22,6 @@ export class ChurchJoinRequestModel extends BaseModel {
   user: UserModel;
 
   @Column({
-    enum: ChurchJoinRequestStatusEnum,
     default: ChurchJoinRequestStatusEnum.PENDING,
   })
   status: ChurchJoinRequestStatusEnum;

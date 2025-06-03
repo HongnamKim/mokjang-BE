@@ -3,24 +3,27 @@ import { ApiPatchVisitationDetail } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
 import { VisitationService } from '../service/visitation.service';
 import { ApiTags } from '@nestjs/swagger';
+import { VisitationDetailService } from '../service/visitation-detail.service';
 
 @ApiTags('Visitations:Details')
 @Controller('visitations/:visitationId/details')
 export class VisitationDetailController {
-  constructor(private readonly visitationService: VisitationService) {}
+  constructor(
+    private readonly visitationDetailService: VisitationDetailService,
+  ) {}
 
   @ApiPatchVisitationDetail()
-  @Patch(':detailId')
+  @Patch(':memberId')
   patchVisitationDetail(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
-    @Param('detailId', ParseIntPipe) detailId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdateVisitationDetailDto,
   ) {
-    return this.visitationService.updateVisitationDetail(
+    return this.visitationDetailService.updateVisitationDetail(
       churchId,
       visitationId,
-      detailId,
+      memberId,
       dto,
     );
   }

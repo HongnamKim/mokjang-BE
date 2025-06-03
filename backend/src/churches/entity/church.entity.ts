@@ -1,5 +1,12 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import { Column, Entity, OneToMany, Unique } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  Unique,
+} from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
@@ -13,6 +20,7 @@ import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.ent
 import { ChurchJoinRequestModel } from './church-join-request.entity';
 import { Exclude } from 'class-transformer';
 import { TaskModel } from '../../task/entity/task.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Entity()
 @Unique(['joinCode'])
@@ -44,8 +52,15 @@ export class ChurchModel extends BaseModel {
   @Column({ default: 0 })
   memberCount: number;
 
-  @OneToMany(() => UserModel, (user) => user.church)
-  users: UserModel[];
+  @Column()
+  ownerUserId: number;
+
+  @OneToOne(() => UserModel, (user) => user.ownedChurch)
+  @JoinColumn({ name: 'ownerUserId' })
+  ownerUser: UserModel;
+
+  @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.church)
+  churchUsers: ChurchUserModel[];
 
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];

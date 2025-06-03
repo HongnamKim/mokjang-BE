@@ -7,6 +7,6 @@ export class UpdateMemberRoleDto {
     description: '변경할 권한',
     enum: UserRole,
   })
-  @IsIn([UserRole.member, UserRole.manager])
-  role: UserRole.member | UserRole.manager;
+  @IsIn([UserRole.MEMBER, UserRole.MANAGER])
+  role: UserRole.MEMBER | UserRole.MANAGER;
 }

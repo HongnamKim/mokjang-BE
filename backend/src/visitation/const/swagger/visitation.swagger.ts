@@ -64,8 +64,7 @@ export const ApiPatchVisitationMeta = () =>
         '<p>3. 심방 제목</p>' +
         '<p>4. 심방 진행자</p>' +
         '<p>5. 심방 진행 날짜</p>' +
-        '<p>6. 추가할 심방 대상자</p>' +
-        '<p>7. 삭제할 심방 대상자</p>',
+        '<p>6. 최종적으로 포함되어야 할 심방 대상자</p>',
     }),
     ApiNotFoundResponse({
       description: [

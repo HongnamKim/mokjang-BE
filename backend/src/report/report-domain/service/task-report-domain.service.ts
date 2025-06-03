@@ -83,8 +83,8 @@ export class TaskReportDomainService implements ITaskReportDomainService {
       // 피보고자의 권한 체크
       if (
         !receiver.user ||
-        (receiver.user.role !== UserRole.mainAdmin &&
-          receiver.user.role !== UserRole.manager)
+        (receiver.user.role !== UserRole.OWNER &&
+          receiver.user.role !== UserRole.MANAGER)
       ) {
         failed.push({
           receiverId: receiver.id,

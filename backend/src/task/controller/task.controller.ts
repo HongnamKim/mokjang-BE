@@ -28,6 +28,7 @@ import {
   ApiAddReportReceivers,
   ApiDeleteReportReceiver,
   ApiDeleteTask,
+  ApiGetSubTasks,
   ApiGetTaskById,
   ApiGetTasks,
   ApiPatchTask,
@@ -70,6 +71,15 @@ export class TaskController {
     @Param('taskId', ParseIntPipe) taskId: number,
   ) {
     return this.taskService.getTaskById(churchId, taskId);
+  }
+
+  @ApiGetSubTasks()
+  @Get(':taskId/sub-tasks')
+  async getSubTasks(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+  ) {
+    return this.taskService.getSubTasks(churchId, taskId);
   }
 
   @ApiPatchTask()
