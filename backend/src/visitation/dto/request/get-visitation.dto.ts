@@ -8,12 +8,12 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { VisitationStatus } from '../const/visitation-status.enum';
-import { TransformStringArray } from '../../common/decorator/transformer/transform-array';
-import { VisitationOrderEnum } from '../const/visitation-order.enum';
-import { VisitationMethod } from '../const/visitation-method.enum';
-import { VisitationType } from '../const/visitation-type.enum';
-import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
+import { VisitationStatus } from '../../const/visitation-status.enum';
+import { TransformStringArray } from '../../../common/decorator/transformer/transform-array';
+import { VisitationOrderEnum } from '../../const/visitation-order.enum';
+import { VisitationMethod } from '../../const/visitation-method.enum';
+import { VisitationType } from '../../const/visitation-type.enum';
+import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
 
 export class GetVisitationDto {
   @ApiProperty({

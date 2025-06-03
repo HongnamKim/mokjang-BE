@@ -115,7 +115,8 @@ export const ApiApproveChurchJoinRequest = () =>
       summary: '교회 가입 신청 허가',
       description:
         '<h2>교회 가입 신청을 허가합니다.</h2>' +
-        '<p>status 가 PENDING 인 신청에만 요청 가능</p>',
+        '<p>status 가 PENDING 인 신청에만 요청 가능</p>' +
+        '<p>요청 승인 시 manager 권한 부여</p>',
     }),
   );
 

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
   IsArray,
   IsDate,
   IsEnum,
@@ -9,13 +10,13 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { TransformNumberArray } from '../../common/decorator/transformer/transform-array';
-import { VisitationStatus } from '../const/visitation-status.enum';
-import { VisitationMethod } from '../const/visitation-method.enum';
-import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
-import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
-import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
-import { IsOptionalNotNull } from '../../common/decorator/validator/is-optional-not.null.validator';
+import { TransformNumberArray } from '../../../common/decorator/transformer/transform-array';
+import { VisitationStatus } from '../../const/visitation-status.enum';
+import { VisitationMethod } from '../../const/visitation-method.enum';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
+import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class UpdateVisitationDto {
   @ApiProperty({
@@ -71,10 +72,10 @@ export class UpdateVisitationDto {
   })
   @IsOptionalNotNull()
   @IsDate()
-  @IsAfterDate('visitationStartDate')
+  @IsAfterDate('startDate')
   endDate?: Date;
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '심방 대상자 추가할 교인 ID 들',
     isArray: true,
     required: false,
@@ -92,5 +93,16 @@ export class UpdateVisitationDto {
   @IsOptional()
   @IsArray()
   @TransformNumberArray()
-  deleteMemberIds?: number[];
+  deleteMemberIds?: number[];*/
+
+  @ApiProperty({
+    description: '심방 대상자 교인 ID',
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @TransformNumberArray()
+  memberIds?: number[];
 }

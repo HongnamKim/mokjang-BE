@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { CreateVisitationDto } from '../create-visitation.dto';
+import { CreateVisitationDto } from '../request/create-visitation.dto';
 import { IsArray, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class AddReceiverDto extends PickType(CreateVisitationDto, [

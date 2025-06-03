@@ -16,13 +16,13 @@ import { VisitationService } from '../service/visitation.service';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { CreateVisitationDto } from '../dto/create-visitation.dto';
+import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
 import { ChurchManagerGuard } from '../../churches/guard/church-guard.service';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
-import { GetVisitationDto } from '../dto/get-visitation.dto';
+import { GetVisitationDto } from '../dto/request/get-visitation.dto';
 import {
   ApiDeleteVisitation,
   ApiGetVisitationById,
@@ -30,7 +30,7 @@ import {
   ApiPatchVisitationMeta,
   ApiPostVisitation,
 } from '../const/swagger/visitation.swagger';
-import { UpdateVisitationDto } from '../dto/update-visitation.dto';
+import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
 import { DeleteReceiverDto } from '../dto/receiever/delete-receiver.dto';
 
@@ -60,7 +60,7 @@ export class VisitationController {
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.createVisitation(
-      accessPayload,
+      accessPayload.id,
       churchId,
       dto,
       qr,

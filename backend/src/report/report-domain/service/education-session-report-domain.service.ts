@@ -201,8 +201,8 @@ export class EducationSessionReportDomainService
         continue;
       }
       if (
-        receiver.user.role !== UserRole.mainAdmin &&
-        receiver.user.role !== UserRole.manager
+        receiver.user.role !== UserRole.OWNER &&
+        receiver.user.role !== UserRole.MANAGER
       ) {
         failed.push({
           receiverId: receiver.id,

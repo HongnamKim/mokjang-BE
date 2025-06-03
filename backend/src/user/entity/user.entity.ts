@@ -1,12 +1,4 @@
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, Index, OneToMany, OneToOne } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { UserRole } from '../const/user-role.enum';
@@ -37,25 +29,19 @@ export class UserModel extends BaseModel {
   @Column({ default: false })
   privacyPolicyAgreed: boolean;
 
-  @Index()
-  @Column({ nullable: true })
-  churchId: number;
+  @OneToOne(() => ChurchModel)
+  ownedChurch: ChurchModel;
 
-  @ManyToOne(() => ChurchModel, (church) => church.users)
-  @JoinColumn({ name: 'churchId' })
-  church: ChurchModel;
-
-  @Column({ enum: UserRole, default: UserRole.none })
+  @Column({
+    default: UserRole.NONE,
+    comment:
+      '서비스 내의 role (owner: 교회 소유자, member: 교회 가입자, none: 소속X)',
+  })
   role: UserRole;
 
   @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinRequestModel;
 
-  /*@Index()
-  @Column({ nullable: true })
-  memberId: number;*/
-
   @OneToOne(() => MemberModel, (member) => member.user)
-  //@JoinColumn({ name: 'memberId' })
   member: MemberModel;
 }

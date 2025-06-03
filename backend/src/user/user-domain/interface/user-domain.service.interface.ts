@@ -3,8 +3,6 @@ import { UserModel } from '../../entity/user.entity';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateUserDto } from '../../dto/update-user.dto';
-import { UserRole } from '../../const/user-role.enum';
-import { MemberModel } from '../../../members/entity/member.entity';
 
 export const IUSER_DOMAIN_SERVICE = Symbol('IUserDomainService');
 
@@ -31,24 +29,9 @@ export interface IUserDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
-  isAbleToCreateChurch(user: UserModel): boolean;
-
-  signInChurch(
-    user: UserModel,
-    church: ChurchModel,
-    role: UserRole,
-    qr?: QueryRunner,
-  ): Promise<UpdateResult>;
-
-  linkMemberToUser(
-    member: MemberModel,
-    user: UserModel,
-    qr?: QueryRunner,
-  ): Promise<UserModel>;
-
   findMainAdminUser(church: ChurchModel, qr?: QueryRunner): Promise<UserModel>;
 
-  transferMainAdmin(
+  transferOwner(
     beforeMainAdmin: UserModel,
     newMainAdmin: UserModel,
     qr: QueryRunner,

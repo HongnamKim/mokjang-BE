@@ -3,7 +3,6 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   IVISITATION_META_DOMAIN_SERVICE,
@@ -24,27 +23,33 @@ import {
 import { UserRole } from '../../user/const/user-role.enum';
 import { UpdateVisitationMetaDto } from '../dto/internal/meta/update-visitation-meta.dto';
 import { QueryRunner } from 'typeorm';
-import { VisitationDetailModel } from '../entity/visitation-detail.entity';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
-import { CreateVisitationDto } from '../dto/create-visitation.dto';
+import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import { VisitationException } from '../const/exception/visitation.exception';
 import { CreateVisitationMetaDto } from '../dto/internal/meta/create-visitation-meta.dto';
-import { GetVisitationDto } from '../dto/get-visitation.dto';
+import { GetVisitationDto } from '../dto/request/get-visitation.dto';
 import { VisitationType } from '../const/visitation-type.enum';
-import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
-import { UpdateVisitationDto } from '../dto/update-visitation.dto';
+import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MemberModel } from '../../members/entity/member.entity';
-import { VisitationDetailDto } from '../dto/visittion-detail.dto';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
 } from '../../report/report-domain/interface/visitation-report-domain.service.interface';
 import { AddConflictException } from '../../common/exception/add-conflict.exception';
 import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
-import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
+import { VisitationPaginationResultDto } from '../dto/response/visitation-pagination-result.dto';
 import { VisitationDetailService } from './visitation-detail.service';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { GetVisitationResponseDto } from '../dto/response/get-visitation-response.dto';
+import { PostVisitationResponseDto } from '../dto/response/post-visitation-response.dto';
+import { PatchVisitationResponseDto } from '../dto/response/patch-visitation-response.dto';
+import { DeleteVisitationResponseDto } from '../dto/response/delete-visitation-response.dto';
 
 @Injectable()
 export class VisitationService {
@@ -53,6 +58,8 @@ export class VisitationService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
 
     @Inject(IVISITATION_META_DOMAIN_SERVICE)
     private readonly visitationMetaDomainService: IVisitationMetaDomainService,
@@ -89,29 +96,18 @@ export class VisitationService {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const visitationMeta =
+    const visitation =
       await this.visitationMetaDomainService.findVisitationMetaById(
         church,
         visitingMetaDataId,
         qr,
       );
 
-    const visitationDetails: VisitationDetailModel[] =
-      await this.visitationDetailDomainService.findVisitationDetailsByMetaId(
-        visitationMeta,
-        qr,
-      );
-
-    const visitation: VisitationMetaModel = {
-      ...visitationMeta,
-      visitationDetails,
-    };
-
-    return visitation;
+    return new GetVisitationResponseDto(visitation);
   }
 
   async createVisitation(
-    accessPayload: JwtAccessPayload,
+    creatorId: number,
     churchId: number,
     dto: CreateVisitationDto,
     qr: QueryRunner,
@@ -121,22 +117,17 @@ export class VisitationService {
       qr,
     );
 
-    const creatorMember =
-      await this.membersDomainService.findMemberModelByUserId(
-        church,
-        accessPayload.id,
-        qr,
-      );
+    const creator = await this.managerDomainService.findManagerByUserId(
+      church,
+      creatorId,
+      qr,
+    );
 
-    const instructor = await this.membersDomainService.findMemberModelById(
+    const inCharge = await this.managerDomainService.findManagerById(
       church,
       dto.inChargeId,
       qr,
-      { user: true },
     );
-
-    // 심방 진행자 검증
-    this.checkVisitationAuthorization(instructor);
 
     const memberIds = dto.visitationDetails.map((detail) => detail.memberId);
 
@@ -148,8 +139,8 @@ export class VisitationService {
 
     const visitationMeta = await this.createVisitationMeta(
       church,
-      creatorMember,
-      instructor,
+      creator,
+      inCharge,
       members,
       dto,
       qr,
@@ -165,89 +156,27 @@ export class VisitationService {
     if (dto.receiverIds && dto.receiverIds.length > 0) {
       await this.createVisitationReports(
         church,
-        //instructor,
         dto.receiverIds,
         visitationMeta,
         qr,
       );
     }
 
-    return this.getVisitationById(churchId, visitationMeta.id, qr);
+    const newVisitation =
+      await this.visitationMetaDomainService.findVisitationMetaById(
+        church,
+        visitationMeta.id,
+        qr,
+      );
+
+    return new PostVisitationResponseDto(newVisitation);
   }
-
-  private async createVisitationReports(
-    church: ChurchModel,
-    //sender: MemberModel,
-    receiverIds: number[],
-    visitationMeta: VisitationMetaModel,
-    qr: QueryRunner,
-  ) {
-    const receivers = await this.membersDomainService.findMembersById(
-      church,
-      receiverIds,
-      qr,
-      { user: true },
-    );
-
-    return Promise.all(
-      receivers.map(async (receiver) => {
-        // 권한 검증
-        if (
-          receiver.user.role !== UserRole.manager &&
-          receiver.user.role !== UserRole.mainAdmin
-        ) {
-          throw new ForbiddenException(VisitationException.INVALID_RECEIVER);
-        }
-
-        return this.visitationReportDomainService.createVisitationReport(
-          visitationMeta,
-          //sender,
-          receiver,
-          qr,
-        );
-      }),
-    );
-  }
-
-  /**
-   * 심방 생성 시 대상자들의 심방 세부 데이터 생성
-   * @param visitationMeta 사전에 생성된 심방 메타 데이터
-   * @param members 심방 대상자 교인 엔티티 배열
-   * @param dto 심방 생성 DTO
-   * @param qr 트랜잭션을 위한 QueryRunner
-   * @private
-   */
-  /*private async createVisitationDetails(
-    visitationMeta: VisitationMetaModel,
-    members: MemberModel[],
-    dto: CreateVisitationDto,
-    qr: QueryRunner,
-  ) {
-    return Promise.all(
-      dto.visitationDetails.map(async (visitationDetailDto) => {
-        const visitationMember = members.find(
-          (member) => member.id === visitationDetailDto.memberId,
-        );
-
-        if (!visitationMember) {
-          throw new NotFoundException(MemberException.NOT_FOUND);
-        }
-
-        return this.visitationDetailDomainService.createVisitationDetail(
-          visitationMeta,
-          visitationMember,
-          visitationDetailDto,
-          qr,
-        );
-      }),
-    );
-  }*/
 
   /**
    * 심방 생성 시 심방의 메타 데이터 생성
    * @param church 교회 엔티티
    * @param creator 심방 생성 교인
-   * @param instructor 심방 진행자
+   * @param inCharge 심방 진행자
    * @param members 심방 대상자 (교인 엔티티 배열)
    * @param dto 심방 생성 DTO
    * @param qr 트랜잭션을 위한 QueryRunner
@@ -255,15 +184,15 @@ export class VisitationService {
    */
   private async createVisitationMeta(
     church: ChurchModel,
-    creator: MemberModel,
-    instructor: MemberModel,
+    creator: ChurchUserModel,
+    inCharge: ChurchUserModel,
     members: MemberModel[],
     dto: CreateVisitationDto,
     qr: QueryRunner,
   ) {
     const createVisitationMetaDto: CreateVisitationMetaDto = {
       creator,
-      inCharge: instructor,
+      inCharge: inCharge,
       status: dto.status,
       visitationMethod: dto.visitationMethod,
       title: dto.title,
@@ -278,171 +207,6 @@ export class VisitationService {
       createVisitationMetaDto,
       members,
       qr,
-    );
-  }
-
-  private checkVisitationAuthorization(instructor: MemberModel) {
-    if (
-      !instructor.user ||
-      (instructor.user.role !== UserRole.mainAdmin &&
-        instructor.user.role !== UserRole.manager)
-    ) {
-      throw new ForbiddenException(VisitationException.INVALID_INSTRUCTOR);
-    }
-  }
-
-  private async updateVisitationMembers(
-    church: ChurchModel,
-    visitationMeta: VisitationMetaModel,
-    dto: UpdateVisitationDto,
-    qr: QueryRunner,
-  ) {
-    if (!visitationMeta.members) {
-      throw new InternalServerErrorException(
-        VisitationException.MEMBER_RELATION_ERROR,
-      );
-    }
-
-    let visitationMembers = [...visitationMeta.members];
-
-    // 교인이 추가되는 경우 추가할 수 있는지 확인
-    if (dto.addMemberIds) {
-      if (visitationMembers.length + dto.addMemberIds.length > 30) {
-        throw new BadRequestException(
-          VisitationException.EXCEED_VISITATION_MEMBER,
-        );
-      }
-
-      await this.handleAddVisitationMembers(
-        church,
-        visitationMeta,
-        dto.addMemberIds,
-        visitationMembers,
-        qr,
-      );
-    }
-
-    // 교인이 삭제되는 경우 삭제할 수 있는지 확인
-    if (dto.deleteMemberIds) {
-      await this.handleDeleteVisitationMembers(
-        church,
-        visitationMeta,
-        dto.deleteMemberIds,
-        //visitationMembers,
-        qr,
-      );
-
-      // 삭제되지 않고 남은 교인들
-      visitationMembers = visitationMembers.filter(
-        (member) => !dto.deleteMemberIds?.includes(member.id),
-      );
-    }
-
-    await this.visitationMetaDomainService.updateVisitationMember(
-      visitationMeta,
-      visitationMembers,
-      qr,
-    );
-
-    return visitationMembers;
-  }
-
-  private async handleDeleteVisitationMembers(
-    church: ChurchModel,
-    visitationMeta: VisitationMetaModel,
-    deleteMemberIds: number[],
-    //visitationMembers: MemberModel[],
-    qr: QueryRunner,
-  ) {
-    const visitationMemberIdSet = new Set(
-      visitationMeta.members.map((member) => member.id),
-    );
-
-    const notExistMember = deleteMemberIds.filter(
-      (id) => !visitationMemberIdSet.has(id),
-    );
-
-    if (notExistMember.length > 0) {
-      throw new RemoveConflictException(
-        VisitationException.NOT_EXIST_DELETE_TARGET_MEMBER,
-        notExistMember,
-      );
-    }
-
-    await Promise.all(
-      deleteMemberIds.map(async (memberId) => {
-        const member = await this.membersDomainService.findMemberModelById(
-          church,
-          memberId,
-          qr,
-        );
-
-        const deleteTarget =
-          await this.visitationDetailDomainService.findVisitationDetailByMetaAndMemberId(
-            visitationMeta,
-            member,
-            qr,
-          );
-
-        return this.visitationDetailDomainService.deleteVisitationDetail(
-          deleteTarget,
-          qr,
-        );
-      }),
-    );
-  }
-
-  private async handleAddVisitationMembers(
-    church: ChurchModel,
-    visitationMeta: VisitationMetaModel,
-    addMemberIds: number[],
-    visitationMembers: MemberModel[],
-    qr: QueryRunner,
-  ) {
-    const visitationMemberIdSet = new Set(
-      visitationMeta.members.map((member) => member.id),
-    );
-
-    const duplicatedIds = addMemberIds.filter((id) =>
-      visitationMemberIdSet.has(id),
-    );
-
-    if (duplicatedIds.length > 0) {
-      throw new AddConflictException(
-        VisitationException.ALREADY_EXIST_TARGET_MEMBER,
-        duplicatedIds,
-      );
-    }
-
-    const newMembers = await this.membersDomainService.findMembersById(
-      church,
-      addMemberIds,
-      qr,
-    );
-
-    // 새 심방 대상자 추가
-    visitationMembers.push(...newMembers);
-
-    // 심방 세부 정보 생성 (VisitationDetailModel)
-    await Promise.all(
-      addMemberIds.map(async (memberId) => {
-        const member = await this.membersDomainService.findMemberModelById(
-          church,
-          memberId,
-          qr,
-        );
-
-        const detailDto: VisitationDetailDto = {
-          memberId: memberId,
-        };
-
-        return this.visitationDetailDomainService.createVisitationDetail(
-          visitationMeta,
-          member,
-          detailDto,
-          qr,
-        );
-      }),
     );
   }
 
@@ -463,50 +227,46 @@ export class VisitationService {
         { members: true },
       );
 
-    // 심방 종료날짜만 변경하는 경우
-    if (!dto.startDate && dto.endDate) {
-      if (dto.endDate < targetMetaData.startDate) {
-        throw new BadRequestException(VisitationException.INVALID_END_DATE);
-      }
-    }
-    // 심방 시작날짜만 변경하는 경우
-    if (dto.startDate && !dto.endDate) {
-      if (dto.startDate > targetMetaData.endDate) {
-        throw new BadRequestException(VisitationException.INVALID_START_DATE);
-      }
-    }
-
     // 심방 진행자 변경 시
     const newInstructor =
       dto.inChargeId && dto.inChargeId !== targetMetaData.inChargeId
-        ? await this.membersDomainService.findMemberModelById(
+        ? await this.managerDomainService.findManagerById(
             church,
             dto.inChargeId,
             qr,
-            { user: true },
           )
         : undefined;
-
-    // 새로운 심방 진행자의 권한 확인
-    if (newInstructor) {
-      this.checkVisitationAuthorization(newInstructor);
-    }
 
     // 심방 대상자 변경
     let visitationType: VisitationType = targetMetaData.visitationType;
 
-    if (dto.addMemberIds || dto.deleteMemberIds) {
-      const newVisitationMembers = await this.updateVisitationMembers(
-        church,
-        targetMetaData,
-        dto,
-        qr,
-      );
+    if (dto.memberIds) {
+      const newVisitationMembers =
+        await this.membersDomainService.findMembersById(
+          church,
+          dto.memberIds,
+          qr,
+        );
 
       visitationType =
         newVisitationMembers.length > 1
           ? VisitationType.GROUP
           : VisitationType.SINGLE;
+
+      // 변경된 대상자에 맞게 심방 디테일 생성/삭제
+      await this.visitationDetailService.handleUpdateVisitationMembers(
+        church,
+        targetMetaData,
+        dto.memberIds,
+        qr,
+      );
+
+      // 심방 메타 데이터의 대상자 수정
+      await this.visitationMetaDomainService.updateVisitationMember(
+        targetMetaData,
+        newVisitationMembers,
+        qr,
+      );
     }
 
     const updateVisitationMetaDto: UpdateVisitationMetaDto = {
@@ -525,11 +285,14 @@ export class VisitationService {
       qr,
     );
 
-    return this.visitationMetaDomainService.findVisitationMetaById(
-      church,
-      visitationMetaDataId,
-      qr,
-    );
+    const updatedVisitation =
+      await this.visitationMetaDomainService.findVisitationMetaById(
+        church,
+        visitationMetaDataId,
+        qr,
+      );
+
+    return new PatchVisitationResponseDto(updatedVisitation);
   }
 
   async deleteVisitation(
@@ -549,39 +312,53 @@ export class VisitationService {
         qr,
       );
 
+    // 메타 데이터 삭제
     await this.visitationMetaDomainService.deleteVisitationMeta(metaData, qr);
 
+    // 심방 디테일 삭제
     await this.visitationDetailDomainService.deleteVisitationDetailsCascade(
       metaData,
       qr,
     );
+
+    return new DeleteVisitationResponseDto(
+      new Date(),
+      metaData.id,
+      metaData.title,
+      true,
+    );
   }
 
-  async updateVisitationDetail(
-    churchId: number,
-    visitationId: number,
-    detailId: number,
-    dto: UpdateVisitationDetailDto,
+  private async createVisitationReports(
+    church: ChurchModel,
+    receiverIds: number[],
+    visitationMeta: VisitationMetaModel,
+    qr: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+    const receivers = await this.membersDomainService.findMembersById(
+      church,
+      receiverIds,
+      qr,
+      { user: true },
+    );
 
-    const metaData =
-      await this.visitationMetaDomainService.findVisitationMetaModelById(
-        church,
-        visitationId,
-      );
+    return Promise.all(
+      receivers.map(async (receiver) => {
+        // 권한 검증
+        if (
+          receiver.user.role !== UserRole.MANAGER &&
+          receiver.user.role !== UserRole.OWNER
+        ) {
+          throw new ForbiddenException(VisitationException.INVALID_RECEIVER);
+        }
 
-    const detailData =
-      await this.visitationDetailDomainService.findVisitationDetailModelById(
-        metaData,
-        detailId,
-      );
-
-    return this.visitationDetailDomainService.updateVisitationDetail(
-      metaData,
-      detailData,
-      dto,
+        return this.visitationReportDomainService.createVisitationReport(
+          visitationMeta,
+          //sender,
+          receiver,
+          qr,
+        );
+      }),
     );
   }
 
@@ -601,7 +378,7 @@ export class VisitationService {
         church,
         visitationId,
         qr,
-        { /*instructor: true,*/ reports: true },
+        { reports: true },
       );
 
     const reports = visitation.reports;
@@ -626,8 +403,8 @@ export class VisitationService {
     const isAvailableReceivers = newReceivers.every((receiver) => {
       return (
         receiver.user &&
-        (receiver.user.role === UserRole.mainAdmin ||
-          receiver.user.role === UserRole.manager)
+        (receiver.user.role === UserRole.OWNER ||
+          receiver.user.role === UserRole.MANAGER)
       );
     });
 
@@ -641,7 +418,6 @@ export class VisitationService {
       newReceivers.map((receiver) => {
         return this.visitationReportDomainService.createVisitationReport(
           visitation,
-          //visitation.instructor,
           receiver,
           qr,
         );

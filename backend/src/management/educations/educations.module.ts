@@ -15,6 +15,7 @@ import { EducationDomainModule } from './service/education-domain/education-doma
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { EducationSessionReportDomainModule } from '../../report/report-domain/education-session-report-domain.module';
+import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { EducationSessionReportDomainModule } from '../../report/report-domain/e
     //MembersModule,
     MembersDomainModule,
     ChurchesDomainModule,
+    ManagerDomainModule,
     EducationDomainModule,
 
     EducationSessionReportDomainModule,

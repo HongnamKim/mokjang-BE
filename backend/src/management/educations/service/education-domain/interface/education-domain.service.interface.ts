@@ -4,7 +4,7 @@ import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { EducationModel } from '../../../entity/education.entity';
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
-import { MemberModel } from '../../../../../members/entity/member.entity';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 
 export const IEDUCATION_DOMAIN_SERVICE = Symbol('IEDUCATION_DOMAIN_SERVICE');
 
@@ -30,7 +30,8 @@ export interface IEducationDomainService {
 
   createEducation(
     church: ChurchModel,
-    creatorMember: MemberModel,
+    //creatorMember: MemberModel,
+    creatorMember: ChurchUserModel,
     dto: CreateEducationDto,
     qr?: QueryRunner,
   ): Promise<EducationModel>;

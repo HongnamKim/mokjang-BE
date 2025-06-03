@@ -10,17 +10,17 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { VisitationMethod } from '../const/visitation-method.enum';
+import { VisitationMethod } from '../../const/visitation-method.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { VisitationStatus } from '../const/visitation-status.enum';
-import { VisitationDetailValidator } from '../decorator/visitation-detail.validator';
-import { VisitationDetailDto } from './visittion-detail.dto';
-import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
-import { SanitizeDto } from '../../common/decorator/sanitize-target.decorator';
-import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
-import { VisitationException } from '../const/exception/visitation.exception';
-import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
+import { VisitationStatus } from '../../const/visitation-status.enum';
+import { VisitationDetailValidator } from '../../decorator/visitation-detail.validator';
+import { VisitationDetailDto } from '../internal/visittion-detail.dto';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator';
+import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
+import { VisitationException } from '../../const/exception/visitation.exception';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 
 @SanitizeDto()
 export class CreateVisitationDto {

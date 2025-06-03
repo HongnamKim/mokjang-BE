@@ -5,7 +5,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -33,15 +32,14 @@ import {
   EducationEnrollmentStatus,
   EducationTermStatus,
 } from '../../../const/education-status.enum';
-import { MemberModel } from '../../../../../members/entity/member.entity';
 import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../../../members/const/member-find-options.const';
-import { UserRole } from '../../../../../user/const/user-role.enum';
-import { MemberException } from '../../../../../members/const/exception/member.exception';
+import { ChurchUserRole } from '../../../../../user/const/user-role.enum';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
 import { GetInProgressEducationTermDto } from '../../../dto/terms/request/get-in-progress-education-term.dto';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -72,8 +70,19 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       : this.educationSessionsRepository;
   }
 
-  private assertValidateInChargeMember(member: MemberModel) {
-    if (!member.userId) {
+  private assertValidateInChargeMember(
+    member: ChurchUserModel /*MemberModel*/,
+  ) {
+    if (
+      member.role !== ChurchUserRole.MANAGER &&
+      member.role !== ChurchUserRole.OWNER
+    ) {
+      throw new ConflictException(
+        EducationTermException.INVALID_IN_CHARGE_ROLE,
+      );
+    }
+
+    /*if (!member.userId) {
       throw new UnauthorizedException(
         EducationTermException.UNLINKED_IN_CHARGE,
       );
@@ -84,13 +93,13 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     if (
-      member.user.role !== UserRole.manager &&
-      member.user.role !== UserRole.mainAdmin
+      member.user.role !== UserRole.MANAGER &&
+      member.user.role !== UserRole.OWNER
     ) {
       throw new ConflictException(
         EducationTermException.INVALID_IN_CHARGE_ROLE,
       );
-    }
+    }*/
   }
 
   private async isExistEducationTerm(
@@ -336,8 +345,8 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
   async createEducationTerm(
     education: EducationModel,
-    creator: MemberModel,
-    inCharge: MemberModel | null,
+    creator: ChurchUserModel, //MemberModel,
+    inCharge: ChurchUserModel | null, //MemberModel | null,
     dto: CreateEducationTermDto,
     qr: QueryRunner,
   ): Promise<EducationTermModel> {
@@ -358,9 +367,9 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return educationTermsRepository.save({
       educationId: education.id,
       educationName: education.name,
-      creatorId: creator.id,
+      creatorId: creator.member.id,
       ...dto,
-      inChargeId: inCharge ? inCharge.id : undefined,
+      inChargeId: inCharge ? inCharge.member.id : undefined,
     });
   }
 
@@ -408,7 +417,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   async updateEducationTerm(
     education: EducationModel,
     educationTerm: EducationTermModel,
-    newInCharge: MemberModel | null,
+    newInCharge: ChurchUserModel | null, //MemberModel | null,
     dto: UpdateEducationTermDto,
     qr: QueryRunner,
   ) {
@@ -432,7 +441,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       },
       {
         ...dto,
-        inChargeId: newInCharge ? newInCharge.id : undefined,
+        inChargeId: newInCharge ? newInCharge.member.id : undefined,
       },
     );
 

@@ -11,8 +11,8 @@ import { EducationTermModel } from '../../../entity/education-term.entity';
 import { CreateEducationTermDto } from '../../../dto/terms/request/create-education-term.dto';
 import { UpdateEducationTermDto } from '../../../dto/terms/request/update-education-term.dto';
 import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
-import { MemberModel } from '../../../../../members/entity/member.entity';
 import { GetInProgressEducationTermDto } from '../../../dto/terms/request/get-in-progress-education-term.dto';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',
@@ -44,8 +44,8 @@ export interface IEducationTermDomainService {
 
   createEducationTerm(
     education: EducationModel,
-    creator: MemberModel,
-    instructor: MemberModel | null,
+    creator: ChurchUserModel, //MemberModel,
+    instructor: ChurchUserModel | null, //MemberModel | null,
     dto: CreateEducationTermDto,
     qr: QueryRunner,
   ): Promise<EducationTermModel>;
@@ -53,7 +53,7 @@ export interface IEducationTermDomainService {
   updateEducationTerm(
     education: EducationModel,
     educationTerm: EducationTermModel,
-    newInstructor: MemberModel | null,
+    newInstructor: ChurchUserModel | null, //MemberModel | null,
     dto: UpdateEducationTermDto,
     qr: QueryRunner,
   ): Promise<UpdateResult>;

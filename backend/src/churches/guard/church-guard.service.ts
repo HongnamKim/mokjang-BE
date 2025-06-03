@@ -9,17 +9,17 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../churches-domain/interface/churches-domain.service.interface';
-import {
-  IUSER_DOMAIN_SERVICE,
-  IUserDomainService,
-} from '../../user/user-domain/interface/user-domain.service.interface';
 import { ChurchAuthException } from '../const/exception/church.exception';
+import {
+  ICHURCH_USER_DOMAIN_SERVICE,
+  IChurchUserDomainService,
+} from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
 
 @Injectable()
 export class ChurchMemberGuard implements CanActivate {
   constructor(
-    @Inject(IUSER_DOMAIN_SERVICE)
-    private readonly userDomainService: IUserDomainService,
+    @Inject(ICHURCH_USER_DOMAIN_SERVICE)
+    private readonly churchUserDomainService: IChurchUserDomainService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,11 +27,12 @@ export class ChurchMemberGuard implements CanActivate {
 
     const token = req.tokenPayload;
 
-    const user = await this.userDomainService.findUserById(token.id);
-
     const churchId = parseInt(req.body.churchId);
 
-    if (user.churchId !== churchId) {
+    const churchUser =
+      await this.churchUserDomainService.findChurchUserByUserId(token.id);
+
+    if (churchUser.churchId !== churchId) {
       throw new ForbiddenException(ChurchAuthException.MEMBER_EXCEPTION);
     }
 
@@ -65,7 +66,7 @@ export class ChurchManagerGuard implements CanActivate {
 }
 
 @Injectable()
-export class ChurchMainAdminGuard implements CanActivate {
+export class ChurchOwnerGuard implements CanActivate {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -78,10 +79,10 @@ export class ChurchMainAdminGuard implements CanActivate {
 
     const churchId = parseInt(req.params.churchId);
 
-    const mainAdminIds =
-      await this.churchesDomainService.getChurchMainAdminIds(churchId);
+    const ownerIds =
+      await this.churchesDomainService.getChurchOwnerIds(churchId);
 
-    if (!mainAdminIds.includes(token.id)) {
+    if (!ownerIds.includes(token.id)) {
       throw new ForbiddenException(ChurchAuthException.MAIN_ADMIN_EXCEPTION);
     }
 
