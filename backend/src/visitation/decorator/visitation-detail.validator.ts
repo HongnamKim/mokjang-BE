@@ -5,7 +5,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { VisitationDetailDto } from '../dto/visittion-detail.dto';
+import { VisitationDetailDto } from '../dto/internal/visittion-detail.dto';
 
 @ValidatorConstraint({ name: 'VisitationDetailValidator', async: false })
 export class VisitationDetailConstraint

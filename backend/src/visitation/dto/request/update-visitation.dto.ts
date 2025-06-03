@@ -10,13 +10,13 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { TransformNumberArray } from '../../common/decorator/transformer/transform-array';
-import { VisitationStatus } from '../const/visitation-status.enum';
-import { VisitationMethod } from '../const/visitation-method.enum';
-import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
-import { IsAfterDate } from '../../common/decorator/validator/is-after-date.decorator';
-import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
-import { IsOptionalNotNull } from '../../common/decorator/validator/is-optional-not.null.validator';
+import { TransformNumberArray } from '../../../common/decorator/transformer/transform-array';
+import { VisitationStatus } from '../../const/visitation-status.enum';
+import { VisitationMethod } from '../../const/visitation-method.enum';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
+import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class UpdateVisitationDto {
   @ApiProperty({

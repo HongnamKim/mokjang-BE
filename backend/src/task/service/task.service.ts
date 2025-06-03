@@ -14,7 +14,6 @@ import {
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
 import { PostTaskResponseDto } from '../dto/response/post-task-response.dto';
-import { TaskTreeEnum } from '../const/task-tree.enum';
 import { GetTaskResponseDto } from '../dto/response/get-task-response.dto';
 import { GetTasksDto } from '../dto/request/get-tasks.dto';
 import { TaskPaginationResultDto } from '../dto/response/task-pagination-result.dto';
@@ -30,6 +29,11 @@ import {
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
 import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { GetSubTaskResponseDto } from '../dto/response/get-sub-task-response.dto';
 
 @Injectable()
 export class TaskService {
@@ -38,6 +42,8 @@ export class TaskService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
 
     @Inject(ITASK_DOMAIN_SERVICE)
     private readonly taskDomainService: ITaskDomainService,
@@ -62,6 +68,27 @@ export class TaskService {
     );
   }
 
+  async getSubTasks(churchId: number, taskId: number, qr?: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const parentTask = await this.taskDomainService.findParentTaskModelById(
+      church,
+      taskId,
+      qr,
+    );
+
+    const subTasks = await this.taskDomainService.findSubTasks(
+      church,
+      parentTask,
+      qr,
+    );
+
+    return new GetSubTaskResponseDto(subTasks, taskId);
+  }
+
   async postTask(
     churchId: number,
     creatorUserId: number,
@@ -73,46 +100,39 @@ export class TaskService {
       qr,
     );
 
-    const creatorMember =
-      await this.membersDomainService.findMemberModelByUserId(
-        church,
-        creatorUserId,
-        qr,
-      );
+    const creator = await this.managerDomainService.findManagerByUserId(
+      church,
+      creatorUserId,
+      qr,
+    );
 
-    const inChargeMember = dto.inChargeId
-      ? await this.membersDomainService.findMemberModelById(
+    const inCharge = dto.inChargeId
+      ? await this.managerDomainService.findManagerById(
           church,
           dto.inChargeId,
           qr,
-          { user: true },
         )
       : null;
 
-    // 업무 담당자 권한 체크
-    inChargeMember &&
-      this.taskDomainService.assertValidInChargeMember(inChargeMember);
-
     // 상위 업무
     const parentTask = dto.parentTaskId
-      ? await this.taskDomainService.findTaskModelById(
+      ? await this.taskDomainService.findParentTaskModelById(
           church,
           dto.parentTaskId,
-          TaskTreeEnum.parent,
           qr,
         )
       : null;
 
     const newTask = await this.taskDomainService.createTask(
       church,
-      creatorMember,
+      creator,
       parentTask,
-      inChargeMember,
+      inCharge,
       dto,
       qr,
     );
 
-    if (dto.receiverIds.length > 0) {
+    if (dto.receiverIds && dto.receiverIds.length > 0) {
       await this.handleAddTaskReport(church, newTask.id, dto.receiverIds, qr);
     }
 
@@ -142,7 +162,6 @@ export class TaskService {
     const targetTask = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
-      undefined,
       qr,
       {
         subTasks: true,
@@ -150,22 +169,17 @@ export class TaskService {
     );
 
     const newInChargeMember = dto.inChargeId
-      ? await this.membersDomainService.findMemberModelById(
+      ? await this.managerDomainService.findManagerById(
           church,
           dto.inChargeId,
           qr,
-          { user: true },
         )
       : null;
 
-    newInChargeMember &&
-      this.taskDomainService.assertValidInChargeMember(newInChargeMember);
-
     const newParentTask = dto.parentTaskId
-      ? await this.taskDomainService.findTaskModelById(
+      ? await this.taskDomainService.findParentTaskModelById(
           church,
           dto.parentTaskId,
-          TaskTreeEnum.parent,
           qr,
         )
       : null;
@@ -196,7 +210,6 @@ export class TaskService {
     const targetTask = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
-      TaskTreeEnum.none,
       qr,
       { reports: true },
     );
@@ -241,9 +254,8 @@ export class TaskService {
     const task = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
-      TaskTreeEnum.none,
       qr,
-      { /* inCharge: true, */ reports: true },
+      { reports: true },
     );
 
     const newReceivers = await this.membersDomainService.findMembersById(
@@ -283,7 +295,6 @@ export class TaskService {
     const task = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
-      TaskTreeEnum.none,
       qr,
       { reports: { receiver: true } },
     );

@@ -21,7 +21,7 @@ import {
 } from '../../const/visitation-find-options.const';
 import { VisitationDetailException } from '../../const/exception/visitation.exception';
 import { UpdateVisitationDetailDto } from '../../dto/internal/detail/update-visitation-detail.dto';
-import { VisitationDetailDto } from '../../dto/visittion-detail.dto';
+import { VisitationDetailDto } from '../../dto/internal/visittion-detail.dto';
 
 @Injectable()
 export class VisitationDetailDomainService
