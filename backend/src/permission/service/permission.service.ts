@@ -136,14 +136,24 @@ export class PermissionService {
       qr,
     );
 
+    const educationUnits =
+      await this.permissionDomainService.findPermissionUnits(
+        DomainType.EDUCATION,
+      );
+
     const educationManager: CreatePermissionTemplateDto = {
       title: '교육 관리자(샘플)',
-      unitIds: [9, 10, 11, 12],
+      unitIds: educationUnits.map((unit) => unit.id),
     };
+
+    const visitationUnits =
+      await this.permissionDomainService.findPermissionUnits(
+        DomainType.VISITATION,
+      );
 
     const visitationManager: CreatePermissionTemplateDto = {
       title: '심방 관리자(샘플)',
-      unitIds: [5, 6, 7, 8],
+      unitIds: visitationUnits.map((unit) => unit.id),
     };
 
     const educationTemplate =
