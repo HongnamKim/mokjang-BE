@@ -1,6 +1,7 @@
 export enum DomainAction {
-  CREATE = 'create',
+  //CREATE = 'create',
   READ = 'read',
-  UPDATE = 'update',
-  DELETE = 'delete',
+  //UPDATE = 'update',
+  //DELETE = 'delete',
+  WRITE = 'write',
 }
