@@ -5,7 +5,7 @@ import {
 } from '../visitation-domain/interface/visitation-detail-domain.service.interface';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
 import { MemberModel } from '../../members/entity/member.entity';
-import { CreateVisitationDto } from '../dto/create-visitation.dto';
+import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
 import { QueryRunner } from 'typeorm';
 import {
   IVISITATION_META_DOMAIN_SERVICE,

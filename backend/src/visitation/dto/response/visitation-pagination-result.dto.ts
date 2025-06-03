@@ -1,5 +1,5 @@
-import { BaseOffsetPaginationResponseDto } from '../../common/dto/reponse/base-offset-pagination-response.dto';
-import { VisitationMetaModel } from '../entity/visitation-meta.entity';
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
+import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 
 export class VisitationPaginationResultDto extends BaseOffsetPaginationResponseDto<VisitationMetaModel> {
   constructor(

@@ -25,7 +25,7 @@ import { CreateVisitationMetaDto } from '../../dto/internal/meta/create-visitati
 import { MemberModel } from '../../../members/entity/member.entity';
 import { VisitationException } from '../../const/exception/visitation.exception';
 import { UpdateVisitationMetaDto } from '../../dto/internal/meta/update-visitation-meta.dto';
-import { GetVisitationDto } from '../../dto/get-visitation.dto';
+import { GetVisitationDto } from '../../dto/request/get-visitation.dto';
 import {
   VisitationRelationOptions,
   VisitationSelectOptions,
@@ -34,7 +34,7 @@ import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/const/exception/member.exception';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
-import { UpdateVisitationDto } from '../../dto/update-visitation.dto';
+import { UpdateVisitationDto } from '../../dto/request/update-visitation.dto';
 
 @Injectable()
 export class VisitationMetaDomainService

@@ -8,6 +8,13 @@ export const ApiGetTasks = () =>
     }),
   );
 
+export const ApiGetSubTasks = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '하위 업무 목록 조회',
+    }),
+  );
+
 export const ApiPostTask = () =>
   applyDecorators(
     ApiOperation({

@@ -24,13 +24,13 @@ import { UserRole } from '../../user/const/user-role.enum';
 import { UpdateVisitationMetaDto } from '../dto/internal/meta/update-visitation-meta.dto';
 import { QueryRunner } from 'typeorm';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
-import { CreateVisitationDto } from '../dto/create-visitation.dto';
+import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import { VisitationException } from '../const/exception/visitation.exception';
 import { CreateVisitationMetaDto } from '../dto/internal/meta/create-visitation-meta.dto';
-import { GetVisitationDto } from '../dto/get-visitation.dto';
+import { GetVisitationDto } from '../dto/request/get-visitation.dto';
 import { VisitationType } from '../const/visitation-type.enum';
-import { UpdateVisitationDto } from '../dto/update-visitation.dto';
+import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import {
@@ -39,7 +39,7 @@ import {
 } from '../../report/report-domain/interface/visitation-report-domain.service.interface';
 import { AddConflictException } from '../../common/exception/add-conflict.exception';
 import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
-import { VisitationPaginationResultDto } from '../dto/visitation-pagination-result.dto';
+import { VisitationPaginationResultDto } from '../dto/response/visitation-pagination-result.dto';
 import { VisitationDetailService } from './visitation-detail.service';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import {

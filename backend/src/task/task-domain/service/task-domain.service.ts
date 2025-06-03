@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -22,7 +23,6 @@ import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-
 import { TaskException } from '../../const/exception-message/task.exception';
 import { CreateTaskDto } from '../../dto/request/create-task.dto';
 import { ITaskDomainService } from '../interface/task-domain.service.interface';
-import { MemberModel } from '../../../members/entity/member.entity';
 import {
   TaskFindOptionsRelation,
   TaskFindOptionsSelect,
@@ -30,12 +30,18 @@ import {
   TasksFindOptionsSelect,
 } from '../../const/task-find-options.const';
 import { TaskType } from '../../const/task-type.enum';
-import { UserRole } from '../../../user/const/user-role.enum';
+import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/const/exception/member.exception';
 import { GetTasksDto } from '../../dto/request/get-tasks.dto';
 import { TaskOrder } from '../../const/task-order.enum';
 import { MAX_SUB_TASK_COUNT } from '../../const/task.constraints';
 import { UpdateTaskDto } from '../../dto/request/update-task.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { ManagerException } from '../../../manager/exception/manager.exception';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
 
 @Injectable()
 export class TaskDomainService implements ITaskDomainService {
@@ -102,6 +108,55 @@ export class TaskDomainService implements ITaskDomainService {
     return new TaskDomainPaginationResultDto(data, totalCount);
   }
 
+  async findSubTasks(
+    church: ChurchModel,
+    parentTask: TaskModel,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getTaskRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        parentTaskId: parentTask.id,
+      },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        churchId: true,
+        taskType: true,
+        title: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        inCharge: MemberSummarizedSelect,
+      },
+    });
+  }
+
+  private async findTaskModel(
+    church: ChurchModel,
+    taskId: number,
+    taskType: TaskType,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<TaskModel>,
+  ) {
+    const repository = this.getTaskRepository(qr);
+
+    return repository.findOne({
+      where: {
+        churchId: church.id,
+        id: taskId,
+        taskType: taskType === TaskType.none ? undefined : taskType,
+      },
+      relations: relationOptions,
+    });
+  }
+
   async findTaskById(church: ChurchModel, taskId: number, qr?: QueryRunner) {
     const taskRepository = this.getTaskRepository(qr);
 
@@ -115,7 +170,28 @@ export class TaskDomainService implements ITaskDomainService {
     });
 
     if (!task) {
-      throw new NotFoundException(TaskException.NOT_FOUND());
+      throw new NotFoundException(TaskException.NOT_FOUND);
+    }
+
+    return task;
+  }
+
+  async findParentTaskModelById(
+    church: ChurchModel,
+    taskId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<TaskModel>,
+  ) {
+    const task = await this.findTaskModel(
+      church,
+      taskId,
+      TaskType.parent,
+      qr,
+      relationOptions,
+    );
+
+    if (!task) {
+      throw new NotFoundException(TaskException.NOT_FOUND_PARENT);
     }
 
     return task;
@@ -124,37 +200,63 @@ export class TaskDomainService implements ITaskDomainService {
   async findTaskModelById(
     church: ChurchModel,
     taskId: number,
-    purpose?: string,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<TaskModel>,
   ): Promise<TaskModel> {
-    const taskRepository = this.getTaskRepository(qr);
-
-    const task = await taskRepository.findOne({
-      where: {
-        churchId: church.id,
-        id: taskId,
-      },
-      relations: relationOptions,
-    });
+    const task = await this.findTaskModel(
+      church,
+      taskId,
+      TaskType.none,
+      qr,
+      relationOptions,
+    );
 
     if (!task) {
-      throw new NotFoundException(TaskException.NOT_FOUND(purpose));
+      throw new NotFoundException(TaskException.NOT_FOUND);
     }
 
     return task;
   }
 
-  assertValidInChargeMember(inChargeMember: MemberModel) {
-    if (!inChargeMember.user) {
-      throw new ConflictException(MemberException.NOT_LINKED_MEMBER);
+  private assertValidInChargeMember(inChargeMember: ChurchUserModel | null) {
+    if (!inChargeMember) {
+      return;
+    }
+
+    if (!inChargeMember.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('업무 담당자'),
+      );
+    }
+
+    if (!inChargeMember.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
     }
 
     if (
-      inChargeMember.user.role !== UserRole.OWNER &&
-      inChargeMember.user.role !== UserRole.MANAGER
+      inChargeMember.role !== ChurchUserRole.MANAGER &&
+      inChargeMember.role !== ChurchUserRole.OWNER
     ) {
       throw new ConflictException(TaskException.INVALID_IN_CHARGE_MEMBER);
+    }
+  }
+
+  private assertValidCreator(creator: ChurchUserModel) {
+    if (!creator.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('업무 생성자'),
+      );
+    }
+
+    if (!creator.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
+    }
+
+    if (
+      creator.role !== ChurchUserRole.MANAGER &&
+      creator.role !== ChurchUserRole.OWNER
+    ) {
+      throw new ForbiddenException(TaskException.INVALID_CREATOR);
     }
   }
 
@@ -178,9 +280,9 @@ export class TaskDomainService implements ITaskDomainService {
 
   async createTask(
     church: ChurchModel,
-    creatorMember: MemberModel,
+    creator: ChurchUserModel,
     parentTask: TaskModel | null,
-    inChargeMember: MemberModel | null,
+    inCharge: ChurchUserModel | null,
     dto: CreateTaskDto,
     qr: QueryRunner,
   ) {
@@ -191,13 +293,20 @@ export class TaskDomainService implements ITaskDomainService {
     }
 
     if (parentTask) {
+      if (parentTask.taskType === TaskType.subTask) {
+        throw new BadRequestException(TaskException.INVALID_PARENT_TASK);
+      }
+
       await this.assertSubTaskLimitNotExceeded(parentTask, qr);
     }
 
+    this.assertValidCreator(creator);
+    this.assertValidInChargeMember(inCharge);
+
     return taskRepository.save({
       churchId: church.id,
-      creatorId: creatorMember.id,
-      inChargeId: inChargeMember ? inChargeMember.id : undefined,
+      creatorId: creator.member.id,
+      inChargeId: inCharge ? inCharge.member.id : undefined,
       parentTaskId: parentTask ? parentTask.id : undefined,
       taskType: parentTask ? TaskType.subTask : TaskType.parent,
       title: dto.title,
@@ -227,7 +336,7 @@ export class TaskDomainService implements ITaskDomainService {
 
   async updateTask(
     targetTask: TaskModel,
-    newInChargeMember: MemberModel | null,
+    newInCharge: ChurchUserModel | null,
     newParentTask: TaskModel | null,
     dto: UpdateTaskDto,
     qr: QueryRunner,
@@ -253,12 +362,14 @@ export class TaskDomainService implements ITaskDomainService {
 
     this.assertValidTaskDate(targetTask, dto);
 
+    this.assertValidInChargeMember(newInCharge);
+
     const result = await taskRepository.update(
       {
         id: targetTask.id,
       },
       {
-        inChargeId: newInChargeMember ? newInChargeMember.id : undefined,
+        inChargeId: newInCharge ? newInCharge.member.id : undefined,
         parentTaskId: newParentTask ? newParentTask.id : undefined,
         title: dto.title,
         status: dto.status,
