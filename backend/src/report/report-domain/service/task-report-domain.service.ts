@@ -65,9 +65,9 @@ export class TaskReportDomainService implements ITaskReportDomainService {
 
     // 피보고자 중복 체크
     for (const receiver of receivers) {
-      if (oldReceiverIds.has(receiver.id)) {
+      if (oldReceiverIds.has(receiver.member.id)) {
         failed.push({
-          receiverId: receiver.id,
+          receiverId: receiver.member.id,
           reason: TaskReportException.ALREADY_REPORTED_MEMBER,
         });
       }
