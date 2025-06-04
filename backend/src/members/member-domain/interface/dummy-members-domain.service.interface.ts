@@ -1,4 +1,4 @@
-import { CreateMemberDto } from '../../dto/create-member.dto';
+import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { MemberModel } from '../../entity/member.entity';
 import { QueryRunner } from 'typeorm';
 
