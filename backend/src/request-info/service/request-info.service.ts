@@ -29,7 +29,7 @@ import {
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
-import { UpdateMemberDto } from '../../members/dto/update-member.dto';
+import { UpdateMemberDto } from '../../members/dto/request/update-member.dto';
 import {
   IREQUEST_INFO_DOMAIN_SERVICE,
   IRequestInfoDomainService,

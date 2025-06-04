@@ -11,17 +11,17 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { GenderEnum } from '../const/enum/gender.enum';
-import { BaptismEnum } from '../const/enum/baptism.enum';
-import { GetMemberOrderEnum } from '../const/enum/get-member-order.enum';
+import { GenderEnum } from '../../const/enum/gender.enum';
+import { BaptismEnum } from '../../const/enum/baptism.enum';
+import { GetMemberOrderEnum } from '../../const/enum/get-member-order.enum';
 import {
   TransformNumberArray,
   TransformStringArray,
-} from '../../common/decorator/transformer/transform-array';
-import { MarriageOptions } from '../member-domain/const/marriage-options.const';
-import { QueryBoolean } from '../../common/decorator/transformer/query-boolean.decorator';
-import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
-import { EducationEnrollmentStatus } from '../../management/educations/const/education-status.enum';
+} from '../../../common/decorator/transformer/transform-array';
+import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
+import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { EducationEnrollmentStatus } from '../../../management/educations/const/education-status.enum';
 
 export class GetMemberDto {
   @ApiProperty({

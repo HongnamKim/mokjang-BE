@@ -1,4 +1,4 @@
-import { GetMemberDto } from '../../dto/get-member.dto';
+import { GetMemberDto } from '../../dto/request/get-member.dto';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
@@ -9,12 +9,15 @@ import {
 } from 'typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { CreateMemberDto } from '../../dto/create-member.dto';
-import { UpdateMemberDto } from '../../dto/update-member.dto';
+import { CreateMemberDto } from '../../dto/request/create-member.dto';
+import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
+import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
+import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
+import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -27,6 +30,18 @@ export interface IMembersDomainService {
     selectOptions: FindOptionsSelect<MemberModel>,
     qr?: QueryRunner,
   ): Promise<{ data: MemberModel[]; totalCount: number }>;
+
+  findSimpleMembers(
+    church: ChurchModel,
+    dto: GetSimpleMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MembersDomainPaginationResultDto>;
+
+  findRecommendLinkMember(
+    church: ChurchModel,
+    dto: GetRecommendLinkMemberDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
 
   findMembersById(
     church: ChurchModel,

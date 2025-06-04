@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   PipeTransform,
 } from '@nestjs/common';
-import { CreateMemberDto } from '../../members/dto/create-member.dto';
+import { CreateMemberDto } from '../../members/dto/request/create-member.dto';
 import { FamilyRelationConst } from '../family-relation-domain/const/family-relation.const';
 import { CreateRequestInfoDto } from '../../request-info/dto/create-request-info.dto';
 

@@ -14,13 +14,13 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { GenderEnum } from '../const/enum/gender.enum';
-import { IsValidVehicleNumber } from '../decorator/is-valid-vehicle-number.decorator';
-import { BaptismEnum } from '../const/enum/baptism.enum';
-import { FamilyRelationConst } from '../../family-relation/family-relation-domain/const/family-relation.const';
-import { MarriageOptions } from '../member-domain/const/marriage-options.const';
-import { RemoveSpaces } from '../../common/decorator/transformer/remove-spaces';
-import { IsNoSpecialChar } from '../../common/decorator/validator/is-no-special-char.validator';
+import { GenderEnum } from '../../const/enum/gender.enum';
+import { IsValidVehicleNumber } from '../../decorator/is-valid-vehicle-number.decorator';
+import { BaptismEnum } from '../../const/enum/baptism.enum';
+import { FamilyRelationConst } from '../../../family-relation/family-relation-domain/const/family-relation.const';
+import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
+import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 
 export class CreateMemberDto {
   @ApiProperty({
