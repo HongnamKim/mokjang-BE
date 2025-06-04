@@ -7,7 +7,6 @@ export const TaskReportException = {
   ALREADY_REPORTED_MEMBER: '이미 피보고자로 등록된 교인입니다.',
   NOT_EXIST_REPORTED_MEMBER: '피보고자로 등록되지 않은 교인입니다.',
 
-  EXCEED_RECEIVERS: (maxReceiver: number = MAX_RECEIVER_COUNT) =>
-    `피보고자는 최대 ${maxReceiver}명까지 등록할 수 있습니다.`,
+  EXCEED_RECEIVERS: `피보고자는 최대 ${MAX_RECEIVER_COUNT}명까지 등록할 수 있습니다.`,
   INVALID_RECEIVER_AUTHORIZATION: '피보고자로 등록할 수 없는 교인입니다.',
 };

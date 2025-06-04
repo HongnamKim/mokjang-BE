@@ -9,10 +9,6 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
-  IMEMBERS_DOMAIN_SERVICE,
-  IMembersDomainService,
-} from '../../members/member-domain/interface/members-domain.service.interface';
 import { PostTaskResponseDto } from '../dto/response/post-task-response.dto';
 import { GetTaskResponseDto } from '../dto/response/get-task-response.dto';
 import { GetTasksDto } from '../dto/request/get-tasks.dto';
@@ -21,27 +17,24 @@ import { UpdateTaskDto } from '../dto/request/update-task.dto';
 import { PatchTaskResponseDto } from '../dto/response/patch-task-response.dto';
 import { DeleteTaskResponseDto } from '../dto/response/delete-task-response.dto';
 import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
-import { TaskReportException } from '../../report/const/exception/task-report.exception';
 import {
   ITASK_REPORT_DOMAIN_SERVICE,
   ITaskReportDomainService,
 } from '../../report/report-domain/interface/task-report-domain.service.interface';
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
-import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { GetSubTaskResponseDto } from '../dto/response/get-sub-task-response.dto';
+import { TaskModel } from '../entity/task.entity';
 
 @Injectable()
 export class TaskService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
 
@@ -133,7 +126,7 @@ export class TaskService {
     );
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
-      await this.handleAddTaskReport(church, newTask.id, dto.receiverIds, qr);
+      await this.handleAddTaskReport(church, newTask, dto.receiverIds, qr);
     }
 
     return new PostTaskResponseDto(newTask, new Date());
@@ -218,10 +211,7 @@ export class TaskService {
     await this.taskDomainService.deleteTask(targetTask, qr);
 
     // 업무 보고 삭제
-    await this.taskReportDomainService.deleteTaskReports(
-      targetTask.reports,
-      qr,
-    );
+    await this.taskReportDomainService.deleteTaskReportCascade(targetTask, qr);
 
     return new DeleteTaskResponseDto(
       new Date(),
@@ -242,32 +232,29 @@ export class TaskService {
       qr,
     );
 
-    return this.handleAddTaskReport(church, taskId, dto.receiverIds, qr);
-  }
-
-  private async handleAddTaskReport(
-    church: ChurchModel,
-    taskId: number,
-    newReceiverIds: number[],
-    qr: QueryRunner,
-  ) {
     const task = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
       qr,
-      { reports: true },
     );
 
-    const newReceivers = await this.membersDomainService.findMembersById(
+    return this.handleAddTaskReport(church, task, dto.receiverIds, qr);
+  }
+
+  private async handleAddTaskReport(
+    church: ChurchModel,
+    task: TaskModel,
+    newReceiverIds: number[],
+    qr: QueryRunner,
+  ) {
+    const newReceivers = await this.managerDomainService.findManagersByIds(
       church,
       newReceiverIds,
       qr,
-      { user: true },
     );
 
     await this.taskReportDomainService.createTaskReports(
       task,
-      //task.inCharge,
       newReceivers,
       qr,
     );
@@ -275,8 +262,8 @@ export class TaskService {
     return {
       taskId: task.id,
       addReceivers: newReceivers.map((receiver) => ({
-        id: receiver.id,
-        name: receiver.name,
+        id: receiver.memberId,
+        name: receiver.member.name,
       })),
       addedCount: newReceivers.length,
     };
@@ -292,42 +279,22 @@ export class TaskService {
       churchId,
       qr,
     );
+
     const task = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
       qr,
-      { reports: { receiver: true } },
-    );
-
-    const reports = task.reports;
-    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
-
-    const notExistReceiverIds = dto.receiverIds.filter(
-      (id) => !oldReceiverIds.has(id),
-    );
-
-    if (notExistReceiverIds.length > 0) {
-      throw new RemoveConflictException(
-        TaskReportException.NOT_EXIST_REPORTED_MEMBER,
-        notExistReceiverIds,
-      );
-    }
-
-    const deleteReports = reports.filter((report) =>
-      dto.receiverIds.includes(report.receiverId),
     );
 
     const result = await this.taskReportDomainService.deleteTaskReports(
-      deleteReports,
+      task,
+      dto.receiverIds,
       qr,
     );
 
     return {
       taskId,
-      deletedReceivers: deleteReports.map((r) => ({
-        id: r.receiverId,
-        name: r.receiver.name,
-      })),
+      deletedReceiverIds: dto.receiverIds,
       deletedCount: result.affected,
     };
   }
