@@ -33,6 +33,12 @@ export interface IManagerDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 
+  findManagersByIds(
+    church: ChurchModel,
+    managerIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]>;
+
   updatePermissionActive(
     churchUser: ChurchUserModel,
     activity: boolean,

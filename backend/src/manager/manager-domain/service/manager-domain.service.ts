@@ -30,6 +30,10 @@ import {
   ManagersFindOptionsRelations,
   ManagersFindOptionsSelect,
 } from '../../const/manager-find-options.const';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
 
 export class ManagerDomainService implements IManagerDomainService {
   constructor(
@@ -128,6 +132,49 @@ export class ManagerDomainService implements IManagerDomainService {
     }
 
     return churchUser;
+  }
+
+  async findManagersByIds(
+    church: ChurchModel,
+    managerIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    const managers = await repository.find({
+      where: {
+        churchId: church.id,
+        memberId: In(managerIds),
+        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSummarizedSelect,
+      },
+    });
+
+    // 요청한 매니저들을 모두 찾지 못한 경우
+    if (managers.length !== managerIds.length) {
+      const findManagerMemberIds = new Set(
+        managers.map((manager) => manager.memberId),
+      );
+      const failed: { receiverId: number; reason: string }[] = [];
+
+      managerIds.forEach((managerId) => {
+        if (!findManagerMemberIds.has(managerId)) {
+          failed.push({
+            receiverId: managerId,
+            reason: ManagerException.NOT_FOUND,
+          });
+        }
+      });
+
+      throw new NotFoundException(failed);
+    }
+
+    return managers;
   }
 
   async findManagerById(

@@ -5,21 +5,16 @@ import { TaskReportModel } from '../../entity/task-report.entity';
 import { TaskReportDomainPaginationResultDto } from '../../dto/task-report/task-report-domain-pagination-result.dto';
 import { GetTaskReportDto } from '../../dto/task-report/get-task-report.dto';
 import { UpdateTaskReportDto } from '../../dto/task-report/request/update-task-report.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 export const ITASK_REPORT_DOMAIN_SERVICE = Symbol(
   'ITASK_REPORT_DOMAIN_SERVICE',
 );
 
 export interface ITaskReportDomainService {
-  assertCanAddReceivers(
-    task: TaskModel & { reports: TaskReportModel[] },
-    newReceiverIds: number[] | MemberModel[],
-  ): void;
-
   createTaskReports(
     task: TaskModel,
-    //sender: MemberModel,
-    receivers: MemberModel[],
+    receivers: ChurchUserModel[],
     qr: QueryRunner,
   ): Promise<TaskReportModel[]>;
 
@@ -54,8 +49,14 @@ export interface ITaskReportDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
+  deleteTaskReportCascade(
+    task: TaskModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
   deleteTaskReports(
-    taskReports: TaskReportModel[],
+    task: TaskModel,
+    receiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 }
