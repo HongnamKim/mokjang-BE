@@ -27,11 +27,15 @@ export class UserDomainService implements IUserDomainService {
   async findUserById(id: number, qr?: QueryRunner) {
     const userRepository = this.getUserRepository(qr);
 
-    const user = await userRepository.findOne({
-      where: {
-        id,
-      },
-    });
+    const user = await userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.churchUser',
+        'churchUser',
+        'churchUser.leftAt IS NULL',
+      )
+      .where('user.id = :id', { id: id })
+      .getOne();
 
     if (!user) {
       throw new NotFoundException(UserException.NOT_FOUND);

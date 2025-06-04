@@ -1,7 +1,7 @@
 import { GetMemberDto } from './get-member.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '../../user/const/user-role.enum';
-import { TransformStringArray } from '../../common/decorator/transformer/transform-array';
+import { UserRole } from '../../../user/const/user-role.enum';
+import { TransformStringArray } from '../../../common/decorator/transformer/transform-array';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetUserMemberDto extends GetMemberDto {

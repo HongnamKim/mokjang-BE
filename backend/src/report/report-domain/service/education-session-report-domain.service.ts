@@ -110,49 +110,6 @@ export class EducationSessionReportDomainService
     );
   }
 
-  /*async createSingleReport(
-    education: EducationModel,
-    educationTerm: EducationTermModel,
-    educationSession: EducationSessionModel,
-    receiver: MemberModel,
-    qr: QueryRunner,
-  ) {
-    // 해당 교육에 피보고자 추가할 수 있는지
-    //educationSession.canAddReport([receiver]);
-    this.assertCanAddReceivers(educationSession, [receiver]);
-
-    if (!receiver.userId) {
-      throw new UnauthorizedException(MemberException.NOT_LINKED_MEMBER);
-    } else if (!receiver.user) {
-      throw new InternalServerErrorException('계정 정보 불러오기 실패');
-    } else if (
-      receiver.user.role !== UserRole.manager &&
-      receiver.user.role !== UserRole.mainAdmin
-    ) {
-      throw new ConflictException('관리자가 아님');
-    }
-
-    const repository = this.getRepository(qr);
-
-    const isExist = await repository.findOne({
-      where: {
-        receiverId: receiver.id,
-        educationSessionId: educationSession.id,
-      },
-    });
-
-    if (isExist) {
-      throw new ConflictException('이미 존재하는 피보고자');
-    }
-
-    return repository.save({
-      receiverId: receiver.id,
-      educationSessionId: educationSession.id,
-      educationTermId: educationTerm.id,
-      educationId: education.id,
-    });
-  }*/
-
   async createEducationSessionReports(
     education: EducationModel,
     educationTerm: EducationTermModel,
@@ -160,8 +117,6 @@ export class EducationSessionReportDomainService
     receivers: MemberModel[],
     qr: QueryRunner,
   ) {
-    //educationSession.canAddReport(receivers);
-
     this.assertCanAddReceivers(educationSession, receivers);
 
     const repository = this.getRepository(qr);

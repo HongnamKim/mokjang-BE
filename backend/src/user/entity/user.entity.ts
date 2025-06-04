@@ -5,6 +5,7 @@ import { UserRole } from '../const/user-role.enum';
 import { MemberModel } from '../../members/entity/member.entity';
 import { ChurchJoinRequestModel } from '../../churches/entity/church-join-request.entity';
 import { Exclude } from 'class-transformer';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Entity()
 export class UserModel extends BaseModel {
@@ -38,6 +39,9 @@ export class UserModel extends BaseModel {
       '서비스 내의 role (owner: 교회 소유자, member: 교회 가입자, none: 소속X)',
   })
   role: UserRole;
+
+  @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.user)
+  churchUser: ChurchUserModel[];
 
   @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinRequestModel;

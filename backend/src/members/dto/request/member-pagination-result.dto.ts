@@ -1,5 +1,5 @@
-import { BaseOffsetPaginationResponseDto } from '../../common/dto/reponse/base-offset-pagination-response.dto';
-import { MemberModel } from '../entity/member.entity';
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
+import { MemberModel } from '../../entity/member.entity';
 
 /*export interface MemberPaginationResultDto
   extends BaseOffsetPaginationResultDto<MemberModel> {

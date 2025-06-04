@@ -1,5 +1,5 @@
 import { IDummyMembersDomainService } from '../interface/dummy-members-domain.service.interface';
-import { CreateMemberDto } from '../../dto/create-member.dto';
+import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { MemberModel } from '../../entity/member.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
