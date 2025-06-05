@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   IVISITATION_META_DOMAIN_SERVICE,
   IVisitationMetaDomainService,
@@ -20,13 +15,10 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
-import { UserRole } from '../../user/const/user-role.enum';
 import { UpdateVisitationMetaDto } from '../dto/internal/meta/update-visitation-meta.dto';
 import { QueryRunner } from 'typeorm';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
 import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
-import { JwtAccessPayload } from '../../auth/type/jwt';
-import { VisitationException } from '../const/exception/visitation.exception';
 import { CreateVisitationMetaDto } from '../dto/internal/meta/create-visitation-meta.dto';
 import { GetVisitationDto } from '../dto/request/get-visitation.dto';
 import { VisitationType } from '../const/visitation-type.enum';
@@ -37,8 +29,6 @@ import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
 } from '../../report/report-domain/interface/visitation-report-domain.service.interface';
-import { AddConflictException } from '../../common/exception/add-conflict.exception';
-import { RemoveConflictException } from '../../common/exception/remove-conflict.exception';
 import { VisitationPaginationResultDto } from '../dto/response/visitation-pagination-result.dto';
 import { VisitationDetailService } from './visitation-detail.service';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
@@ -154,10 +144,10 @@ export class VisitationService {
     );
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
-      await this.createVisitationReports(
+      await this.handleAddVisitationReport(
         church,
-        dto.receiverIds,
         visitationMeta,
+        dto.receiverIds,
         qr,
       );
     }
@@ -321,6 +311,11 @@ export class VisitationService {
       qr,
     );
 
+    await this.visitationReportDomainService.deleteVisitationReportCascade(
+      metaData,
+      qr,
+    );
+
     return new DeleteVisitationResponseDto(
       new Date(),
       metaData.id,
@@ -329,37 +324,32 @@ export class VisitationService {
     );
   }
 
-  private async createVisitationReports(
+  private async handleAddVisitationReport(
     church: ChurchModel,
-    receiverIds: number[],
-    visitationMeta: VisitationMetaModel,
+    visitation: VisitationMetaModel,
+    newReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const receivers = await this.membersDomainService.findMembersById(
+    const newReceivers = await this.managerDomainService.findManagersByIds(
       church,
-      receiverIds,
+      newReceiverIds,
       qr,
-      { user: true },
     );
 
-    return Promise.all(
-      receivers.map(async (receiver) => {
-        // 권한 검증
-        if (
-          receiver.user.role !== UserRole.MANAGER &&
-          receiver.user.role !== UserRole.OWNER
-        ) {
-          throw new ForbiddenException(VisitationException.INVALID_RECEIVER);
-        }
-
-        return this.visitationReportDomainService.createVisitationReport(
-          visitationMeta,
-          //sender,
-          receiver,
-          qr,
-        );
-      }),
+    await this.visitationReportDomainService.createVisitationReports(
+      visitation,
+      newReceivers,
+      qr,
     );
+
+    return {
+      visitationMetaId: visitation.id,
+      addReceivers: newReceivers.map((newReceiver) => ({
+        id: newReceiver.id,
+        name: newReceiver.member.name,
+      })),
+      addedCount: newReceivers.length,
+    };
   }
 
   async addReportReceivers(
@@ -378,60 +368,14 @@ export class VisitationService {
         church,
         visitationId,
         qr,
-        { reports: true },
       );
 
-    const reports = visitation.reports;
-    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
-
-    const duplicated = newReceiverIds.filter((id) => oldReceiverIds.has(id));
-
-    if (duplicated.length > 0) {
-      throw new AddConflictException(
-        VisitationException.ALREADY_REPORTED_MEMBER,
-        duplicated,
-      );
-    }
-
-    const newReceivers = await this.membersDomainService.findMembersById(
+    return this.handleAddVisitationReport(
       church,
+      visitation,
       newReceiverIds,
       qr,
-      { user: true },
     );
-
-    const isAvailableReceivers = newReceivers.every((receiver) => {
-      return (
-        receiver.user &&
-        (receiver.user.role === UserRole.OWNER ||
-          receiver.user.role === UserRole.MANAGER)
-      );
-    });
-
-    if (!isAvailableReceivers) {
-      throw new BadRequestException(
-        VisitationException.INVALID_REPORT_RECEIVER,
-      );
-    }
-
-    await Promise.all(
-      newReceivers.map((receiver) => {
-        return this.visitationReportDomainService.createVisitationReport(
-          visitation,
-          receiver,
-          qr,
-        );
-      }),
-    );
-
-    return {
-      visitationId,
-      addedReceivers: newReceivers.map((r) => ({
-        id: r.id,
-        name: r.name,
-      })),
-      addedCount: newReceivers.length,
-    };
   }
 
   async deleteReportReceivers(
@@ -453,36 +397,16 @@ export class VisitationService {
         { inCharge: true, reports: { receiver: true } },
       );
 
-    const reports = visitation.reports;
-    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
-
-    const notExistReceivers = deleteReceiverIds.filter(
-      (id) => !oldReceiverIds.has(id),
-    );
-
-    if (notExistReceivers.length > 0) {
-      throw new RemoveConflictException(
-        VisitationException.NOT_EXIST_REPORTED_MEMBER,
-        notExistReceivers,
-      );
-    }
-
-    const deleteReports = reports.filter((report) =>
-      deleteReceiverIds.includes(report.receiverId),
-    );
-
     const result =
       await this.visitationReportDomainService.deleteVisitationReports(
-        deleteReports,
+        visitation,
+        deleteReceiverIds,
         qr,
       );
 
     return {
-      visitationId,
-      deletedReceivers: deleteReports.map((r) => ({
-        id: r.receiver.id,
-        name: r.receiver.name,
-      })),
+      visitationMetaId: visitation.id,
+      deleteReceiverIds: deleteReceiverIds,
       deletedCount: result.affected,
     };
   }

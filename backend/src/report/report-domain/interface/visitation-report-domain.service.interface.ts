@@ -4,6 +4,7 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationReportModel } from '../../entity/visitation-report.entity';
 import { GetVisitationReportDto } from '../../dto/visitation-report/get-visitation-report.dto';
 import { UpdateVisitationReportDto } from '../../dto/visitation-report/update-visitation-report.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 export const IVISITATION_REPORT_DOMAIN_SERVICE = Symbol(
   'IVISITATION_REPORT_DOMAIN_SERVICE',
@@ -16,12 +17,11 @@ export interface IVisitationReportDomainService {
     qr?: QueryRunner,
   ): Promise<{ data: VisitationReportModel[]; totalCount: number }>;
 
-  createVisitationReport(
+  createVisitationReports(
     visitation: VisitationMetaModel,
-    //sender: MemberModel,
-    receiver: MemberModel,
+    newReceivers: ChurchUserModel[],
     qr: QueryRunner,
-  ): Promise<VisitationReportModel>;
+  ): Promise<VisitationReportModel[]>;
 
   findVisitationReportModelById(
     receiver: MemberModel,
@@ -48,8 +48,14 @@ export interface IVisitationReportDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
+  deleteVisitationReportCascade(
+    visitation: VisitationMetaModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
   deleteVisitationReports(
-    visitationReports: VisitationReportModel[],
+    visitation: VisitationMetaModel,
+    receiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 }
