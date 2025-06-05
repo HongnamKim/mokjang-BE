@@ -37,6 +37,8 @@ import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
 } from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
+import { GetRecommendLinkMemberDto } from '../../members/dto/request/get-recommend-link-member.dto';
+import { GetRecommendLinkMemberResponseDto } from '../dto/church-join-request/response/get-recommend-link-member-response.dto';
 
 @Injectable()
 export class ChurchJoinRequestService {
@@ -249,5 +251,20 @@ export class ChurchJoinRequestService {
 
   getTopRequestUsers() {
     return this.churchJoinRequestStatsDomainService.getTopRequestUsers();
+  }
+
+  async getRecommendLinkMember(
+    churchId: number,
+    dto: GetRecommendLinkMemberDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const members = await this.membersDomainService.findRecommendLinkMember(
+      church,
+      dto,
+    );
+
+    return new GetRecommendLinkMemberResponseDto(members);
   }
 }

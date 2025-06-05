@@ -12,12 +12,13 @@ import {
 } from '@nestjs/common';
 import { MembersService } from '../service/members.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateMemberDto } from '../dto/create-member.dto';
+import { CreateMemberDto } from '../dto/request/create-member.dto';
 import { QueryRunner as QR } from 'typeorm';
-import { UpdateMemberDto } from '../dto/update-member.dto';
-import { GetMemberDto } from '../dto/get-member.dto';
+import { UpdateMemberDto } from '../dto/request/update-member.dto';
+import { GetMemberDto } from '../dto/request/get-member.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -40,6 +41,14 @@ export class MembersController {
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.createMember(churchId, dto, qr);
+  }
+
+  @Get('simple')
+  getMembersSimple(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetSimpleMembersDto,
+  ) {
+    return this.membersService.getSimpleMembers(churchId, dto);
   }
 
   @Get(':memberId')

@@ -31,6 +31,7 @@ import { ApproveJoinRequestDto } from '../dto/church-join-request/approve-join-r
 import { ChurchJoinRequestService } from '../service/church-join-request.service';
 import { CreateJoinRequestDto } from '../dto/church-join-request/create-join-request.dto';
 import { GetJoinRequestDto } from '../dto/church-join-request/get-join-request.dto';
+import { GetRecommendLinkMemberDto } from '../../members/dto/request/get-recommend-link-member.dto';
 
 @ApiTags('Churches:Join Requests')
 @Controller('churches')
@@ -63,6 +64,14 @@ export class ChurchJoinRequestsController {
     @Query() dto: GetJoinRequestDto,
   ) {
     return this.churchJoinRequestService.getChurchJoinRequests(churchId, dto);
+  }
+
+  @Get(':churchId/join/recommend-link-member')
+  getRecommendLinkMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetRecommendLinkMemberDto,
+  ) {
+    return this.churchJoinRequestService.getRecommendLinkMember(churchId, dto);
   }
 
   @ApiApproveChurchJoinRequest()
