@@ -43,7 +43,7 @@ export interface IPermissionDomainService {
     template: PermissionTemplateModel,
     dto: UpdatePermissionTemplateDto,
     qr?: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<void>;
 
   deletePermissionTemplate(
     template: PermissionTemplateModel,

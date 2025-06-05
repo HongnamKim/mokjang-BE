@@ -238,11 +238,20 @@ export class PermissionDomainService implements IPermissionDomainService {
 
     if (dto.title) {
       await this.assertValidTemplateTitle(church, dto.title, qr);
+      template.title = dto.title;
+    }
+
+    if (units) {
+      template.permissionUnits = units;
     }
 
     const templateRepository = this.getTemplateRepository(qr);
 
-    const result = await templateRepository.update(
+    await templateRepository.save(template);
+
+    return;
+
+    /*const result = await templateRepository.update(
       {
         churchId: church.id,
         id: template.id,
@@ -257,7 +266,7 @@ export class PermissionDomainService implements IPermissionDomainService {
       throw new InternalServerErrorException(PermissionException.UPDATE_ERROR);
     }
 
-    return result;
+    return result;*/
   }
 
   async deletePermissionTemplate(
