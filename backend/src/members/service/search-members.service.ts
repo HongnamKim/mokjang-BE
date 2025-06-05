@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GetMemberDto } from '../dto/get-member.dto';
+import { GetMemberDto } from '../dto/request/get-member.dto';
 import {
   ArrayContains,
   Between,

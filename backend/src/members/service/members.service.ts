@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
 import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
-import { CreateMemberDto } from '../dto/create-member.dto';
-import { UpdateMemberDto } from '../dto/update-member.dto';
-import { GetMemberDto } from '../dto/get-member.dto';
+import { CreateMemberDto } from '../dto/request/create-member.dto';
+import { UpdateMemberDto } from '../dto/request/update-member.dto';
+import { GetMemberDto } from '../dto/request/get-member.dto';
 import { ResponseGetDto } from '../dto/response/response-get.dto';
 import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -24,7 +24,9 @@ import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
-import { MemberPaginationResultDto } from '../dto/member-pagination-result.dto';
+import { MemberPaginationResultDto } from '../dto/request/member-pagination-result.dto';
+import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
+import { GetSimpleMembersPaginationResponseDto } from '../dto/response/get-simple-members-pagination-response.dto';
 
 @Injectable()
 export class MembersService {
@@ -185,5 +187,21 @@ export class MembersService {
     );
 
     return new ResponseDeleteDto(true, targetMember.id);
+  }
+
+  async getSimpleMembers(churchId: number, dto: GetSimpleMembersDto) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const { data, totalCount } =
+      await this.membersDomainService.findSimpleMembers(church, dto);
+
+    return new GetSimpleMembersPaginationResponseDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 }

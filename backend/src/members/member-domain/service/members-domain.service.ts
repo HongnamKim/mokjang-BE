@@ -12,25 +12,34 @@ import {
   FindOptionsRelations,
   FindOptionsSelect,
   FindOptionsWhere,
+  ILike,
   In,
   IsNull,
+  Not,
   QueryRunner,
   Repository,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { GetMemberDto } from '../../dto/get-member.dto';
+import { GetMemberDto } from '../../dto/request/get-member.dto';
 import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
 } from '../../const/default-find-options.const';
 import { MemberException } from '../../const/exception/member.exception';
-import { CreateMemberDto } from '../../dto/create-member.dto';
-import { UpdateMemberDto } from '../../dto/update-member.dto';
+import { CreateMemberDto } from '../../dto/request/create-member.dto';
+import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 import { UserModel } from '../../../user/entity/user.entity';
+import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
+import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../const/member-find-options.const';
+import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -71,16 +80,63 @@ export class MembersDomainService implements IMembersDomainService {
       data: result,
       totalCount,
     };
+  }
 
-    /*const resultDto: MemberPaginationResultDto = {
-      data: result,
-      count: result.length,
-      totalCount,
-      page: dto.page,
-      totalPage,
+  async findRecommendLinkMember(
+    church: ChurchModel,
+    dto: GetRecommendLinkMemberDto,
+    qr?: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    return membersRepository.find({
+      where: [
+        {
+          churchId: church.id,
+          name: ILike(`%${dto.name}%`),
+          mobilePhone: ILike(`%${dto.mobilePhone}%`),
+        },
+        {
+          churchId: church.id,
+          name: ILike(`%${dto.name}%`),
+          mobilePhone: Not(ILike(`%${dto.mobilePhone}%`)),
+        },
+        {
+          churchId: church.id,
+          name: Not(ILike(`%${dto.name}%`)),
+          mobilePhone: ILike(`%${dto.mobilePhone}%`),
+        },
+      ],
+      relations: MemberSummarizedRelation,
+      select: { ...MemberSummarizedSelect, mobilePhone: true },
+    });
+  }
+
+  async findSimpleMembers(
+    church: ChurchModel,
+    dto: GetSimpleMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MembersDomainPaginationResultDto> {
+    const repository = this.getMembersRepository(qr);
+
+    const whereOptions: FindOptionsWhere<MemberModel> = {
+      churchId: church.id,
+      name: ILike(`%${dto.name}%`),
+      mobilePhone: dto.mobilePhone && ILike(`%${dto.mobilePhone}%`),
     };
 
-    return resultDto;*/
+    const [data, totalCount] = await Promise.all([
+      repository.find({
+        where: whereOptions,
+        relations: MemberSummarizedRelation,
+        select: MemberSummarizedSelect,
+      }),
+      repository.count({
+        where: whereOptions,
+      }),
+    ]);
+
+    return new MembersDomainPaginationResultDto(data, totalCount);
   }
 
   async countAllMembers(church: ChurchModel, qr?: QueryRunner) {

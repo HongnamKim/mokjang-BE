@@ -18,12 +18,20 @@ import { UpdatePermissionTemplateDto } from '../dto/template/request/update-perm
 import { PatchPermissionTemplateResponseDto } from '../dto/template/response/patch-permission-template-response.dto';
 import { DeletePermissionTemplateResponseDto } from '../dto/template/response/delete-permission-template-response.dto';
 import { QueryRunner } from 'typeorm';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { MemberPaginationResultDto } from '../../members/dto/request/member-pagination-result.dto';
+import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-managers-by-permission-template.dto';
 
 @Injectable()
 export class PermissionService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
 
     @Inject(IPERMISSION_DOMAIN_SERVICE)
     private readonly permissionDomainService: IPermissionDomainService,
@@ -170,5 +178,36 @@ export class PermissionService {
       );
 
     return [educationTemplate, visitationTemplate];
+  }
+
+  async getManagersByPermissionTemplate(
+    churchId: number,
+    templateId: number,
+    dto: GetManagersByPermissionTemplateDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+    const permissionTemplate =
+      await this.permissionDomainService.findPermissionTemplateModelById(
+        church,
+        templateId,
+      );
+
+    const { data, totalCount } =
+      await this.managerDomainService.findManagersByPermissionTemplate(
+        church,
+        permissionTemplate,
+        dto,
+      );
+
+    const managerMember = data.map((churchUser) => churchUser.member);
+
+    return new MemberPaginationResultDto(
+      managerMember,
+      totalCount,
+      managerMember.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 }

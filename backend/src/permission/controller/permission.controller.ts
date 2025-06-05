@@ -19,6 +19,7 @@ import { CreatePermissionTemplateDto } from '../dto/template/request/create-perm
 import { UpdatePermissionTemplateDto } from '../dto/template/request/update-permission-template.dto';
 import {
   ApiDeletePermissionTemplate,
+  ApiGetManagersByPermissionTemplate,
   ApiGetPermissionTemplateById,
   ApiGetPermissionTemplates,
   ApiGetPermissionUnits,
@@ -29,6 +30,7 @@ import {
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-managers-by-permission-template.dto';
 
 @ApiTags('Churches:Permissions')
 @Controller('permissions')
@@ -82,6 +84,20 @@ export class PermissionController {
     return this.permissionService.getPermissionTemplateById(
       churchId,
       templateId,
+    );
+  }
+
+  @ApiGetManagersByPermissionTemplate()
+  @Get('templates/:templateId/managers')
+  getManagersByPermissionTemplate(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('templateId', ParseIntPipe) templateId: number,
+    @Query() dto: GetManagersByPermissionTemplateDto,
+  ) {
+    return this.permissionService.getManagersByPermissionTemplate(
+      churchId,
+      templateId,
+      dto,
     );
   }
 

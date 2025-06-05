@@ -7,6 +7,7 @@ import { EducationSessionModel } from '../../../management/educations/entity/edu
 import { EducationSessionReportDomainPaginationResultDto } from '../../dto/education-report/session/response/education-session-report-domain-pagination-result.dto';
 import { GetEducationSessionReportDto } from '../../dto/education-report/session/request/get-education-session-report.dto';
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 export const IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE',
@@ -32,36 +33,33 @@ export interface IEducationSessionReportDomainService {
     relationOptions?: FindOptionsRelations<EducationSessionReportModel>,
   ): Promise<EducationSessionReportModel>;
 
-  /*createSingleReport(
-    education: EducationModel,
-    educationTerm: EducationTermModel,
-    educationSession: EducationSessionModel,
-    receiver: MemberModel,
-    qr: QueryRunner,
-  ): Promise<EducationSessionReportModel>;*/
-
   createEducationSessionReports(
     education: EducationModel,
     educationTerm: EducationTermModel,
     educationSession: EducationSessionModel,
-    receivers: MemberModel[],
+    receivers: ChurchUserModel[],
     qr: QueryRunner,
   ): Promise<EducationSessionReportModel[]>;
-
-  deleteEducationSessionReports(
-    deleteReports: EducationSessionReportModel[],
-    qr?: QueryRunner,
-  ): Promise<UpdateResult>;
-
-  delete(
-    educationSessionId: number,
-    deleteReceiverIds: number[],
-    qr?: QueryRunner,
-  ): Promise<UpdateResult>;
 
   updateEducationSessionReport(
     targetReport: EducationSessionReportModel,
     dto: UpdateEducationSessionReportDto,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteEducationSessionReportsCascade(
+    educationSession: EducationSessionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteEducationSessionReport(
+    deleteReport: EducationSessionReportModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteEducationSessionReports(
+    educationSession: EducationSessionModel,
+    deleteReceiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 }
