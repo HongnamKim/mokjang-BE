@@ -46,6 +46,7 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { EducationSessionModel } from '../entity/education-session.entity';
 
 @Injectable()
 export class EducationSessionService {
@@ -191,23 +192,13 @@ export class EducationSessionService {
       creatorMemberId,
       qr,
     );
-    /*await this.membersDomainService.findMemberModelByUserId(
-        church,
-        creatorMemberId,
-        qr,
-      );*/
 
     const inCharge = dto.inChargeId
       ? await this.managerDomainService.findManagerById(
           church,
           dto.inChargeId,
           qr,
-        ) /*await this.membersDomainService.findMemberModelById(
-          church,
-          dto.inChargeId,
-          qr,
-          { user: true },
-        )*/
+        )
       : null;
 
     const newSession =
@@ -241,7 +232,7 @@ export class EducationSessionService {
         church,
         education,
         educationTerm,
-        newSession.id,
+        newSession,
         dto.receiverIds,
         qr,
       );
@@ -284,12 +275,7 @@ export class EducationSessionService {
           church,
           dto.inChargeId,
           qr,
-        ) /*await this.membersDomainService.findMemberModelById(
-          church,
-          dto.inChargeId,
-          qr,
-          { user: true },
-        )*/
+        )
       : null;
 
     const targetSession =
@@ -360,35 +346,33 @@ export class EducationSessionService {
         educationTerm,
         educationSessionId,
         qr,
-        { sessionAttendances: true, reports: true },
+        { sessionAttendances: true },
       );
 
-    await Promise.all([
-      // 세션 삭제
-      this.educationSessionDomainService.deleteEducationSession(
-        targetSession,
-        qr,
-      ),
+    // 세션 삭제
+    await this.educationSessionDomainService.deleteEducationSession(
+      targetSession,
+      qr,
+    );
 
-      // 세션의 보고 삭제
-      this.educationSessionReportDomainService.deleteEducationSessionReports(
-        targetSession.reports,
-        qr,
-      ),
+    // 세션의 보고 삭제
+    await this.educationSessionReportDomainService.deleteEducationSessionReportsCascade(
+      targetSession,
+      qr,
+    );
 
-      // 다른 회차들 session 번호 수정
-      this.educationSessionDomainService.reorderSessionsAfterDeletion(
-        educationTerm,
-        targetSession,
-        qr,
-      ),
+    // 다른 회차들 session 번호 수정
+    await this.educationSessionDomainService.reorderSessionsAfterDeletion(
+      educationTerm,
+      targetSession,
+      qr,
+    );
 
-      // 해당 기수의 세션 개수 업데이트
-      this.educationTermDomainService.decrementNumberOfSessions(
-        educationTerm,
-        qr,
-      ),
-    ]);
+    // 해당 기수의 세션 개수 업데이트
+    await this.educationTermDomainService.decrementNumberOfSessions(
+      educationTerm,
+      qr,
+    );
 
     if (targetSession.status === EducationSessionStatus.DONE) {
       await this.educationTermDomainService.decrementDoneCount(
@@ -449,12 +433,18 @@ export class EducationSessionService {
         educationTermId,
         qr,
       );
+    const educationSession =
+      await this.educationSessionDomainService.findEducationSessionModelById(
+        educationTerm,
+        educationSessionId,
+        qr,
+      );
 
     return this.handleAddTaskReport(
       church,
       education,
       educationTerm,
-      educationSessionId,
+      educationSession,
       dto.receiverIds,
       qr,
     );
@@ -464,35 +454,15 @@ export class EducationSessionService {
     church: ChurchModel,
     education: EducationModel,
     educationTerm: EducationTermModel,
-    educationSessionId: number,
+    educationSession: EducationSessionModel,
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const newReceivers = (
-      await Promise.all(
-        newReceiverIds.map((receiverId) => {
-          return this.managerDomainService.findManagerById(
-            church,
-            receiverId,
-            qr,
-          );
-        }),
-      )
-    ).map((churchUser) => churchUser.member);
-    /*await this.membersDomainService.findMembersById(
+    const newReceivers = await this.managerDomainService.findManagersByIds(
       church,
       newReceiverIds,
       qr,
-      { user: true },
-    )*/
-
-    const educationSession =
-      await this.educationSessionDomainService.findEducationSessionModelById(
-        educationTerm,
-        educationSessionId,
-        qr,
-        { reports: true },
-      );
+    );
 
     await this.educationSessionReportDomainService.createEducationSessionReports(
       education,
@@ -508,7 +478,7 @@ export class EducationSessionService {
       educationSessionId: educationSession.id,
       addReceivers: newReceivers.map((receiver) => ({
         id: receiver.id,
-        name: receiver.name,
+        name: receiver.member.name,
       })),
       addedCount: newReceivers.length,
     };
@@ -544,35 +514,12 @@ export class EducationSessionService {
         { reports: { receiver: true } },
       );
 
-    const result = await this.educationSessionReportDomainService.delete(
-      educationSession.id,
-      dto.receiverIds,
-      qr,
-    );
-
-    /*const reports = educationSession.reports;
-    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
-
-    const notExistReceiverIds = dto.receiverIds.filter(
-      (newReceiverId) => !oldReceiverIds.has(newReceiverId),
-    );
-
-    if (notExistReceiverIds.length > 0) {
-      throw new RemoveConflictException(
-        EducationSessionReportException.NOT_EXIST_REPORTED_MEMBER,
-        notExistReceiverIds,
-      );
-    }
-
-    const deleteReports = reports.filter((report) =>
-      dto.receiverIds.includes(report.receiverId),
-    );
-
     const result =
       await this.educationSessionReportDomainService.deleteEducationSessionReports(
-        deleteReports,
+        educationSession,
+        dto.receiverIds,
         qr,
-      );*/
+      );
 
     return {
       educationId: education.id,
