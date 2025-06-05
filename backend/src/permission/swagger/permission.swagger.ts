@@ -87,3 +87,11 @@ export const ApiDeletePermissionTemplate = () =>
         '<p><a href="https://test-khn.atlassian.net/wiki/x/iAD8Ag">세부 문서</a></p>',
     }),
   );
+
+export const ApiGetManagersByPermissionTemplate = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '권한 유형에 속한 매니저 목록 조회',
+      description: '해당 권한 유형에 속한 매니저 목록 조회',
+    }),
+  );

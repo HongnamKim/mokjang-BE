@@ -30,6 +30,11 @@ import {
   ManagersFindOptionsRelations,
   ManagersFindOptionsSelect,
 } from '../../const/manager-find-options.const';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
+import { GetManagersByPermissionTemplateDto } from '../../../permission/dto/template/request/get-managers-by-permission-template.dto';
 
 export class ManagerDomainService implements IManagerDomainService {
   constructor(
@@ -71,6 +76,49 @@ export class ManagerDomainService implements IManagerDomainService {
         order: orderOptions,
         relations: ManagersFindOptionsRelations,
         select: ManagersFindOptionsSelect,
+      }),
+      repository.count({
+        where: whereOptions,
+      }),
+    ]);
+
+    return new ManagerDomainPaginationResultDto(data, totalCount);
+  }
+
+  async findManagersByPermissionTemplate(
+    church: ChurchModel,
+    permissionTemplate: PermissionTemplateModel,
+    dto: GetManagersByPermissionTemplateDto,
+    qr?: QueryRunner,
+  ): Promise<ManagerDomainPaginationResultDto> {
+    const repository = this.getRepository(qr);
+
+    const whereOptions: FindOptionsWhere<ChurchUserModel> = {
+      churchId: church.id,
+      role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+      permissionTemplateId: permissionTemplate.id,
+    };
+
+    const orderOptions: FindOptionsOrder<ChurchUserModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== ManagerOrder.CREATED_AT) {
+      orderOptions.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      repository.find({
+        where: whereOptions,
+        relations: {
+          member: MemberSummarizedRelation,
+        },
+        select: {
+          member: MemberSummarizedSelect,
+        },
+        take: dto.take,
+        order: orderOptions,
+        skip: dto.take * (dto.page - 1),
       }),
       repository.count({
         where: whereOptions,
