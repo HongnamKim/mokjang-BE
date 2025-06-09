@@ -5,6 +5,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
 } from 'typeorm';
 import { ChurchModel } from '../../churches/entity/church.entity';
@@ -12,6 +13,7 @@ import { UserModel } from '../../user/entity/user.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionTemplateModel } from '../../permission/entity/permission-template.entity';
+import { PermissionScopeModel } from '../../permission/entity/permission-scope.entity';
 
 @Entity()
 export class ChurchUserModel extends BaseModel {
@@ -49,6 +51,12 @@ export class ChurchUserModel extends BaseModel {
   @ManyToOne(() => PermissionTemplateModel)
   @JoinColumn({ name: 'permissionTemplateId' })
   permissionTemplate: PermissionTemplateModel;
+
+  @OneToMany(
+    () => PermissionScopeModel,
+    (permissionScope) => permissionScope.churchUser,
+  )
+  permissionScopes: PermissionScopeModel[];
 
   @Column({ default: false })
   isPermissionActive: boolean;

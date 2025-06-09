@@ -57,6 +57,7 @@ import { PermissionTemplateModel } from './permission/entity/permission-template
 import { ManagerModule } from './manager/manager.module';
 import { ChurchUserModule } from './church-user/church-user.module';
 import { ChurchUserModel } from './church-user/entity/church-user.entity';
+import { PermissionScopeModel } from './permission/entity/permission-scope.entity';
 
 @Module({
   imports: [
@@ -167,6 +168,7 @@ import { ChurchUserModel } from './church-user/entity/church-user.entity';
           // 권한 관련
           PermissionUnitModel,
           PermissionTemplateModel,
+          PermissionScopeModel,
         ],
         synchronize: true,
       }),
