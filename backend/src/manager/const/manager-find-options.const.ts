@@ -10,6 +10,7 @@ export const ManagersFindOptionsRelations: FindOptionsRelations<ChurchUserModel>
     member: MemberSummarizedRelation,
     user: true,
     permissionTemplate: true,
+    permissionScopes: { group: true },
   };
 
 export const ManagersFindOptionsSelect: FindOptionsSelect<ChurchUserModel> = {
@@ -23,6 +24,14 @@ export const ManagersFindOptionsSelect: FindOptionsSelect<ChurchUserModel> = {
     id: true,
     title: true,
   },
+  permissionScopes: {
+    id: true,
+    isAllGroups: true,
+    group: {
+      id: true,
+      name: true,
+    },
+  },
 };
 
 export const ManagerFindOptionsRelations: FindOptionsRelations<ChurchUserModel> =
@@ -30,6 +39,7 @@ export const ManagerFindOptionsRelations: FindOptionsRelations<ChurchUserModel> 
     member: MemberSummarizedRelation,
     permissionTemplate: { permissionUnits: true },
     user: true,
+    permissionScopes: { group: true },
   };
 
 export const ManagerFindOptionsSelect: FindOptionsSelect<ChurchUserModel> = {
@@ -38,5 +48,13 @@ export const ManagerFindOptionsSelect: FindOptionsSelect<ChurchUserModel> = {
     id: true,
     name: true,
     mobilePhone: true,
+  },
+  permissionScopes: {
+    id: true,
+    isAllGroups: true,
+    group: {
+      id: true,
+      name: true,
+    },
   },
 };

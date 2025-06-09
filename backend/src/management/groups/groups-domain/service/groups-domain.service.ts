@@ -15,6 +15,7 @@ import { CreateGroupDto } from '../../dto/group/create-group.dto';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  In,
   IsNull,
   QueryRunner,
   Repository,
@@ -114,6 +115,29 @@ export class GroupsDomainService implements IGroupsDomainService {
     }
 
     return group;
+  }
+
+  async findGroupModelsByIds(
+    church: ChurchModel,
+    groupIds: number[],
+    qr?: QueryRunner,
+    relationsOptions?: FindOptionsRelations<GroupModel>,
+  ) {
+    const groupRepository = this.getGroupsRepository(qr);
+
+    const groups = await groupRepository.find({
+      where: {
+        churchId: church.id,
+        id: In(groupIds),
+      },
+      relations: relationsOptions,
+    });
+
+    if (groups.length !== groupIds.length) {
+      throw new NotFoundException(GroupException.NOT_FOUND);
+    }
+
+    return groups;
   }
 
   async findGroupById(

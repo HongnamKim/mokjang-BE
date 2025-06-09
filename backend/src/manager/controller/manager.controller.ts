@@ -15,6 +15,7 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { AssignPermissionTemplateDto } from '../dto/request/assign-permission-template.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UpdatePermissionScopeDto } from '../dto/request/update-permission-scope.dto';
 
 @ApiTags('Churches:Managers')
 @Controller('managers')
@@ -78,6 +79,22 @@ export class ManagerController {
     return this.managerService.unassignPermissionTemplate(
       churchId,
       managerId,
+      qr,
+    );
+  }
+
+  @Patch(':managerId/permission-scope')
+  @UseInterceptors(TransactionInterceptor)
+  patchPermissionScope(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('managerId', ParseIntPipe) managerId: number,
+    @Body() dto: UpdatePermissionScopeDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.managerService.patchPermissionScope(
+      churchId,
+      managerId,
+      dto,
       qr,
     );
   }

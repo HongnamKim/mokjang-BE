@@ -37,6 +37,13 @@ export interface IGroupsDomainService {
     qr?: QueryRunner,
   ): Promise<GroupModel>;
 
+  findGroupModelsByIds(
+    church: ChurchModel,
+    groupIds: number[],
+    qr?: QueryRunner,
+    relationsOptions?: FindOptionsRelations<GroupModel>,
+  ): Promise<GroupModel[]>;
+
   findGroupModelById(
     church: ChurchModel,
     groupId: number,
