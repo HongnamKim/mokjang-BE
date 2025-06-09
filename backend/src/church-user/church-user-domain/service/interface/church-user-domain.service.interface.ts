@@ -33,6 +33,7 @@ export interface IChurchUserDomainService {
     qr?: QueryRunner,
   ): Promise<boolean>;
 
+  // 권한 인증용
   findChurchUserByUserId(
     userId: number,
     qr?: QueryRunner,
@@ -44,9 +45,9 @@ export interface IChurchUserDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserDomainPaginationResultDto>;
 
-  findChurchUserByMember(
+  findChurchUserById(
     church: ChurchModel,
-    member: MemberModel,
+    churchUserId: number,
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 

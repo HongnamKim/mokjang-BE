@@ -3,9 +3,9 @@ import { IsNumber, Min } from 'class-validator';
 
 export class TransferOwnerDto {
   @ApiProperty({
-    description: '새로운 owner 가 될 교인의 ID',
+    description: '새로운 owner 가 될 교인의 Church User ID',
   })
   @IsNumber()
   @Min(1)
-  newOwnerMemberId: number;
+  newOwnerChurchUserId: number;
 }
