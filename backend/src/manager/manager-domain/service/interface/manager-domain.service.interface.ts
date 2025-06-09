@@ -15,13 +15,6 @@ export interface IManagerDomainService {
     qr?: QueryRunner,
   ): Promise<ManagerDomainPaginationResultDto>;
 
-  findManagerModelById(
-    church: ChurchModel,
-    managerId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<ChurchUserModel>,
-  ): Promise<ChurchUserModel>;
-
   findManagersByPermissionTemplate(
     church: ChurchModel,
     permissionTemplate: PermissionTemplateModel,
@@ -29,19 +22,57 @@ export interface IManagerDomainService {
     qr?: QueryRunner,
   ): Promise<ManagerDomainPaginationResultDto>;
 
+  findManagerById(
+    church: ChurchModel,
+    churchUserId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel>;
+
+  findManagerModelById(
+    church: ChurchModel,
+    churchUserId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchUserModel>,
+  ): Promise<ChurchUserModel>;
+
+  /**
+   * 생성자의 권한 확인용
+   * @param church
+   * @param userId
+   * @param qr
+   */
   findManagerByUserId(
     church: ChurchModel,
     userId: number,
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 
-  findManagerById(
+  /**
+   * inCharge 로 지정된 교인의 권한 확인용
+   * @param church
+   * @param managerId
+   * @param qr
+   */
+  findManagerByMemberId(
     church: ChurchModel,
     managerId: number,
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 
-  findManagersByIds(
+  findManagerModelByMemberId(
+    church: ChurchModel,
+    managerId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchUserModel>,
+  ): Promise<ChurchUserModel>;
+
+  /**
+   * receiver 로 지정된 교인의 권한 확인용
+   * @param church
+   * @param managerIds
+   * @param qr
+   */
+  findManagersByMemberIds(
     church: ChurchModel,
     managerIds: number[],
     qr?: QueryRunner,
