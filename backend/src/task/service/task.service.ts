@@ -100,7 +100,7 @@ export class TaskService {
     );
 
     const inCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerById(
+      ? await this.managerDomainService.findManagerByMemberId(
           church,
           dto.inChargeId,
           qr,
@@ -162,7 +162,7 @@ export class TaskService {
     );
 
     const newInChargeMember = dto.inChargeId
-      ? await this.managerDomainService.findManagerById(
+      ? await this.managerDomainService.findManagerByMemberId(
           church,
           dto.inChargeId,
           qr,
@@ -247,11 +247,12 @@ export class TaskService {
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const newReceivers = await this.managerDomainService.findManagersByIds(
-      church,
-      newReceiverIds,
-      qr,
-    );
+    const newReceivers =
+      await this.managerDomainService.findManagersByMemberIds(
+        church,
+        newReceiverIds,
+        qr,
+      );
 
     await this.taskReportDomainService.createTaskReports(
       task,

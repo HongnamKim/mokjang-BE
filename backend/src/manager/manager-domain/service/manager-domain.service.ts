@@ -14,7 +14,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerOrder } from '../../const/manager-order.enum';
-import { ChurchUserRole } from '../../../user/const/user-role.enum';
+import {
+  ChurchUserManagers,
+  ChurchUserRole,
+} from '../../../user/const/user-role.enum';
 import { ManagerDomainPaginationResultDto } from '../dto/manager-domain-pagination-result.dto';
 import { IManagerDomainService } from './interface/manager-domain.service.interface';
 import {
@@ -63,7 +66,7 @@ export class ManagerDomainService implements IManagerDomainService {
 
     const whereOptions: FindOptionsWhere<ChurchUserModel> = {
       churchId: church.id,
-      role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+      role: ChurchUserManagers,
       leftAt: IsNull(),
       member: {
         name: dto.name && ILike(`%${dto.name}%`),
@@ -95,7 +98,7 @@ export class ManagerDomainService implements IManagerDomainService {
 
     const whereOptions: FindOptionsWhere<ChurchUserModel> = {
       churchId: church.id,
-      role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+      role: ChurchUserManagers,
       permissionTemplateId: permissionTemplate.id,
     };
 
@@ -130,6 +133,31 @@ export class ManagerDomainService implements IManagerDomainService {
 
   async findManagerModelById(
     church: ChurchModel,
+    churchUserId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchUserModel>,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const churchUser = await repository.findOne({
+      where: {
+        churchId: church.id,
+        id: churchUserId,
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      relations: relationOptions,
+    });
+
+    if (!churchUser) {
+      throw new NotFoundException(ManagerException.NOT_FOUND);
+    }
+
+    return churchUser;
+  }
+
+  async findManagerModelByMemberId(
+    church: ChurchModel,
     managerId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<ChurchUserModel>,
@@ -140,7 +168,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         memberId: managerId,
-        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+        role: ChurchUserManagers,
         leftAt: IsNull(),
       },
       relations: relationOptions,
@@ -164,7 +192,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         userId: userId,
-        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+        role: ChurchUserManagers,
         leftAt: IsNull(),
       },
       relations: ManagerFindOptionsRelations,
@@ -178,7 +206,7 @@ export class ManagerDomainService implements IManagerDomainService {
     return churchUser;
   }
 
-  async findManagersByIds(
+  async findManagersByMemberIds(
     church: ChurchModel,
     managerIds: number[],
     qr?: QueryRunner,
@@ -189,7 +217,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         memberId: In(managerIds),
-        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+        role: ChurchUserManagers,
       },
       relations: {
         member: MemberSummarizedRelation,
@@ -223,6 +251,31 @@ export class ManagerDomainService implements IManagerDomainService {
 
   async findManagerById(
     church: ChurchModel,
+    churchUserId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel> {
+    const repository = this.getRepository(qr);
+
+    const churchUser = await repository.findOne({
+      where: {
+        churchId: church.id,
+        id: churchUserId,
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      relations: ManagerFindOptionsRelations,
+      select: ManagerFindOptionsSelect,
+    });
+
+    if (!churchUser) {
+      throw new NotFoundException(ManagerException.NOT_FOUND);
+    }
+
+    return churchUser;
+  }
+
+  async findManagerByMemberId(
+    church: ChurchModel,
     managerId: number,
     qr?: QueryRunner,
   ): Promise<ChurchUserModel> {
@@ -232,7 +285,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         memberId: managerId,
-        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]),
+        role: ChurchUserManagers,
         leftAt: IsNull(),
       },
       relations: ManagerFindOptionsRelations,

@@ -146,12 +146,6 @@ export class ChurchesService {
       qr,
     );
 
-    const newOwnerMember = await this.membersDomainService.findMemberModelById(
-      church,
-      dto.newOwnerMemberId,
-      qr,
-    );
-
     const oldOwnerChurchUser =
       await this.churchUserDomainService.findChurchUserByUser(
         church,
@@ -160,9 +154,9 @@ export class ChurchesService {
       );
 
     const newOwnerChurchUser =
-      await this.churchUserDomainService.findChurchUserByMember(
+      await this.churchUserDomainService.findChurchUserById(
         church,
-        newOwnerMember,
+        dto.newOwnerChurchUserId,
         qr,
       );
 

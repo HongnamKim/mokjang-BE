@@ -182,7 +182,7 @@ export class EducationTermService {
           qr,
           { user: true },
         )*/
-        await this.managerDomainService.findManagerById(
+        await this.managerDomainService.findManagerByMemberId(
           church,
           dto.inChargeId,
           qr,
@@ -273,13 +273,7 @@ export class EducationTermService {
       );
 
     const newInCharge = dto.inChargeId
-      ? /*await this.membersDomainService.findMemberModelById(
-          church,
-          dto.inChargeId,
-          qr,
-          { user: true },
-        )*/
-        await this.managerDomainService.findManagerModelById(
+      ? await this.managerDomainService.findManagerByMemberId(
           church,
           dto.inChargeId,
           qr,

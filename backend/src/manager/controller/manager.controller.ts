@@ -32,68 +32,72 @@ export class ManagerController {
   }
 
   @ApiOperation({ summary: '관리자 단건 조회' })
-  @Get(':managerId')
+  @Get(':churchUserId')
   getManagerById(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('managerId', ParseIntPipe) managerId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
   ) {
-    return this.managerService.getManagerById(churchId, managerId);
+    return this.managerService.getManagerById(churchId, churchUserId);
   }
 
   @ApiOperation({ summary: '관리자 활성 상태 온오프' })
-  @Patch(':managerId/toggle-permission-activity')
+  @Patch(':churchUserId/toggle-permission-activity')
   @UseInterceptors(TransactionInterceptor)
   toggleManagerPermissionActive(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('managerId', ParseIntPipe) managerId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.managerService.togglePermissionActive(churchId, managerId, qr);
+    return this.managerService.togglePermissionActive(
+      churchId,
+      churchUserId,
+      qr,
+    );
   }
 
   @ApiOperation({ summary: '권한 유형 부여' })
-  @Patch(':managerId/assign-permission-template')
+  @Patch(':churchUserId/assign-permission-template')
   @UseInterceptors(TransactionInterceptor)
   assignPermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('managerId', ParseIntPipe) managerId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
     @Body() dto: AssignPermissionTemplateDto,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.assignPermissionTemplate(
       churchId,
-      managerId,
+      churchUserId,
       dto,
       qr,
     );
   }
 
   @ApiOperation({ summary: '권한 유형 해제' })
-  @Patch(':managerId/unassign-permission-template')
+  @Patch(':churchUserId/unassign-permission-template')
   @UseInterceptors(TransactionInterceptor)
   unassignPermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('managerId', ParseIntPipe) managerId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.unassignPermissionTemplate(
       churchId,
-      managerId,
+      churchUserId,
       qr,
     );
   }
 
-  @Patch(':managerId/permission-scope')
+  @Patch(':churchUserId/permission-scope')
   @UseInterceptors(TransactionInterceptor)
   patchPermissionScope(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('managerId', ParseIntPipe) managerId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
     @Body() dto: UpdatePermissionScopeDto,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.patchPermissionScope(
       churchId,
-      managerId,
+      churchUserId,
       dto,
       qr,
     );

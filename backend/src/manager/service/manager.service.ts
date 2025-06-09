@@ -67,7 +67,7 @@ export class ManagerService {
 
   async togglePermissionActive(
     churchId: number,
-    managerId: number,
+    churchUserId: number,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -77,7 +77,7 @@ export class ManagerService {
 
     const targetManager = await this.managerDomainService.findManagerModelById(
       church,
-      managerId,
+      churchUserId,
       qr,
     );
 
@@ -89,20 +89,20 @@ export class ManagerService {
 
     const updatedManager = await this.managerDomainService.findManagerById(
       church,
-      managerId,
+      churchUserId,
       qr,
     );
 
     return new PatchManagerResponseDto(updatedManager);
   }
 
-  async getManagerById(churchId: number, managerId: number) {
+  async getManagerById(churchId: number, churchUserId: number) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
     const manager = await this.managerDomainService.findManagerById(
       church,
-      managerId,
+      churchUserId,
     );
 
     return new GetManagerResponseDto(manager);
@@ -110,7 +110,7 @@ export class ManagerService {
 
   async assignPermissionTemplate(
     churchId: number,
-    managerId: number,
+    churchUserId: number,
     dto: AssignPermissionTemplateDto,
     qr: QueryRunner,
   ) {
@@ -128,7 +128,7 @@ export class ManagerService {
 
     const manager = await this.managerDomainService.findManagerModelById(
       church,
-      managerId,
+      churchUserId,
       qr,
       { permissionTemplate: true },
     );
@@ -154,7 +154,7 @@ export class ManagerService {
 
     const updatedManager = await this.managerDomainService.findManagerById(
       church,
-      managerId,
+      churchUserId,
       qr,
     );
 
@@ -163,7 +163,7 @@ export class ManagerService {
 
   async unassignPermissionTemplate(
     churchId: number,
-    managerId: number,
+    churchUserId: number,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -173,7 +173,7 @@ export class ManagerService {
 
     const manager = await this.managerDomainService.findManagerModelById(
       church,
-      managerId,
+      churchUserId,
       qr,
       { permissionTemplate: true },
     );
@@ -188,7 +188,7 @@ export class ManagerService {
 
     const updatedManager = await this.managerDomainService.findManagerById(
       church,
-      managerId,
+      churchUserId,
       qr,
     );
 
@@ -277,7 +277,7 @@ export class ManagerService {
 
   async patchPermissionScope(
     churchId: number,
-    managerId: number,
+    churchUserId: number,
     dto: UpdatePermissionScopeDto,
     qr: QueryRunner,
   ) {
@@ -286,7 +286,7 @@ export class ManagerService {
 
     const manager = await this.managerDomainService.findManagerById(
       church,
-      managerId,
+      churchUserId,
       qr,
     );
 
@@ -304,7 +304,11 @@ export class ManagerService {
     if (dto.isAllGroups) {
       await this.handleAllGroupScope(manager, existingScope, qr);
 
-      return this.managerDomainService.findManagerById(church, managerId, qr);
+      return this.managerDomainService.findManagerById(
+        church,
+        churchUserId,
+        qr,
+      );
     } else {
       await this.handlePermissionScopeChange(
         church,
@@ -314,7 +318,11 @@ export class ManagerService {
         qr,
       );
 
-      return this.managerDomainService.findManagerById(church, managerId, qr);
+      return this.managerDomainService.findManagerById(
+        church,
+        churchUserId,
+        qr,
+      );
     }
   }
 }
