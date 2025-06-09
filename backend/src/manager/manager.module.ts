@@ -6,6 +6,7 @@ import { ManagerService } from './service/manager.service';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { PermissionDomainModule } from '../permission/permission-domain/permission-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserDomainModule } from '../user/user-domain/user-domain.module';
     ChurchesDomainModule,
     PermissionDomainModule,
     ManagerDomainModule,
+    GroupsDomainModule,
   ],
   controllers: [ManagerController],
   providers: [ManagerService],
