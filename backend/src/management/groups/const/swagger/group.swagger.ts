@@ -70,3 +70,10 @@ export const ApiGetChildGroupIds = () =>
       description: '<h2>해당 그룹의 하위 그룹들의 id 값을 조회합니다.</h2>',
     }),
   );
+
+export const ApiGetGroupsByName = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '그룹 이름으로 검색',
+    }),
+  );
