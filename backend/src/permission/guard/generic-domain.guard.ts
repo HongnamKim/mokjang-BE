@@ -8,18 +8,23 @@ import {
   mixin,
   Type,
 } from '@nestjs/common';
-import { DomainAction } from '../../permission/const/domain-action.enum';
+import { DomainType } from '../const/domain-type.enum';
+import { DomainAction } from '../const/domain-action.enum';
 import {
   IDomainPermissionService,
   IDOMAIN_PERMISSION_SERVICE,
-} from '../../permission/service/domain-permission.service.interface';
+} from '../service/domain-permission.service.interface';
 
-export function TaskGuard(domainAction: DomainAction): Type<CanActivate> {
+export function createDomainGuard(
+  domainType: DomainType,
+  domainNameForMessage: string,
+  domainAction: DomainAction,
+): Type<CanActivate> {
   @Injectable()
-  class TaskPermissionGuard implements CanActivate {
+  class GenericDomainGuard implements CanActivate {
     constructor(
       @Inject(IDOMAIN_PERMISSION_SERVICE)
-      private readonly taskPermissionService: IDomainPermissionService,
+      private readonly permissionService: IDomainPermissionService,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -32,10 +37,9 @@ export function TaskGuard(domainAction: DomainAction): Type<CanActivate> {
       }
 
       const churchId = parseInt(req.params.churchId);
-
       const requestUserId = token.id;
 
-      const hasPermission = await this.taskPermissionService.hasPermission(
+      const hasPermission = await this.permissionService.hasPermission(
         churchId,
         requestUserId,
         domainAction,
@@ -45,12 +49,13 @@ export function TaskGuard(domainAction: DomainAction): Type<CanActivate> {
         const actionText = domainAction === DomainAction.READ ? '읽기' : '쓰기';
 
         throw new ForbiddenException(
-          `업무 기능에 대한 ${actionText} 권한이 없습니다.`,
+          `${domainNameForMessage} 기능에 대한 ${actionText} 권한이 없습니다.`,
         );
       }
 
-      return hasPermission;
+      return true;
     }
   }
-  return mixin(TaskPermissionGuard);
+
+  return mixin(GenericDomainGuard);
 }

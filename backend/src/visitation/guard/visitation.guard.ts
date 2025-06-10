@@ -1,3 +1,4 @@
+import { DomainAction } from '../../permission/const/domain-action.enum';
 import {
   CanActivate,
   ExecutionContext,
@@ -8,18 +9,17 @@ import {
   mixin,
   Type,
 } from '@nestjs/common';
-import { DomainAction } from '../../permission/const/domain-action.enum';
 import {
   IDomainPermissionService,
   IDOMAIN_PERMISSION_SERVICE,
 } from '../../permission/service/domain-permission.service.interface';
 
-export function TaskGuard(domainAction: DomainAction): Type<CanActivate> {
+export function VisitationGuard(domainAction: DomainAction): Type<CanActivate> {
   @Injectable()
-  class TaskPermissionGuard implements CanActivate {
+  class VisitationPermissionGuard implements CanActivate {
     constructor(
       @Inject(IDOMAIN_PERMISSION_SERVICE)
-      private readonly taskPermissionService: IDomainPermissionService,
+      private readonly visitationPermissionService: IDomainPermissionService,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,22 +35,24 @@ export function TaskGuard(domainAction: DomainAction): Type<CanActivate> {
 
       const requestUserId = token.id;
 
-      const hasPermission = await this.taskPermissionService.hasPermission(
-        churchId,
-        requestUserId,
-        domainAction,
-      );
+      const hasPermission =
+        await this.visitationPermissionService.hasPermission(
+          churchId,
+          requestUserId,
+          domainAction,
+        );
 
       if (!hasPermission) {
         const actionText = domainAction === DomainAction.READ ? '읽기' : '쓰기';
 
         throw new ForbiddenException(
-          `업무 기능에 대한 ${actionText} 권한이 없습니다.`,
+          `심방 기능에 대한 ${actionText} 권한이 없습니다.`,
         );
       }
 
       return hasPermission;
     }
   }
-  return mixin(TaskPermissionGuard);
+
+  return mixin(VisitationPermissionGuard);
 }

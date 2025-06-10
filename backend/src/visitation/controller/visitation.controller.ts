@@ -33,6 +33,9 @@ import {
 import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
 import { DeleteReceiverDto } from '../dto/receiever/delete-receiver.dto';
+import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
+import { DomainType } from '../../permission/const/domain-type.enum';
+import { DomainAction } from '../../permission/const/domain-action.enum';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -40,6 +43,10 @@ export class VisitationController {
   constructor(private readonly visitationService: VisitationService) {}
 
   @ApiGetVisitations()
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(DomainType.VISITATION, '심방', DomainAction.READ),
+  )
   @Get()
   getVisitations(
     @Param('churchId', ParseIntPipe) churchId: number,

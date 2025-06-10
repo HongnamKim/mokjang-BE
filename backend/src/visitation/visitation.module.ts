@@ -9,6 +9,8 @@ import { VisitationReportDomainModule } from '../report/report-domain/visitation
 import { VisitationDetailController } from './controller/visitation-detail.controller';
 import { VisitationDetailService } from './service/visitation-detail.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { VisitationPermissionService } from './service/visitation-permission.service';
+import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 
 @Module({
   imports: [
@@ -23,6 +25,13 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     VisitationReportDomainModule,
   ],
   controllers: [VisitationController, VisitationDetailController],
-  providers: [VisitationService, VisitationDetailService],
+  providers: [
+    VisitationService,
+    VisitationDetailService,
+    {
+      provide: IDOMAIN_PERMISSION_SERVICE,
+      useClass: VisitationPermissionService,
+    },
+  ],
 })
 export class VisitationModule {}
