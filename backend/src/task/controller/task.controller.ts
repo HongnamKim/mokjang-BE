@@ -38,6 +38,8 @@ import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/a
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
 import { TaskGuard } from '../guard/task.guard';
 import { DomainAction } from '../../permission/const/domain-action.enum';
+import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
+import { DomainType } from '../../permission/const/domain-type.enum';
 
 @ApiTags('Tasks')
 @Controller()
@@ -45,7 +47,10 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @ApiGetTasks()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.READ))
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(DomainType.TASK, '업무', DomainAction.READ),
+  )
   @Get()
   getTasks(
     @Param('churchId', ParseIntPipe) churchId: number,

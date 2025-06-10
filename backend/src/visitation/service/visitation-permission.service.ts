@@ -7,12 +7,12 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
+import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainPermissionService } from '../../permission/service/domain-permission.service';
 
 @Injectable()
-export class TaskPermissionService extends DomainPermissionService {
+export class VisitationPermissionService extends DomainPermissionService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -22,11 +22,11 @@ export class TaskPermissionService extends DomainPermissionService {
     super();
   }
 
-  async hasPermission(
+  override async hasPermission(
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ) {
+  ): Promise<boolean> {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -36,6 +36,10 @@ export class TaskPermissionService extends DomainPermissionService {
         requestUserId,
       );
 
-    return super.checkPermission(DomainType.TASK, domainAction, requestManager);
+    return super.checkPermission(
+      DomainType.VISITATION,
+      domainAction,
+      requestManager,
+    );
   }
 }
