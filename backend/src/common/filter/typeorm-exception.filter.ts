@@ -20,7 +20,7 @@ export class TypeOrmExceptionFilter implements ExceptionFilter {
     const error: any = exception;
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = '데이터 저장 실패';
+    let message = '데이터베이스 에러';
     let errorType = 'Internal Server Error';
 
     if (error.code === '23505') {

@@ -22,6 +22,7 @@ import { ManagerDomainPaginationResultDto } from '../dto/manager-domain-paginati
 import { IManagerDomainService } from './interface/manager-domain.service.interface';
 import {
   BadRequestException,
+  ForbiddenException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -192,7 +193,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         userId: userId,
-        role: ChurchUserManagers,
+        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]), //ChurchUserManagers,
         leftAt: IsNull(),
       },
       relations: ManagerFindOptionsRelations,
@@ -201,6 +202,31 @@ export class ManagerDomainService implements IManagerDomainService {
 
     if (!churchUser) {
       throw new NotFoundException(ManagerException.NOT_FOUND);
+    }
+
+    return churchUser;
+  }
+
+  async findManagerForPermissionCheck(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const churchUser = await repository.findOne({
+      where: {
+        churchId: church.id,
+        userId: userId,
+        role: In([ChurchUserRole.MANAGER, ChurchUserRole.OWNER]), //ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      relations: ManagerFindOptionsRelations,
+      select: ManagerFindOptionsSelect,
+    });
+
+    if (!churchUser) {
+      throw new ForbiddenException(ManagerException.FORBIDDEN);
     }
 
     return churchUser;
