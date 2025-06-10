@@ -14,7 +14,7 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   group: true,
   groupRole: true,
-  user: true,
+  //user: true,
 };
 
 export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
@@ -47,9 +47,9 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     role: true,
   },
-  user: {
+  /*user: {
     role: true,
-  },
+  },*/
 };
 
 export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
@@ -60,11 +60,12 @@ export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
     educationTerm: true,
   },
   officer: true,
-  user: true,
+  //user: true,
 };
 
 export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
   id: true,
+  profileImageUrl: true,
   name: true,
   createdAt: true,
   updatedAt: true,
@@ -98,9 +99,9 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  user: {
+  /*user: {
     role: true,
-  },
+  },*/
 };
 
 export const HardDeleteMemberRelationOptions: FindOptionsRelations<MemberModel> =

@@ -10,6 +10,7 @@ export const MemberSummarizedRelation: FindOptionsRelations<MemberModel> = {
 export const MemberSummarizedSelect: FindOptionsSelect<MemberModel> = {
   id: true,
   name: true,
+  profileImageUrl: true,
   officer: {
     id: true,
     name: true,

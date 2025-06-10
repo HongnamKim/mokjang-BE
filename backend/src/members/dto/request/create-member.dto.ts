@@ -10,6 +10,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   Length,
   Matches,
   MaxLength,
@@ -31,6 +32,14 @@ export class CreateMemberDto {
   @IsDate()
   @IsOptional()
   registeredAt?: Date = new Date();
+
+  @ApiProperty({
+    description: '프로필 이미지 url',
+    required: false,
+  })
+  @IsOptional()
+  @IsUrl()
+  profileImageUrl?: string;
 
   @ApiProperty({
     name: 'name',
