@@ -65,12 +65,12 @@ export interface IMembersDomainService {
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel>;
 
-  findMemberModelByUserId(
+  /*findMemberModelByUserId(
     church: ChurchModel,
     userId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
-  ): Promise<MemberModel>;
+  ): Promise<MemberModel>;*/
 
   /*linkUserToMember(
     member: MemberModel,

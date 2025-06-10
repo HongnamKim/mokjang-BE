@@ -2,7 +2,6 @@ import { Column, Entity, Index, OneToMany, OneToOne } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { UserRole } from '../const/user-role.enum';
-import { MemberModel } from '../../members/entity/member.entity';
 import { ChurchJoinRequestModel } from '../../churches/entity/church-join-request.entity';
 import { Exclude } from 'class-transformer';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
@@ -46,6 +45,6 @@ export class UserModel extends BaseModel {
   @OneToMany(() => ChurchJoinRequestModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinRequestModel;
 
-  @OneToOne(() => MemberModel, (member) => member.user)
-  member: MemberModel;
+  /*@OneToOne(() => MemberModel, (member) => member.user)
+  member: MemberModel;*/
 }
