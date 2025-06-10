@@ -25,6 +25,7 @@ import {
 import { ChurchUserDomainPaginationResultDto } from '../dto/church-user-domain-pagination-result.dto';
 import { GetChurchUsersDto } from '../../dto/request/get-church-users.dto';
 import { ChurchUserOrder } from '../../const/church-user-order.enum';
+import { ChurchUserException } from '../../exception/church-user.exception';
 
 @Injectable()
 export class ChurchUserDomainService implements IChurchUserDomainService {
@@ -72,6 +73,27 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
       joinedAt: new Date(),
       isPermissionActive: role !== ChurchUserRole.MEMBER,
     });
+  }
+
+  async findChurchUserById(
+    church: ChurchModel,
+    churchUserId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getChurchUserRepository(qr);
+
+    const churchUser = await repository.findOne({
+      where: {
+        churchId: church.id,
+        id: churchUserId,
+      },
+    });
+
+    if (!churchUser) {
+      throw new NotFoundException(ChurchUserException.NOT_FOUND);
+    }
+
+    return churchUser;
   }
 
   async findChurchUserByUserId(
@@ -148,28 +170,6 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     return new ChurchUserDomainPaginationResultDto(data, totalCount);
   }
 
-  async findChurchUserByMember(
-    church: ChurchModel,
-    member: MemberModel,
-    qr?: QueryRunner,
-  ): Promise<ChurchUserModel> {
-    const repository = this.getChurchUserRepository(qr);
-
-    const churchUser = await repository.findOne({
-      where: {
-        churchId: church.id,
-        memberId: member.id,
-        leftAt: IsNull(),
-      },
-    });
-
-    if (!churchUser) {
-      throw new NotFoundException('해당 교회 가입 정보를 찾을 수 없습니다.');
-    }
-
-    return churchUser;
-  }
-
   async findChurchUserByUser(
     church: ChurchModel,
     user: UserModel,
@@ -198,7 +198,7 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     });
 
     if (!churchUser) {
-      throw new NotFoundException('해당 교회 가입 정보를 찾을 수 없습니다.');
+      throw new NotFoundException(ChurchUserException.NOT_FOUND);
     }
 
     return churchUser;
@@ -223,9 +223,7 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        '교회 가입 정보 업데이트 도중 에러 발생',
-      );
+      throw new InternalServerErrorException(ChurchUserException.UPDATE_ERROR);
     }
 
     return result;
@@ -235,7 +233,7 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     const repository = this.getChurchUserRepository(qr);
 
     if (churchUser.role === ChurchUserRole.OWNER) {
-      throw new ConflictException('교회 소유자는 교회에서 탈퇴할 수 없습니다.');
+      throw new ConflictException(ChurchUserException.OWNER_CANNOT_LEAVE);
     }
 
     const result = await repository.update(
@@ -251,7 +249,7 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException('교회 탈퇴 중 에러 발생');
+      throw new InternalServerErrorException(ChurchUserException.DELETE_ERROR);
     }
 
     return result;

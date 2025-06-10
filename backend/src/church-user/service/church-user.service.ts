@@ -18,6 +18,9 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from '../../user/user-domain/interface/user-domain.service.interface';
+import { GetChurchUserResponseDto } from '../dto/response/get-church-user-response.dto';
+import { ChurchUserPaginationResponseDto } from '../dto/response/church-user-pagination-response.dto';
+import { PatchChurchUserResponseDto } from '../dto/response/patch-church-user-response.dto';
 
 @Injectable()
 export class ChurchUserService {
@@ -46,17 +49,18 @@ export class ChurchUserService {
     const { data, totalCount } =
       await this.churchUserDomainService.findChurchUsers(church, dto);
 
-    return {
+    return new ChurchUserPaginationResponseDto(
       data,
       totalCount,
-      count: data.length,
-      totalPage: Math.ceil(totalCount / dto.take),
-    };
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 
   async getChurchUserByUserId(
     churchId: number,
-    userId: number,
+    churchUserId: number,
     qr?: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -64,20 +68,18 @@ export class ChurchUserService {
       qr,
     );
 
-    const user = await this.userDomainService.findUserById(userId, qr);
-
-    const churchUser = await this.churchUserDomainService.findChurchUserByUser(
+    const churchUser = await this.churchUserDomainService.findChurchUserById(
       church,
-      user,
+      churchUserId,
       qr,
     );
 
-    return churchUser;
+    return new GetChurchUserResponseDto(churchUser);
   }
 
   async patchChurchUserRole(
     churchId: number,
-    userId: number,
+    churchUserId: number,
     dto: UpdateChurchUserRoleDto,
     qr?: QueryRunner,
   ) {
@@ -86,11 +88,9 @@ export class ChurchUserService {
       qr,
     );
 
-    const user = await this.userDomainService.findUserById(userId, qr);
-
-    const churchUser = await this.churchUserDomainService.findChurchUserByUser(
+    const churchUser = await this.churchUserDomainService.findChurchUserById(
       church,
-      user,
+      churchUserId,
       qr,
     );
 
@@ -101,8 +101,12 @@ export class ChurchUserService {
     );
 
     const updatedChurchUser =
-      await this.churchUserDomainService.findChurchUserByUser(church, user, qr);
+      await this.churchUserDomainService.findChurchUserById(
+        church,
+        churchUserId,
+        qr,
+      );
 
-    return updatedChurchUser;
+    return new PatchChurchUserResponseDto(updatedChurchUser);
   }
 }

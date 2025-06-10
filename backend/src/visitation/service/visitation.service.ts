@@ -113,7 +113,7 @@ export class VisitationService {
       qr,
     );
 
-    const inCharge = await this.managerDomainService.findManagerById(
+    const inCharge = await this.managerDomainService.findManagerByMemberId(
       church,
       dto.inChargeId,
       qr,
@@ -220,7 +220,7 @@ export class VisitationService {
     // 심방 진행자 변경 시
     const newInstructor =
       dto.inChargeId && dto.inChargeId !== targetMetaData.inChargeId
-        ? await this.managerDomainService.findManagerById(
+        ? await this.managerDomainService.findManagerByMemberId(
             church,
             dto.inChargeId,
             qr,
@@ -330,11 +330,12 @@ export class VisitationService {
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const newReceivers = await this.managerDomainService.findManagersByIds(
-      church,
-      newReceiverIds,
-      qr,
-    );
+    const newReceivers =
+      await this.managerDomainService.findManagersByMemberIds(
+        church,
+        newReceiverIds,
+        qr,
+      );
 
     await this.visitationReportDomainService.createVisitationReports(
       visitation,

@@ -1,3 +1,5 @@
+import { In } from 'typeorm';
+
 export enum UserRole {
   OWNER = 'owner', // 교회 생성자, 결제, 교회 삭제를 포함한 모든 권한, 교회 당 1명만 부여
   MANAGER = 'manager', // 관리자, 상위 관리자가 부여한 권한
@@ -16,3 +18,8 @@ export enum ChurchUserRole {
   MEMBER = 'member', // 교회 일반 교인
   NONE = 'none',
 }
+
+export const ChurchUserManagers = In([
+  ChurchUserRole.MANAGER,
+  ChurchUserRole.OWNER,
+]);

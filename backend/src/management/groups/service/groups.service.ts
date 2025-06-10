@@ -14,6 +14,7 @@ import {
 import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
 import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
+import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
 
 @Injectable()
 export class GroupsService {
@@ -172,5 +173,27 @@ export class GroupsService {
     );
 
     return this.groupsDomainService.findChildGroups(group, qr);
+  }
+
+  async getGroupsByName(
+    churchId: number,
+    dto: GetGroupByNameDto,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const { data, totalCount } =
+      await this.groupsDomainService.findGroupsByName(church, dto, qr);
+
+    return new GroupPaginationResultDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 }

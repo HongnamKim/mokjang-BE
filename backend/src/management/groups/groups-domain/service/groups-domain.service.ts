@@ -15,6 +15,9 @@ import { CreateGroupDto } from '../../dto/group/create-group.dto';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsWhere,
+  ILike,
+  In,
   IsNull,
   QueryRunner,
   Repository,
@@ -26,6 +29,8 @@ import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetGroupDto } from '../../dto/group/get-group.dto';
 import { GroupOrderEnum } from '../../const/group-order.enum';
+import { GetGroupByNameDto } from '../../dto/group/get-group-by-name.dto';
+import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -55,6 +60,38 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     return !!existingGroup;
+  }
+
+  async findGroupsByName(
+    church: ChurchModel,
+    dto: GetGroupByNameDto,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getGroupsRepository(qr);
+
+    const whereOptions: FindOptionsWhere<GroupModel> = {
+      churchId: church.id,
+      name: dto.name && ILike(`%${dto.name}%`),
+    };
+
+    const orderOptions: FindOptionsOrder<GroupModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== GroupOrderEnum.createdAt) {
+      orderOptions.createdAt = 'asc';
+    }
+    const [data, totalCount] = await Promise.all([
+      repository.find({
+        where: whereOptions,
+        order: orderOptions,
+      }),
+      repository.count({
+        where: whereOptions,
+      }),
+    ]);
+
+    return new GroupDomainPaginationResultDto(data, totalCount);
   }
 
   async findGroups(
@@ -90,7 +127,7 @@ export class GroupsDomainService implements IGroupsDomainService {
       }),
     ]);
 
-    return { data, totalCount };
+    return new GroupDomainPaginationResultDto(data, totalCount);
   }
 
   async findGroupModelById(
@@ -114,6 +151,29 @@ export class GroupsDomainService implements IGroupsDomainService {
     }
 
     return group;
+  }
+
+  async findGroupModelsByIds(
+    church: ChurchModel,
+    groupIds: number[],
+    qr?: QueryRunner,
+    relationsOptions?: FindOptionsRelations<GroupModel>,
+  ) {
+    const groupRepository = this.getGroupsRepository(qr);
+
+    const groups = await groupRepository.find({
+      where: {
+        churchId: church.id,
+        id: In(groupIds),
+      },
+      relations: relationsOptions,
+    });
+
+    if (groups.length !== groupIds.length) {
+      throw new NotFoundException(GroupException.NOT_FOUND);
+    }
+
+    return groups;
   }
 
   async findGroupById(

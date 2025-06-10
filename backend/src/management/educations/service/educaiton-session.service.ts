@@ -187,14 +187,14 @@ export class EducationSessionService {
         { educationEnrollments: true },
       );
 
-    const creatorMember = await this.managerDomainService.findManagerById(
+    const creatorMember = await this.managerDomainService.findManagerByMemberId(
       church,
       creatorMemberId,
       qr,
     );
 
     const inCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerById(
+      ? await this.managerDomainService.findManagerByMemberId(
           church,
           dto.inChargeId,
           qr,
@@ -271,7 +271,7 @@ export class EducationSessionService {
       );
 
     const inCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerById(
+      ? await this.managerDomainService.findManagerByMemberId(
           church,
           dto.inChargeId,
           qr,
@@ -458,11 +458,12 @@ export class EducationSessionService {
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const newReceivers = await this.managerDomainService.findManagersByIds(
-      church,
-      newReceiverIds,
-      qr,
-    );
+    const newReceivers =
+      await this.managerDomainService.findManagersByMemberIds(
+        church,
+        newReceiverIds,
+        qr,
+      );
 
     await this.educationSessionReportDomainService.createEducationSessionReports(
       education,

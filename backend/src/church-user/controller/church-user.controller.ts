@@ -32,12 +32,12 @@ export class ChurchUserController {
   @ApiOperation({
     summary: '교회 가입 계정(교인) 단건 조회',
   })
-  @Get(':userId')
+  @Get(':churchUserId')
   getChurchUserById(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
   ) {
-    return this.churchUserService.getChurchUserByUserId(churchId, userId);
+    return this.churchUserService.getChurchUserByUserId(churchId, churchUserId);
   }
 
   @ApiOperation({
@@ -48,10 +48,10 @@ export class ChurchUserController {
       '<h2>교회에 가입한 교인의 role 을 변경합니다.</h2>' +
       '<p>변경 가능한 role: manager, member</p>',
   })
-  @Patch(':userId/role')
+  @Patch(':churchUserId/role')
   patchUserRole(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
     @Body() dto: UpdateChurchUserRoleDto,
   ) {
     throw new BadRequestException('현재 개발 범위 외의 기능');
@@ -62,7 +62,7 @@ export class ChurchUserController {
   @ApiOperation({
     summary: '계정 - 교인 정보 연결',
   })
-  @Patch(':userId/link-member')
+  @Patch(':churchUserId/link-member')
   linkMember() {
     return '개발 전';
   }
@@ -70,7 +70,7 @@ export class ChurchUserController {
   @ApiOperation({
     summary: '계정 - 교인 정보 연결 해제',
   })
-  @Patch(':userId/unlink-member')
+  @Patch(':churchUserId/unlink-member')
   unlinkMember() {
     return '개발 전';
   }
@@ -78,7 +78,7 @@ export class ChurchUserController {
   @ApiOperation({
     summary: '교회 계정 가입 취소',
   })
-  @Patch(':userId/leave-church')
+  @Patch(':churchUserId/leave-church')
   leaveChurch() {
     return '개발 전';
   }

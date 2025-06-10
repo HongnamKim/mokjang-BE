@@ -22,10 +22,12 @@ import {
   ApiGetChildGroupIds,
   ApiGetGroupById,
   ApiGetGroups,
+  ApiGetGroupsByName,
   ApiPatchGroup,
   ApiPostGroups,
 } from '../const/swagger/group.swagger';
 import { GetGroupDto } from '../dto/group/get-group.dto';
+import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -39,6 +41,15 @@ export class GroupsController {
     @Query() dto: GetGroupDto,
   ) {
     return this.groupsService.getGroups(churchId, dto);
+  }
+
+  @ApiGetGroupsByName()
+  @Get('search')
+  getGroupsByName(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetGroupByNameDto,
+  ) {
+    return this.groupsService.getGroupsByName(churchId, dto);
   }
 
   @ApiPostGroups()
