@@ -39,7 +39,7 @@ export class VisitationReportService {
       church,
       memberId,
       undefined,
-      { user: true },
+      //{ user: true },
     );
 
     const { data, totalCount } =
@@ -82,7 +82,7 @@ export class VisitationReportService {
       church,
       memberId,
       qr,
-      { user: true },
+      //{ user: true },
     );
 
     return this.visitationReportDomainService.findVisitationReportById(

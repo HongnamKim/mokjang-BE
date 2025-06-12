@@ -10,9 +10,11 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   Length,
   Matches,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 import { GenderEnum } from '../../const/enum/gender.enum';
 import { IsValidVehicleNumber } from '../../decorator/is-valid-vehicle-number.decorator';
@@ -21,6 +23,7 @@ import { FamilyRelationConst } from '../../../family-relation/family-relation-do
 import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
+import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class CreateMemberDto {
   @ApiProperty({
@@ -30,7 +33,16 @@ export class CreateMemberDto {
   })
   @IsDate()
   @IsOptional()
-  registeredAt?: Date = new Date();
+  registeredAt?: Date;
+
+  @ApiProperty({
+    description: '프로필 이미지 url',
+    required: false,
+  })
+  @IsOptionalNotNull()
+  @ValidateIf((_, value) => typeof value === 'string' && value.length > 0)
+  @IsUrl()
+  profileImageUrl?: string;
 
   @ApiProperty({
     name: 'name',
@@ -77,7 +89,7 @@ export class CreateMemberDto {
   @ApiProperty({
     name: 'relation',
     description: '가족 관계',
-    example: '어머니',
+    example: FamilyRelationConst.MOTHER,
     required: false,
   })
   @IsString()

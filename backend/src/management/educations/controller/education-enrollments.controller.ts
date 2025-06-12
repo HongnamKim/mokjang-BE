@@ -18,6 +18,8 @@ import { UpdateEducationEnrollmentDto } from '../dto/enrollments/update-educatio
 import { EducationEnrollmentService } from '../service/education-enrollment.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { EducationReadGuard } from '../guard/education-read.guard';
+import { EducationWriteGuard } from '../guard/education-write.guard';
 
 @ApiTags('Management:Educations:Enrollments')
 @Controller('educations/:educationId/terms/:educationTermId/enrollments')
@@ -26,6 +28,7 @@ export class EducationEnrollmentsController {
     private readonly educationEnrollmentsService: EducationEnrollmentService,
   ) {}
 
+  @EducationReadGuard()
   @Get()
   getEducationEnrollments(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -41,6 +44,7 @@ export class EducationEnrollmentsController {
     );
   }
 
+  @EducationWriteGuard()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postEducationEnrollment(
@@ -59,6 +63,7 @@ export class EducationEnrollmentsController {
     );
   }
 
+  @EducationWriteGuard()
   @Patch(':educationEnrollmentId')
   @UseInterceptors(TransactionInterceptor)
   patchEducationEnrollment(
@@ -79,6 +84,7 @@ export class EducationEnrollmentsController {
     );
   }
 
+  @EducationWriteGuard()
   @Delete(':educationEnrollmentId')
   @UseInterceptors(TransactionInterceptor)
   deleteEducationEnrollment(

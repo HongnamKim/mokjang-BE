@@ -11,7 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { EducationsService } from '../service/educations.service';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateAttendanceDto } from '../dto/attendance/update-attendance.dto';
 import { GetAttendanceDto } from '../dto/attendance/get-attendance.dto';
@@ -23,6 +22,8 @@ import {
 import { SessionAttendanceService } from '../service/session-attendance.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { EducationReadGuard } from '../guard/education-read.guard';
+import { EducationWriteGuard } from '../guard/education-write.guard';
 
 @ApiTags('Management:Educations:Attendance')
 @Controller(
@@ -30,11 +31,11 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 )
 export class SessionAttendanceController {
   constructor(
-    private readonly educationsService: EducationsService,
     private readonly sessionAttendanceService: SessionAttendanceService,
   ) {}
 
   @ApiGetSessionAttendance()
+  @EducationReadGuard()
   @Get()
   getSessionAttendances(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -50,13 +51,6 @@ export class SessionAttendanceController {
       sessionId,
       dto,
     );
-    /*return this.educationsService.getSessionAttendance(
-      churchId,
-      educationId,
-      educationTermId,
-      sessionId,
-      dto,
-    );*/
   }
 
   @ApiLoadSessionAttendance()
@@ -78,6 +72,7 @@ export class SessionAttendanceController {
   }
 
   @ApiPatchSessionAttendance()
+  @EducationWriteGuard()
   @Patch(':attendanceId')
   @UseInterceptors(TransactionInterceptor)
   patchSessionAttendance(
@@ -98,14 +93,5 @@ export class SessionAttendanceController {
       dto,
       qr,
     );
-    /*return this.educationsService.updateSessionAttendance(
-      churchId,
-      educationId,
-      educationTermId,
-      sessionId,
-      attendanceId,
-      dto,
-      qr,
-    );*/
   }
 }
