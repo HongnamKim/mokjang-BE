@@ -35,6 +35,8 @@ import {
   ApiPatchEducationSession,
   ApiPostEducationSessions,
 } from '../const/swagger/education-session.swagger';
+import { EducationReadGuard } from '../guard/education-read.guard';
+import { EducationWriteGuard } from '../guard/education-write.guard';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
@@ -44,6 +46,7 @@ export class EducationSessionsController {
   ) {}
 
   @ApiGetEducationSessions()
+  @EducationReadGuard()
   @Get()
   getEducationSessions(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -60,6 +63,7 @@ export class EducationSessionsController {
   }
 
   @ApiPostEducationSessions()
+  @EducationWriteGuard()
   @Post()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -84,6 +88,7 @@ export class EducationSessionsController {
   }
 
   @ApiGetEducationSessionById()
+  @EducationReadGuard()
   @Get(':educationSessionId')
   getEducationSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -100,6 +105,7 @@ export class EducationSessionsController {
   }
 
   @ApiPatchEducationSession()
+  @EducationWriteGuard()
   @Patch(':educationSessionId')
   @UseInterceptors(TransactionInterceptor)
   patchEducationSession(
@@ -121,6 +127,7 @@ export class EducationSessionsController {
   }
 
   @ApiDeleteEducationSession()
+  @EducationWriteGuard()
   @Delete(':educationSessionId')
   @UseInterceptors(TransactionInterceptor)
   deleteEducationSession(
@@ -140,6 +147,7 @@ export class EducationSessionsController {
   }
 
   @ApiAddReportReceivers()
+  @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   @Patch(':educationSessionId/add-receivers')
   addReportReceivers(
@@ -161,6 +169,7 @@ export class EducationSessionsController {
   }
 
   @ApiDeleteReportReceivers()
+  @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   @Patch(':educationSessionId/delete-receivers')
   deleteReportReceivers(

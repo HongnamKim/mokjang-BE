@@ -32,6 +32,8 @@ import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service
 import { Token } from '../../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../../auth/type/jwt';
+import { EducationReadGuard } from '../guard/education-read.guard';
+import { EducationWriteGuard } from '../guard/education-write.guard';
 
 @ApiTags('Management:Educations:Terms')
 @Controller('educations/:educationId/terms')
@@ -39,6 +41,7 @@ export class EducationTermsController {
   constructor(private readonly educationTermService: EducationTermService) {}
 
   @ApiGetEducationTerms()
+  @EducationReadGuard()
   @Get()
   getEducationTerms(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -53,6 +56,7 @@ export class EducationTermsController {
   }
 
   @ApiPostEducationTerms()
+  @EducationWriteGuard()
   @Post()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -74,6 +78,7 @@ export class EducationTermsController {
   }
 
   @ApiGetEducationTermById()
+  @EducationReadGuard()
   @Get(':educationTermId')
   getEducationTermById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -88,6 +93,7 @@ export class EducationTermsController {
   }
 
   @ApiPatchEducationTerm()
+  @EducationWriteGuard()
   @Patch(':educationTermId')
   @UseInterceptors(TransactionInterceptor)
   patchEducationTerm(
@@ -107,6 +113,7 @@ export class EducationTermsController {
   }
 
   @ApiDeleteEducationTerm()
+  @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   @Delete(':educationTermId')
   async deleteEducationTerm(
@@ -124,6 +131,7 @@ export class EducationTermsController {
   }
 
   @ApiSyncAttendance()
+  @EducationWriteGuard()
   @Post(':educationTermId/sync-attendance')
   @UseInterceptors(TransactionInterceptor)
   syncAttendance(

@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -17,8 +16,6 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
-import { ChurchManagerGuard } from '../../churches/guard/church-guard.service';
-import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
@@ -33,9 +30,8 @@ import {
 import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
 import { DeleteReceiverDto } from '../dto/receiever/delete-receiver.dto';
-import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
-import { DomainType } from '../../permission/const/domain-type.enum';
-import { DomainAction } from '../../permission/const/domain-action.enum';
+import { VisitationReadGuard } from '../guard/visitation-read.guard';
+import { VisitationWriteGuard } from '../guard/visitation-write.guard';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -43,10 +39,7 @@ export class VisitationController {
   constructor(private readonly visitationService: VisitationService) {}
 
   @ApiGetVisitations()
-  @UseGuards(
-    AccessTokenGuard,
-    createDomainGuard(DomainType.VISITATION, '심방', DomainAction.READ),
-  )
+  @VisitationReadGuard()
   @Get()
   getVisitations(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -56,8 +49,8 @@ export class VisitationController {
   }
 
   @ApiPostVisitation()
+  @VisitationWriteGuard()
   @Post()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postVisitationReservation(
     @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
@@ -75,6 +68,7 @@ export class VisitationController {
   }
 
   @ApiGetVisitationById()
+  @VisitationReadGuard()
   @Get(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   getVisitingById(
@@ -90,6 +84,7 @@ export class VisitationController {
   }
 
   @ApiPatchVisitationMeta()
+  @VisitationWriteGuard()
   @Patch(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   patchVisitationMetaData(
@@ -107,6 +102,7 @@ export class VisitationController {
   }
 
   @ApiDeleteVisitation()
+  @VisitationWriteGuard()
   @Delete(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   deleteVisiting(
@@ -121,6 +117,7 @@ export class VisitationController {
     summary: '심방 보고자 추가',
   })
   @Patch(':visitationId/add-receivers')
+  @VisitationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -140,6 +137,7 @@ export class VisitationController {
     summary: '심방 보고자 삭제',
   })
   @Patch(':visitationId/delete-receivers')
+  @VisitationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   removeReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,

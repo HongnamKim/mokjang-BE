@@ -36,10 +36,8 @@ import {
 } from '../const/swagger/task.swagger';
 import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
-import { TaskGuard } from '../guard/task.guard';
-import { DomainAction } from '../../permission/const/domain-action.enum';
-import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
-import { DomainType } from '../../permission/const/domain-type.enum';
+import { TaskReadGuard } from '../guard/task-read.guard';
+import { TaskWriteGuard } from '../guard/task-write.guard';
 
 @ApiTags('Tasks')
 @Controller()
@@ -47,10 +45,7 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @ApiGetTasks()
-  @UseGuards(
-    AccessTokenGuard,
-    createDomainGuard(DomainType.TASK, '업무', DomainAction.READ),
-  )
+  @TaskReadGuard()
   @Get()
   getTasks(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -60,7 +55,7 @@ export class TaskController {
   }
 
   @ApiPostTask()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  @TaskWriteGuard()
   @Post()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -74,7 +69,7 @@ export class TaskController {
   }
 
   @ApiGetTaskById()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.READ))
+  @TaskReadGuard()
   @Get(':taskId')
   async getTaskById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -84,7 +79,8 @@ export class TaskController {
   }
 
   @ApiGetSubTasks()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.READ))
+  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.READ))
+  @TaskReadGuard()
   @Get(':taskId/sub-tasks')
   async getSubTasks(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -94,7 +90,8 @@ export class TaskController {
   }
 
   @ApiPatchTask()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  @TaskWriteGuard()
   @Patch(':taskId')
   @UseInterceptors(TransactionInterceptor)
   patchTask(
@@ -107,7 +104,8 @@ export class TaskController {
   }
 
   @ApiDeleteTask()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  @TaskWriteGuard()
   @Delete(':taskId')
   @UseInterceptors(TransactionInterceptor)
   deleteTask(
@@ -119,7 +117,8 @@ export class TaskController {
   }
 
   @ApiAddReportReceivers()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  @TaskWriteGuard()
   @Patch(':taskId/add-receivers')
   @UseInterceptors(TransactionInterceptor)
   addReportReceivers(
@@ -132,7 +131,8 @@ export class TaskController {
   }
 
   @ApiDeleteReportReceiver()
-  @UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
+  @TaskWriteGuard()
   @Patch(':taskId/delete-receivers')
   @UseInterceptors(TransactionInterceptor)
   deleteReportReceivers(
