@@ -228,6 +228,7 @@ export class SearchMembersService implements ISearchMembersService {
     return {
       id: true,
       registeredAt: true,
+      profileImageUrl: true,
       name: true,
       [dto.order]: this.isChurchManagementColumn(dto.order)
         ? { id: true, name: true }

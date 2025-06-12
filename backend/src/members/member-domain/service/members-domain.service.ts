@@ -32,7 +32,6 @@ import { OfficerModel } from '../../../management/officers/entity/officer.entity
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
-import { UserModel } from '../../../user/entity/user.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
@@ -195,7 +194,7 @@ export class MembersDomainService implements IMembersDomainService {
     return member;
   }
 
-  async findMemberModelByUserId(
+  /*async findMemberModelByUserId(
     church: ChurchModel,
     userId: number,
     qr?: QueryRunner,
@@ -216,9 +215,9 @@ export class MembersDomainService implements IMembersDomainService {
     }
 
     return member;
-  }
+  }*/
 
-  async linkUserToMember(
+  /*async linkUserToMember(
     member: MemberModel,
     user: UserModel,
     qr?: QueryRunner,
@@ -240,7 +239,7 @@ export class MembersDomainService implements IMembersDomainService {
     }
 
     return result;
-  }
+  }*/
 
   async findMemberModelById(
     church: ChurchModel,
