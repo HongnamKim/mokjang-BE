@@ -25,13 +25,12 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateEducationDto } from '../dto/education/update-education.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { Token } from '../../../auth/decorator/jwt.decorator';
-import { AuthType } from '../../../auth/const/enum/auth-type.enum';
-import { JwtAccessPayload } from '../../../auth/type/jwt';
 import { EducationTermService } from '../service/education-term.service';
 import { GetInProgressEducationTermDto } from '../dto/terms/request/get-in-progress-education-term.dto';
 import { EducationReadGuard } from '../guard/education-read.guard';
 import { EducationWriteGuard } from '../guard/education-write.guard';
+import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:Educations')
 @Controller('educations')
@@ -56,13 +55,14 @@ export class EducationsController {
   @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postEducation(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @PermissionManager() pm: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateEducationDto,
     @QueryRunner() qr: QR,
   ) {
-    const userId = accessPayload.id;
-    return this.educationsService.createEducation(userId, churchId, dto, qr);
+    //const userId = accessPayload.id;
+    return this.educationsService.createEducation(pm, churchId, dto, qr);
   }
 
   @Get('in-progress')

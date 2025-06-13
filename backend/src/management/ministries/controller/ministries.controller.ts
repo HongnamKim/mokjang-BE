@@ -27,6 +27,8 @@ import {
   ApiPostMinistry,
   ApiRefreshMinistryMembersCount,
 } from '../const/swagger/ministry.swagger';
+import { MinistryReadGuard } from '../guard/ministry-read.guard';
+import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 
 @ApiTags('Management:Ministries')
 @Controller('ministries')
@@ -34,6 +36,7 @@ export class MinistriesController {
   constructor(private readonly ministryService: MinistryService) {}
 
   @ApiGetMinistries()
+  @MinistryReadGuard()
   @Get()
   getMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -43,6 +46,7 @@ export class MinistriesController {
   }
 
   @ApiPostMinistry()
+  @MinistryWriteGuard()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postMinistries(
@@ -54,6 +58,7 @@ export class MinistriesController {
   }
 
   @ApiGetMinistryById()
+  @MinistryReadGuard()
   @Get(':ministryId')
   getMinistryById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -65,6 +70,7 @@ export class MinistriesController {
   }
 
   @ApiPatchMinistry()
+  @MinistryWriteGuard()
   @Patch(':ministryId')
   @UseInterceptors(TransactionInterceptor)
   patchMinistry(
@@ -77,6 +83,7 @@ export class MinistriesController {
   }
 
   @ApiDeleteMinistry()
+  @MinistryWriteGuard()
   @Delete(':ministryId')
   @UseInterceptors(TransactionInterceptor)
   deleteMinistry(
@@ -88,6 +95,7 @@ export class MinistriesController {
   }
 
   @ApiRefreshMinistryMembersCount()
+  @MinistryWriteGuard()
   @Patch(':ministryId/refresh-members-count')
   refreshMembersCount(
     @Param('churchId', ParseIntPipe) churchId: number,

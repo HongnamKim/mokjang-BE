@@ -97,7 +97,8 @@ export class VisitationService {
   }
 
   async createVisitation(
-    creatorId: number,
+    //creatorId: number,
+    creatorManager: ChurchUserModel,
     churchId: number,
     dto: CreateVisitationDto,
     qr: QueryRunner,
@@ -107,11 +108,11 @@ export class VisitationService {
       qr,
     );
 
-    const creator = await this.managerDomainService.findManagerByUserId(
+    /*const creator = await this.managerDomainService.findManagerByUserId(
       church,
       creatorId,
       qr,
-    );
+    );*/
 
     const inCharge = await this.managerDomainService.findManagerByMemberId(
       church,
@@ -129,7 +130,7 @@ export class VisitationService {
 
     const visitationMeta = await this.createVisitationMeta(
       church,
-      creator,
+      creatorManager,
       inCharge,
       members,
       dto,

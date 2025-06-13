@@ -11,13 +11,13 @@ export abstract class DomainPermissionService
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<boolean>;
+  ): Promise<ChurchUserModel | null>;
 
   protected checkPermission(
     domainType: DomainType,
     domainAction: DomainAction,
     requestManager: ChurchUserModel,
-  ) {
+  ): boolean {
     if (requestManager.role === ChurchUserRole.OWNER) return true;
 
     const permissionTemplate = requestManager.permissionTemplate;

@@ -24,6 +24,8 @@ import {
   ApiPostOfficer,
 } from '../const/swagger/officers.swagger';
 import { GetOfficersDto } from '../dto/request/get-officers.dto';
+import { OfficerReadGuard } from '../guard/officer-read.guard';
+import { OfficerWriteGuard } from '../guard/officer-write.guard';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -31,6 +33,7 @@ export class OfficersController {
   constructor(private readonly officersService: OfficersService) {}
 
   @ApiGetOfficers()
+  @OfficerReadGuard()
   @Get()
   getOfficers(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -40,6 +43,7 @@ export class OfficersController {
   }
 
   @ApiPostOfficer()
+  @OfficerWriteGuard()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postOfficer(
@@ -51,6 +55,7 @@ export class OfficersController {
   }
 
   @ApiPatchOfficer()
+  @OfficerWriteGuard()
   @Patch(':officerId')
   @UseInterceptors(TransactionInterceptor)
   patchOfficer(
@@ -63,6 +68,7 @@ export class OfficersController {
   }
 
   @ApiDeleteOfficer()
+  @OfficerWriteGuard()
   @Delete(':officerId')
   @UseInterceptors(TransactionInterceptor)
   deleteOfficer(

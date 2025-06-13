@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -27,13 +26,10 @@ import {
   ApiPostEducationTerms,
   ApiSyncAttendance,
 } from '../const/swagger/education-term.swagger';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service';
-import { Token } from '../../../auth/decorator/jwt.decorator';
-import { AuthType } from '../../../auth/const/enum/auth-type.enum';
-import { JwtAccessPayload } from '../../../auth/type/jwt';
 import { EducationReadGuard } from '../guard/education-read.guard';
 import { EducationWriteGuard } from '../guard/education-write.guard';
+import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:Educations:Terms')
 @Controller('educations/:educationId/terms')
@@ -58,10 +54,11 @@ export class EducationTermsController {
   @ApiPostEducationTerms()
   @EducationWriteGuard()
   @Post()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationTerms(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @PermissionManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe)
     churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
@@ -69,7 +66,8 @@ export class EducationTermsController {
     @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.createEducationTerm(
-      accessPayload.id,
+      //accessPayload.id,
+      manager,
       churchId,
       educationId,
       dto,

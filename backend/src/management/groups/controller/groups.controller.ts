@@ -28,6 +28,8 @@ import {
 } from '../const/swagger/group.swagger';
 import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
+import { GroupReadGuard } from '../guard/group-read.guard';
+import { GroupWriteGuard } from '../guard/group-write.guard';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -35,6 +37,7 @@ export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @ApiGetGroups()
+  @GroupReadGuard()
   @Get()
   getGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -53,6 +56,7 @@ export class GroupsController {
   }
 
   @ApiPostGroups()
+  @GroupWriteGuard()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postGroup(
@@ -64,6 +68,7 @@ export class GroupsController {
   }
 
   @ApiGetGroupById()
+  @GroupReadGuard()
   @Get(':groupId')
   getGroupById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -73,6 +78,7 @@ export class GroupsController {
   }
 
   @ApiPatchGroup()
+  @GroupWriteGuard()
   @Patch(':groupId')
   @UseInterceptors(TransactionInterceptor)
   patchGroup(
@@ -85,6 +91,7 @@ export class GroupsController {
   }
 
   @ApiDeleteGroup()
+  @GroupWriteGuard()
   @Delete(':groupId')
   @UseInterceptors(TransactionInterceptor)
   deleteGroup(
@@ -97,6 +104,7 @@ export class GroupsController {
   }
 
   @ApiGetChildGroupIds()
+  @GroupReadGuard()
   @Get(':groupId/childGroups')
   getChildGroupIds(
     @Param('churchId', ParseIntPipe) churchId: number,

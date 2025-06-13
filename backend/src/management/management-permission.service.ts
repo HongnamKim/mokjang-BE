@@ -1,19 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { DomainPermissionService } from '../permission/service/domain-permission.service';
+import { DomainAction } from '../permission/const/domain-action.enum';
+import { ChurchUserModel } from '../church-user/entity/church-user.entity';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
+} from '../churches/churches-domain/interface/churches-domain.service.interface';
 import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
-} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { DomainAction } from '../../permission/const/domain-action.enum';
-import { DomainType } from '../../permission/const/domain-type.enum';
-import { DomainPermissionService } from '../../permission/service/domain-permission.service';
-import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+} from '../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { DomainType } from '../permission/const/domain-type.enum';
 
 @Injectable()
-export class VisitationPermissionService extends DomainPermissionService {
+export class ManagementPermissionService extends DomainPermissionService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -23,7 +23,7 @@ export class VisitationPermissionService extends DomainPermissionService {
     super();
   }
 
-  override async hasPermission(
+  async hasPermission(
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
@@ -38,7 +38,7 @@ export class VisitationPermissionService extends DomainPermissionService {
       );
 
     const permission = super.checkPermission(
-      DomainType.VISITATION,
+      DomainType.MANAGEMENT,
       domainAction,
       requestManager,
     );

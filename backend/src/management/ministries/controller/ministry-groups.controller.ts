@@ -18,6 +18,8 @@ import { UpdateMinistryGroupDto } from '../dto/ministry-group/update-ministry-gr
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { GetMinistryGroupDto } from '../dto/ministry-group/get-ministry-group.dto';
+import { MinistryReadGuard } from '../guard/ministry-read.guard';
+import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -25,6 +27,7 @@ export class MinistryGroupsController {
   constructor(private readonly ministryGroupService: MinistryGroupService) {}
 
   @Get()
+  @MinistryReadGuard()
   getMinistryGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMinistryGroupDto,
@@ -33,6 +36,7 @@ export class MinistryGroupsController {
   }
 
   @Post()
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -43,6 +47,7 @@ export class MinistryGroupsController {
   }
 
   @Get(':ministryGroupId')
+  @MinistryReadGuard()
   getMinistryGroupById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
@@ -59,6 +64,7 @@ export class MinistryGroupsController {
       '최상위 그룹으로 설정하려는 경우 parentMinistryGroupId 를 null 로 설정',
   })
   @Patch(':ministryGroupId')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -75,6 +81,7 @@ export class MinistryGroupsController {
   }
 
   @Delete(':ministryGroupId')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   deleteMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -89,6 +96,7 @@ export class MinistryGroupsController {
   }
 
   @Get(':ministryGroupId/childGroups')
+  @MinistryReadGuard()
   getChildGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,

@@ -6,6 +6,9 @@ import { GroupsController } from './controller/groups.controller';
 import { GroupsRolesController } from './controller/groups-roles.controller';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { RouterModule } from '@nestjs/core';
+import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
+import { ManagementPermissionService } from '../management-permission.service';
+import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 
 @Module({
   imports: [
@@ -17,9 +20,17 @@ import { RouterModule } from '@nestjs/core';
     ]),
     GroupsDomainModule,
     ChurchesDomainModule,
+    ManagerDomainModule,
   ],
   controllers: [GroupsController, GroupsRolesController],
-  providers: [GroupsService, GroupRolesService],
+  providers: [
+    GroupsService,
+    GroupRolesService,
+    {
+      provide: IDOMAIN_PERMISSION_SERVICE,
+      useClass: ManagementPermissionService,
+    },
+  ],
   exports: [],
 })
 export class GroupsModule {}

@@ -7,7 +7,12 @@ export const TOKEN_COOKIE_OPTIONS = (
   authType: AuthType,
   isClearCookie: boolean = false,
 ): CookieOptions => {
-  const maxAge = authType === AuthType.REFRESH ? ms('14d') : ms('30m');
+  const maxAge =
+    authType === AuthType.REFRESH
+      ? ms('14d')
+      : NODE_ENV === 'development'
+        ? ms('14d')
+        : ms('30m');
 
   return {
     httpOnly: true,
