@@ -1,4 +1,5 @@
 import { DomainAction } from '../const/domain-action.enum';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 export const IDOMAIN_PERMISSION_SERVICE = Symbol('IDOMAIN_PERMISSION_SERVICE');
 
@@ -7,5 +8,5 @@ export interface IDomainPermissionService {
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<boolean>;
+  ): Promise<ChurchUserModel | null>;
 }

@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { TaskService } from '../service/task.service';
@@ -17,11 +16,6 @@ import { CreateTaskDto } from '../dto/request/create-task.dto';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
-import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../churches/guard/church-guard.service';
-import { Token } from '../../auth/decorator/jwt.decorator';
-import { JwtAccessPayload } from '../../auth/type/jwt';
-import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { GetTasksDto } from '../dto/request/get-tasks.dto';
 import { UpdateTaskDto } from '../dto/request/update-task.dto';
 import {
@@ -38,6 +32,8 @@ import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/a
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
 import { TaskReadGuard } from '../guard/task-read.guard';
 import { TaskWriteGuard } from '../guard/task-write.guard';
+import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('Tasks')
 @Controller()
@@ -57,15 +53,16 @@ export class TaskController {
   @ApiPostTask()
   @TaskWriteGuard()
   @Post()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postTask(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @PermissionManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateTaskDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.postTask(churchId, accessPayload.id, dto, qr);
+    return this.taskService.postTask(churchId, manager, dto, qr);
   }
 
   @ApiGetTaskById()

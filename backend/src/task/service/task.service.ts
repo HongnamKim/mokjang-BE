@@ -29,6 +29,7 @@ import {
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { GetSubTaskResponseDto } from '../dto/response/get-sub-task-response.dto';
 import { TaskModel } from '../entity/task.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class TaskService {
@@ -84,7 +85,8 @@ export class TaskService {
 
   async postTask(
     churchId: number,
-    creatorUserId: number,
+    //creatorUserId: number,
+    creatorManager: ChurchUserModel,
     dto: CreateTaskDto,
     qr: QueryRunner,
   ) {
@@ -93,11 +95,11 @@ export class TaskService {
       qr,
     );
 
-    const creator = await this.managerDomainService.findManagerByUserId(
+    /*const creator = await this.managerDomainService.findManagerByUserId(
       church,
       creatorUserId,
       qr,
-    );
+    );*/
 
     const inCharge = dto.inChargeId
       ? await this.managerDomainService.findManagerByMemberId(
@@ -118,7 +120,8 @@ export class TaskService {
 
     const newTask = await this.taskDomainService.createTask(
       church,
-      creator,
+      //creator,
+      creatorManager,
       parentTask,
       inCharge,
       dto,

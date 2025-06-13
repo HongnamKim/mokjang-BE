@@ -4,6 +4,9 @@ import { OfficersService } from './service/officers.service';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { OfficersDomainModule } from './officer-domain/officers-domain.module';
 import { RouterModule } from '@nestjs/core';
+import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
+import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
+import { ManagementPermissionService } from '../management-permission.service';
 
 @Module({
   imports: [
@@ -15,9 +18,16 @@ import { RouterModule } from '@nestjs/core';
     ]),
     ChurchesDomainModule,
     OfficersDomainModule,
+    ManagerDomainModule,
   ],
   controllers: [OfficersController],
-  providers: [OfficersService],
+  providers: [
+    OfficersService,
+    {
+      provide: IDOMAIN_PERMISSION_SERVICE,
+      useClass: ManagementPermissionService,
+    },
+  ],
   exports: [],
 })
 export class OfficersModule {}

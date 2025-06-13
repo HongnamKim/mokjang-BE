@@ -1,7 +1,6 @@
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { TaskModel } from '../../entity/task.entity';
-import { MemberModel } from '../../../members/entity/member.entity';
 import { CreateTaskDto } from '../../dto/request/create-task.dto';
 import { GetTasksDto } from '../../dto/request/get-tasks.dto';
 import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-result.dto';
@@ -45,7 +44,7 @@ export interface ITaskDomainService {
 
   createTask(
     church: ChurchModel,
-    creatorMember: ChurchUserModel, //MemberModel,
+    creatorManager: ChurchUserModel, //MemberModel,
     parentTask: TaskModel | null,
     inChargeMember: ChurchUserModel | null, //MemberModel | null,
     dto: CreateTaskDto,

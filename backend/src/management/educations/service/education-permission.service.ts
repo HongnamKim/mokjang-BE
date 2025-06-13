@@ -10,6 +10,7 @@ import {
   IManagerDomainService,
 } from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { DomainType } from '../../../permission/const/domain-type.enum';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationPermissionService extends DomainPermissionService {
@@ -26,7 +27,7 @@ export class EducationPermissionService extends DomainPermissionService {
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<boolean> {
+  ): Promise<ChurchUserModel | null> {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -36,10 +37,16 @@ export class EducationPermissionService extends DomainPermissionService {
         requestUserId,
       );
 
-    return super.checkPermission(
+    const permission = super.checkPermission(
       DomainType.EDUCATION,
       domainAction,
       requestManager,
     );
+
+    if (permission) {
+      return requestManager;
+    } else {
+      return null;
+    }
   }
 }

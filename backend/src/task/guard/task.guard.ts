@@ -49,7 +49,7 @@ export function TaskGuard(domainAction: DomainAction): Type<CanActivate> {
         );
       }
 
-      return hasPermission;
+      return !!hasPermission;
     }
   }
   return mixin(TaskPermissionGuard);

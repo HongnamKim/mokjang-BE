@@ -50,7 +50,7 @@ export function VisitationGuard(domainAction: DomainAction): Type<CanActivate> {
         );
       }
 
-      return hasPermission;
+      return !!hasPermission;
     }
   }
 

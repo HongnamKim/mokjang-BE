@@ -53,6 +53,8 @@ export function createDomainGuard(
         );
       }
 
+      req.permissionedChurchUser = hasPermission;
+
       return true;
     }
   }

@@ -10,6 +10,7 @@ import {
 import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { DomainPermissionService } from '../../permission/service/domain-permission.service';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class TaskPermissionService extends DomainPermissionService {
@@ -26,7 +27,7 @@ export class TaskPermissionService extends DomainPermissionService {
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ) {
+  ): Promise<ChurchUserModel | null> {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -36,6 +37,16 @@ export class TaskPermissionService extends DomainPermissionService {
         requestUserId,
       );
 
-    return super.checkPermission(DomainType.TASK, domainAction, requestManager);
+    const permission = super.checkPermission(
+      DomainType.TASK,
+      domainAction,
+      requestManager,
+    );
+
+    if (permission) {
+      return requestManager;
+    } else {
+      return null;
+    }
   }
 }

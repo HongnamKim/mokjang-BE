@@ -1,9 +1,9 @@
 import { Body, Controller, Param, ParseIntPipe, Patch } from '@nestjs/common';
 import { ApiPatchVisitationDetail } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
-import { VisitationService } from '../service/visitation.service';
 import { ApiTags } from '@nestjs/swagger';
 import { VisitationDetailService } from '../service/visitation-detail.service';
+import { VisitationWriteGuard } from '../guard/visitation-write.guard';
 
 @ApiTags('Visitations:Details')
 @Controller('visitations/:visitationId/details')
@@ -13,6 +13,7 @@ export class VisitationDetailController {
   ) {}
 
   @ApiPatchVisitationDetail()
+  @VisitationWriteGuard()
   @Patch(':memberId')
   patchVisitationDetail(
     @Param('churchId', ParseIntPipe) churchId: number,
