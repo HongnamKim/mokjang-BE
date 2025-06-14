@@ -3,9 +3,7 @@ import { ChurchesService } from './service/churches.service';
 import { ChurchesController } from './controller/churches.controller';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { ChurchesDomainModule } from './churches-domain/churches-domain.module';
-import { ChurchJoinRequestsController } from './controller/church-join-requests.controller';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
-import { ChurchJoinRequestService } from './service/church-join-request.service';
 import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
 
 @Module({
@@ -15,7 +13,7 @@ import { ChurchUserDomainModule } from '../church-user/church-user-domain/church
     MembersDomainModule,
     ChurchUserDomainModule,
   ],
-  controllers: [ChurchesController, ChurchJoinRequestsController],
-  providers: [ChurchesService, ChurchJoinRequestService],
+  controllers: [ChurchesController /*ChurchJoinController*/],
+  providers: [ChurchesService /*ChurchJoinService*/],
 })
 export class ChurchesModule {}

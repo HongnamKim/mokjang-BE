@@ -7,9 +7,9 @@ import {
   IsOptional,
   Min,
 } from 'class-validator';
-import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
-import { JoinRequestOrderEnum } from '../../const/join-request-order.enum';
-import { TransformStringArray } from '../../../common/decorator/transformer/transform-array';
+import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
+import { JoinRequestOrderEnum } from '../const/join-request-order.enum';
+import { TransformStringArray } from '../../common/decorator/transformer/transform-array';
 
 export class GetJoinRequestDto {
   @ApiProperty({

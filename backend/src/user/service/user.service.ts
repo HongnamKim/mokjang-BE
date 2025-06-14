@@ -7,8 +7,8 @@ import {
 import {
   ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE,
   IChurchJoinRequestDomainService,
-} from '../../churches/churches-domain/interface/church-join-requests-domain.service.interface';
-import { ChurchJoinRequestStatusEnum } from '../../churches/const/church-join-request-status.enum';
+} from '../../church-join/church-join-domain/interface/church-join-requests-domain.service.interface';
+import { ChurchJoinRequestStatusEnum } from '../../church-join/const/church-join-request-status.enum';
 
 @Injectable()
 export class UserService {

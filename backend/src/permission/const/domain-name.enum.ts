@@ -8,4 +8,7 @@ export enum DomainName {
   OFFICER = '직분 관리',
   GROUP = '그룹 관리',
   MINISTRY = '사역 관리',
+  PERMISSION = '관리자 설정',
+  CHURCH_USER = '교회 가입 계정 관리',
+  CHURCH_JOIN = '교회 가입',
 }

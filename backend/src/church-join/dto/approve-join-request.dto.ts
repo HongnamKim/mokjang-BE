@@ -4,7 +4,7 @@ import {
   AssignableChurchUserRole,
   ChurchUserRole,
   UserRole,
-} from '../../../user/const/user-role.enum';
+} from '../../user/const/user-role.enum';
 
 export class ApproveJoinRequestDto {
   @ApiProperty({

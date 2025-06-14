@@ -4,7 +4,7 @@ import { UserModel } from '../../user/entity/user.entity';
 
 @Entity()
 @Unique(['userId', 'date'])
-export class ChurchJoinRequestStatModel extends BaseModel {
+export class ChurchJoinStatModel extends BaseModel {
   @Index()
   @Column()
   userId: number;
