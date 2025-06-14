@@ -1,9 +1,9 @@
-import { ChurchModel } from '../../entity/church.entity';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UserModel } from '../../../user/entity/user.entity';
 import { QueryRunner, UpdateResult } from 'typeorm';
-import { ChurchJoinRequestModel } from '../../entity/church-join-request.entity';
+import { ChurchJoinModel } from '../../entity/church-join.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
-import { GetJoinRequestDto } from '../../dto/church-join-request/get-join-request.dto';
+import { GetJoinRequestDto } from '../../dto/get-join-request.dto';
 
 export const ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE = Symbol(
   'ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE',
@@ -19,44 +19,44 @@ export interface IChurchJoinRequestDomainService {
     church: ChurchModel,
     user: UserModel,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel>;
+  ): Promise<ChurchJoinModel>;
 
   findChurchJoinRequests(
     church: ChurchModel,
     dto: GetJoinRequestDto,
     qr?: QueryRunner,
-  ): Promise<{ data: ChurchJoinRequestModel[]; totalCount: number }>;
+  ): Promise<{ data: ChurchJoinModel[]; totalCount: number }>;
 
   findChurchJoinRequestById(
     church: ChurchModel,
     joinId: number,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel>;
+  ): Promise<ChurchJoinModel>;
 
   updateChurchJoinRequest(
-    joinRequest: ChurchJoinRequestModel,
+    joinRequest: ChurchJoinModel,
     status: ChurchJoinRequestStatusEnum,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
   deleteChurchJoinRequest(
-    joinRequest: ChurchJoinRequestModel,
+    joinRequest: ChurchJoinModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
   findMyChurchJoinRequest(
     user: UserModel,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel[]>;
+  ): Promise<ChurchJoinModel[]>;
 
   findMyChurchJoinRequestById(
     user: UserModel,
     joinId: number,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel>;
+  ): Promise<ChurchJoinModel>;
 
   findMyPendingChurchJoinRequest(
     user: UserModel,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel>;
+  ): Promise<ChurchJoinModel>;
 }

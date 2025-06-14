@@ -1,5 +1,5 @@
 export enum DomainType {
-  MEMBER = 'member', // 교인 관리
+  MEMBER = 'member', // 교인 관리 --> PermissionScope 필요
   VISITATION = 'visitation', // 심방 관리
   EDUCATION = 'education', // 교육 관리
   TASK = 'task', // 업무 관리

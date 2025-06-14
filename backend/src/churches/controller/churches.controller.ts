@@ -27,7 +27,7 @@ import {
   ApiGetChurchById,
   ApiPatchChurch,
   ApiPostChurch,
-} from '../const/swagger/churches/controller.swagger';
+} from '../const/swagger/church.swagger';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';

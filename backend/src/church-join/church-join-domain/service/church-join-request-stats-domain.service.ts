@@ -1,25 +1,23 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { IChurchJoinRequestStatsDomainService } from '../interface/church-join-request-stats-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChurchJoinRequestStatModel } from '../../entity/church-join-request-stat.entity';
+import { ChurchJoinStatModel } from '../../entity/church-join-stat.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { UserModel } from '../../../user/entity/user.entity';
-import { ChurchJoinRequestException } from '../../const/exception/church.exception';
 import { ChurchJoinRequestConstraints } from '../../const/church-join-request.constraints';
+import { ChurchJoinException } from '../../exception/church-join.exception';
 
 @Injectable()
 export class ChurchJoinRequestStatsDomainService
   implements IChurchJoinRequestStatsDomainService
 {
   constructor(
-    @InjectRepository(ChurchJoinRequestStatModel)
-    private readonly repository: Repository<ChurchJoinRequestStatModel>,
+    @InjectRepository(ChurchJoinStatModel)
+    private readonly repository: Repository<ChurchJoinStatModel>,
   ) {}
 
   private getRepository(qr?: QueryRunner) {
-    return qr
-      ? qr.manager.getRepository(ChurchJoinRequestStatModel)
-      : this.repository;
+    return qr ? qr.manager.getRepository(ChurchJoinStatModel) : this.repository;
   }
 
   async increaseAttemptsCount(user: UserModel, qr?: QueryRunner) {
@@ -36,7 +34,7 @@ export class ChurchJoinRequestStatsDomainService
     } else {
       if (stat.attempts >= 5) {
         throw new BadRequestException(
-          ChurchJoinRequestException.TOO_MANY_REQUESTS(
+          ChurchJoinException.TOO_MANY_REQUESTS(
             ChurchJoinRequestConstraints.MAX_ATTEMPTS,
           ),
         );

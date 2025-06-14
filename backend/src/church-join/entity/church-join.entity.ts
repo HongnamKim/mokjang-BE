@@ -1,11 +1,11 @@
 import { BaseModel } from '../../common/entity/base.entity';
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { ChurchModel } from './church.entity';
+import { ChurchModel } from '../../churches/entity/church.entity';
 import { UserModel } from '../../user/entity/user.entity';
 import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
 
 @Entity()
-export class ChurchJoinRequestModel extends BaseModel {
+export class ChurchJoinModel extends BaseModel {
   @Index()
   @Column()
   churchId: number;

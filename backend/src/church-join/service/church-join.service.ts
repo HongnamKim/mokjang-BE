@@ -7,11 +7,11 @@ import {
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from '../churches-domain/interface/churches-domain.service.interface';
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import {
   ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE,
   IChurchJoinRequestDomainService,
-} from '../churches-domain/interface/church-join-requests-domain.service.interface';
+} from '../church-join-domain/interface/church-join-requests-domain.service.interface';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
@@ -22,26 +22,26 @@ import {
 } from '../../members/member-domain/interface/members-domain.service.interface';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import { UserException } from '../../user/const/exception/user.exception';
-import { ApproveJoinRequestDto } from '../dto/church-join-request/approve-join-request.dto';
+import { ApproveJoinRequestDto } from '../dto/approve-join-request.dto';
 import { QueryRunner } from 'typeorm';
 import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
-import { ChurchJoinRequestException } from '../const/exception/church.exception';
 import { UserRole } from '../../user/const/user-role.enum';
 import {
   ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE,
   IChurchJoinRequestStatsDomainService,
-} from '../churches-domain/interface/church-join-request-stats-domain.service.interface';
-import { GetJoinRequestDto } from '../dto/church-join-request/get-join-request.dto';
-import { JoinRequestPaginationResult } from '../dto/church-join-request/join-request-pagination-result.dto';
+} from '../church-join-domain/interface/church-join-request-stats-domain.service.interface';
+import { GetJoinRequestDto } from '../dto/get-join-request.dto';
+import { JoinRequestPaginationResult } from '../dto/join-request-pagination-result.dto';
 import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
 } from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
 import { GetRecommendLinkMemberDto } from '../../members/dto/request/get-recommend-link-member.dto';
-import { GetRecommendLinkMemberResponseDto } from '../dto/church-join-request/response/get-recommend-link-member-response.dto';
+import { GetRecommendLinkMemberResponseDto } from '../dto/response/get-recommend-link-member-response.dto';
+import { ChurchJoinException } from '../exception/church-join.exception';
 
 @Injectable()
-export class ChurchJoinRequestService {
+export class ChurchJoinService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -139,12 +139,10 @@ export class ChurchJoinRequestService {
     if (joinRequest.status !== ChurchJoinRequestStatusEnum.PENDING) {
       // 취소된 가입 신청일 경우
       if (joinRequest.status === ChurchJoinRequestStatusEnum.CANCELED) {
-        throw new BadRequestException(
-          ChurchJoinRequestException.CANCELED_REQUEST,
-        );
+        throw new BadRequestException(ChurchJoinException.CANCELED_REQUEST);
       }
       // 이미 처리된 가입 신청
-      throw new BadRequestException(ChurchJoinRequestException.ALREADY_DECIDED);
+      throw new BadRequestException(ChurchJoinException.ALREADY_DECIDED);
     }
 
     await this.churchJoinRequestsDomainService.updateChurchJoinRequest(
@@ -204,7 +202,7 @@ export class ChurchJoinRequestService {
       );
 
     if (joinRequest.status !== ChurchJoinRequestStatusEnum.PENDING) {
-      throw new BadRequestException(ChurchJoinRequestException.ALREADY_DECIDED);
+      throw new BadRequestException(ChurchJoinException.ALREADY_DECIDED);
     }
 
     await this.churchJoinRequestsDomainService.updateChurchJoinRequest(
@@ -238,7 +236,7 @@ export class ChurchJoinRequestService {
       );
 
     if (joinRequest.status === ChurchJoinRequestStatusEnum.PENDING) {
-      throw new BadRequestException(ChurchJoinRequestException.NOT_DECIDED);
+      throw new BadRequestException(ChurchJoinException.NOT_DECIDED);
     }
 
     await this.churchJoinRequestsDomainService.deleteChurchJoinRequest(

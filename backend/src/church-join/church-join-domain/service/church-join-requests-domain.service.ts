@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { IChurchJoinRequestDomainService } from '../interface/church-join-requests-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChurchJoinRequestModel } from '../../entity/church-join-request.entity';
+import { ChurchJoinModel } from '../../entity/church-join.entity';
 import {
   Between,
   In,
@@ -16,24 +16,24 @@ import {
   Repository,
   UpdateResult,
 } from 'typeorm';
-import { ChurchModel } from '../../entity/church.entity';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
-import { ChurchJoinRequestException } from '../../const/exception/church.exception';
-import { GetJoinRequestDto } from '../../dto/church-join-request/get-join-request.dto';
+import { GetJoinRequestDto } from '../../dto/get-join-request.dto';
+import { ChurchJoinException } from '../../exception/church-join.exception';
 
 @Injectable()
 export class ChurchJoinRequestsDomainService
   implements IChurchJoinRequestDomainService
 {
   constructor(
-    @InjectRepository(ChurchJoinRequestModel)
-    private readonly churchJoinRequestsRepository: Repository<ChurchJoinRequestModel>,
+    @InjectRepository(ChurchJoinModel)
+    private readonly churchJoinRequestsRepository: Repository<ChurchJoinModel>,
   ) {}
 
   private getRepository(qr?: QueryRunner) {
     return qr
-      ? qr.manager.getRepository(ChurchJoinRequestModel)
+      ? qr.manager.getRepository(ChurchJoinModel)
       : this.churchJoinRequestsRepository;
   }
 
@@ -51,7 +51,7 @@ export class ChurchJoinRequestsDomainService
     });
 
     if (joinRequest.length > 0) {
-      throw new BadRequestException(ChurchJoinRequestException.ALREADY_EXIST);
+      throw new BadRequestException(ChurchJoinException.ALREADY_EXIST);
     }
 
     return true;
@@ -89,7 +89,7 @@ export class ChurchJoinRequestsDomainService
     church: ChurchModel,
     dto: GetJoinRequestDto,
     qr?: QueryRunner,
-  ): Promise<{ data: ChurchJoinRequestModel[]; totalCount: number }> {
+  ): Promise<{ data: ChurchJoinModel[]; totalCount: number }> {
     const repository = this.getRepository(qr);
 
     const [data, totalCount] = await Promise.all([
@@ -144,14 +144,14 @@ export class ChurchJoinRequestsDomainService
     });
 
     if (!request) {
-      throw new NotFoundException(ChurchJoinRequestException.NOT_FOUND);
+      throw new NotFoundException(ChurchJoinException.NOT_FOUND);
     }
 
     return request;
   }
 
   async updateChurchJoinRequest(
-    joinRequest: ChurchJoinRequestModel,
+    joinRequest: ChurchJoinModel,
     status: ChurchJoinRequestStatusEnum,
     qr?: QueryRunner,
   ) {
@@ -167,16 +167,14 @@ export class ChurchJoinRequestsDomainService
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        ChurchJoinRequestException.UPDATE_ERROR,
-      );
+      throw new InternalServerErrorException(ChurchJoinException.UPDATE_ERROR);
     }
 
     return result;
   }
 
   async deleteChurchJoinRequest(
-    joinRequest: ChurchJoinRequestModel,
+    joinRequest: ChurchJoinModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const repository = this.getRepository(qr);
@@ -184,9 +182,7 @@ export class ChurchJoinRequestsDomainService
     const result = await repository.softDelete(joinRequest.id);
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        ChurchJoinRequestException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ChurchJoinException.DELETE_ERROR);
     }
 
     return result;
@@ -195,7 +191,7 @@ export class ChurchJoinRequestsDomainService
   async findMyChurchJoinRequest(
     user: UserModel,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel[]> {
+  ): Promise<ChurchJoinModel[]> {
     const repository = this.getRepository(qr);
 
     return repository.find({
@@ -224,7 +220,7 @@ export class ChurchJoinRequestsDomainService
     user: UserModel,
     joinId: number,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinRequestModel> {
+  ): Promise<ChurchJoinModel> {
     const repository = this.getRepository(qr);
 
     const joinRequest = await repository.findOne({
@@ -246,7 +242,7 @@ export class ChurchJoinRequestsDomainService
     });
 
     if (!joinRequest) {
-      throw new NotFoundException(ChurchJoinRequestException.NOT_FOUND);
+      throw new NotFoundException(ChurchJoinException.NOT_FOUND);
     }
 
     return joinRequest;
@@ -263,7 +259,7 @@ export class ChurchJoinRequestsDomainService
     });
 
     if (!joinRequest) {
-      throw new NotFoundException(ChurchJoinRequestException.NOT_FOUND);
+      throw new NotFoundException(ChurchJoinException.NOT_FOUND);
     }
 
     return joinRequest;
