@@ -22,7 +22,7 @@ import {
 } from '../../members/member-domain/interface/members-domain.service.interface';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import { UserException } from '../../user/const/exception/user.exception';
-import { ApproveJoinRequestDto } from '../dto/approve-join-request.dto';
+import { ApproveJoinRequestDto } from '../dto/request/approve-join-request.dto';
 import { QueryRunner } from 'typeorm';
 import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
 import { UserRole } from '../../user/const/user-role.enum';
@@ -30,8 +30,8 @@ import {
   ICHURCH_JOIN_REQUEST_STATS_DOMAIN_SERVICE,
   IChurchJoinRequestStatsDomainService,
 } from '../church-join-domain/interface/church-join-request-stats-domain.service.interface';
-import { GetJoinRequestDto } from '../dto/get-join-request.dto';
-import { JoinRequestPaginationResult } from '../dto/join-request-pagination-result.dto';
+import { GetJoinRequestDto } from '../dto/request/get-join-request.dto';
+import { JoinRequestPaginationResult } from '../dto/response/join-request-pagination-result.dto';
 import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
@@ -39,6 +39,8 @@ import {
 import { GetRecommendLinkMemberDto } from '../../members/dto/request/get-recommend-link-member.dto';
 import { GetRecommendLinkMemberResponseDto } from '../dto/response/get-recommend-link-member-response.dto';
 import { ChurchJoinException } from '../exception/church-join.exception';
+import { PostJoinRequestResponseDto } from '../dto/response/post-join-request-response.dto';
+import { MemberException } from '../../members/const/exception/member.exception';
 
 @Injectable()
 export class ChurchJoinService {
@@ -73,10 +75,6 @@ export class ChurchJoinService {
       throw new ConflictException(UserException.ALREADY_JOINED);
     }
 
-    /*if (user.church) {
-      throw new ConflictException(UserException.ALREADY_JOINED);
-    }*/
-
     await this.churchJoinRequestStatsDomainService.increaseAttemptsCount(
       user,
       qr,
@@ -92,11 +90,14 @@ export class ChurchJoinService {
       qr,
     );
 
-    return this.churchJoinRequestsDomainService.createChurchJoinRequest(
-      church,
-      user,
-      qr,
-    );
+    const newRequest =
+      await this.churchJoinRequestsDomainService.createChurchJoinRequest(
+        church,
+        user,
+        qr,
+      );
+
+    return new PostJoinRequestResponseDto(newRequest);
   }
 
   async getChurchJoinRequests(churchId: number, dto: GetJoinRequestDto) {
@@ -151,17 +152,16 @@ export class ChurchJoinService {
       qr,
     );
 
-    // user - member 연결
     const linkMember = await this.membersDomainService.findMemberModelById(
       church,
       dto.linkMemberId,
       qr,
-      //{ user: true },
+      { churchUser: true },
     );
 
-    /*if (linkMember.user) {
+    if (linkMember.churchUser) {
       throw new ConflictException(MemberException.ALREADY_LINKED);
-    }*/
+    }
 
     await this.churchUserDomainService.createChurchUser(
       church,

@@ -19,8 +19,9 @@ import {
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
-import { GetJoinRequestDto } from '../../dto/get-join-request.dto';
+import { GetJoinRequestDto } from '../../dto/request/get-join-request.dto';
 import { ChurchJoinException } from '../../exception/church-join.exception';
+import { ChurchJoinDomainPaginationResultDto } from '../dto/church-join-domain-pagination-result.dto';
 
 @Injectable()
 export class ChurchJoinRequestsDomainService
@@ -64,13 +65,13 @@ export class ChurchJoinRequestsDomainService
   ) {
     const repository = this.getRepository(qr);
 
-    const newRequest = await repository.save({
+    return repository.save({
       church,
       user,
       status: ChurchJoinRequestStatusEnum.PENDING,
     });
 
-    return this.findMyChurchJoinRequestById(user, newRequest.id, qr);
+    //return this.findMyChurchJoinRequestById(user, newRequest.id, qr);
   }
 
   private parseCreatedAt(dto: GetJoinRequestDto) {
@@ -123,7 +124,7 @@ export class ChurchJoinRequestsDomainService
       }),
     ]);
 
-    return { data, totalCount };
+    return new ChurchJoinDomainPaginationResultDto(data, totalCount);
   }
 
   async findChurchJoinRequestById(

@@ -19,10 +19,10 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { ApiTags } from '@nestjs/swagger';
-import { ApproveJoinRequestDto } from '../dto/approve-join-request.dto';
+import { ApproveJoinRequestDto } from '../dto/request/approve-join-request.dto';
 import { ChurchJoinService } from '../service/church-join.service';
-import { CreateJoinRequestDto } from '../dto/create-join-request.dto';
-import { GetJoinRequestDto } from '../dto/get-join-request.dto';
+import { CreateJoinRequestDto } from '../dto/request/create-join-request.dto';
+import { GetJoinRequestDto } from '../dto/request/get-join-request.dto';
 import { GetRecommendLinkMemberDto } from '../../members/dto/request/get-recommend-link-member.dto';
 import {
   ApiApproveChurchJoinRequest,

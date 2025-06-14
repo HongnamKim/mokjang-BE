@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -56,6 +57,25 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     return !!isJoined;
   }
 
+  private async isExistChurchUser(
+    church: ChurchModel,
+    user: UserModel,
+    member: MemberModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getChurchUserRepository(qr);
+
+    const isExist = await repository.findOne({
+      where: {
+        churchId: church.id,
+        userId: user.id,
+        memberId: member.id,
+      },
+    });
+
+    return !!isExist;
+  }
+
   async createChurchUser(
     church: ChurchModel,
     user: UserModel,
@@ -64,6 +84,12 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     qr: QueryRunner,
   ) {
     const repository = this.getChurchUserRepository(qr);
+
+    const isExist = await this.isExistChurchUser(church, user, member, qr);
+
+    if (isExist) {
+      throw new BadRequestException(ChurchUserException.ALREADY_EXIST);
+    }
 
     return repository.save({
       churchId: church.id,

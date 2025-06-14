@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
-import { Transform } from 'class-transformer';
 
-import { ChurchJoinException } from '../exception/church-join.exception';
+import { ChurchJoinException } from '../../exception/church-join.exception';
 
 export class CreateJoinRequestDto {
   @ApiProperty({
@@ -13,7 +12,7 @@ export class CreateJoinRequestDto {
   @Matches(/^[A-Za-z0-9]+$/, {
     message: ChurchJoinException.INVALID_CHURCH_CODE,
   })
-  @Transform(({ value }) => value.toUpperCase())
+  //@Transform(({ value }) => value.toUpperCase())
   @Length(6, 20, { message: ChurchJoinException.INVALID_CHURCH_CODE })
   joinCode: string;
 }
