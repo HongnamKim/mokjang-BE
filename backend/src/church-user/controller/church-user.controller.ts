@@ -69,7 +69,10 @@ export class ChurchUserController {
   })
   @ChurchUserWriteGuard()
   @Patch(':churchUserId/link-member')
-  linkMember() {
+  linkMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+  ) {
     return '개발 전';
   }
 
@@ -78,7 +81,10 @@ export class ChurchUserController {
   })
   @Patch(':churchUserId/unlink-member')
   @ChurchUserWriteGuard()
-  unlinkMember() {
+  unlinkMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+  ) {
     return '개발 전';
   }
 
@@ -87,7 +93,10 @@ export class ChurchUserController {
   })
   @Patch(':churchUserId/leave-church')
   @ChurchUserWriteGuard()
-  leaveChurch() {
+  leaveChurch(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+  ) {
     return '개발 전';
   }
 }

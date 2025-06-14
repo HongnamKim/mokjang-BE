@@ -1,18 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDate,
-  IsEnum,
-  IsIn,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
-import { ChurchJoinRequestStatusEnum } from '../const/church-join-request-status.enum';
-import { JoinRequestOrderEnum } from '../const/join-request-order.enum';
-import { TransformStringArray } from '../../common/decorator/transformer/transform-array';
+import { IsDate, IsEnum, IsOptional } from 'class-validator';
+import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
+import { JoinRequestOrderEnum } from '../../const/join-request-order.enum';
+import { TransformStringArray } from '../../../common/decorator/transformer/transform-array';
+import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base-offset-pagination-request.dto';
 
-export class GetJoinRequestDto {
-  @ApiProperty({
+export class GetJoinRequestDto extends BaseOffsetPaginationRequestDto<JoinRequestOrderEnum> {
+  /*@ApiProperty({
     description: '요청 데이터 개수',
     default: 20,
     required: false,
@@ -33,6 +27,16 @@ export class GetJoinRequestDto {
   page: number = 1;
 
   @ApiProperty({
+    description: '정렬 오름차순 / 내림차순',
+    default: 'desc',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  orderDirection: 'ASC' | 'DESC' | 'asc' | 'desc' = 'DESC';
+  */
+
+  @ApiProperty({
     description: '정렬 기준',
     enum: JoinRequestOrderEnum,
     default: JoinRequestOrderEnum.createdAt,
@@ -41,15 +45,6 @@ export class GetJoinRequestDto {
   @IsOptional()
   @IsEnum(JoinRequestOrderEnum)
   order: JoinRequestOrderEnum = JoinRequestOrderEnum.createdAt;
-
-  @ApiProperty({
-    description: '정렬 오름차순 / 내림차순',
-    default: 'desc',
-    required: false,
-  })
-  @IsOptional()
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
-  orderDirection: 'ASC' | 'DESC' | 'asc' | 'desc' = 'DESC';
 
   @ApiProperty({
     description: '신청 날짜 ~ 부터',

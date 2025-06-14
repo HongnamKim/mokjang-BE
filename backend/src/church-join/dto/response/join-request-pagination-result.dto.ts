@@ -1,10 +1,5 @@
-import { BaseOffsetPaginationResponseDto } from '../../common/dto/reponse/base-offset-pagination-response.dto';
-import { ChurchJoinModel } from '../entity/church-join.entity';
-
-/*export interface JoinRequestPaginationResult
-  extends BaseOffsetPaginationResultDto<ChurchJoinRequestModel> {
-  totalPage: number;
-}*/
+import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
+import { ChurchJoinModel } from '../../entity/church-join.entity';
 
 export class JoinRequestPaginationResult extends BaseOffsetPaginationResponseDto<ChurchJoinModel> {
   constructor(
