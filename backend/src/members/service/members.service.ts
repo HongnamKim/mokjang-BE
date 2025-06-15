@@ -29,6 +29,11 @@ import { SimpleMembersPaginationResponseDto } from '../dto/response/simple-membe
 import { PostMemberResponseDto } from '../dto/response/post-member-response.dto';
 import { PatchMemberResponseDto } from '../dto/response/patch-member-response.dto';
 import { GetMemberResponseDto } from '../dto/response/get-member-response.dto';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from './interface/member-filter.service.interface';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class MembersService {
@@ -43,9 +48,17 @@ export class MembersService {
     private readonly searchMembersService: ISearchMembersService,
     @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
     private readonly familyDomainService: IFamilyRelationDomainService,
+
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
   ) {}
 
-  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
+  async getMembers(
+    churchId: number,
+    requestManager: ChurchUserModel,
+    dto: GetMemberDto,
+    qr?: QueryRunner,
+  ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -70,8 +83,15 @@ export class MembersService {
       qr,
     );
 
-    return new MemberPaginationResponseDto(
+    const filteredMember = await this.memberFilterService.filterMembers(
+      church,
+      requestManager,
       data,
+    );
+
+    return new MemberPaginationResponseDto(
+      //data,
+      filteredMember,
       totalCount,
       data.length,
       dto.page,
@@ -79,7 +99,12 @@ export class MembersService {
     );
   }
 
-  async getMemberById(churchId: number, memberId: number, qr?: QueryRunner) {
+  async getMemberById(
+    churchId: number,
+    memberId: number,
+    requestManager: ChurchUserModel,
+    qr?: QueryRunner,
+  ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -91,7 +116,13 @@ export class MembersService {
       qr,
     );
 
-    return new GetMemberResponseDto(member);
+    const filteredMember = await this.memberFilterService.filterMember(
+      church,
+      requestManager,
+      member,
+    );
+
+    return new GetMemberResponseDto(filteredMember);
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {

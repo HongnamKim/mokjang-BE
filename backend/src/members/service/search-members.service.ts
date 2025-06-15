@@ -233,6 +233,7 @@ export class SearchMembersService implements ISearchMembersService {
       [dto.order]: this.isChurchManagementColumn(dto.order)
         ? { id: true, name: true }
         : true,
+      groupId: true,
     };
   }
 
