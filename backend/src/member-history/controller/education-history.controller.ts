@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 import { EducationHistoryService } from '../service/education-history.service';
 import { ApiGetEducationHistory } from '../const/swagger/education-history.swagger';
+import { HistoryReadGuard } from '../guard/history-read.guard';
 
 @ApiTags('Churches:Members:Educations')
 @Controller('educations')
@@ -13,6 +14,7 @@ export class EducationHistoryController {
 
   @ApiGetEducationHistory()
   @Get()
+  @HistoryReadGuard()
   getMemberEducationHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,

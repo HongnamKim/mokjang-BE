@@ -22,7 +22,7 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { MemberPaginationResultDto } from '../../members/dto/request/member-pagination-result.dto';
+import { MemberPaginationResponseDto } from '../../members/dto/response/member-pagination-response.dto';
 import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-managers-by-permission-template.dto';
 
 @Injectable()
@@ -202,7 +202,7 @@ export class PermissionService {
 
     const managerMember = data.map((churchUser) => churchUser.member);
 
-    return new MemberPaginationResultDto(
+    return new MemberPaginationResponseDto(
       managerMember,
       totalCount,
       managerMember.length,

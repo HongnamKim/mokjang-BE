@@ -26,6 +26,8 @@ import {
 } from '../const/swagger/officer-history.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { HistoryReadGuard } from '../guard/history-read.guard';
+import { HistoryWriteGuard } from '../guard/history-write.guard';
 
 @ApiTags('Churches:Members:Officer')
 @Controller('officers')
@@ -34,6 +36,7 @@ export class OfficerHistoryController {
 
   @ApiGetMemberOfficerHistory()
   @Get()
+  @HistoryReadGuard()
   getMemberOfficerHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -48,6 +51,7 @@ export class OfficerHistoryController {
 
   @ApiPostMemberOfficer()
   @Post()
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postMemberOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -66,6 +70,7 @@ export class OfficerHistoryController {
   @ApiEndMemberOfficer()
   //@Delete()
   @Patch('end')
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   endMemberOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -83,6 +88,7 @@ export class OfficerHistoryController {
 
   @ApiPatchOfficerHistory()
   @Patch(':officerHistoryId')
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchOfficerHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -102,6 +108,7 @@ export class OfficerHistoryController {
 
   @ApiDeleteOfficerHistory()
   @Delete(':officerHistoryId')
+  @HistoryWriteGuard()
   deleteOfficerHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,

@@ -26,6 +26,8 @@ import {
 import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { HistoryReadGuard } from '../guard/history-read.guard';
+import { HistoryWriteGuard } from '../guard/history-write.guard';
 
 @ApiTags('Churches:Members:Groups')
 @Controller('groups')
@@ -34,6 +36,7 @@ export class GroupHistoryController {
 
   @ApiGetMemberGroupHistory()
   @Get()
+  @HistoryReadGuard()
   getMemberGroupHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -48,6 +51,7 @@ export class GroupHistoryController {
 
   @ApiPostMemberGroup()
   @Post()
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postMemberGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -65,6 +69,7 @@ export class GroupHistoryController {
 
   @ApiEndMemberGroup()
   @Patch('end')
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   endMemberGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -77,6 +82,7 @@ export class GroupHistoryController {
 
   @ApiPatchGroupHistory()
   @Patch(':groupHistoryId')
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   updateGroupHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -97,6 +103,7 @@ export class GroupHistoryController {
 
   @ApiDeleteGroupHistory()
   @Delete(':groupHistoryId')
+  @HistoryWriteGuard()
   deleteGroupHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,

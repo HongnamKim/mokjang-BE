@@ -1,7 +1,7 @@
 import { MemberModel } from '../../entity/member.entity';
 import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
 
-export class GetSimpleMembersPaginationResponseDto extends BaseOffsetPaginationResponseDto<MemberModel> {
+export class SimpleMembersPaginationResponseDto extends BaseOffsetPaginationResponseDto<MemberModel> {
   constructor(
     data: MemberModel[],
     totalCount: number,
