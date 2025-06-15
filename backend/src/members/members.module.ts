@@ -10,6 +10,9 @@ import { FamilyRelationDomainModule } from '../family-relation/family-relation-d
 import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 import { MemberPermissionService } from './service/member-permission.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
+import { IMEMBER_FILTER_SERVICE } from './service/interface/member-filter.service.interface';
+import { MemberFilterService } from './service/member-filter.service';
 
 @Module({
   imports: [
@@ -21,6 +24,7 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     ManagerDomainModule,
     MembersDomainModule,
     FamilyRelationDomainModule,
+    GroupsDomainModule,
   ],
   controllers: [MembersController],
   providers: [
@@ -32,6 +36,10 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: MemberPermissionService,
+    },
+    {
+      provide: IMEMBER_FILTER_SERVICE,
+      useClass: MemberFilterService,
     },
   ],
   exports: [],
