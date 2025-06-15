@@ -24,6 +24,8 @@ import {
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { FamilyRelationService } from '../service/family-relation.service';
+import { FamilyReadGuard } from '../guard/family-read.guard';
+import { FamilyWriteGuard } from '../guard/family-write.guard';
 
 @ApiTags('Churches:Members:Family')
 @Controller(':memberId/family')
@@ -32,6 +34,7 @@ export class FamilyRelationController {
 
   @ApiGetFamilyMember()
   @Get()
+  @FamilyReadGuard()
   getFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -41,6 +44,7 @@ export class FamilyRelationController {
 
   @ApiPostFamilyMember()
   @Post()
+  @FamilyWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -58,6 +62,7 @@ export class FamilyRelationController {
 
   @ApiFetchFamilyMember()
   @Post('fetch-family')
+  @FamilyWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   fetchFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -78,6 +83,7 @@ export class FamilyRelationController {
 
   @ApiPatchFamilyMember()
   @Patch(':familyMemberId')
+  @FamilyWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -97,6 +103,7 @@ export class FamilyRelationController {
 
   @ApiDeleteFamilyMember()
   @Delete(':familyMemberId')
+  @FamilyWriteGuard()
   deleteFamilyMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,

@@ -6,7 +6,7 @@ import { MemberModel } from '../../entity/member.entity';
   totalPage: number;
 }*/
 
-export class MemberPaginationResultDto extends BaseOffsetPaginationResponseDto<MemberModel> {
+export class MemberPaginationResponseDto extends BaseOffsetPaginationResponseDto<MemberModel> {
   constructor(
     public readonly data: MemberModel[],
     public readonly totalCount: number,

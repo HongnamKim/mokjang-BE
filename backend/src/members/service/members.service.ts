@@ -4,8 +4,7 @@ import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
 import { CreateMemberDto } from '../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../dto/request/update-member.dto';
 import { GetMemberDto } from '../dto/request/get-member.dto';
-import { ResponseGetDto } from '../dto/response/response-get.dto';
-import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
+import { DeleteMemberResponseDto } from '../dto/response/delete-member-response.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
 import {
@@ -24,9 +23,12 @@ import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
-import { MemberPaginationResultDto } from '../dto/request/member-pagination-result.dto';
+import { MemberPaginationResponseDto } from '../dto/response/member-pagination-response.dto';
 import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
-import { GetSimpleMembersPaginationResponseDto } from '../dto/response/get-simple-members-pagination-response.dto';
+import { SimpleMembersPaginationResponseDto } from '../dto/response/simple-members-pagination-response.dto';
+import { PostMemberResponseDto } from '../dto/response/post-member-response.dto';
+import { PatchMemberResponseDto } from '../dto/response/patch-member-response.dto';
+import { GetMemberResponseDto } from '../dto/response/get-member-response.dto';
 
 @Injectable()
 export class MembersService {
@@ -68,7 +70,7 @@ export class MembersService {
       qr,
     );
 
-    return new MemberPaginationResultDto(
+    return new MemberPaginationResponseDto(
       data,
       totalCount,
       data.length,
@@ -89,7 +91,7 @@ export class MembersService {
       qr,
     );
 
-    return new ResponseGetDto<MemberModel>(member);
+    return new GetMemberResponseDto(member);
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
@@ -124,7 +126,7 @@ export class MembersService {
       );
     }
 
-    return newMember;
+    return new PostMemberResponseDto(newMember);
   }
 
   async updateMember(
@@ -150,7 +152,7 @@ export class MembersService {
       qr,
     );
 
-    return new ResponseGetDto<MemberModel>(updatedMember);
+    return new PatchMemberResponseDto(updatedMember);
   }
 
   // 교인 soft delete
@@ -159,7 +161,7 @@ export class MembersService {
     churchId: number,
     memberId: number,
     qr: QueryRunner,
-  ): Promise<ResponseDeleteDto> {
+  ): Promise<DeleteMemberResponseDto> {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -186,7 +188,12 @@ export class MembersService {
       new MemberDeletedEvent(churchId, memberId),
     );
 
-    return new ResponseDeleteDto(true, targetMember.id);
+    return new DeleteMemberResponseDto(
+      new Date(),
+      targetMember.id,
+      targetMember.name,
+      true,
+    );
   }
 
   async getSimpleMembers(churchId: number, dto: GetSimpleMembersDto) {
@@ -196,7 +203,7 @@ export class MembersService {
     const { data, totalCount } =
       await this.membersDomainService.findSimpleMembers(church, dto);
 
-    return new GetSimpleMembersPaginationResponseDto(
+    return new SimpleMembersPaginationResponseDto(
       data,
       totalCount,
       data.length,
