@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DomainPermissionService } from './domain-permission.service';
 import { DomainAction } from '../const/domain-action.enum';
-import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -27,7 +26,7 @@ export class PermissionPermissionService extends DomainPermissionService {
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<ChurchUserModel | null> {
+  ) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -44,22 +43,22 @@ export class PermissionPermissionService extends DomainPermissionService {
     );
 
     if (permission) {
-      return requestManager;
+      return { requestManager, church };
     } else {
       return null;
     }
   }
 
-  async getRequestManagerOrThrow(
-    churchId: number,
-    requestUserId: number,
-  ): Promise<ChurchUserModel> {
+  async getRequestManagerOrThrow(churchId: number, requestUserId: number) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    return this.managerDomainService.findManagerForPermissionCheck(
-      church,
-      requestUserId,
-    );
+    const requestManager =
+      await this.managerDomainService.findManagerForPermissionCheck(
+        church,
+        requestUserId,
+      );
+
+    return { requestManager, church };
   }
 }
