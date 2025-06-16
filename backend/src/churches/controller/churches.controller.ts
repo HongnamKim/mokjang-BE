@@ -13,13 +13,9 @@ import {
 import { ChurchesService } from '../service/churches.service';
 import { CreateChurchDto } from '../dto/create-church.dto';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../../auth/type/jwt';
-import {
-  ChurchOwnerGuard,
-  ChurchManagerGuard,
-} from '../guard/church-guard.service';
 import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ApiDeleteChurch,
@@ -34,6 +30,9 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateChurchJoinCodeDto } from '../dto/update-church-join-code.dto';
 import { TransferOwnerDto } from '../dto/transfer-owner.dto';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { ChurchReadGuard } from '../guard/church-read.guard';
+import { ChurchWriteGuard } from '../guard/church-write.guard';
 
 @Controller('churches')
 export class ChurchesController {
@@ -47,7 +46,6 @@ export class ChurchesController {
 
   @ApiPostChurch()
   @Post()
-  @ApiBearerAuth()
   @UseGuards(AccessTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   postChurch(
@@ -60,16 +58,16 @@ export class ChurchesController {
 
   @ApiGetChurchById()
   @Get(':churchId')
-  @ApiBearerAuth()
+  @ChurchReadGuard()
+  @UseGuards(AccessTokenGuard)
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.getChurchById(churchId);
   }
 
   @ApiPatchChurch()
+  @ChurchWriteGuard()
   @Patch(':churchId')
-  @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   patchChurch(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: UpdateChurchDto,
@@ -78,9 +76,8 @@ export class ChurchesController {
   }
 
   @ApiDeleteChurch()
+  @ChurchWriteGuard()
   @Delete(':churchId')
-  @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.deleteChurchById(churchId);
   }
@@ -89,7 +86,7 @@ export class ChurchesController {
     summary: '가입 코드 수정',
   })
   @Patch(':churchId/join-code')
-  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
+  @ChurchWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchChurchJoinCode(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -107,7 +104,7 @@ export class ChurchesController {
     summary: '교회 생성자(owner) 양도',
   })
   @Patch(':churchId/owner')
-  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
+  @ChurchWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   transferMainAdmin(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -120,8 +117,8 @@ export class ChurchesController {
   @ApiOperation({
     summary: '교인 수 새로고침',
   })
+  @ChurchWriteGuard()
   @Patch(':churchId/refresh-member-count')
-  @UseGuards(AccessTokenGuard, ChurchOwnerGuard)
   refreshMemberCount(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.refreshMemberCount(churchId);
   }

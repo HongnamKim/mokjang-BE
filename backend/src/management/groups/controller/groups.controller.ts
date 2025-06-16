@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -30,6 +31,8 @@ import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
 import { GroupReadGuard } from '../guard/group-read.guard';
 import { GroupWriteGuard } from '../guard/group-write.guard';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -37,8 +40,9 @@ export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @ApiGetGroups()
-  @GroupReadGuard()
+  //@GroupReadGuard()
   @Get()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetGroupDto,

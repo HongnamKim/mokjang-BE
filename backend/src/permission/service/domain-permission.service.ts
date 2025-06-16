@@ -13,12 +13,21 @@ export abstract class DomainPermissionService
     domainAction: DomainAction,
   ): Promise<ChurchUserModel | null>;
 
+  abstract getRequestManagerOrThrow(
+    churchId: number,
+    requestUserId: number,
+  ): Promise<ChurchUserModel>;
+
   protected checkPermission(
     domainType: DomainType,
     domainAction: DomainAction,
     requestManager: ChurchUserModel,
   ): boolean {
     if (requestManager.role === ChurchUserRole.OWNER) return true;
+
+    if (!requestManager.isPermissionActive) {
+      return false;
+    }
 
     const permissionTemplate = requestManager.permissionTemplate;
 

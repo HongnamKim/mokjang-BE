@@ -23,6 +23,19 @@ export class MemberPermissionService extends DomainPermissionService {
     super();
   }
 
+  async getRequestManagerOrThrow(
+    churchId: number,
+    requestUserId: number,
+  ): Promise<ChurchUserModel> {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    return this.managerDomainService.findManagerForPermissionCheck(
+      church,
+      requestUserId,
+    );
+  }
+
   async hasPermission(
     churchId: number,
     requestUserId: number,

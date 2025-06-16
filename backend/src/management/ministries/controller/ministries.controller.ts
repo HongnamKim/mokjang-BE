@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -29,6 +30,8 @@ import {
 } from '../const/swagger/ministry.swagger';
 import { MinistryReadGuard } from '../guard/ministry-read.guard';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 
 @ApiTags('Management:Ministries')
 @Controller('ministries')
@@ -36,7 +39,7 @@ export class MinistriesController {
   constructor(private readonly ministryService: MinistryService) {}
 
   @ApiGetMinistries()
-  @MinistryReadGuard()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @Get()
   getMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,

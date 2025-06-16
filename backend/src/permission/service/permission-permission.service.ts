@@ -49,4 +49,17 @@ export class PermissionPermissionService extends DomainPermissionService {
       return null;
     }
   }
+
+  async getRequestManagerOrThrow(
+    churchId: number,
+    requestUserId: number,
+  ): Promise<ChurchUserModel> {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    return this.managerDomainService.findManagerForPermissionCheck(
+      church,
+      requestUserId,
+    );
+  }
 }
