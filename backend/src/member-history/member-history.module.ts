@@ -14,6 +14,9 @@ import { OfficersDomainModule } from '../management/officers/officer-domain/offi
 import { MinistriesDomainModule } from '../management/ministries/ministries-domain/ministries-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { MemberHistoryDomainModule } from './member-history-domain/member-history-domain.module';
+import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
+import { HistoryPermissionService } from './service/history-permission.service';
 
 @Module({
   imports: [
@@ -28,6 +31,7 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
     OfficersDomainModule,
     MinistriesDomainModule,
     ChurchesDomainModule,
+    ManagerDomainModule,
 
     MemberHistoryDomainModule,
   ],
@@ -37,6 +41,10 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
     MinistryHistoryService,
     EducationHistoryService,
     GroupHistoryService,
+    {
+      provide: IDOMAIN_PERMISSION_SERVICE,
+      useClass: HistoryPermissionService,
+    },
   ],
   controllers: [
     OfficerHistoryController,

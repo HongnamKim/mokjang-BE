@@ -280,7 +280,7 @@ export class TaskDomainService implements ITaskDomainService {
 
   async createTask(
     church: ChurchModel,
-    creator: ChurchUserModel,
+    creatorManager: ChurchUserModel,
     parentTask: TaskModel | null,
     inCharge: ChurchUserModel | null,
     dto: CreateTaskDto,
@@ -300,12 +300,12 @@ export class TaskDomainService implements ITaskDomainService {
       await this.assertSubTaskLimitNotExceeded(parentTask, qr);
     }
 
-    this.assertValidCreator(creator);
+    this.assertValidCreator(creatorManager);
     this.assertValidInChargeMember(inCharge);
 
     return taskRepository.save({
       churchId: church.id,
-      creatorId: creator.member.id,
+      creatorId: creatorManager.member.id,
       inChargeId: inCharge ? inCharge.member.id : undefined,
       parentTaskId: parentTask ? parentTask.id : undefined,
       taskType: parentTask ? TaskType.subTask : TaskType.parent,

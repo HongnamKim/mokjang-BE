@@ -1,5 +1,6 @@
 export const ManagerException = {
   NOT_FOUND: '해당 관리자를 찾을 수 없습니다.',
+  FORBIDDEN: '해당 교회 관리자만 접근할 수 있습니다.',
 
   CANNOT_CHANGE_ACTIVITY:
     '관리자 권한의 교인만 활성 상태를 변경할 수 있습니다.',

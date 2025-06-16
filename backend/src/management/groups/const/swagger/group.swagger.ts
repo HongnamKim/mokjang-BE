@@ -66,6 +66,7 @@ export const ApiDeleteGroup = () =>
 export const ApiGetChildGroupIds = () =>
   applyDecorators(
     ApiOperation({
+      deprecated: true,
       summary: '하위 그룹 id 조회',
       description: '<h2>해당 그룹의 하위 그룹들의 id 값을 조회합니다.</h2>',
     }),
@@ -74,6 +75,7 @@ export const ApiGetChildGroupIds = () =>
 export const ApiGetGroupsByName = () =>
   applyDecorators(
     ApiOperation({
+      deprecated: true,
       summary: '그룹 이름으로 검색',
     }),
   );

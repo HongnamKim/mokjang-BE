@@ -8,6 +8,9 @@ import { MinistryGroupService } from './service/ministry-group.service';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { RouterModule } from '@nestjs/core';
 import { MinistriesDomainModule } from './ministries-domain/ministries-domain.module';
+import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
+import { ManagementPermissionService } from '../management-permission.service';
+import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 
 @Module({
   imports: [
@@ -19,10 +22,18 @@ import { MinistriesDomainModule } from './ministries-domain/ministries-domain.mo
     ]),
     TypeOrmModule.forFeature([MinistryModel]),
     ChurchesDomainModule,
+    ManagerDomainModule,
     MinistriesDomainModule,
   ],
   controllers: [MinistriesController, MinistryGroupsController],
-  providers: [MinistryService, MinistryGroupService],
+  providers: [
+    MinistryService,
+    MinistryGroupService,
+    {
+      provide: IDOMAIN_PERMISSION_SERVICE,
+      useClass: ManagementPermissionService,
+    },
+  ],
   exports: [],
 })
 export class MinistriesModule {}

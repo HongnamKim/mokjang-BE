@@ -89,7 +89,7 @@ export class CreateMemberDto {
   @ApiProperty({
     name: 'relation',
     description: '가족 관계',
-    example: '어머니',
+    example: FamilyRelationConst.MOTHER,
     required: false,
   })
   @IsString()

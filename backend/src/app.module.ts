@@ -44,8 +44,8 @@ import { VisitationDetailModel } from './visitation/entity/visitation-detail.ent
 import { ReportModule } from './report/report.module';
 import { ReportModel } from './report/entity/report.entity';
 import { VisitationReportModel } from './report/entity/visitation-report.entity';
-import { ChurchJoinRequestModel } from './churches/entity/church-join-request.entity';
-import { ChurchJoinRequestStatModel } from './churches/entity/church-join-request-stat.entity';
+import { ChurchJoinModel } from './church-join/entity/church-join.entity';
+import { ChurchJoinStatModel } from './church-join/entity/church-join-stat.entity';
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
 import { TaskReportModel } from './report/entity/task-report.entity';
@@ -58,6 +58,7 @@ import { ManagerModule } from './manager/manager.module';
 import { ChurchUserModule } from './church-user/church-user.module';
 import { ChurchUserModel } from './church-user/entity/church-user.entity';
 import { PermissionScopeModel } from './permission/entity/permission-scope.entity';
+import { ChurchJoinModule } from './church-join/church-join.module';
 
 @Module({
   imports: [
@@ -131,8 +132,8 @@ import { PermissionScopeModel } from './permission/entity/permission-scope.entit
           ChurchModel,
           // 교회 가입 엔티티
           ChurchUserModel,
-          ChurchJoinRequestModel,
-          ChurchJoinRequestStatModel,
+          ChurchJoinModel,
+          ChurchJoinStatModel,
           // 교인 관련 엔티티
           RequestInfoModel,
           MemberModel,
@@ -185,11 +186,12 @@ import { PermissionScopeModel } from './permission/entity/permission-scope.entit
     AuthModule,
     UserModule,
     ChurchesModule,
-    RequestInfoModule,
-    MembersModule,
+    ChurchJoinModule,
     ChurchUserModule,
     ManagerModule,
     PermissionModule,
+    RequestInfoModule,
+    MembersModule,
     FamilyRelationModule,
     MemberHistoryModule,
     ReportModule,

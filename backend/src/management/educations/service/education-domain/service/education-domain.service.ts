@@ -161,7 +161,7 @@ export class EducationDomainService implements IEducationDomainService {
   async createEducation(
     church: ChurchModel,
     //creatorMember: MemberModel,
-    creatorMember: ChurchUserModel,
+    creatorManager: ChurchUserModel,
     dto: CreateEducationDto,
     qr?: QueryRunner,
   ) {
@@ -173,14 +173,14 @@ export class EducationDomainService implements IEducationDomainService {
       throw new BadRequestException(EducationException.ALREADY_EXIST);
     }
 
-    if (!creatorMember.member) {
+    if (!creatorManager.member) {
       throw new InternalServerErrorException(MemberException.USER_ERROR);
     }
 
     return educationsRepository.save({
       name: dto.name,
       description: dto.description,
-      creatorId: creatorMember.member.id,
+      creatorId: creatorManager.member.id,
       churchId: church.id,
     });
   }

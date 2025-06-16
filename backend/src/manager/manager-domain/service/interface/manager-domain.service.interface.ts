@@ -47,6 +47,12 @@ export interface IManagerDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 
+  findManagerForPermissionCheck(
+    church: ChurchModel,
+    userId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel>;
+
   /**
    * inCharge 로 지정된 교인의 권한 확인용
    * @param church

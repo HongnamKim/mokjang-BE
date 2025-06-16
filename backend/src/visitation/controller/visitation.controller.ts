@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -17,11 +16,6 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { CreateVisitationDto } from '../dto/request/create-visitation.dto';
-import { ChurchManagerGuard } from '../../churches/guard/church-guard.service';
-import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { Token } from '../../auth/decorator/jwt.decorator';
-import { AuthType } from '../../auth/const/enum/auth-type.enum';
-import { JwtAccessPayload } from '../../auth/type/jwt';
 import { GetVisitationDto } from '../dto/request/get-visitation.dto';
 import {
   ApiDeleteVisitation,
@@ -33,6 +27,10 @@ import {
 import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
 import { DeleteReceiverDto } from '../dto/receiever/delete-receiver.dto';
+import { VisitationReadGuard } from '../guard/visitation-read.guard';
+import { VisitationWriteGuard } from '../guard/visitation-write.guard';
+import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -40,6 +38,7 @@ export class VisitationController {
   constructor(private readonly visitationService: VisitationService) {}
 
   @ApiGetVisitations()
+  @VisitationReadGuard()
   @Get()
   getVisitations(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -49,18 +48,19 @@ export class VisitationController {
   }
 
   @ApiPostVisitation()
+  @VisitationWriteGuard()
   @Post()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postVisitationReservation(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
-    @Param('churchId', ParseIntPipe)
-    churchId: number,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @PermissionManager() manager: ChurchUserModel,
+    @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.createVisitation(
-      accessPayload.id,
+      //accessPayload.id,
+      manager,
       churchId,
       dto,
       qr,
@@ -68,6 +68,7 @@ export class VisitationController {
   }
 
   @ApiGetVisitationById()
+  @VisitationReadGuard()
   @Get(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   getVisitingById(
@@ -83,6 +84,7 @@ export class VisitationController {
   }
 
   @ApiPatchVisitationMeta()
+  @VisitationWriteGuard()
   @Patch(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   patchVisitationMetaData(
@@ -100,6 +102,7 @@ export class VisitationController {
   }
 
   @ApiDeleteVisitation()
+  @VisitationWriteGuard()
   @Delete(':visitationId')
   @UseInterceptors(TransactionInterceptor)
   deleteVisiting(
@@ -114,6 +117,7 @@ export class VisitationController {
     summary: '심방 보고자 추가',
   })
   @Patch(':visitationId/add-receivers')
+  @VisitationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -133,6 +137,7 @@ export class VisitationController {
     summary: '심방 보고자 삭제',
   })
   @Patch(':visitationId/delete-receivers')
+  @VisitationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   removeReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,

@@ -12,6 +12,8 @@ import { ChurchUserService } from '../service/church-user.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetChurchUsersDto } from '../dto/request/get-church-users.dto';
 import { UpdateChurchUserRoleDto } from '../dto/request/update-church-user-role.dto';
+import { ChurchUserReadGuard } from '../guard/church-user-read.guard';
+import { ChurchUserWriteGuard } from '../guard/church-user-write.guard';
 
 @ApiTags('Churches:Church-Users')
 @Controller('church-users')
@@ -22,6 +24,7 @@ export class ChurchUserController {
     summary: '교회 가입 계정(교인) 조회',
   })
   @Get()
+  @ChurchUserReadGuard()
   getChurchUsers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetChurchUsersDto,
@@ -33,6 +36,7 @@ export class ChurchUserController {
     summary: '교회 가입 계정(교인) 단건 조회',
   })
   @Get(':churchUserId')
+  @ChurchUserReadGuard()
   getChurchUserById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
@@ -49,6 +53,7 @@ export class ChurchUserController {
       '<p>변경 가능한 role: manager, member</p>',
   })
   @Patch(':churchUserId/role')
+  @ChurchUserWriteGuard()
   patchUserRole(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
@@ -62,8 +67,12 @@ export class ChurchUserController {
   @ApiOperation({
     summary: '계정 - 교인 정보 연결',
   })
+  @ChurchUserWriteGuard()
   @Patch(':churchUserId/link-member')
-  linkMember() {
+  linkMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+  ) {
     return '개발 전';
   }
 
@@ -71,7 +80,11 @@ export class ChurchUserController {
     summary: '계정 - 교인 정보 연결 해제',
   })
   @Patch(':churchUserId/unlink-member')
-  unlinkMember() {
+  @ChurchUserWriteGuard()
+  unlinkMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+  ) {
     return '개발 전';
   }
 
@@ -79,7 +92,11 @@ export class ChurchUserController {
     summary: '교회 계정 가입 취소',
   })
   @Patch(':churchUserId/leave-church')
-  leaveChurch() {
+  @ChurchUserWriteGuard()
+  leaveChurch(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+  ) {
     return '개발 전';
   }
 }
