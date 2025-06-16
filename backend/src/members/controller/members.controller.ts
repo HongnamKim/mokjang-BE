@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { MembersService } from '../service/members.service';
@@ -27,6 +28,8 @@ import { TargetMember } from '../decorator/target-member.decorator';
 import { MemberModel } from '../entity/member.entity';
 import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -55,6 +58,7 @@ export class MembersController {
   }
 
   @Get('simple')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembersSimple(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetSimpleMembersDto,
