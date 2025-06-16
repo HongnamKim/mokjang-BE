@@ -1,19 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DomainPermissionService } from '../../permission/service/domain-permission.service';
-import { DomainAction } from '../../permission/const/domain-action.enum';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { DomainAction } from '../../permission/const/domain-action.enum';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
+} from '../churches-domain/interface/churches-domain.service.interface';
 import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
-} from '../manager-domain/service/interface/manager-domain.service.interface';
-import { DomainType } from '../../permission/const/domain-type.enum';
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { ChurchUserRole } from '../../user/const/user-role.enum';
 
 @Injectable()
-export class ManagerPermissionService extends DomainPermissionService {
+export class ChurchPermissionService extends DomainPermissionService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -43,14 +43,25 @@ export class ManagerPermissionService extends DomainPermissionService {
   ): Promise<ChurchUserModel | null> {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
+
     const requestManager =
       await this.managerDomainService.findManagerForPermissionCheck(
         church,
         requestUserId,
       );
 
-    const permission = super.checkPermission(
-      DomainType.PERMISSION,
+    if (domainAction === DomainAction.WRITE) {
+      if (requestManager.role === ChurchUserRole.OWNER) {
+        return requestManager;
+      } else {
+        return null;
+      }
+    } else {
+      // 읽기 권한인 경우 교회 관리자 통과
+      return requestManager;
+    }
+    /*const permission = super.checkPermission(
+      DomainType.MANAGEMENT,
       domainAction,
       requestManager,
     );
@@ -59,6 +70,6 @@ export class ManagerPermissionService extends DomainPermissionService {
       return requestManager;
     } else {
       return null;
-    }
+    }*/
   }
 }

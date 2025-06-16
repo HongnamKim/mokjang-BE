@@ -9,4 +9,9 @@ export interface IDomainPermissionService {
     requestUserId: number,
     domainAction: DomainAction,
   ): Promise<ChurchUserModel | null>;
+
+  getRequestManagerOrThrow(
+    churchId: number,
+    requestUserId: number,
+  ): Promise<ChurchUserModel>;
 }

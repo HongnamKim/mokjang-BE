@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -24,8 +25,9 @@ import {
   ApiPostOfficer,
 } from '../const/swagger/officers.swagger';
 import { GetOfficersDto } from '../dto/request/get-officers.dto';
-import { OfficerReadGuard } from '../guard/officer-read.guard';
 import { OfficerWriteGuard } from '../guard/officer-write.guard';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -33,7 +35,7 @@ export class OfficersController {
   constructor(private readonly officersService: OfficersService) {}
 
   @ApiGetOfficers()
-  @OfficerReadGuard()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @Get()
   getOfficers(
     @Param('churchId', ParseIntPipe) churchId: number,

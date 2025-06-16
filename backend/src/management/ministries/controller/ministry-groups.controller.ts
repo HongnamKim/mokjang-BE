@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
@@ -20,6 +21,8 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { GetMinistryGroupDto } from '../dto/ministry-group/get-ministry-group.dto';
 import { MinistryReadGuard } from '../guard/ministry-read.guard';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -27,7 +30,7 @@ export class MinistryGroupsController {
   constructor(private readonly ministryGroupService: MinistryGroupService) {}
 
   @Get()
-  @MinistryReadGuard()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMinistryGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMinistryGroupDto,

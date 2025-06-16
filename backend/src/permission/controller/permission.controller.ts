@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { PermissionService } from '../service/permission.service';
@@ -33,6 +34,8 @@ import { QueryRunner as QR } from 'typeorm';
 import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-managers-by-permission-template.dto';
 import { PermissionReadGuard } from '../guard/permission-read.guard';
 import { PermissionWriteGuard } from '../guard/permission-write.guard';
+import { ChurchManagerGuard } from '../guard/church-manager.guard';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 
 @ApiTags('Churches:Permissions')
 @Controller('permissions')
@@ -41,7 +44,7 @@ export class PermissionController {
 
   @ApiGetPermissionUnits()
   @Get('units')
-  @PermissionReadGuard()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getPermissionUnits(
     @Param('churchId', ParseIntPipe) _: number,
     @Query('domain', new ParseEnumPipe(DomainType, { optional: true }))

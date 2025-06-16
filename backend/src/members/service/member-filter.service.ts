@@ -8,6 +8,7 @@ import {
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
+import { ConcealedMemberDto } from '../dto/response/get-member-response.dto';
 
 @Injectable()
 export class MemberFilterService implements IMemberFilterService {
@@ -20,13 +21,21 @@ export class MemberFilterService implements IMemberFilterService {
     church: ChurchModel,
     requestManager: ChurchUserModel,
     member: MemberModel,
-  ): Promise<MemberModel> {
-    if (!member.groupId) {
-      return member;
+  ): Promise<ConcealedMemberDto> {
+    if (requestManager.memberId === member.id) {
+      return { ...member, isConcealed: false };
     }
 
     if (requestManager.role === ChurchUserRole.OWNER) {
-      return member;
+      return { ...member, isConcealed: false };
+    }
+
+    if (requestManager.permissionScopes.find((scope) => scope.isAllGroups)) {
+      return { ...member, isConcealed: false };
+    }
+
+    if (!member.groupId) {
+      return { ...this.concealInfo(member), isConcealed: true };
     }
 
     const memberGroup = await this.groupsDomainService.findGroupModelById(
@@ -52,11 +61,11 @@ export class MemberFilterService implements IMemberFilterService {
 
     for (const managerScope of managerScopes) {
       if (possibleScopesSet.has(managerScope)) {
-        return member;
+        return { ...member, isConcealed: false };
       }
     }
 
-    return this.concealInfo(member);
+    return { ...this.concealInfo(member), isConcealed: true };
   }
 
   private concealInfo(member: MemberModel) {
@@ -66,6 +75,7 @@ export class MemberFilterService implements IMemberFilterService {
       'updatedAt',
       'registeredAt',
       'profileImageUrl',
+      'baptism',
       'name',
       'birth',
       'isLunar',
