@@ -221,7 +221,7 @@ export class EducationSessionDomainService
 
   async createSingleEducationSession(
     educationTerm: EducationTermModel,
-    creatorMember: ChurchUserModel, //MemberModel,
+    creatorManager: ChurchUserModel, //MemberModel,
     dto: CreateEducationSessionDto,
     inCharge: ChurchUserModel | null, //MemberModel | null,
     qr: QueryRunner,
@@ -248,7 +248,7 @@ export class EducationSessionDomainService
     inCharge && this.assertValidInCharge(inCharge);
 
     return educationSessionsRepository.save({
-      creatorId: creatorMember.member.id,
+      creatorId: creatorManager.member.id,
       educationTermId: educationTerm.id,
       session: newSessionNumber,
       title: dto.title,

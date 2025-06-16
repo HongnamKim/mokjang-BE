@@ -26,6 +26,8 @@ import {
 } from '../const/swagger/ministry-history.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { HistoryReadGuard } from '../guard/history-read.guard';
+import { HistoryWriteGuard } from '../guard/history-write.guard';
 
 @ApiTags('Churches:Members:Ministries')
 @Controller('ministries')
@@ -37,6 +39,7 @@ export class MinistryHistoryController {
   // 교인의 사역 조회 (현재)
   @ApiGetMemberMinistry()
   @Get()
+  @HistoryReadGuard()
   getMemberMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -54,6 +57,7 @@ export class MinistryHistoryController {
   // ministryHistory 추가 (시작일)
   @ApiPostMemberMinistry()
   @Post()
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postMemberMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -73,6 +77,7 @@ export class MinistryHistoryController {
   // 사역의 시작 날짜, 종료 날짜만 수정 가능
   @ApiPatchMinistryHistory()
   @Patch(':ministryHistoryId')
+  @HistoryWriteGuard()
   patchMinistryHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -93,6 +98,7 @@ export class MinistryHistoryController {
   // 해당 MinistryHistoryModel 에 endDate 추가
   @ApiDeleteMemberMinistry()
   @Patch(':ministryHistoryId/end')
+  @HistoryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   deleteMemberMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -113,6 +119,7 @@ export class MinistryHistoryController {
   // 교인의 사역 이력 삭제
   @ApiDeleteMinistryHistory()
   @Delete(':ministryHistoryId')
+  @HistoryWriteGuard()
   deleteMinistryHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,

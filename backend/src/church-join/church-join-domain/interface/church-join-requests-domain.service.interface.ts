@@ -1,0 +1,63 @@
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { UserModel } from '../../../user/entity/user.entity';
+import { QueryRunner, UpdateResult } from 'typeorm';
+import { ChurchJoinModel } from '../../entity/church-join.entity';
+import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
+import { GetJoinRequestDto } from '../../dto/request/get-join-request.dto';
+import { ChurchJoinDomainPaginationResultDto } from '../dto/church-join-domain-pagination-result.dto';
+
+export const ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE = Symbol(
+  'ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE',
+);
+
+export interface IChurchJoinRequestDomainService {
+  ensureUserCanRequestJoinChurch(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<boolean>;
+
+  createChurchJoinRequest(
+    church: ChurchModel,
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinModel>;
+
+  findChurchJoinRequests(
+    church: ChurchModel,
+    dto: GetJoinRequestDto,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinDomainPaginationResultDto>;
+
+  findChurchJoinRequestById(
+    church: ChurchModel,
+    joinId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinModel>;
+
+  updateChurchJoinRequest(
+    joinRequest: ChurchJoinModel,
+    status: ChurchJoinRequestStatusEnum,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteChurchJoinRequest(
+    joinRequest: ChurchJoinModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  findMyChurchJoinRequest(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinModel[]>;
+
+  findMyChurchJoinRequestById(
+    user: UserModel,
+    joinId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinModel>;
+
+  findMyPendingChurchJoinRequest(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchJoinModel>;
+}

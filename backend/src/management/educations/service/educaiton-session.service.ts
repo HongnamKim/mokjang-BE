@@ -47,6 +47,7 @@ import {
   IManagerDomainService,
 } from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { EducationSessionModel } from '../entity/education-session.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationSessionService {
@@ -166,7 +167,8 @@ export class EducationSessionService {
   }
 
   async createSingleEducationSession(
-    creatorMemberId: number,
+    //creatorMemberId: number,
+    creatorManager: ChurchUserModel,
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -187,11 +189,11 @@ export class EducationSessionService {
         { educationEnrollments: true },
       );
 
-    const creatorMember = await this.managerDomainService.findManagerByMemberId(
+    /*const creatorMember = await this.managerDomainService.findManagerByMemberId(
       church,
       creatorMemberId,
       qr,
-    );
+    );*/
 
     const inCharge = dto.inChargeId
       ? await this.managerDomainService.findManagerByMemberId(
@@ -204,7 +206,8 @@ export class EducationSessionService {
     const newSession =
       await this.educationSessionDomainService.createSingleEducationSession(
         educationTerm,
-        creatorMember,
+        //creatorMember,
+        creatorManager,
         dto,
         inCharge,
         qr,

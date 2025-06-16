@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>테스트 로그인</title>
+</head>
+<body>
+<h1>테스트 로그인</h1>
+
+<form id="login-form">
+    <label for="provider">Provider:</label>
+    <input type="text" id="provider" name="provider" value="test" required />
+    <br /><br />
+
+    <label for="providerId">Provider ID:</label>
+    <input type="text" id="providerId" name="providerId" value="test" required />
+    <br /><br />
+
+    <label for="loginOption">Login Option:</label>
+    <input type="text" id="loginOption" name="loginOption" value="test" required />
+    <br /><br />
+
+    <button type="submit">로그인</button>
+</form>
+
+<hr />
+
+<h2>현재 로그인된 사용자 정보</h2>
+<pre id="user-info">불러오는 중...</pre>
+
+<script>
+    const form = document.getElementById('login-form');
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const provider = document.getElementById('provider').value;
+        const providerId = document.getElementById('providerId').value;
+        const loginOption = document.getElementById('loginOption').value;
+
+        const query = new URLSearchParams({
+            provider,
+            providerId,
+            loginOption,
+        });
+
+        try {
+            const res = await fetch(`http://localhost:3000/auth/test/sign-in?${query.toString()}`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                alert('로그인 실패');
+                return;
+            }
+
+            // 로그인 성공 → 자신을 다시 로드
+            window.location.href = window.location.pathname;
+        } catch (err) {
+            alert('에러 발생: ' + err.message);
+        }
+    };
+
+    async function fetchUserInfo() {
+        try {
+            const res = await fetch('http://localhost:3000/users', {
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                document.getElementById('user-info').textContent = '로그인된 사용자 없음';
+                return;
+            }
+
+            const user = await res.json();
+            document.getElementById('user-info').textContent = JSON.stringify(user, null, 2);
+        } catch (err) {
+            document.getElementById('user-info').textContent = '오류 발생: ' + err.message;
+        }
+    }
+
+    window.onload = fetchUserInfo;
+</script>
+</body>
+</html>

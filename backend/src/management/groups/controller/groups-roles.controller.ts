@@ -24,6 +24,8 @@ import {
   ApiPatchGroupRole,
   ApiPostGroupRole,
 } from '../const/swagger/group-role.swagger';
+import { GroupReadGuard } from '../guard/group-read.guard';
+import { GroupWriteGuard } from '../guard/group-write.guard';
 
 @ApiTags('Management:Groups:Roles')
 @Controller('groups/:groupId/role')
@@ -31,6 +33,7 @@ export class GroupsRolesController {
   constructor(private readonly groupsRolesService: GroupRolesService) {}
 
   @ApiGetGroupRoles()
+  @GroupReadGuard()
   @Get()
   getGroupRoles(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -41,6 +44,7 @@ export class GroupsRolesController {
   }
 
   @ApiPostGroupRole()
+  @GroupWriteGuard()
   @Post()
   @UseInterceptors(TransactionInterceptor)
   async postGroupRole(
@@ -55,6 +59,7 @@ export class GroupsRolesController {
   }
 
   @ApiPatchGroupRole()
+  @GroupWriteGuard()
   @Patch(':roleId')
   patchGroupRole(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -71,6 +76,7 @@ export class GroupsRolesController {
   }
 
   @ApiDeleteGroupRole()
+  @GroupWriteGuard()
   @Delete(':roleId')
   deleteGroupRole(
     @Param('churchId', ParseIntPipe) churchId: number,

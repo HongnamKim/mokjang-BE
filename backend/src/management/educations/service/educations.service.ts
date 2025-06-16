@@ -21,6 +21,7 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationsService {
@@ -76,7 +77,8 @@ export class EducationsService {
   }
 
   async createEducation(
-    userId: number,
+    //userId: number,
+    creatorManager: ChurchUserModel,
     churchId: number,
     dto: CreateEducationDto,
     qr?: QueryRunner,
@@ -86,15 +88,16 @@ export class EducationsService {
       qr,
     );
 
-    const creatorMember = await this.managerDomainService.findManagerByUserId(
+    /*const creatorMember = await this.managerDomainService.findManagerByUserId(
       church,
       userId,
       qr,
-    );
+    );*/
 
     return this.educationDomainService.createEducation(
       church,
-      creatorMember,
+      //creatorMember,
+      creatorManager,
       dto,
       qr,
     );

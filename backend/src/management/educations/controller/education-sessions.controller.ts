@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -18,11 +17,6 @@ import { EducationSessionService } from '../service/educaiton-session.service';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { CreateEducationSessionDto } from '../dto/sessions/request/create-education-session.dto';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service';
-import { AuthType } from '../../../auth/const/enum/auth-type.enum';
-import { JwtAccessPayload } from '../../../auth/type/jwt';
-import { Token } from '../../../auth/decorator/jwt.decorator';
 import { GetEducationSessionDto } from '../dto/sessions/request/get-education-session.dto';
 import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
 import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
@@ -35,6 +29,10 @@ import {
   ApiPatchEducationSession,
   ApiPostEducationSessions,
 } from '../const/swagger/education-session.swagger';
+import { EducationReadGuard } from '../guard/education-read.guard';
+import { EducationWriteGuard } from '../guard/education-write.guard';
+import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
@@ -44,6 +42,7 @@ export class EducationSessionsController {
   ) {}
 
   @ApiGetEducationSessions()
+  @EducationReadGuard()
   @Get()
   getEducationSessions(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -60,21 +59,24 @@ export class EducationSessionsController {
   }
 
   @ApiPostEducationSessions()
+  @EducationWriteGuard()
   @Post()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationSession(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @PermissionManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Body() dto: CreateEducationSessionDto,
     @QueryRunner() qr: QR,
   ) {
-    const userId = accessPayload.id;
+    //const userId = accessPayload.id;
 
     return this.educationSessionsService.createSingleEducationSession(
-      userId,
+      //userId,
+      manager,
       churchId,
       educationId,
       educationTermId,
@@ -84,6 +86,7 @@ export class EducationSessionsController {
   }
 
   @ApiGetEducationSessionById()
+  @EducationReadGuard()
   @Get(':educationSessionId')
   getEducationSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -100,6 +103,7 @@ export class EducationSessionsController {
   }
 
   @ApiPatchEducationSession()
+  @EducationWriteGuard()
   @Patch(':educationSessionId')
   @UseInterceptors(TransactionInterceptor)
   patchEducationSession(
@@ -121,6 +125,7 @@ export class EducationSessionsController {
   }
 
   @ApiDeleteEducationSession()
+  @EducationWriteGuard()
   @Delete(':educationSessionId')
   @UseInterceptors(TransactionInterceptor)
   deleteEducationSession(
@@ -140,6 +145,7 @@ export class EducationSessionsController {
   }
 
   @ApiAddReportReceivers()
+  @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   @Patch(':educationSessionId/add-receivers')
   addReportReceivers(
@@ -161,6 +167,7 @@ export class EducationSessionsController {
   }
 
   @ApiDeleteReportReceivers()
+  @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   @Patch(':educationSessionId/delete-receivers')
   deleteReportReceivers(
