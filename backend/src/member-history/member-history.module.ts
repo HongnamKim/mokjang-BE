@@ -17,6 +17,8 @@ import { MemberHistoryDomainModule } from './member-history-domain/member-histor
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 import { HistoryPermissionService } from './service/history-permission.service';
+import { IMEMBER_FILTER_SERVICE } from '../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../members/service/member-filter.service';
 
 @Module({
   imports: [
@@ -44,6 +46,10 @@ import { HistoryPermissionService } from './service/history-permission.service';
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: HistoryPermissionService,
+    },
+    {
+      provide: IMEMBER_FILTER_SERVICE,
+      useClass: MemberFilterService,
     },
   ],
   controllers: [

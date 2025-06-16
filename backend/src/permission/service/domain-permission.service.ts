@@ -3,6 +3,7 @@ import { DomainAction } from '../const/domain-action.enum';
 import { DomainType } from '../const/domain-type.enum';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 export abstract class DomainPermissionService
   implements IDomainPermissionService
@@ -11,12 +12,12 @@ export abstract class DomainPermissionService
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<ChurchUserModel | null>;
+  ): Promise<{ requestManager: ChurchUserModel; church: ChurchModel } | null>;
 
   abstract getRequestManagerOrThrow(
     churchId: number,
     requestUserId: number,
-  ): Promise<ChurchUserModel>;
+  ): Promise<{ requestManager: ChurchUserModel; church: ChurchModel }>;
 
   protected checkPermission(
     domainType: DomainType,
