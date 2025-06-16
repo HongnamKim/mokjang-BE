@@ -29,13 +29,14 @@ export class ChurchManagerGuard implements CanActivate {
     const churchId = parseInt(req.params.churchId);
     const requestUserId = token.id;
 
-    const requestManager =
+    const { requestManager, church } =
       await this.permissionService.getRequestManagerOrThrow(
         churchId,
         requestUserId,
       );
 
-    req.permissionedChurchUser = requestManager;
+    req.requestManager = requestManager;
+    req.church = church;
 
     return true;
   }
