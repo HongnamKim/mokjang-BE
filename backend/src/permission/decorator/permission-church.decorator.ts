@@ -4,14 +4,14 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-export const PermissionManager = createParamDecorator(
+export const PermissionChurch = createParamDecorator(
   (_, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest();
 
-    if (!req.requestManager) {
-      throw new InternalServerErrorException('Request 내 ChurchUser 누락');
+    if (!req.church) {
+      throw new InternalServerErrorException('Request 내 Church 누락');
     }
 
-    return req.requestManager;
+    return req.church;
   },
 );

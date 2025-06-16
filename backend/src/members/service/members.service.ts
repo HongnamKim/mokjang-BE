@@ -34,6 +34,7 @@ import {
   IMemberFilterService,
 } from './interface/member-filter.service.interface';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class MembersService {
@@ -161,12 +162,14 @@ export class MembersService {
   }
 
   async updateMember(
-    churchId: number,
-    memberId: number,
+    //churchId: number,
+    //memberId: number,
+    church: ChurchModel,
+    targetMember: MemberModel,
     dto: UpdateMemberDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -174,7 +177,7 @@ export class MembersService {
       church,
       memberId,
       qr,
-    );
+    );*/
 
     const updatedMember = await this.membersDomainService.updateMember(
       church,
@@ -189,11 +192,13 @@ export class MembersService {
   // 교인 soft delete
   // 교육 등록도 soft delete
   async softDeleteMember(
-    churchId: number,
-    memberId: number,
+    //churchId: number,
+    church: ChurchModel,
+    //memberId: number,
+    targetMember: MemberModel,
     qr: QueryRunner,
   ): Promise<DeleteMemberResponseDto> {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -201,7 +206,7 @@ export class MembersService {
       church,
       memberId,
       qr,
-    );
+    );*/
 
     // 교인 삭제
     await this.membersDomainService.deleteMember(church, targetMember, qr);
@@ -216,7 +221,7 @@ export class MembersService {
     // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음
     this.eventEmitter.emit(
       'member.deleted',
-      new MemberDeletedEvent(churchId, memberId),
+      new MemberDeletedEvent(church.id, targetMember.id),
     );
 
     return new DeleteMemberResponseDto(

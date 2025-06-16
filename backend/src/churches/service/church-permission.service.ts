@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DomainPermissionService } from '../../permission/service/domain-permission.service';
-import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import {
   ICHURCHES_DOMAIN_SERVICE,
@@ -23,24 +22,24 @@ export class ChurchPermissionService extends DomainPermissionService {
     super();
   }
 
-  async getRequestManagerOrThrow(
-    churchId: number,
-    requestUserId: number,
-  ): Promise<ChurchUserModel> {
+  async getRequestManagerOrThrow(churchId: number, requestUserId: number) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    return this.managerDomainService.findManagerForPermissionCheck(
-      church,
-      requestUserId,
-    );
+    const requestManager =
+      await this.managerDomainService.findManagerForPermissionCheck(
+        church,
+        requestUserId,
+      );
+
+    return { requestManager, church };
   }
 
   async hasPermission(
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<ChurchUserModel | null> {
+  ) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -52,13 +51,13 @@ export class ChurchPermissionService extends DomainPermissionService {
 
     if (domainAction === DomainAction.WRITE) {
       if (requestManager.role === ChurchUserRole.OWNER) {
-        return requestManager;
+        return { requestManager, church };
       } else {
         return null;
       }
     } else {
       // 읽기 권한인 경우 교회 관리자 통과
-      return requestManager;
+      return { requestManager, church };
     }
     /*const permission = super.checkPermission(
       DomainType.MANAGEMENT,

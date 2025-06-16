@@ -23,6 +23,10 @@ import { MemberReadGuard } from '../guard/member-read.guard';
 import { MemberWriteGuard } from '../guard/member-write.guard';
 import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { TargetMember } from '../decorator/target-member.decorator';
+import { MemberModel } from '../entity/member.entity';
+import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -54,7 +58,6 @@ export class MembersController {
   getMembersSimple(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetSimpleMembersDto,
-    @PermissionManager() pm: ChurchUserModel,
   ) {
     return this.membersService.getSimpleMembers(churchId, dto);
   }
@@ -75,8 +78,11 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdateMemberDto,
+    @PermissionChurch() church: ChurchModel,
+    @TargetMember() targetMember: MemberModel,
   ) {
-    return this.membersService.updateMember(churchId, memberId, dto);
+    return this.membersService.updateMember(church, targetMember, dto);
+    //return this.membersService.updateMember(churchId, memberId, dto);
   }
 
   @Delete(':memberId')
@@ -85,8 +91,11 @@ export class MembersController {
   deleteMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @PermissionChurch() church: ChurchModel,
+    @TargetMember() targetMember: MemberModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.membersService.softDeleteMember(churchId, memberId, qr);
+    return this.membersService.softDeleteMember(church, targetMember, qr);
+    //return this.membersService.softDeleteMember(churchId, memberId, qr);
   }
 }

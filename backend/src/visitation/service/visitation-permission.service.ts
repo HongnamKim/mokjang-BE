@@ -10,7 +10,6 @@ import {
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainPermissionService } from '../../permission/service/domain-permission.service';
-import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class VisitationPermissionService extends DomainPermissionService {
@@ -27,7 +26,7 @@ export class VisitationPermissionService extends DomainPermissionService {
     churchId: number,
     requestUserId: number,
     domainAction: DomainAction,
-  ): Promise<ChurchUserModel | null> {
+  ) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -44,22 +43,22 @@ export class VisitationPermissionService extends DomainPermissionService {
     );
 
     if (permission) {
-      return requestManager;
+      return { requestManager, church };
     } else {
       return null;
     }
   }
 
-  async getRequestManagerOrThrow(
-    churchId: number,
-    requestUserId: number,
-  ): Promise<ChurchUserModel> {
+  async getRequestManagerOrThrow(churchId: number, requestUserId: number) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    return this.managerDomainService.findManagerForPermissionCheck(
-      church,
-      requestUserId,
-    );
+    const requestManager =
+      await this.managerDomainService.findManagerForPermissionCheck(
+        church,
+        requestUserId,
+      );
+
+    return { requestManager, church };
   }
 }
