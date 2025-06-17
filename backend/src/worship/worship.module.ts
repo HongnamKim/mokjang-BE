@@ -10,6 +10,7 @@ import { WorshipSessionService } from './service/worship-session.service';
 import { WorshipAttendanceController } from './controller/worship-attendance.controller';
 import { WorshipEnrollmentController } from './controller/worship-enrollment.controller';
 import { WorshipDomainModule } from './worship-domain/worship-domain.module';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WorshipDomainModule } from './worship-domain/worship-domain.module';
     ]),
     ChurchesDomainModule,
     WorshipDomainModule,
+    GroupsDomainModule,
   ],
   controllers: [
     WorshipController,

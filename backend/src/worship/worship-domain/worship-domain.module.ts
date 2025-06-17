@@ -13,6 +13,8 @@ import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
 import { WorshipSessionModel } from '../entity/worship-session.entity';
 import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
 import { WorshipTargetGroupModel } from '../entity/worship-target-group.entity';
+import { IWORSHIP_TARGET_GROUP_DOMAIN_SERVICE } from './interface/worship-target-group-domain.service.interface';
+import { WorshipTargetGroupDomainService } from './service/worship-target-group-domain.service';
 
 @Module({
   imports: [
@@ -38,12 +40,17 @@ import { WorshipTargetGroupModel } from '../entity/worship-target-group.entity';
       provide: IWORSHIP_SESSION_DOMAIN_SERVICE,
       useClass: WorshipSessionDomainService,
     },
+    {
+      provide: IWORSHIP_TARGET_GROUP_DOMAIN_SERVICE,
+      useClass: WorshipTargetGroupDomainService,
+    },
   ],
   exports: [
     IWORSHIP_DOMAIN_SERVICE,
     IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
     IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
     IWORSHIP_SESSION_DOMAIN_SERVICE,
+    IWORSHIP_TARGET_GROUP_DOMAIN_SERVICE,
   ],
 })
 export class WorshipDomainModule {}
