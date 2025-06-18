@@ -37,6 +37,8 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
   ): Promise<MembersDomainPaginationResultDto>;
 
+  findAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<MemberModel[]>;
+
   findRecommendLinkMember(
     church: ChurchModel,
     dto: GetRecommendLinkMemberDto,

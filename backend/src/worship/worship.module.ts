@@ -11,6 +11,7 @@ import { WorshipAttendanceController } from './controller/worship-attendance.con
 import { WorshipEnrollmentController } from './controller/worship-enrollment.controller';
 import { WorshipDomainModule } from './worship-domain/worship-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
+import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { GroupsDomainModule } from '../management/groups/groups-domain/groups-do
       { path: 'churches/:churchId/worships', module: WorshipModule },
     ]),
     ChurchesDomainModule,
+    MembersDomainModule,
     WorshipDomainModule,
     GroupsDomainModule,
   ],

@@ -26,6 +26,14 @@ import { UpdateWorshipDto } from '../dto/request/worship/update-worship.dto';
 import { PatchWorshipResponseDto } from '../dto/response/worship/patch-worship-response.dto';
 import { WorshipModel } from '../entity/worship.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
+  IWorshipEnrollmentDomainService,
+} from '../worship-domain/interface/worship-enrollment-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../members/member-domain/interface/members-domain.service.interface';
 
 @Injectable()
 export class WorshipService {
@@ -38,6 +46,11 @@ export class WorshipService {
     private readonly worshipTargetGroupDomainService: IWorshipTargetGroupDomainService,
     @Inject(IGROUPS_DOMAIN_SERVICE)
     private readonly groupsDomainService: IGroupsDomainService,
+
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
+    @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
   ) {}
 
   async findWorships(churchId: number, dto: GetWorshipsDto) {
@@ -101,6 +114,17 @@ export class WorshipService {
     const worship = await this.worshipDomainService.findWorshipById(
       church,
       newWorship.id,
+      qr,
+    );
+
+    const allMembers = await this.membersDomainService.findAllMembers(
+      church,
+      qr,
+    );
+
+    await this.worshipEnrollmentDomainService.refreshEnrollments(
+      newWorship,
+      allMembers,
       qr,
     );
 
@@ -168,7 +192,14 @@ export class WorshipService {
 
     await this.worshipDomainService.deleteWorship(targetWorship, qr);
 
+    // 예배 대상 그룹 중간 테이블 삭제
     await this.worshipTargetGroupDomainService.deleteWorshipTargetGroupCascade(
+      targetWorship,
+      qr,
+    );
+
+    // 예배 대상 교인 정보 삭제
+    await this.worshipEnrollmentDomainService.deleteEnrollmentCascade(
       targetWorship,
       qr,
     );
