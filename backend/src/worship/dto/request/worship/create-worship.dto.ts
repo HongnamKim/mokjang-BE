@@ -2,7 +2,6 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import { WorshipModel } from '../../../entity/worship.entity';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 import {
-  ArrayMinSize,
   IsArray,
   IsNotEmpty,
   IsNumber,
@@ -67,6 +66,6 @@ export class CreateWorshipDto extends PickType(WorshipModel, [
   @Transform(({ value }) => Array.from(new Set(value)))
   @IsNumber({}, { each: true })
   @IsArray()
-  @ArrayMinSize(1)
+  //@ArrayMinSize(1)
   worshipTargetGroupIds: number[];
 }

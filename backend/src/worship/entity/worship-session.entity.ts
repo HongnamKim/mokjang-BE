@@ -18,6 +18,6 @@ export class WorshipSessionModel extends BaseModel {
   @Column({ default: '' })
   description: string;
 
-  @Column()
+  @Column({ type: 'timestamptz', nullable: true })
   sessionDate: Date;
 }
