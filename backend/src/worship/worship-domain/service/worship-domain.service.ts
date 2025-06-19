@@ -177,7 +177,12 @@ export class WorshipDomainService implements IWorshipDomainService {
 
     const result = await repository.update(
       { id: targetWorship.id },
-      { ...dto },
+      {
+        title: dto.title,
+        description: dto.description,
+        worshipDay: dto.worshipDay,
+        repeatPeriod: dto.repeatPeriod,
+      },
     );
 
     if (result.affected === 0) {

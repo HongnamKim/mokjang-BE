@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { MAX_WORSHIP_TITLE } from '../../../constraints/worship.constraints';
 import {
-  ArrayMinSize,
   IsArray,
   IsNotEmpty,
   IsNumber,
@@ -67,6 +66,6 @@ export class UpdateWorshipDto {
   @Transform(({ value }) => Array.from(new Set(value)))
   @IsNumber({}, { each: true })
   @IsArray()
-  @ArrayMinSize(1)
+  //@ArrayMinSize(1)
   worshipTargetGroupIds: number[];
 }

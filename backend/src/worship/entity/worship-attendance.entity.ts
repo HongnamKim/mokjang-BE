@@ -21,7 +21,7 @@ export class WorshipAttendanceModel extends BaseModel {
   note: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'timestamptz' })
   sessionDate: Date;
 
   @ManyToOne(
