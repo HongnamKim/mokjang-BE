@@ -24,9 +24,14 @@ export class WorshipAttendanceModel extends BaseModel {
   @Column({ type: 'timestamptz' })
   sessionDate: Date;
 
+  @Index()
+  @Column()
+  worshipEnrollmentId: number;
+
   @ManyToOne(
     () => WorshipEnrollmentModel,
     (enrollment) => enrollment.worshipAttendances,
   )
+  @JoinColumn({ name: 'worshipEnrollmentId' })
   worshipEnrollment: WorshipEnrollmentModel;
 }
