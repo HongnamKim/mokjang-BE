@@ -10,7 +10,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WorshipSessionService } from '../service/worship-session.service';
 import { CreateWorshipSessionDto } from '../dto/request/worship-session/create-worship-session.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
@@ -98,16 +98,23 @@ export class WorshipSessionController {
     );
   }
 
+  @ApiOperation({
+    summary: '예배 세션 개별 삭제',
+    description: '하위 attendance 삭제',
+  })
   @Delete(':sessionId')
+  @UseInterceptors(TransactionInterceptor)
   deleteSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
+    @QueryRunner() qr: QR,
   ) {
     return this.worshipSessionService.deleteWorshipSessionById(
       churchId,
       worshipId,
       sessionId,
+      qr,
     );
   }
 }

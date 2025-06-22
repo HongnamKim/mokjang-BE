@@ -1,7 +1,7 @@
 import { BaseOffsetPaginationRequestDto } from '../../../../common/dto/request/base-offset-pagination-request.dto';
 import { WorshipEnrollmentOrderEnum } from '../../../const/worship-enrollment-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber } from 'class-validator';
+import { IsDate, IsEnum, IsNumber } from 'class-validator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class GetWorshipEnrollmentsDto extends BaseOffsetPaginationRequestDto<WorshipEnrollmentOrderEnum> {
@@ -21,4 +21,20 @@ export class GetWorshipEnrollmentsDto extends BaseOffsetPaginationRequestDto<Wor
   @IsOptionalNotNull()
   @IsNumber()
   groupId: number;
+
+  @ApiProperty({
+    description: '불러올 예배 세션 시작 날짜',
+    required: false,
+  })
+  @IsOptionalNotNull()
+  @IsDate()
+  fromSessionDate: Date;
+
+  @ApiProperty({
+    description: '불러올 예배 세션 마지막 날짜',
+    required: false,
+  })
+  @IsOptionalNotNull()
+  @IsDate()
+  toSessionDate: Date;
 }

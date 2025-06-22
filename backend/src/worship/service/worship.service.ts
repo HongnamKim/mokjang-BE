@@ -38,6 +38,10 @@ import {
   IWORSHIP_SESSION_DOMAIN_SERVICE,
   IWorshipSessionDomainService,
 } from '../worship-domain/interface/worship-session-domain.service.interface';
+import {
+  IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
+  IWorshipAttendanceDomainService,
+} from '../worship-domain/interface/worship-attendance-domain.service.interface';
 
 @Injectable()
 export class WorshipService {
@@ -57,6 +61,8 @@ export class WorshipService {
     private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
     @Inject(IWORSHIP_SESSION_DOMAIN_SERVICE)
     private readonly worshipSessionDomainService: IWorshipSessionDomainService,
+    @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
   async findWorships(churchId: number, dto: GetWorshipsDto) {
@@ -211,8 +217,17 @@ export class WorshipService {
     );
 
     // 예배 세션 삭제
-    await this.worshipSessionDomainService.deleteWorshipSessionCascade(
-      targetWorship,
+    const deletedSessionIds =
+      await this.worshipSessionDomainService.deleteWorshipSessionCascade(
+        targetWorship,
+        qr,
+      );
+
+    console.log(deletedSessionIds);
+
+    // 예배 세션들의 출석 정보 삭제
+    await this.worshipAttendanceDomainService.deleteAttendanceCascadeWorship(
+      deletedSessionIds,
       qr,
     );
 

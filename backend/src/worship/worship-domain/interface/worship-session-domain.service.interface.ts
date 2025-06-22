@@ -27,7 +27,7 @@ export interface IWorshipSessionDomainService {
     worship: WorshipModel,
     dto: CreateWorshipSessionDto,
     qr: QueryRunner,
-  ): Promise<WorshipSessionModel>;
+  ): Promise<WorshipSessionModel & { isCreated: boolean }>;
 
   findWorshipSessionById(
     worship: WorshipModel,
@@ -57,5 +57,5 @@ export interface IWorshipSessionDomainService {
   deleteWorshipSessionCascade(
     worship: WorshipModel,
     qr: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<number[]>;
 }

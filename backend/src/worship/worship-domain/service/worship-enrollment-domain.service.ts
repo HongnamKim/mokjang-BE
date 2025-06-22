@@ -43,17 +43,7 @@ export class WorshipEnrollmentDomainService
       };
 
       return orderOptions;
-    } /*else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
-      const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-        member: {
-          group: {
-            name: dto.orderDirection,
-          },
-        },
-      };
-
-      return orderOptions;
-    } */ else {
+    } else {
       const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
         [dto.order]: dto.orderDirection,
       };
@@ -158,5 +148,41 @@ export class WorshipEnrollmentDomainService
     return repository.softDelete({
       worshipId: deletedWorship.id,
     });
+  }
+
+  async incrementPresentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    return repository.increment({ id: enrollment.id }, 'presentCount', 1);
+  }
+
+  async decrementPresentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    return repository.decrement({ id: enrollment.id }, 'presentCount', 1);
+  }
+
+  async incrementAbsentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    return repository.increment({ id: enrollment.id }, 'absentCount', 1);
+  }
+
+  async decrementAbsentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    return repository.decrement({ id: enrollment.id }, 'absentCount', 1);
   }
 }
