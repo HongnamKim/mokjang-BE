@@ -19,6 +19,10 @@ import {
 } from '../../members/member-domain/interface/members-domain.service.interface';
 import { MemberModel } from '../../members/entity/member.entity';
 import { WorshipEnrollmentPaginationResponseDto } from '../dto/response/worship-enrollment/worship-enrollment-pagination-response.dto';
+import {
+  IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
+  IWorshipAttendanceDomainService,
+} from '../worship-domain/interface/worship-attendance-domain.service.interface';
 
 @Injectable()
 export class WorshipEnrollmentService {
@@ -32,6 +36,8 @@ export class WorshipEnrollmentService {
 
     @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
     private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
+    @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
   async getEnrollments(
@@ -57,6 +63,21 @@ export class WorshipEnrollmentService {
         dto,
         qr,
       );
+
+    const attendances = await Promise.all(
+      data.map(async (enrollment) =>
+        this.worshipAttendanceDomainService.joinAttendance(
+          enrollment,
+          dto.fromSessionDate,
+          dto.toSessionDate,
+          qr,
+        ),
+      ),
+    );
+
+    data.forEach((enrollment, index) => {
+      enrollment.worshipAttendances = attendances[index];
+    });
 
     return new WorshipEnrollmentPaginationResponseDto(
       data,

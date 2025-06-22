@@ -39,7 +39,7 @@ export class WorshipAttendanceController {
     );
   }
 
-  @Post()
+  @Post('refresh')
   @UseInterceptors(TransactionInterceptor)
   refreshAttendance(
     @Param('churchId', ParseIntPipe) churchId: number,

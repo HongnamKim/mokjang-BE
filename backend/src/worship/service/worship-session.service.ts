@@ -22,6 +22,14 @@ import { UpdateWorshipSessionDto } from '../dto/request/worship-session/update-w
 import { WorshipSessionException } from '../exception/worship-session.exception';
 import { PatchWorshipSessionResponseDto } from '../dto/response/worship-session/patch-worship-session-response.dto';
 import { WorshipModel } from '../entity/worship.entity';
+import {
+  IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
+  IWorshipAttendanceDomainService,
+} from '../worship-domain/interface/worship-attendance-domain.service.interface';
+import {
+  IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
+  IWorshipEnrollmentDomainService,
+} from '../worship-domain/interface/worship-enrollment-domain.service.interface';
 
 @Injectable()
 export class WorshipSessionService {
@@ -33,6 +41,10 @@ export class WorshipSessionService {
 
     @Inject(IWORSHIP_SESSION_DOMAIN_SERVICE)
     private readonly worshipSessionDomainService: IWorshipSessionDomainService,
+    @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
+    @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
   async getWorshipSessions(
@@ -59,6 +71,13 @@ export class WorshipSessionService {
     );
   }
 
+  /**
+   * 예배 세션 수동 생성
+   * @param churchId
+   * @param worshipId
+   * @param dto
+   * @param qr
+   */
   async postWorshipSession(
     churchId: number,
     worshipId: number,
@@ -77,6 +96,7 @@ export class WorshipSessionService {
     );
 
     if (dto.sessionDate.getDay() !== worship.worshipDay) {
+      console.log(dto.sessionDate.getDay());
       throw new ConflictException(WorshipSessionException.INVALID_SESSION_DAY);
     }
 
@@ -86,6 +106,16 @@ export class WorshipSessionService {
         dto,
         qr,
       );
+
+    // 예배 세션의 하위 출석 정보 생성
+    const enrollments =
+      await this.worshipEnrollmentDomainService.findAllEnrollments(worship, qr);
+
+    await this.worshipAttendanceDomainService.refreshAttendances(
+      newSession,
+      enrollments,
+      qr,
+    );
 
     const session =
       await this.worshipSessionDomainService.findWorshipSessionById(
@@ -115,6 +145,14 @@ export class WorshipSessionService {
     return new GetWorshipSessionResponseDto(session);
   }
 
+  /**
+   * 예배 세션 수정
+   * @param churchId
+   * @param worshipId
+   * @param sessionId
+   * @param dto
+   * @param qr
+   */
   async patchWorshipSessionById(
     churchId: number,
     worshipId: number,
@@ -169,7 +207,7 @@ export class WorshipSessionService {
     churchId: number,
     worshipId: number,
     sessionId: number,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
@@ -194,6 +232,11 @@ export class WorshipSessionService {
       qr,
     );
 
+    await this.worshipAttendanceDomainService.deleteAttendanceCascadeSession(
+      targetWorshipSession,
+      qr,
+    );
+
     return new DeleteWorshipSessionResponseDto(
       new Date(),
       targetWorshipSession.id,
@@ -202,6 +245,12 @@ export class WorshipSessionService {
     );
   }
 
+  /**
+   * 가장 최근의 예배 세션 조회 or 생성
+   * @param churchId
+   * @param worshipId
+   * @param qr
+   */
   async getOrPostRecentSession(
     churchId: number,
     worshipId: number,
@@ -232,6 +281,20 @@ export class WorshipSessionService {
         dto,
         qr,
       );
+
+    if (recentSession.isCreated) {
+      const enrollments =
+        await this.worshipEnrollmentDomainService.findAllEnrollments(
+          worship,
+          qr,
+        );
+
+      await this.worshipAttendanceDomainService.refreshAttendances(
+        recentSession,
+        enrollments,
+        qr,
+      );
+    }
 
     return new GetWorshipSessionResponseDto(recentSession);
   }

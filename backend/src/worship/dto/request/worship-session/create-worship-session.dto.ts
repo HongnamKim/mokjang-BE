@@ -1,6 +1,9 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { WorshipSessionModel } from '../../../entity/worship-session.entity';
-import { MAX_WORSHIP_TITLE } from '../../../constraints/worship.constraints';
+import {
+  MAX_DESCRIPTION_LENGTH,
+  MAX_WORSHIP_TITLE,
+} from '../../../constraints/worship.constraints';
 import { IsDate, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
@@ -30,7 +33,7 @@ export class CreateWorshipSessionDto extends PickType(WorshipSessionModel, [
   })
   @IsOptionalNotNull()
   @IsString()
-  @PlainTextMaxLength(500)
+  @PlainTextMaxLength(MAX_DESCRIPTION_LENGTH)
   override description: string;
 
   @ApiProperty({

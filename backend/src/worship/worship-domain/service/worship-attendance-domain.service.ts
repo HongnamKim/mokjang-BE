@@ -7,7 +7,9 @@ import { IWorshipAttendanceDomainService } from '../interface/worship-attendance
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 import {
+  Between,
   FindOptionsRelations,
+  In,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -67,6 +69,66 @@ export class WorshipAttendanceDomainService
     ]);
 
     return new WorshipAttendanceDomainPaginationResultDto(data, totalCount);
+  }
+
+  async joinAttendance(
+    enrollment: WorshipEnrollmentModel,
+    fromSessionDate?: Date,
+    toSessionDate?: Date,
+    qr?: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]> {
+    const repository = this.getRepository(qr);
+
+    if (fromSessionDate && toSessionDate) {
+      const attendances = await repository.find({
+        where: {
+          worshipEnrollmentId: enrollment.id,
+          sessionDate: Between(fromSessionDate, toSessionDate),
+        },
+        order: {
+          sessionDate: 'desc',
+        },
+        select: {
+          id: true,
+          attendanceStatus: true,
+          sessionDate: true,
+        },
+        take: 12,
+      });
+
+      for (let i = 0; i < attendances.length / 2; i++) {
+        const temp = attendances[i];
+
+        attendances[i] = attendances[attendances.length - 1];
+        attendances[attendances.length - 1] = temp;
+      }
+
+      return attendances;
+    }
+
+    const attendances = await repository.find({
+      where: {
+        worshipEnrollmentId: enrollment.id,
+      },
+      order: {
+        sessionDate: 'desc',
+      },
+      select: {
+        id: true,
+        attendanceStatus: true,
+        sessionDate: true,
+      },
+      take: 12,
+    });
+
+    for (let i = 0; i < attendances.length / 2; i++) {
+      const temp = attendances[i];
+
+      attendances[i] = attendances[attendances.length - 1];
+      attendances[attendances.length - 1] = temp;
+    }
+
+    return attendances;
   }
 
   async findAllAttendances(session: WorshipSessionModel, qr: QueryRunner) {
@@ -178,5 +240,27 @@ export class WorshipAttendanceDomainService
     }
 
     return result;
+  }
+
+  async deleteAttendanceCascadeSession(
+    session: WorshipSessionModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    return repository.softDelete({
+      worshipSessionId: session.id,
+    });
+  }
+
+  deleteAttendanceCascadeWorship(
+    deletedSessionIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    return repository.softDelete({
+      worshipSessionId: In(deletedSessionIds),
+    });
   }
 }

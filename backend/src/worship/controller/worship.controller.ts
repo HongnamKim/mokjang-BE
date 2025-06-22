@@ -10,7 +10,7 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WorshipService } from '../service/worship.service';
 import { GetWorshipsDto } from '../dto/request/worship/get-worships.dto';
 import { CreateWorshipDto } from '../dto/request/worship/create-worship.dto';
@@ -61,6 +61,10 @@ export class WorshipController {
     return this.worshipService.patchWorshipById(churchId, worshipId, dto, qr);
   }
 
+  @ApiOperation({
+    summary: '예배 삭제',
+    description: '하위 enrollment, session, attendance 삭제',
+  })
   @Delete(':worshipId')
   @UseInterceptors(TransactionInterceptor)
   DeleteWorshipById(

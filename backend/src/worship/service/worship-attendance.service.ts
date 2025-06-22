@@ -24,6 +24,7 @@ import {
 } from '../worship-domain/interface/worship-enrollment-domain.service.interface';
 import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
 import { UpdateWorshipAttendanceDto } from '../dto/request/worship-attendance/update-worship-attendance.dto';
+import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
 
 @Injectable()
 export class WorshipAttendanceService {
@@ -153,7 +154,15 @@ export class WorshipAttendanceService {
         session,
         attendanceId,
         qr,
+        { worshipEnrollment: true },
       );
+
+    await this.updatePresentAbsentCount(
+      targetAttendance,
+      targetAttendance.worshipEnrollment,
+      dto,
+      qr,
+    );
 
     await this.worshipAttendanceDomainService.updateAttendance(
       targetAttendance,
@@ -166,5 +175,80 @@ export class WorshipAttendanceService {
       attendanceId,
       qr,
     );
+  }
+
+  async joinAttendance(
+    enrollment: WorshipEnrollmentModel,
+    fromSessionDate?: Date,
+    toSessionDate?: Date,
+    qr?: QueryRunner,
+  ) {
+    return this.worshipAttendanceDomainService.joinAttendance(
+      enrollment,
+      fromSessionDate,
+      toSessionDate,
+      qr,
+    );
+  }
+
+  private async updatePresentAbsentCount(
+    targetAttendance: WorshipAttendanceModel,
+    enrollment: WorshipEnrollmentModel,
+    dto: UpdateWorshipAttendanceDto,
+    qr: QueryRunner,
+  ) {
+    if (!dto.attendanceStatus) {
+      return;
+    }
+
+    const transition =
+      `${targetAttendance.attendanceStatus}->${dto.attendanceStatus}` as const;
+
+    const mutations: Record<
+      string,
+      { inc?: 'present' | 'absent'; dec?: 'present' | 'absent' }
+    > = {
+      // UNKNOWN -> PRESENT or ABSENT
+      'unknown->present': { inc: 'present' },
+      'unknown->absent': { inc: 'absent' },
+
+      // PRESENT -> UNKNOWN or PRESENT
+      'present->unknown': { dec: 'present' },
+      'present->absent': { dec: 'present', inc: 'absent' },
+
+      // ABSENT -> UNKNOWN or PRESENT
+      'absent->unknown': { dec: 'absent' },
+      'absent->present': { dec: 'absent', inc: 'present' },
+    };
+
+    const mutation = mutations[transition];
+
+    if (mutation?.inc === 'present') {
+      await this.worshipEnrollmentDomainService.incrementPresentCount(
+        enrollment,
+        qr,
+      );
+    }
+
+    if (mutation?.inc === 'absent') {
+      await this.worshipEnrollmentDomainService.incrementAbsentCount(
+        enrollment,
+        qr,
+      );
+    }
+
+    if (mutation?.dec === 'present') {
+      await this.worshipEnrollmentDomainService.decrementPresentCount(
+        enrollment,
+        qr,
+      );
+    }
+
+    if (mutation?.dec === 'absent') {
+      await this.worshipEnrollmentDomainService.decrementAbsentCount(
+        enrollment,
+        qr,
+      );
+    }
   }
 }

@@ -37,4 +37,24 @@ export interface IWorshipEnrollmentDomainService {
     deletedWorship: WorshipModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  incrementPresentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementPresentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  incrementAbsentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementAbsentCount(
+    enrollment: WorshipEnrollmentModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

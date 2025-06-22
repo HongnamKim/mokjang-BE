@@ -17,6 +17,13 @@ export interface IWorshipAttendanceDomainService {
     qr?: QueryRunner,
   ): Promise<WorshipAttendanceDomainPaginationResultDto>;
 
+  joinAttendance(
+    enrollment: WorshipEnrollmentModel,
+    fromSessionDate?: Date,
+    toSessionDate?: Date,
+    qr?: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]>;
+
   findAllAttendances(
     session: WorshipSessionModel,
     qr: QueryRunner,
@@ -44,6 +51,16 @@ export interface IWorshipAttendanceDomainService {
   updateAttendance(
     targetAttendance: WorshipAttendanceModel,
     dto: UpdateWorshipAttendanceDto,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteAttendanceCascadeSession(
+    session: WorshipSessionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteAttendanceCascadeWorship(
+    deletedSessionIds: number[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 }

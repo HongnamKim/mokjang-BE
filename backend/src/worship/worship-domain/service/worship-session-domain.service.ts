@@ -13,7 +13,6 @@ import {
   FindOptionsWhere,
   QueryRunner,
   Repository,
-  UpdateResult,
 } from 'typeorm';
 import { WorshipModel } from '../../entity/worship.entity';
 import { CreateWorshipSessionDto } from '../../dto/request/worship-session/create-worship-session.dto';
@@ -103,10 +102,15 @@ export class WorshipSessionDomainService
     });
 
     if (recentWorship) {
-      return recentWorship;
+      return { ...recentWorship, isCreated: false };
     }
 
-    return repository.save({ worshipId: worship.id, ...dto });
+    const createdSession = await repository.save({
+      worshipId: worship.id,
+      ...dto,
+    });
+
+    return { ...createdSession, isCreated: true };
   }
 
   async createWorshipSession(
@@ -213,11 +217,24 @@ export class WorshipSessionDomainService
   async deleteWorshipSessionCascade(
     worship: WorshipModel,
     qr: QueryRunner,
-  ): Promise<UpdateResult> {
+  ): Promise<number[]> {
     const repository = this.getRepository(qr);
 
-    return repository.softDelete({
+    const deletedSessionIds = (
+      await repository.find({
+        where: {
+          worshipId: worship.id,
+        },
+        select: {
+          id: true,
+        },
+      })
+    ).map((session) => session.id);
+
+    await repository.softDelete({
       worshipId: worship.id,
     });
+
+    return deletedSessionIds;
   }
 }
