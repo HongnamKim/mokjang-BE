@@ -20,12 +20,18 @@ export interface IWorshipSessionDomainService {
   createWorshipSession(
     worship: WorshipModel,
     dto: CreateWorshipSessionDto,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ): Promise<WorshipSessionModel>;
+
+  findOrCreateWorshipSessionByDate(
+    worship: WorshipModel,
+    sessionDate: Date,
+    qr: QueryRunner,
+  ): Promise<WorshipSessionModel & { isCreated: boolean }>;
 
   findOrCreateRecentWorshipSession(
     worship: WorshipModel,
-    dto: CreateWorshipSessionDto,
+    sessionDate: Date,
     qr: QueryRunner,
   ): Promise<WorshipSessionModel & { isCreated: boolean }>;
 
@@ -43,7 +49,6 @@ export interface IWorshipSessionDomainService {
   ): Promise<WorshipSessionModel>;
 
   updateWorshipSession(
-    worship: WorshipModel,
     worshipSession: WorshipSessionModel,
     dto: UpdateWorshipSessionDto,
     qr: QueryRunner,

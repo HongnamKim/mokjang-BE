@@ -12,12 +12,10 @@ export class WorshipSessionModel extends BaseModel {
   @JoinColumn({ name: 'worshipId' })
   worship: WorshipModel;
 
-  @Column()
-  title: string;
-
   @Column({ default: '' })
   description: string;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Index()
+  @Column({ type: 'timestamptz' })
   sessionDate: Date;
 }

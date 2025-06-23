@@ -1,4 +1,9 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import {
   IWORSHIP_SESSION_DOMAIN_SERVICE,
   IWorshipSessionDomainService,
@@ -72,16 +77,14 @@ export class WorshipSessionService {
   }
 
   /**
-   * 예배 세션 수동 생성
+   * 가장 최근의 예배 세션 조회 or 생성
    * @param churchId
    * @param worshipId
-   * @param dto
    * @param qr
    */
-  async postWorshipSession(
+  async getOrPostRecentSession(
     churchId: number,
     worshipId: number,
-    dto: CreateWorshipSessionDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -95,36 +98,116 @@ export class WorshipSessionService {
       qr,
     );
 
-    if (dto.sessionDate.getDay() !== worship.worshipDay) {
-      console.log(dto.sessionDate.getDay());
+    const recentSessionDate: Date = this.getRecentSessionDate(worship);
+
+    const recentSession =
+      await this.worshipSessionDomainService.findOrCreateRecentWorshipSession(
+        worship,
+        recentSessionDate,
+        qr,
+      );
+
+    if (recentSession.isCreated) {
+      const enrollments =
+        await this.worshipEnrollmentDomainService.findAllEnrollments(
+          worship,
+          qr,
+        );
+
+      await this.worshipAttendanceDomainService.refreshAttendances(
+        recentSession,
+        enrollments,
+        qr,
+      );
+    }
+
+    return new GetWorshipSessionResponseDto(recentSession);
+  }
+
+  /**
+   * 예배 세션 수동 생성
+   * @param churchId
+   * @param worshipId
+   * @param sessionDate
+   * @param qr
+   */
+  async getOrPostWorshipSessionByDate(
+    churchId: number,
+    worshipId: number,
+    sessionDate: Date,
+    qr: QueryRunner,
+  ) {
+    if (!sessionDate) {
+      throw new BadRequestException('조회할 날짜를 입력해주세요.');
+    }
+
+    // 미래 날짜 불가능
+    if (sessionDate.getTime() > Date.now() - 1) {
+      throw new BadRequestException(
+        WorshipSessionException.INVALID_SESSION_DATE,
+      );
+    }
+
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const worship = await this.worshipDomainService.findWorshipModelById(
+      church,
+      worshipId,
+      qr,
+    );
+
+    if (sessionDate.getDay() !== worship.worshipDay) {
       throw new ConflictException(WorshipSessionException.INVALID_SESSION_DAY);
     }
 
-    const newSession =
-      await this.worshipSessionDomainService.createWorshipSession(
+    const session =
+      await this.worshipSessionDomainService.findOrCreateWorshipSessionByDate(
         worship,
-        dto,
+        sessionDate,
         qr,
       );
 
     // 예배 세션의 하위 출석 정보 생성
-    const enrollments =
-      await this.worshipEnrollmentDomainService.findAllEnrollments(worship, qr);
+    if (session.isCreated) {
+      const enrollments =
+        await this.worshipEnrollmentDomainService.findAllEnrollments(
+          worship,
+          qr,
+        );
 
-    await this.worshipAttendanceDomainService.refreshAttendances(
-      newSession,
-      enrollments,
-      qr,
-    );
-
-    const session =
-      await this.worshipSessionDomainService.findWorshipSessionById(
-        worship,
-        newSession.id,
+      await this.worshipAttendanceDomainService.refreshAttendances(
+        session,
+        enrollments,
         qr,
       );
+    }
 
     return new PostWorshipSessionResponseDto(session);
+  }
+
+  async postWorshipSessionManual(
+    churchId: number,
+    worshipId: number,
+    dto: CreateWorshipSessionDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+    const worship = await this.worshipDomainService.findWorshipModelById(
+      church,
+      worshipId,
+    );
+
+    if (dto.sessionDate.getDay() !== worship.worshipDay) {
+      throw new ConflictException(WorshipSessionException.INVALID_SESSION_DAY);
+    }
+
+    const newSession =
+      await this.worshipSessionDomainService.createWorshipSession(worship, dto);
+
+    return new PostWorshipSessionResponseDto(newSession);
   }
 
   async getSessionById(churchId: number, worshipId: number, sessionId: number) {
@@ -178,16 +261,7 @@ export class WorshipSessionService {
         qr,
       );
 
-    if (dto.sessionDate) {
-      if (dto.sessionDate.getDay() !== worship.worshipDay) {
-        throw new ConflictException(
-          WorshipSessionException.INVALID_SESSION_DAY,
-        );
-      }
-    }
-
     await this.worshipSessionDomainService.updateWorshipSession(
-      worship,
       targetSession,
       dto,
       qr,
@@ -240,63 +314,9 @@ export class WorshipSessionService {
     return new DeleteWorshipSessionResponseDto(
       new Date(),
       targetWorshipSession.id,
-      targetWorshipSession.title,
+      //targetWorshipSession.title,
       true,
     );
-  }
-
-  /**
-   * 가장 최근의 예배 세션 조회 or 생성
-   * @param churchId
-   * @param worshipId
-   * @param qr
-   */
-  async getOrPostRecentSession(
-    churchId: number,
-    worshipId: number,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const worship = await this.worshipDomainService.findWorshipModelById(
-      church,
-      worshipId,
-      qr,
-    );
-
-    const recentSessionDate: Date = this.getRecentSessionDate(worship);
-
-    const dto: CreateWorshipSessionDto = {
-      title: `${recentSessionDate.getFullYear()}-${recentSessionDate.getMonth() + 1}-${recentSessionDate.getDate()} ${worship.title}`,
-      description: '',
-      sessionDate: recentSessionDate,
-    };
-
-    const recentSession =
-      await this.worshipSessionDomainService.findOrCreateRecentWorshipSession(
-        worship,
-        dto,
-        qr,
-      );
-
-    if (recentSession.isCreated) {
-      const enrollments =
-        await this.worshipEnrollmentDomainService.findAllEnrollments(
-          worship,
-          qr,
-        );
-
-      await this.worshipAttendanceDomainService.refreshAttendances(
-        recentSession,
-        enrollments,
-        qr,
-      );
-    }
-
-    return new GetWorshipSessionResponseDto(recentSession);
   }
 
   private getRecentSessionDate(worship: WorshipModel) {
