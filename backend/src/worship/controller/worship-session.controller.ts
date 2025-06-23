@@ -10,20 +10,31 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { WorshipSessionService } from '../service/worship-session.service';
-import { CreateWorshipSessionDto } from '../dto/request/worship-session/create-worship-session.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { GetWorshipSessionsDto } from '../dto/request/worship-session/get-worship-sessions.dto';
 import { UpdateWorshipSessionDto } from '../dto/request/worship-session/update-worship-session.dto';
+import { ParseDatePipe } from '../pipe/parse-date.pipe';
+import {
+  ApiDeleteSession,
+  ApiGetOrPostRecentSession,
+  ApiGetOrPostSessionByDate,
+  ApiGetSessionById,
+  ApiGetSessions,
+  ApiPatchSession,
+  ApiPostSessionManual,
+} from '../swagger/worship-session.swagger';
+import { CreateWorshipSessionDto } from '../dto/request/worship-session/create-worship-session.dto';
 
 @ApiTags('Worships:Sessions')
 @Controller(':worshipId/sessions')
 export class WorshipSessionController {
   constructor(private readonly worshipSessionService: WorshipSessionService) {}
 
+  @ApiGetSessions()
   @Get()
   getSessions(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -37,22 +48,24 @@ export class WorshipSessionController {
     );
   }
 
+  @ApiGetOrPostSessionByDate()
   @Post()
   @UseInterceptors(TransactionInterceptor)
-  postSession(
+  getOrPostSessionByDate(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
-    @Body() dto: CreateWorshipSessionDto,
+    @Query('sessionDate', ParseDatePipe) sessionDate: Date,
     @QueryRunner() qr: QR,
   ) {
-    return this.worshipSessionService.postWorshipSession(
+    return this.worshipSessionService.getOrPostWorshipSessionByDate(
       churchId,
       worshipId,
-      dto,
+      sessionDate,
       qr,
     );
   }
 
+  @ApiGetOrPostRecentSession()
   @Post('recent')
   @UseInterceptors(TransactionInterceptor)
   getOrPostRecentSession(
@@ -67,6 +80,21 @@ export class WorshipSessionController {
     );
   }
 
+  @ApiPostSessionManual()
+  @Post('manual')
+  postSessionManual(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('worshipId', ParseIntPipe) worshipId: number,
+    @Body() dto: CreateWorshipSessionDto,
+  ) {
+    return this.worshipSessionService.postWorshipSessionManual(
+      churchId,
+      worshipId,
+      dto,
+    );
+  }
+
+  @ApiGetSessionById()
   @Get(':sessionId')
   getSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -80,6 +108,7 @@ export class WorshipSessionController {
     );
   }
 
+  @ApiPatchSession()
   @Patch(':sessionId')
   @UseInterceptors(TransactionInterceptor)
   patchSessionById(
@@ -98,10 +127,7 @@ export class WorshipSessionController {
     );
   }
 
-  @ApiOperation({
-    summary: '예배 세션 개별 삭제',
-    description: '하위 attendance 삭제',
-  })
+  @ApiDeleteSession()
   @Delete(':sessionId')
   @UseInterceptors(TransactionInterceptor)
   deleteSessionById(

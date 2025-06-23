@@ -4,4 +4,6 @@ export const WorshipSessionException = {
   UPDATE_ERROR: '예배 세션 업데이트 도중 에러 발생',
   DELETE_ERROR: '예배 세션 삭제 도중 에러 발생',
   INVALID_SESSION_DAY: '잘못된 예배 세션 요일(날짜)입니다.',
+
+  INVALID_SESSION_DATE: '진행되지 않은 예배의 출석을 기록할 수 없습니다.',
 };

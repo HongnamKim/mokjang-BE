@@ -10,6 +10,7 @@ import { WorshipSessionModel } from '../../entity/worship-session.entity';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsSelect,
   FindOptionsWhere,
   QueryRunner,
   Repository,
@@ -50,6 +51,14 @@ export class WorshipSessionDomainService
       [dto.order]: dto.orderDirection,
     };
 
+    const selectOptions: FindOptionsSelect<WorshipSessionModel> = {
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      worshipId: true,
+      sessionDate: true,
+    };
+
     if (dto.order !== WorshipSessionOrderEnum.CREATED_AT) {
       orderOptions.createdAt = 'asc';
     }
@@ -58,6 +67,7 @@ export class WorshipSessionDomainService
       repository.find({
         where: whereOptions,
         order: orderOptions,
+        select: selectOptions,
       }),
 
       repository.count({
@@ -87,9 +97,39 @@ export class WorshipSessionDomainService
     return true;
   }
 
+  async findOrCreateWorshipSessionByDate(
+    worship: WorshipModel,
+    sessionDate: Date,
+    qr: QueryRunner,
+  ): Promise<
+    WorshipSessionModel & {
+      isCreated: boolean;
+    }
+  > {
+    const repository = this.getRepository(qr);
+
+    const existSession = await repository.findOne({
+      where: {
+        worshipId: worship.id,
+        sessionDate,
+      },
+    });
+
+    if (existSession) {
+      return { ...existSession, isCreated: false };
+    }
+
+    const createdSession = await repository.save({
+      worshipId: worship.id,
+      sessionDate,
+    });
+
+    return { ...createdSession, isCreated: true };
+  }
+
   async findOrCreateRecentWorshipSession(
     worship: WorshipModel,
-    dto: CreateWorshipSessionDto,
+    sessionDate: Date,
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -97,7 +137,7 @@ export class WorshipSessionDomainService
     const recentWorship = await repository.findOne({
       where: {
         worshipId: worship.id,
-        sessionDate: dto.sessionDate,
+        sessionDate: sessionDate,
       },
     });
 
@@ -107,7 +147,7 @@ export class WorshipSessionDomainService
 
     const createdSession = await repository.save({
       worshipId: worship.id,
-      ...dto,
+      sessionDate,
     });
 
     return { ...createdSession, isCreated: true };
@@ -116,7 +156,7 @@ export class WorshipSessionDomainService
   async createWorshipSession(
     worship: WorshipModel,
     dto: CreateWorshipSessionDto,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ): Promise<WorshipSessionModel> {
     const repository = this.getRepository(qr);
 
@@ -173,15 +213,14 @@ export class WorshipSessionDomainService
   }
 
   async updateWorshipSession(
-    worship: WorshipModel,
     worshipSession: WorshipSessionModel,
     dto: UpdateWorshipSessionDto,
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
-    dto.sessionDate &&
-      (await this.assertValidNewSession(worship, dto.sessionDate, repository));
+    /*dto.sessionDate &&
+      (await this.assertValidNewSession(worship, dto.sessionDate, repository));*/
 
     const result = await repository.update(
       { id: worshipSession.id },
