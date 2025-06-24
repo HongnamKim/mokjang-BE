@@ -43,6 +43,7 @@ export class WorshipAttendanceDomainService
   async findAttendances(
     session: WorshipSessionModel,
     dto: GetWorshipAttendancesDto,
+    groupIds?: number[],
     qr?: QueryRunner,
   ): Promise<WorshipAttendanceDomainPaginationResultDto> {
     const repository = this.getRepository(qr);
@@ -51,13 +52,18 @@ export class WorshipAttendanceDomainService
       repository.find({
         where: {
           worshipSessionId: session.id,
+          worshipEnrollment: {
+            member: {
+              groupId: groupIds && In(groupIds),
+            },
+          },
         },
         take: dto.take,
         skip: dto.take * (dto.page - 1),
         relations: {
           worshipSession: true,
           worshipEnrollment: {
-            member: true,
+            member: MemberSummarizedRelation,
           },
         },
       }),
@@ -79,53 +85,43 @@ export class WorshipAttendanceDomainService
   ): Promise<WorshipAttendanceModel[]> {
     const repository = this.getRepository(qr);
 
-    if (fromSessionDate && toSessionDate) {
-      const attendances = await repository.find({
-        where: {
-          worshipEnrollmentId: enrollment.id,
-          sessionDate: Between(fromSessionDate, toSessionDate),
-        },
-        order: {
-          sessionDate: 'desc',
-        },
-        select: {
-          id: true,
-          attendanceStatus: true,
-          sessionDate: true,
-        },
-        take: 12,
-      });
-
-      for (let i = 0; i < attendances.length / 2; i++) {
-        const temp = attendances[i];
-
-        attendances[i] = attendances[attendances.length - 1];
-        attendances[attendances.length - 1] = temp;
-      }
-
-      return attendances;
-    }
-
-    const attendances = await repository.find({
-      where: {
-        worshipEnrollmentId: enrollment.id,
-      },
-      order: {
-        sessionDate: 'desc',
-      },
-      select: {
-        id: true,
-        attendanceStatus: true,
-        sessionDate: true,
-      },
-      take: 12,
-    });
+    const attendances =
+      fromSessionDate && toSessionDate
+        ? await repository.find({
+            where: {
+              worshipEnrollmentId: enrollment.id,
+              sessionDate: Between(fromSessionDate, toSessionDate),
+            },
+            order: {
+              sessionDate: 'ASC',
+            },
+            select: {
+              id: true,
+              attendanceStatus: true,
+              sessionDate: true,
+            },
+            take: 12,
+          })
+        : await repository.find({
+            where: {
+              worshipEnrollmentId: enrollment.id,
+            },
+            order: {
+              sessionDate: 'ASC',
+            },
+            select: {
+              id: true,
+              attendanceStatus: true,
+              sessionDate: true,
+            },
+            take: 12,
+          });
 
     for (let i = 0; i < attendances.length / 2; i++) {
       const temp = attendances[i];
 
-      attendances[i] = attendances[attendances.length - 1];
-      attendances[attendances.length - 1] = temp;
+      attendances[i] = attendances[attendances.length - 1 - i];
+      attendances[attendances.length - 1 - i] = temp;
     }
 
     return attendances;

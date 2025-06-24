@@ -13,6 +13,7 @@ export interface IWorshipEnrollmentDomainService {
   findEnrollments(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
+    groupIds?: number[],
     qr?: QueryRunner,
   ): Promise<WorshipEnrollmentDomainPaginationResultDto>;
 
