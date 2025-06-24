@@ -55,6 +55,7 @@ export class WorshipEnrollmentDomainService
   async findEnrollments(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
+    groupIds?: number[],
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -62,7 +63,7 @@ export class WorshipEnrollmentDomainService
     const whereOptions: FindOptionsWhere<WorshipEnrollmentModel> = {
       worshipId: worship.id,
       member: {
-        groupId: dto.groupId && In([dto.groupId]),
+        groupId: groupIds && In(groupIds),
       },
     };
 

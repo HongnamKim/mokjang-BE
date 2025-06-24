@@ -23,6 +23,11 @@ import {
   IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
   IWorshipAttendanceDomainService,
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 
 @Injectable()
 export class WorshipEnrollmentService {
@@ -33,12 +38,38 @@ export class WorshipEnrollmentService {
     private readonly worshipDomainService: IWorshipDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
 
     @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
     private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
     @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
+
+  private async getGroupIds(
+    church: ChurchModel,
+    dto: GetWorshipEnrollmentsDto,
+    qr?: QueryRunner,
+  ) {
+    if (!dto.groupId) {
+      return;
+    }
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      dto.groupId,
+      qr,
+    );
+
+    const groupIds = (
+      await this.groupsDomainService.findChildGroups(group, qr)
+    ).map((group) => group.id);
+
+    groupIds && groupIds.unshift(group.id);
+
+    return groupIds;
+  }
 
   async getEnrollments(
     churchId: number,
@@ -57,10 +88,13 @@ export class WorshipEnrollmentService {
       qr,
     );
 
+    const groupIds = await this.getGroupIds(church, dto, qr);
+
     const { data, totalCount } =
       await this.worshipEnrollmentDomainService.findEnrollments(
         worship,
         dto,
+        groupIds,
         qr,
       );
 

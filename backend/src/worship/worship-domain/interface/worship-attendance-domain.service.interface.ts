@@ -14,6 +14,7 @@ export interface IWorshipAttendanceDomainService {
   findAttendances(
     session: WorshipSessionModel,
     dto: GetWorshipAttendancesDto,
+    groupIds?: number[],
     qr?: QueryRunner,
   ): Promise<WorshipAttendanceDomainPaginationResultDto>;
 

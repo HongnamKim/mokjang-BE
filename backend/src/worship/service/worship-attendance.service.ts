@@ -25,6 +25,11 @@ import {
 import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
 import { UpdateWorshipAttendanceDto } from '../dto/request/worship-attendance/update-worship-attendance.dto';
 import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class WorshipAttendanceService {
@@ -40,7 +45,31 @@ export class WorshipAttendanceService {
 
     @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
   ) {}
+
+  private async getGroupIds(
+    church: ChurchModel,
+    dto: GetWorshipAttendancesDto,
+  ) {
+    if (!dto.groupId) {
+      return;
+    }
+
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      dto.groupId,
+    );
+
+    const groupIds = (
+      await this.groupsDomainService.findChildGroups(group)
+    ).map((group) => group.id);
+
+    groupIds && groupIds.unshift(group.id);
+
+    return groupIds;
+  }
 
   async getAttendances(
     churchId: number,
@@ -56,6 +85,8 @@ export class WorshipAttendanceService {
       worshipId,
     );
 
+    const groupIds = await this.getGroupIds(church, dto);
+
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
         worship,
@@ -63,7 +94,11 @@ export class WorshipAttendanceService {
       );
 
     const { data, totalCount } =
-      await this.worshipAttendanceDomainService.findAttendances(session, dto);
+      await this.worshipAttendanceDomainService.findAttendances(
+        session,
+        dto,
+        groupIds,
+      );
 
     return new WorshipAttendancePaginationResponseDto(
       data,
