@@ -134,6 +134,7 @@ export class WorshipService {
       qr,
     );
 
+    // Enrollment 생성
     await this.worshipEnrollmentDomainService.refreshEnrollments(
       newWorship,
       allMembers,
@@ -222,8 +223,6 @@ export class WorshipService {
         targetWorship,
         qr,
       );
-
-    console.log(deletedSessionIds);
 
     // 예배 세션들의 출석 정보 삭제
     await this.worshipAttendanceDomainService.deleteAttendanceCascadeWorship(

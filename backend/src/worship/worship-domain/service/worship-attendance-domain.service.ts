@@ -8,7 +8,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 import {
   Between,
+  FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsWhere,
   In,
   QueryRunner,
   Repository,
@@ -24,6 +26,7 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
+import { WorshipAttendanceOrderEnum } from '../../const/worship-attendance-order.enum';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -40,6 +43,35 @@ export class WorshipAttendanceDomainService
       : this.repository;
   }
 
+  private parseOrderOption(
+    dto: GetWorshipAttendancesDto,
+  ): FindOptionsOrder<WorshipAttendanceModel> {
+    if (dto.order === WorshipAttendanceOrderEnum.GROUP_NAME) {
+      return {
+        worshipEnrollment: {
+          member: {
+            group: {
+              name: dto.orderDirection,
+            },
+            name: dto.orderDirection,
+          },
+        },
+      };
+    } else if (dto.order === WorshipAttendanceOrderEnum.NAME) {
+      return {
+        worshipEnrollment: {
+          member: {
+            name: dto.orderDirection,
+          },
+        },
+      };
+    } else {
+      return {
+        [dto.order]: dto.orderDirection,
+      };
+    }
+  }
+
   async findAttendances(
     session: WorshipSessionModel,
     dto: GetWorshipAttendancesDto,
@@ -48,29 +80,51 @@ export class WorshipAttendanceDomainService
   ): Promise<WorshipAttendanceDomainPaginationResultDto> {
     const repository = this.getRepository(qr);
 
+    const whereOptions: FindOptionsWhere<WorshipAttendanceModel> = {
+      worshipSessionId: session.id,
+      worshipEnrollment: {
+        member: {
+          groupId: groupIds && In(groupIds),
+        },
+      },
+    };
+
+    const orderOptions: FindOptionsOrder<WorshipAttendanceModel> =
+      this.parseOrderOption(dto);
+
+    if (dto.order !== WorshipAttendanceOrderEnum.ID) {
+      orderOptions.id = 'ASC';
+    }
+
     const [data, totalCount] = await Promise.all([
       repository.find({
-        where: {
-          worshipSessionId: session.id,
-          worshipEnrollment: {
-            member: {
-              groupId: groupIds && In(groupIds),
-            },
-          },
-        },
+        where: whereOptions,
+        order: orderOptions,
         take: dto.take,
         skip: dto.take * (dto.page - 1),
         relations: {
-          worshipSession: true,
           worshipEnrollment: {
             member: MemberSummarizedRelation,
           },
         },
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          attendanceStatus: true,
+          note: true,
+          worshipEnrollment: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            presentCount: true,
+            absentCount: true,
+            member: MemberSummarizedSelect,
+          },
+        },
       }),
       repository.count({
-        where: {
-          worshipSessionId: session.id,
-        },
+        where: whereOptions,
       }),
     ]);
 
@@ -100,7 +154,7 @@ export class WorshipAttendanceDomainService
               attendanceStatus: true,
               sessionDate: true,
             },
-            take: 12,
+            take: 14,
           })
         : await repository.find({
             where: {
@@ -114,7 +168,7 @@ export class WorshipAttendanceDomainService
               attendanceStatus: true,
               sessionDate: true,
             },
-            take: 12,
+            take: 14,
           });
 
     for (let i = 0; i < attendances.length / 2; i++) {

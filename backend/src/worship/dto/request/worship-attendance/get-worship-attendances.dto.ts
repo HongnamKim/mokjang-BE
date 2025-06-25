@@ -8,11 +8,12 @@ export class GetWorshipAttendancesDto extends BaseOffsetPaginationRequestDto<Wor
   @ApiProperty({
     description: '정렬 조건',
     enum: WorshipAttendanceOrderEnum,
+    default: WorshipAttendanceOrderEnum.ID,
     required: false,
   })
   @IsOptionalNotNull()
   @IsEnum(WorshipAttendanceOrderEnum)
-  order: WorshipAttendanceOrderEnum = WorshipAttendanceOrderEnum.CREATED_AT;
+  order: WorshipAttendanceOrderEnum = WorshipAttendanceOrderEnum.ID;
 
   @ApiProperty({
     description: '교인 그룹 ID',
