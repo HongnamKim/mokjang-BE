@@ -43,6 +43,17 @@ export class WorshipEnrollmentDomainService
       };
 
       return orderOptions;
+    } else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
+      const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
+        member: {
+          group: {
+            name: dto.orderDirection,
+          },
+          name: dto.orderDirection,
+        },
+      };
+
+      return orderOptions;
     } else {
       const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
         [dto.order]: dto.orderDirection,
@@ -70,8 +81,8 @@ export class WorshipEnrollmentDomainService
     const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> =
       this.parseOrderOption(dto);
 
-    if (dto.order !== WorshipEnrollmentOrderEnum.CREATED_AT) {
-      orderOptions.createdAt = 'ASC';
+    if (dto.order !== WorshipEnrollmentOrderEnum.ID) {
+      orderOptions.id = 'ASC';
     }
 
     const [data, totalCount] = await Promise.all([
@@ -80,7 +91,6 @@ export class WorshipEnrollmentDomainService
         order: orderOptions,
         relations: {
           member: MemberSummarizedRelation,
-          worshipAttendances: true,
         },
         select: {
           member: MemberSummarizedSelect,
