@@ -22,6 +22,15 @@ import { GetWorshipSessionsDto } from '../../dto/request/worship-session/get-wor
 import { WorshipSessionOrderEnum } from '../../const/worship-session-order.enum';
 import { WorshipSessionDomainPaginationResultDto } from '../dto/worship-session-domain-pagination-result.dto';
 import { UpdateWorshipSessionDto } from '../../dto/request/worship-session/update-worship-session.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { ManagerException } from '../../../manager/exception/manager.exception';
+import { MemberException } from '../../../members/const/exception/member.exception';
+import { ChurchUserRole } from '../../../user/const/user-role.enum';
+import { TaskException } from '../../../task/const/exception-message/task.exception';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
 
 @Injectable()
 export class WorshipSessionDomainService
@@ -153,18 +162,50 @@ export class WorshipSessionDomainService
     return { ...createdSession, isCreated: true };
   }
 
+  private assertValidInChargeMember(inChargeMember: ChurchUserModel | null) {
+    if (!inChargeMember) {
+      return;
+    }
+
+    if (!inChargeMember.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('예배 세션 담당자'),
+      );
+    }
+
+    if (!inChargeMember.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
+    }
+
+    if (
+      inChargeMember.role !== ChurchUserRole.MANAGER &&
+      inChargeMember.role !== ChurchUserRole.OWNER
+    ) {
+      throw new ConflictException(TaskException.INVALID_IN_CHARGE_MEMBER);
+    }
+  }
+
   async createWorshipSession(
     worship: WorshipModel,
+    inCharge: ChurchUserModel | null,
     dto: CreateWorshipSessionDto,
     qr?: QueryRunner,
   ): Promise<WorshipSessionModel> {
     const repository = this.getRepository(qr);
 
     await this.assertValidNewSession(worship, dto.sessionDate, repository);
+    this.assertValidInChargeMember(inCharge);
 
     return repository.save({
       worshipId: worship.id,
-      ...dto,
+      //inChargeId: inCharge ? inCharge.id : null,
+      //...dto,
+      sessionDate: dto.sessionDate,
+      title: dto.title,
+      bibleTitle: dto.title,
+      description: dto.description,
+      videoUrl: dto.videoUrl,
+      inChargeId: inCharge ? inCharge.member.id : undefined,
     });
   }
 
@@ -179,6 +220,12 @@ export class WorshipSessionDomainService
       where: {
         id: sessionId,
         worshipId: worship.id,
+      },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+      },
+      select: {
+        inCharge: MemberSummarizedSelect,
       },
     });
 
@@ -214,6 +261,7 @@ export class WorshipSessionDomainService
 
   async updateWorshipSession(
     worshipSession: WorshipSessionModel,
+    inCharge: ChurchUserModel | null,
     dto: UpdateWorshipSessionDto,
     qr: QueryRunner,
   ) {
@@ -222,9 +270,11 @@ export class WorshipSessionDomainService
     /*dto.sessionDate &&
       (await this.assertValidNewSession(worship, dto.sessionDate, repository));*/
 
+    this.assertValidInChargeMember(inCharge);
+
     const result = await repository.update(
       { id: worshipSession.id },
-      { ...dto },
+      { ...dto, inChargeId: inCharge ? inCharge.member.id : undefined },
     );
 
     if (result.affected === 0) {

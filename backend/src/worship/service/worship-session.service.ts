@@ -35,6 +35,10 @@ import {
   IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
   IWorshipEnrollmentDomainService,
 } from '../worship-domain/interface/worship-enrollment-domain.service.interface';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 
 @Injectable()
 export class WorshipSessionService {
@@ -43,6 +47,8 @@ export class WorshipSessionService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IWORSHIP_DOMAIN_SERVICE)
     private readonly worshipDomainService: IWorshipDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
 
     @Inject(IWORSHIP_SESSION_DOMAIN_SERVICE)
     private readonly worshipSessionDomainService: IWorshipSessionDomainService,
@@ -121,7 +127,14 @@ export class WorshipSessionService {
       );
     }
 
-    return new GetWorshipSessionResponseDto(recentSession);
+    const responseSession =
+      await this.worshipSessionDomainService.findWorshipSessionById(
+        worship,
+        recentSession.id,
+        qr,
+      );
+
+    return new GetWorshipSessionResponseDto(responseSession);
   }
 
   /**
@@ -185,7 +198,14 @@ export class WorshipSessionService {
       );
     }
 
-    return new PostWorshipSessionResponseDto(session);
+    const responseSession =
+      await this.worshipSessionDomainService.findWorshipSessionById(
+        worship,
+        session.id,
+        qr,
+      );
+
+    return new PostWorshipSessionResponseDto(responseSession);
   }
 
   async postWorshipSessionManual(
@@ -204,8 +224,19 @@ export class WorshipSessionService {
       throw new ConflictException(WorshipSessionException.INVALID_SESSION_DAY);
     }
 
+    const inCharge = dto.inChargeId
+      ? await this.managerDomainService.findManagerByMemberId(
+          church,
+          dto.inChargeId,
+        )
+      : null;
+
     const newSession =
-      await this.worshipSessionDomainService.createWorshipSession(worship, dto);
+      await this.worshipSessionDomainService.createWorshipSession(
+        worship,
+        inCharge,
+        dto,
+      );
 
     return new PostWorshipSessionResponseDto(newSession);
   }
@@ -261,8 +292,17 @@ export class WorshipSessionService {
         qr,
       );
 
+    const inCharge = dto.inChargeId
+      ? await this.managerDomainService.findManagerByMemberId(
+          church,
+          dto.inChargeId,
+          qr,
+        )
+      : null;
+
     await this.worshipSessionDomainService.updateWorshipSession(
       targetSession,
+      inCharge,
       dto,
       qr,
     );

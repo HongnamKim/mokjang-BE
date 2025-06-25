@@ -12,6 +12,7 @@ import { WorshipEnrollmentController } from './controller/worship-enrollment.con
 import { WorshipDomainModule } from './worship-domain/worship-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
+import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
     MembersDomainModule,
     WorshipDomainModule,
     GroupsDomainModule,
+    ManagerDomainModule,
   ],
   controllers: [
     WorshipController,
