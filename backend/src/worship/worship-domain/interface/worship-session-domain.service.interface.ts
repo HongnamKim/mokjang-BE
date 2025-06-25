@@ -5,6 +5,7 @@ import { WorshipSessionModel } from '../../entity/worship-session.entity';
 import { GetWorshipSessionsDto } from '../../dto/request/worship-session/get-worship-sessions.dto';
 import { WorshipSessionDomainPaginationResultDto } from '../dto/worship-session-domain-pagination-result.dto';
 import { UpdateWorshipSessionDto } from '../../dto/request/worship-session/update-worship-session.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 export const IWORSHIP_SESSION_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_SESSION_DOMAIN_SERVICE',
@@ -19,6 +20,7 @@ export interface IWorshipSessionDomainService {
 
   createWorshipSession(
     worship: WorshipModel,
+    inCharge: ChurchUserModel | null,
     dto: CreateWorshipSessionDto,
     qr?: QueryRunner,
   ): Promise<WorshipSessionModel>;
@@ -50,6 +52,7 @@ export interface IWorshipSessionDomainService {
 
   updateWorshipSession(
     worshipSession: WorshipSessionModel,
+    inCharge: ChurchUserModel | null,
     dto: UpdateWorshipSessionDto,
     qr: QueryRunner,
   ): Promise<UpdateResult>;

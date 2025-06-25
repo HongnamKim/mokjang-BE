@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { IsEnum, IsString, MaxLength } from 'class-validator';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
-import { MAX_NOTE_LENGTH } from '../../../constraints/worship.constraints';
+import { MAX_WORSHIP_ATTENDANCE_NOTE_LENGTH } from '../../../constraints/worship.constraints';
 
 @SanitizeDto()
 export class UpdateWorshipAttendanceDto {
@@ -22,6 +22,6 @@ export class UpdateWorshipAttendanceDto {
   })
   @IsOptionalNotNull()
   @IsString()
-  @MaxLength(MAX_NOTE_LENGTH)
+  @MaxLength(MAX_WORSHIP_ATTENDANCE_NOTE_LENGTH)
   note: string;
 }
