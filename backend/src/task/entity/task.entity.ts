@@ -33,14 +33,22 @@ export class TaskModel extends BaseModel {
     enum: TaskStatus,
     default: TaskStatus.RESERVE,
   })
-  taskStatus: TaskStatus;
+  status: TaskStatus;
 
   @Index()
-  @Column({ type: 'timestamptz', comment: '업무 시작 일자' })
-  taskStartDate: Date;
+  @Column({
+    type: 'timestamptz',
+    comment: '업무 시작 일자',
+    default: new Date('2025-01-01'),
+  })
+  startDate: Date;
 
-  @Column({ type: 'timestamptz', comment: '업무 종료 일자' })
-  taskEndDate: Date;
+  @Column({
+    type: 'timestamptz',
+    comment: '업무 종료 일자',
+    default: new Date('2025-01-01'),
+  })
+  endDate: Date;
 
   @OneToMany(() => TaskModel, (subTask) => subTask.parentTask)
   subTasks: TaskModel[];
@@ -53,7 +61,7 @@ export class TaskModel extends BaseModel {
   parentTask: TaskModel;
 
   @Column({ default: '' })
-  comment: string;
+  content: string;
 
   @Index()
   @Column({ comment: '담당자 ID', nullable: true })

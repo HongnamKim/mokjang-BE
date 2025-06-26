@@ -13,13 +13,9 @@ import {
 import { ChurchesService } from '../service/churches.service';
 import { CreateChurchDto } from '../dto/create-church.dto';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../../auth/type/jwt';
-import {
-  ChurchMainAdminGuard,
-  ChurchManagerGuard,
-} from '../guard/church-guard.service';
 import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ApiDeleteChurch,
@@ -27,13 +23,16 @@ import {
   ApiGetChurchById,
   ApiPatchChurch,
   ApiPostChurch,
-} from '../const/swagger/churches/controller.swagger';
+} from '../const/swagger/church.swagger';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateChurchJoinCodeDto } from '../dto/update-church-join-code.dto';
-import { TransferMainAdminDto } from '../dto/transfer-main-admin.dto';
+import { TransferOwnerDto } from '../dto/transfer-owner.dto';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { ChurchReadGuard } from '../guard/church-read.guard';
+import { ChurchWriteGuard } from '../guard/church-write.guard';
 
 @Controller('churches')
 export class ChurchesController {
@@ -47,7 +46,6 @@ export class ChurchesController {
 
   @ApiPostChurch()
   @Post()
-  @ApiBearerAuth()
   @UseGuards(AccessTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   postChurch(
@@ -60,16 +58,16 @@ export class ChurchesController {
 
   @ApiGetChurchById()
   @Get(':churchId')
-  @ApiBearerAuth()
+  @ChurchReadGuard()
+  @UseGuards(AccessTokenGuard)
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.getChurchById(churchId);
   }
 
   @ApiPatchChurch()
+  @ChurchWriteGuard()
   @Patch(':churchId')
-  @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   patchChurch(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: UpdateChurchDto,
@@ -78,9 +76,8 @@ export class ChurchesController {
   }
 
   @ApiDeleteChurch()
+  @ChurchWriteGuard()
   @Delete(':churchId')
-  @ApiBearerAuth()
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.deleteChurchById(churchId);
   }
@@ -89,7 +86,7 @@ export class ChurchesController {
     summary: '가입 코드 수정',
   })
   @Patch(':churchId/join-code')
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @ChurchWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchChurchJoinCode(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -104,32 +101,24 @@ export class ChurchesController {
   }
 
   @ApiOperation({
-    summary: '최고 관리자(mainAdmin) 양도',
+    summary: '교회 생성자(owner) 양도',
   })
-  @Patch(':churchId/main-admin')
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
+  @Patch(':churchId/owner')
+  @ChurchWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   transferMainAdmin(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
-    @Body() dto: TransferMainAdminDto,
+    @Body() dto: TransferOwnerDto,
     @QueryRunner() qr: QR,
   ) {
-    const mainAdminUserId = accessPayload.id;
-
-    return this.churchesService.transferMainAdmin(
-      churchId,
-      mainAdminUserId,
-      dto,
-      qr,
-    );
+    return this.churchesService.transferOwner(churchId, dto, qr);
   }
 
   @ApiOperation({
     summary: '교인 수 새로고침',
   })
+  @ChurchWriteGuard()
   @Patch(':churchId/refresh-member-count')
-  @UseGuards(AccessTokenGuard, ChurchMainAdminGuard)
   refreshMemberCount(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.refreshMemberCount(churchId);
   }

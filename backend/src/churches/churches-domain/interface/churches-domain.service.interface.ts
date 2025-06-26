@@ -3,6 +3,8 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateChurchDto } from '../../dto/create-church.dto';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
+import { UserModel } from '../../../user/entity/user.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 export const ICHURCHES_DOMAIN_SERVICE = Symbol('ICHURCHES_DOMAIN_SERVICE');
 
@@ -25,7 +27,11 @@ export interface IChurchesDomainService {
 
   isExistChurch(id: number, qr?: QueryRunner): Promise<boolean>;
 
-  createChurch(dto: CreateChurchDto, qr?: QueryRunner): Promise<ChurchModel>;
+  createChurch(
+    dto: CreateChurchDto,
+    ownerUser: UserModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchModel>;
 
   updateChurch(church: ChurchModel, dto: UpdateChurchDto): Promise<ChurchModel>;
 
@@ -41,7 +47,7 @@ export interface IChurchesDomainService {
 
   getChurchManagerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
 
-  getChurchMainAdminIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
+  getChurchOwnerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
 
   updateChurchJoinCode(
     church: ChurchModel,
@@ -56,6 +62,12 @@ export interface IChurchesDomainService {
 
   decrementMemberCount(
     church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  transferOwner(
+    church: ChurchModel,
+    newOwnerChurchUser: ChurchUserModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 }

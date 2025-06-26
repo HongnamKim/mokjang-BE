@@ -15,7 +15,6 @@ import { FamilyRelationModel } from '../../family-relation/entity/family-relatio
 import { MarriageOptions } from '../member-domain/const/marriage-options.const';
 import { Exclude } from 'class-transformer';
 import { BaseModel } from '../../common/entity/base.entity';
-import { UserModel } from '../../user/entity/user.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
@@ -31,16 +30,20 @@ import { VisitationDetailModel } from '../../visitation/entity/visitation-detail
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
-  @Index()
+  /*@Index()
   @Column({ nullable: true })
   userId: number;
 
   @OneToOne(() => UserModel, (user) => user.member)
   @JoinColumn({ name: 'userId' })
-  user: UserModel;
+  user: UserModel;*/
+
+  @OneToOne(() => ChurchUserModel, (churchUser) => churchUser.member)
+  churchUser: ChurchUserModel;
 
   @Column()
   @Index()
@@ -57,6 +60,9 @@ export class MemberModel extends BaseModel {
   @Index()
   @Column({ default: new Date() })
   registeredAt: Date;
+
+  @Column({ default: '' })
+  profileImageUrl: string;
 
   @Column({ length: 30, comment: '교인 이름' })
   @Index()
@@ -206,9 +212,9 @@ export class MemberModel extends BaseModel {
   // 진행하는 심방
   @OneToMany(
     () => VisitationMetaModel,
-    (visitationMeta) => visitationMeta.instructor,
+    (visitationMeta) => visitationMeta.inCharge,
   )
-  instructingVisitations: VisitationMetaModel[];
+  inChargingVisitations: VisitationMetaModel[];
 
   // 생성한 심방
   @OneToMany(

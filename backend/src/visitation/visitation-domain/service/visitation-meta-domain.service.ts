@@ -1,4 +1,6 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -9,6 +11,7 @@ import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import {
   Between,
   FindOptionsRelations,
+  FindOptionsWhere,
   ILike,
   In,
   LessThanOrEqual,
@@ -22,11 +25,16 @@ import { CreateVisitationMetaDto } from '../../dto/internal/meta/create-visitati
 import { MemberModel } from '../../../members/entity/member.entity';
 import { VisitationException } from '../../const/exception/visitation.exception';
 import { UpdateVisitationMetaDto } from '../../dto/internal/meta/update-visitation-meta.dto';
-import { GetVisitationDto } from '../../dto/get-visitation.dto';
+import { GetVisitationDto } from '../../dto/request/get-visitation.dto';
 import {
   VisitationRelationOptions,
   VisitationSelectOptions,
 } from '../../const/visitation-find-options.const';
+import { ChurchUserRole } from '../../../user/const/user-role.enum';
+import { MemberException } from '../../../members/const/exception/member.exception';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { ManagerException } from '../../../manager/exception/manager.exception';
+import { UpdateVisitationDto } from '../../dto/request/update-visitation.dto';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -44,25 +52,27 @@ export class VisitationMetaDomainService
   }
 
   private parseVisitationDate(dto: GetVisitationDto) {
-    if (dto.fromVisitationDate && !dto.toVisitationDate) {
-      return MoreThanOrEqual(dto.fromVisitationDate);
-    } else if (!dto.fromVisitationDate && dto.toVisitationDate) {
-      return LessThanOrEqual(dto.toVisitationDate);
-    } else if (dto.fromVisitationDate && dto.toVisitationDate) {
-      return Between(dto.fromVisitationDate, dto.toVisitationDate);
+    if (dto.fromStartDate && !dto.toStartDate) {
+      return MoreThanOrEqual(dto.fromStartDate);
+    } else if (!dto.fromStartDate && dto.toStartDate) {
+      return LessThanOrEqual(dto.toStartDate);
+    } else if (dto.fromStartDate && dto.toStartDate) {
+      return Between(dto.fromStartDate, dto.toStartDate);
     } else {
       return undefined;
     }
   }
 
-  private parseWhereOptions(dto: GetVisitationDto) {
+  private parseWhereOptions(
+    dto: GetVisitationDto,
+  ): FindOptionsWhere<VisitationMetaModel> {
     return {
-      visitationStartDate: this.parseVisitationDate(dto),
-      visitationStatus: dto.visitationStatus && In(dto.visitationStatus),
+      startDate: this.parseVisitationDate(dto),
+      status: dto.status && In(dto.status),
       visitationMethod: dto.visitationMethod && In(dto.visitationMethod),
       visitationType: dto.visitationType && In(dto.visitationType),
-      visitationTitle: dto.visitationTitle && ILike(`%${dto.visitationTitle}%`),
-      instructorId: dto.instructorId,
+      title: dto.title && ILike(`%${dto.title}%`),
+      inChargeId: dto.inChargeId,
     };
   }
 
@@ -141,27 +151,84 @@ export class VisitationMetaDomainService
     return metaData;
   }
 
+  private assertValidCreator(creator: ChurchUserModel) {
+    if (!creator.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('심방 생성자'),
+      );
+    }
+
+    if (!creator.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
+    }
+
+    if (
+      creator.role !== ChurchUserRole.OWNER &&
+      creator.role !== ChurchUserRole.MANAGER
+    ) {
+      throw new ForbiddenException(VisitationException.INVALID_CREATOR);
+    }
+  }
+
+  private assertValidInCharge(inCharge: ChurchUserModel) {
+    if (!inCharge.memberId) {
+      throw new InternalServerErrorException(
+        ManagerException.MISSING_MEMBER_DATA('심방 생성자'),
+      );
+    }
+
+    if (!inCharge.member) {
+      throw new InternalServerErrorException(MemberException.LINK_ERROR);
+    }
+
+    if (
+      inCharge.role !== ChurchUserRole.OWNER &&
+      inCharge.role !== ChurchUserRole.MANAGER
+    ) {
+      throw new ForbiddenException(VisitationException.INVALID_IN_CHARGE);
+    }
+  }
+
+  private assertValidDate(
+    targetMetaData: VisitationMetaModel,
+    dto: UpdateVisitationMetaDto,
+  ) {
+    // 심방 종료날짜만 변경하는 경우
+    if (!dto.startDate && dto.endDate) {
+      if (dto.endDate < targetMetaData.startDate) {
+        throw new BadRequestException(VisitationException.INVALID_END_DATE);
+      }
+    }
+    // 심방 시작날짜만 변경하는 경우
+    if (dto.startDate && !dto.endDate) {
+      if (dto.startDate > targetMetaData.endDate) {
+        throw new BadRequestException(VisitationException.INVALID_START_DATE);
+      }
+    }
+  }
+
   async createVisitationMetaData(
     church: ChurchModel,
     dto: CreateVisitationMetaDto,
     members: MemberModel[],
     qr: QueryRunner,
-    reportTo?: MemberModel,
   ) {
+    this.assertValidCreator(dto.creator);
+    this.assertValidInCharge(dto.inCharge);
+
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
 
     return visitationMetaRepository.save({
       churchId: church.id,
-      instructor: dto.instructor,
+      inCharge: dto.inCharge.member,
       members,
-      creator: dto.creator,
-      visitationStatus: dto.visitationStatus,
+      creator: dto.creator.member,
+      status: dto.status,
       visitationMethod: dto.visitationMethod,
       visitationType: dto.visitationType,
-      visitationTitle: dto.visitationTitle,
-      visitationStartDate: dto.visitationStartDate,
-      visitationEndDate: dto.visitationEndDate,
-      //reportTo: reportTo ? reportTo : undefined,
+      title: dto.title,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
     });
   }
 
@@ -183,6 +250,12 @@ export class VisitationMetaDomainService
     qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const visitationMetaRepository = this.getVisitationMetaRepository(qr);
+
+    if (dto.inCharge) {
+      this.assertValidInCharge(dto.inCharge);
+    }
+
+    this.assertValidDate(visitationMetaData, dto);
 
     const result = await visitationMetaRepository.update(
       {

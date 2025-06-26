@@ -14,15 +14,11 @@ import {
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { EducationSessionException } from '../../../const/exception/education.exception';
 import { UpdateEducationSessionDto } from '../../../dto/sessions/request/update-education-session.dto';
-import { session } from 'passport';
 import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-education-session.dto';
-import { MemberModel } from '../../../../../members/entity/member.entity';
-import { MemberException } from '../../../../../members/const/exception/member.exception';
-import { UserRole } from '../../../../../user/const/user-role.enum';
+import { ChurchUserRole } from '../../../../../user/const/user-role.enum';
 import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
@@ -30,6 +26,7 @@ import {
 import { GetEducationSessionDto } from '../../../dto/sessions/request/get-education-session.dto';
 import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
 import { EducationSessionOrderEnum } from '../../../const/order.enum';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 
 export class EducationSessionDomainService
   implements IEducationSessionDomainService
@@ -74,14 +71,12 @@ export class EducationSessionDomainService
           updatedAt: true,
           educationTermId: true,
           session: true,
-          name: true,
+          title: true,
           inChargeId: true,
           inCharge: MemberSummarizedSelect,
           startDate: true,
           endDate: true,
           status: true,
-          //isDone: true,
-          //sessionDate: true,
         },
         order,
         take: dto.take,
@@ -193,8 +188,17 @@ export class EducationSessionDomainService
     );
   }
 
-  private assertValidInCharge(inCharge: MemberModel) {
-    if (!inCharge.userId) {
+  private assertValidInCharge(inCharge: ChurchUserModel /*MemberModel*/) {
+    if (
+      inCharge.role !== ChurchUserRole.MANAGER &&
+      inCharge.role !== ChurchUserRole.OWNER
+    ) {
+      throw new ConflictException(
+        EducationSessionException.INVALID_IN_CHARGE_ROLE,
+      );
+    }
+
+    /*if (!inCharge.userId) {
       throw new UnauthorizedException(
         EducationSessionException.UNLINKED_IN_CHARGE,
       );
@@ -206,20 +210,20 @@ export class EducationSessionDomainService
     }
 
     if (
-      inCharge.user.role !== UserRole.mainAdmin &&
-      inCharge.user.role !== UserRole.manager
+      inCharge.user.role !== UserRole.OWNER &&
+      inCharge.user.role !== UserRole.MANAGER
     ) {
       throw new ConflictException(
         EducationSessionException.INVALID_IN_CHARGE_ROLE,
       );
-    }
+    }*/
   }
 
   async createSingleEducationSession(
     educationTerm: EducationTermModel,
-    creatorMember: MemberModel,
+    creatorManager: ChurchUserModel, //MemberModel,
     dto: CreateEducationSessionDto,
-    inCharge: MemberModel | null,
+    inCharge: ChurchUserModel | null, //MemberModel | null,
     qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
@@ -244,13 +248,13 @@ export class EducationSessionDomainService
     inCharge && this.assertValidInCharge(inCharge);
 
     return educationSessionsRepository.save({
-      creatorId: creatorMember.id,
+      creatorId: creatorManager.member.id,
       educationTermId: educationTerm.id,
       session: newSessionNumber,
-      name: dto.name,
+      title: dto.title,
       startDate: dto.startDate,
       endDate: dto.endDate,
-      inChargeId: inCharge ? inCharge.id : undefined,
+      inChargeId: inCharge ? inCharge.member.id : undefined,
       content: dto.content,
       status: dto.status,
     });
@@ -279,7 +283,7 @@ export class EducationSessionDomainService
   async updateEducationSession(
     educationSession: EducationSessionModel,
     dto: UpdateEducationSessionDto,
-    inCharge: MemberModel | null,
+    inCharge: ChurchUserModel | null, //MemberModel | null,
     qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
@@ -287,16 +291,13 @@ export class EducationSessionDomainService
     this.assertValidateSessionDate(educationSession, dto);
     inCharge && this.assertValidInCharge(inCharge);
 
-    const inChargeId =
-      dto.inChargeId === undefined ? undefined : dto.inChargeId;
-
     const result = await educationSessionsRepository.update(
       {
         id: educationSession.id,
       },
       {
         ...dto,
-        inChargeId,
+        inChargeId: inCharge ? inCharge.member.id : undefined,
       },
     );
 

@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -26,18 +25,23 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateEducationDto } from '../dto/education/update-education.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../../churches/guard/church-guard.service';
-import { Token } from '../../../auth/decorator/jwt.decorator';
-import { AuthType } from '../../../auth/const/enum/auth-type.enum';
-import { JwtAccessPayload } from '../../../auth/type/jwt';
+import { EducationTermService } from '../service/education-term.service';
+import { GetInProgressEducationTermDto } from '../dto/terms/request/get-in-progress-education-term.dto';
+import { EducationReadGuard } from '../guard/education-read.guard';
+import { EducationWriteGuard } from '../guard/education-write.guard';
+import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:Educations')
 @Controller('educations')
 export class EducationsController {
-  constructor(private readonly educationsService: EducationsService) {}
+  constructor(
+    private readonly educationsService: EducationsService,
+    private readonly educationTermService: EducationTermService,
+  ) {}
 
   @ApiGetEducation()
+  @EducationReadGuard()
   @Get()
   getEducations(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -48,19 +52,30 @@ export class EducationsController {
 
   @ApiPostEducation()
   @Post()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postEducation(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @PermissionManager() pm: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateEducationDto,
     @QueryRunner() qr: QR,
   ) {
-    const userId = accessPayload.id;
-    return this.educationsService.createEducation(userId, churchId, dto, qr);
+    //const userId = accessPayload.id;
+    return this.educationsService.createEducation(pm, churchId, dto, qr);
+  }
+
+  @Get('in-progress')
+  @EducationReadGuard()
+  getInProgressEducations(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetInProgressEducationTermDto,
+  ) {
+    return this.educationTermService.getInProgressEducationTerms(churchId, dto);
   }
 
   @ApiGetEducationById()
+  @EducationReadGuard()
   @Get(':educationId')
   getEducationById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -70,6 +85,7 @@ export class EducationsController {
   }
 
   @ApiPatchEducation()
+  @EducationWriteGuard()
   @Patch(':educationId')
   @UseInterceptors(TransactionInterceptor)
   patchEducation(
@@ -87,6 +103,7 @@ export class EducationsController {
   }
 
   @ApiDeleteEducation()
+  @EducationWriteGuard()
   @Delete(':educationId')
   deleteEducation(
     @Param('churchId', ParseIntPipe) churchId: number,

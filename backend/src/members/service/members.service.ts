@@ -1,11 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
 import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
-import { CreateMemberDto } from '../dto/create-member.dto';
-import { UpdateMemberDto } from '../dto/update-member.dto';
-import { GetMemberDto } from '../dto/get-member.dto';
-import { ResponseGetDto } from '../dto/response/response-get.dto';
-import { ResponseDeleteDto } from '../dto/response/response-delete.dto';
+import { CreateMemberDto } from '../dto/request/create-member.dto';
+import { UpdateMemberDto } from '../dto/request/update-member.dto';
+import { GetMemberDto } from '../dto/request/get-member.dto';
+import { DeleteMemberResponseDto } from '../dto/response/delete-member-response.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
 import {
@@ -24,7 +23,18 @@ import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
-import { MemberPaginationResultDto } from '../dto/member-pagination-result.dto';
+import { MemberPaginationResponseDto } from '../dto/response/member-pagination-response.dto';
+import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
+import { SimpleMembersPaginationResponseDto } from '../dto/response/simple-members-pagination-response.dto';
+import { PostMemberResponseDto } from '../dto/response/post-member-response.dto';
+import { PatchMemberResponseDto } from '../dto/response/patch-member-response.dto';
+import { GetMemberResponseDto } from '../dto/response/get-member-response.dto';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from './interface/member-filter.service.interface';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class MembersService {
@@ -39,9 +49,17 @@ export class MembersService {
     private readonly searchMembersService: ISearchMembersService,
     @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
     private readonly familyDomainService: IFamilyRelationDomainService,
+
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
   ) {}
 
-  async getMembers(churchId: number, dto: GetMemberDto, qr?: QueryRunner) {
+  async getMembers(
+    churchId: number,
+    requestManager: ChurchUserModel,
+    dto: GetMemberDto,
+    qr?: QueryRunner,
+  ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -66,8 +84,15 @@ export class MembersService {
       qr,
     );
 
-    return new MemberPaginationResultDto(
+    const filteredMember = await this.memberFilterService.filterMembers(
+      church,
+      requestManager,
       data,
+    );
+
+    return new MemberPaginationResponseDto(
+      //data,
+      filteredMember,
       totalCount,
       data.length,
       dto.page,
@@ -75,7 +100,12 @@ export class MembersService {
     );
   }
 
-  async getMemberById(churchId: number, memberId: number, qr?: QueryRunner) {
+  async getMemberById(
+    churchId: number,
+    memberId: number,
+    requestManager: ChurchUserModel,
+    qr?: QueryRunner,
+  ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -87,7 +117,13 @@ export class MembersService {
       qr,
     );
 
-    return new ResponseGetDto<MemberModel>(member);
+    const filteredMember = await this.memberFilterService.filterMember(
+      church,
+      requestManager,
+      member,
+    );
+
+    return new GetMemberResponseDto(filteredMember);
   }
 
   async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
@@ -122,16 +158,18 @@ export class MembersService {
       );
     }
 
-    return newMember;
+    return new PostMemberResponseDto(newMember);
   }
 
   async updateMember(
-    churchId: number,
-    memberId: number,
+    //churchId: number,
+    //memberId: number,
+    church: ChurchModel,
+    targetMember: MemberModel,
     dto: UpdateMemberDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -139,7 +177,7 @@ export class MembersService {
       church,
       memberId,
       qr,
-    );
+    );*/
 
     const updatedMember = await this.membersDomainService.updateMember(
       church,
@@ -148,17 +186,19 @@ export class MembersService {
       qr,
     );
 
-    return new ResponseGetDto<MemberModel>(updatedMember);
+    return new PatchMemberResponseDto(updatedMember);
   }
 
   // 교인 soft delete
   // 교육 등록도 soft delete
   async softDeleteMember(
-    churchId: number,
-    memberId: number,
+    //churchId: number,
+    church: ChurchModel,
+    //memberId: number,
+    targetMember: MemberModel,
     qr: QueryRunner,
-  ): Promise<ResponseDeleteDto> {
-    const church = await this.churchesDomainService.findChurchModelById(
+  ): Promise<DeleteMemberResponseDto> {
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -166,7 +206,7 @@ export class MembersService {
       church,
       memberId,
       qr,
-    );
+    );*/
 
     // 교인 삭제
     await this.membersDomainService.deleteMember(church, targetMember, qr);
@@ -181,9 +221,30 @@ export class MembersService {
     // 트랜잭션이 끝나게 되어 이벤트 요청에서 트랜잭션 처리를 할 수 없음
     this.eventEmitter.emit(
       'member.deleted',
-      new MemberDeletedEvent(churchId, memberId),
+      new MemberDeletedEvent(church.id, targetMember.id),
     );
 
-    return new ResponseDeleteDto(true, targetMember.id);
+    return new DeleteMemberResponseDto(
+      new Date(),
+      targetMember.id,
+      targetMember.name,
+      true,
+    );
+  }
+
+  async getSimpleMembers(churchId: number, dto: GetSimpleMembersDto) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const { data, totalCount } =
+      await this.membersDomainService.findSimpleMembers(church, dto);
+
+    return new SimpleMembersPaginationResponseDto(
+      data,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
   }
 }

@@ -1,5 +1,5 @@
 export enum VisitationOrderEnum {
-  visitationStartDate = 'visitationStartDate',
+  startDate = 'startDate',
   createdAt = 'createdAt',
   updatedAt = 'updatedAt',
 }

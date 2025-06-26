@@ -10,6 +10,7 @@ import { EducationSessionReportModel } from '../../entity/education-session-repo
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  In,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -20,14 +21,18 @@ import { EducationModel } from '../../../management/educations/entity/education.
 import { EducationTermModel } from '../../../management/educations/entity/education-term.entity';
 import { EducationSessionModel } from '../../../management/educations/entity/education-session.entity';
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
-import { UserRole } from '../../../user/const/user-role.enum';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { GetEducationSessionReportDto } from '../../dto/education-report/session/request/get-education-session-report.dto';
 import { EducationSessionReportDomainPaginationResultDto } from '../../dto/education-report/session/response/education-session-report-domain-pagination-result.dto';
 import { EducationSessionReportOrderEnum } from '../../const/education-session-report-order.enum';
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
-import { MemberException } from '../../../members/const/exception/member.exception';
 import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
+import {
+  EducationReportFindOptionsSelect,
+  EducationReportsFindOptionsRelation,
+  EducationReportsFindOptionsSelect,
+} from '../../const/report-find-options.const';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationSessionReportDomainService
@@ -42,27 +47,6 @@ export class EducationSessionReportDomainService
     return qr
       ? qr.manager.getRepository(EducationSessionReportModel)
       : this.repository;
-  }
-
-  private assertCanAddReceivers(
-    educationSession: EducationSessionModel & {
-      reports: EducationSessionReportModel[];
-    },
-    newReceiverIds: number[] | MemberModel[],
-  ) {
-    let reports = educationSession.reports;
-
-    if (reports === undefined) {
-      throw new InternalServerErrorException(
-        EducationSessionReportException.REPORT_LOAD_FAIL,
-      );
-    }
-
-    if (reports.length + newReceiverIds.length > MAX_RECEIVER_COUNT) {
-      throw new ConflictException(
-        EducationSessionReportException.EXCEED_RECEIVERS(),
-      );
-    }
   }
 
   async findEducationSessionReports(
@@ -87,6 +71,8 @@ export class EducationSessionReportDomainService
           isConfirmed: dto.isConfirmed && dto.isConfirmed,
         },
         order,
+        relations: EducationReportsFindOptionsRelation,
+        select: EducationReportsFindOptionsSelect,
       }),
       repository.count({
         where: {
@@ -103,67 +89,29 @@ export class EducationSessionReportDomainService
     );
   }
 
-  /*async createSingleReport(
-    education: EducationModel,
-    educationTerm: EducationTermModel,
-    educationSession: EducationSessionModel,
-    receiver: MemberModel,
-    qr: QueryRunner,
-  ) {
-    // 해당 교육에 피보고자 추가할 수 있는지
-    //educationSession.canAddReport([receiver]);
-    this.assertCanAddReceivers(educationSession, [receiver]);
-
-    if (!receiver.userId) {
-      throw new UnauthorizedException(MemberException.NOT_LINKED_MEMBER);
-    } else if (!receiver.user) {
-      throw new InternalServerErrorException('계정 정보 불러오기 실패');
-    } else if (
-      receiver.user.role !== UserRole.manager &&
-      receiver.user.role !== UserRole.mainAdmin
-    ) {
-      throw new ConflictException('관리자가 아님');
-    }
-
-    const repository = this.getRepository(qr);
-
-    const isExist = await repository.findOne({
-      where: {
-        receiverId: receiver.id,
-        educationSessionId: educationSession.id,
-      },
-    });
-
-    if (isExist) {
-      throw new ConflictException('이미 존재하는 피보고자');
-    }
-
-    return repository.save({
-      receiverId: receiver.id,
-      educationSessionId: educationSession.id,
-      educationTermId: educationTerm.id,
-      educationId: education.id,
-    });
-  }*/
-
   async createEducationSessionReports(
     education: EducationModel,
     educationTerm: EducationTermModel,
     educationSession: EducationSessionModel,
-    receivers: MemberModel[],
+    receivers: ChurchUserModel[], //MemberModel[],
     qr: QueryRunner,
   ) {
-    //educationSession.canAddReport(receivers);
-
-    this.assertCanAddReceivers(educationSession, receivers);
-
     const repository = this.getRepository(qr);
 
-    const failed: { receiverId: number; reason: string }[] = [];
-
+    const oldReports = await repository.find({
+      where: { educationSessionId: educationSession.id },
+    });
     const oldReceiverIds = new Set(
-      educationSession.reports.map((r) => r.receiverId),
+      oldReports.map((report) => report.receiverId),
     );
+
+    if (oldReports.length + receivers.length > MAX_RECEIVER_COUNT) {
+      throw new ConflictException(
+        EducationSessionReportException.EXCEED_RECEIVERS,
+      );
+    }
+
+    const failed: { receiverId: number; reason: string }[] = [];
 
     for (const receiver of receivers) {
       // 피보고자 중복 등록
@@ -171,36 +119,6 @@ export class EducationSessionReportDomainService
         failed.push({
           receiverId: receiver.id,
           reason: EducationSessionReportException.ALREADY_REPORTED_MEMBER,
-        });
-
-        continue;
-      }
-
-      // 피보고자의 가입 여부
-      if (!receiver.userId) {
-        failed.push({
-          receiverId: receiver.id,
-          reason: MemberException.NOT_LINKED_MEMBER,
-        });
-
-        continue;
-      }
-
-      if (!receiver.user) {
-        failed.push({
-          receiverId: receiver.id,
-          reason: MemberException.NOT_LINKED_MEMBER,
-        });
-        continue;
-      }
-      if (
-        receiver.user.role !== UserRole.mainAdmin &&
-        receiver.user.role !== UserRole.manager
-      ) {
-        failed.push({
-          receiverId: receiver.id,
-          reason:
-            EducationSessionReportException.INVALID_RECEIVER_AUTHORIZATION,
         });
       }
     }
@@ -217,7 +135,7 @@ export class EducationSessionReportDomainService
         educationId: education.id,
         educationTermId: educationTerm.id,
         educationSession: educationSession,
-        receiver,
+        receiver: receiver.member,
         reportedAt: new Date(),
         isRead: false,
         isConfirmed: false,
@@ -263,6 +181,8 @@ export class EducationSessionReportDomainService
         receiverId: receiver.id,
         id: reportId,
       },
+      relations: EducationReportsFindOptionsRelation,
+      select: EducationReportFindOptionsSelect,
     });
 
     if (!report) {
@@ -303,19 +223,36 @@ export class EducationSessionReportDomainService
     return result;
   }
 
-  deleteEducationSessionReports(
-    deleteReports: EducationSessionReportModel[],
+  deleteEducationSessionReportsCascade(
+    educationSession: EducationSessionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    return repository.softDelete({
+      educationSessionId: educationSession.id,
+    });
+  }
+
+  async deleteEducationSessionReport(
+    deleteReport: EducationSessionReportModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const repository = this.getRepository(qr);
 
-    const reportIds = deleteReports.map((r) => r.id);
+    const result = await repository.softDelete(deleteReport);
 
-    return repository.softDelete(reportIds);
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationSessionReportException.DELETE_ERROR,
+      );
+    }
+
+    return result;
   }
 
-  async delete(
-    educationSessionId: number,
+  async deleteEducationSessionReports(
+    educationSession: EducationSessionModel,
     deleteReceiverIds: number[],
     qr?: QueryRunner,
   ) {
@@ -323,7 +260,7 @@ export class EducationSessionReportDomainService
 
     const reports = await repository.find({
       where: {
-        educationSessionId,
+        educationSessionId: educationSession.id,
       },
     });
 
@@ -339,12 +276,17 @@ export class EducationSessionReportDomainService
       );
     }
 
-    const deleteReports = reports.filter((report) =>
-      deleteReceiverIds.includes(report.receiverId),
-    );
+    const result = await repository.softDelete({
+      educationSessionId: educationSession.id,
+      receiverId: In(deleteReceiverIds),
+    });
 
-    const deleteReportIds = deleteReports.map((report) => report.id);
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationSessionReportException.DELETE_ERROR,
+      );
+    }
 
-    return repository.softDelete(deleteReportIds);
+    return result;
   }
 }

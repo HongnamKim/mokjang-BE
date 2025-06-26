@@ -6,6 +6,9 @@ import { TaskController } from './controller/task.controller';
 import { TaskService } from './service/task.service';
 import { TaskDomainModule } from './task-domain/task-domain.module';
 import { TaskReportDomainModule } from '../report/report-domain/task-report-domain.module';
+import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { TaskPermissionService } from './service/task-permission.service';
+import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 
 @Module({
   imports: [
@@ -13,12 +16,19 @@ import { TaskReportDomainModule } from '../report/report-domain/task-report-doma
       { path: 'churches/:churchId/tasks', module: TaskModule },
     ]),
     ChurchesDomainModule,
+    ManagerDomainModule,
     MembersDomainModule,
     TaskDomainModule,
 
     TaskReportDomainModule,
   ],
   controllers: [TaskController],
-  providers: [TaskService],
+  providers: [
+    TaskService,
+    {
+      provide: IDOMAIN_PERMISSION_SERVICE,
+      useClass: TaskPermissionService,
+    },
+  ],
 })
 export class TaskModule {}

@@ -20,11 +20,12 @@ import { EducationException } from '../../../const/exception/education.exception
 import { CreateEducationDto } from '../../../dto/education/create-education.dto';
 import { UpdateEducationDto } from '../../../dto/education/update-education.dto';
 import { IEducationDomainService } from '../interface/education-domain.service.interface';
-import { MemberModel } from '../../../../../members/entity/member.entity';
 import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../../../members/const/member-find-options.const';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
+import { MemberException } from '../../../../../members/const/exception/member.exception';
 
 @Injectable()
 export class EducationDomainService implements IEducationDomainService {
@@ -159,7 +160,8 @@ export class EducationDomainService implements IEducationDomainService {
 
   async createEducation(
     church: ChurchModel,
-    creatorMember: MemberModel,
+    //creatorMember: MemberModel,
+    creatorManager: ChurchUserModel,
     dto: CreateEducationDto,
     qr?: QueryRunner,
   ) {
@@ -171,10 +173,14 @@ export class EducationDomainService implements IEducationDomainService {
       throw new BadRequestException(EducationException.ALREADY_EXIST);
     }
 
+    if (!creatorManager.member) {
+      throw new InternalServerErrorException(MemberException.USER_ERROR);
+    }
+
     return educationsRepository.save({
       name: dto.name,
       description: dto.description,
-      creatorId: creatorMember.id,
+      creatorId: creatorManager.member.id,
       churchId: church.id,
     });
   }

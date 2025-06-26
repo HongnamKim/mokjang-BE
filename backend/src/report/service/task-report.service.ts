@@ -42,7 +42,7 @@ export class TaskReportService {
       church,
       memberId,
       undefined,
-      { user: true },
+      //{ user: true },
     );
 
     const { data, totalCount } =
@@ -74,7 +74,7 @@ export class TaskReportService {
       church,
       memberId,
       qr,
-      { user: true },
+      //{ user: true },
     );
 
     const report = await this.taskReportDomainService.findTaskReportById(

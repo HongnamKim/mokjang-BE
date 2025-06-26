@@ -5,7 +5,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -13,6 +12,7 @@ import {
   EducationTermModel,
 } from '../../../entity/education-term.entity';
 import {
+  FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsSelect,
   ILike,
@@ -28,15 +28,18 @@ import { EducationTermOrderEnum } from '../../../const/order.enum';
 import { EducationTermException } from '../../../const/exception/education.exception';
 import { CreateEducationTermDto } from '../../../dto/terms/request/create-education-term.dto';
 import { UpdateEducationTermDto } from '../../../dto/terms/request/update-education-term.dto';
-import { EducationEnrollmentStatus } from '../../../const/education-status.enum';
-import { MemberModel } from '../../../../../members/entity/member.entity';
+import {
+  EducationEnrollmentStatus,
+  EducationTermStatus,
+} from '../../../const/education-status.enum';
 import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../../../members/const/member-find-options.const';
-import { UserRole } from '../../../../../user/const/user-role.enum';
-import { MemberException } from '../../../../../members/const/exception/member.exception';
+import { ChurchUserRole } from '../../../../../user/const/user-role.enum';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
+import { GetInProgressEducationTermDto } from '../../../dto/terms/request/get-in-progress-education-term.dto';
+import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -67,8 +70,19 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       : this.educationSessionsRepository;
   }
 
-  private assertValidateInChargeMember(member: MemberModel) {
-    if (!member.userId) {
+  private assertValidateInChargeMember(
+    member: ChurchUserModel /*MemberModel*/,
+  ) {
+    if (
+      member.role !== ChurchUserRole.MANAGER &&
+      member.role !== ChurchUserRole.OWNER
+    ) {
+      throw new ConflictException(
+        EducationTermException.INVALID_IN_CHARGE_ROLE,
+      );
+    }
+
+    /*if (!member.userId) {
       throw new UnauthorizedException(
         EducationTermException.UNLINKED_IN_CHARGE,
       );
@@ -79,13 +93,13 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     if (
-      member.user.role !== UserRole.manager &&
-      member.user.role !== UserRole.mainAdmin
+      member.user.role !== UserRole.MANAGER &&
+      member.user.role !== UserRole.OWNER
     ) {
       throw new ConflictException(
         EducationTermException.INVALID_IN_CHARGE_ROLE,
       );
-    }
+    }*/
   }
 
   private async isExistEducationTerm(
@@ -114,13 +128,79 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     const sessions = await educationSessionRepository.find({
       where: {
         inChargeId: dto.sessionInChargeId,
-        name: dto.sessionName && ILike(`%${dto.sessionName}%`),
+        title: dto.sessionTitle && ILike(`%${dto.sessionTitle}%`),
       },
     });
 
     return Array.from(
       new Set(sessions.map((session) => session.educationTermId)),
     );
+  }
+
+  async findInProgressEducationTerms(
+    church: ChurchModel,
+    dto: GetInProgressEducationTermDto,
+    qr?: QueryRunner,
+  ): Promise<{
+    data: EducationTermModel[];
+    totalCount: number;
+  }> {
+    const educationTermsRepository = this.getEducationTermsRepository(qr);
+
+    const order: FindOptionsOrder<EducationTermModel> = {
+      [dto.order]: dto.orderDirection,
+    };
+
+    if (dto.order !== EducationTermOrderEnum.createdAt) {
+      order.createdAt = 'asc';
+    }
+
+    const [data, totalCount] = await Promise.all([
+      educationTermsRepository.find({
+        where: {
+          education: {
+            churchId: church.id,
+          },
+          status: EducationTermStatus.IN_PROGRESS,
+        },
+        order,
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          educationId: true,
+          educationName: true,
+          creatorId: true,
+          term: true,
+          status: true,
+          numberOfSessions: true,
+          startDate: true,
+          endDate: true,
+          inChargeId: true,
+          isDoneCount: true,
+          enrollmentCount: true,
+          inProgressCount: true,
+          completedCount: true,
+          incompleteCount: true,
+          inCharge: MemberSummarizedSelect,
+        },
+        relations: {
+          inCharge: MemberSummarizedRelation,
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      educationTermsRepository.count({
+        where: {
+          education: {
+            churchId: church.id,
+          },
+          status: EducationTermStatus.IN_PROGRESS,
+        },
+      }),
+    ]);
+
+    return { data, totalCount };
   }
 
   async findEducationTerms(
@@ -142,7 +222,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     const termIds =
-      dto.sessionInChargeId || dto.sessionName
+      dto.sessionInChargeId || dto.sessionTitle
         ? await this.getTermIdsBySession(dto, qr)
         : undefined;
 
@@ -265,8 +345,8 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
   async createEducationTerm(
     education: EducationModel,
-    creator: MemberModel,
-    inCharge: MemberModel | null,
+    creator: ChurchUserModel, //MemberModel,
+    inCharge: ChurchUserModel | null, //MemberModel | null,
     dto: CreateEducationTermDto,
     qr: QueryRunner,
   ): Promise<EducationTermModel> {
@@ -287,9 +367,9 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return educationTermsRepository.save({
       educationId: education.id,
       educationName: education.name,
-      creatorId: creator.id,
+      creatorId: creator.member.id,
       ...dto,
-      inChargeId: inCharge ? inCharge.id : undefined,
+      inChargeId: inCharge ? inCharge.member.id : undefined,
     });
   }
 
@@ -337,7 +417,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   async updateEducationTerm(
     education: EducationModel,
     educationTerm: EducationTermModel,
-    newInCharge: MemberModel | null,
+    newInCharge: ChurchUserModel | null, //MemberModel | null,
     dto: UpdateEducationTermDto,
     qr: QueryRunner,
   ) {
@@ -361,7 +441,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       },
       {
         ...dto,
-        inChargeId: newInCharge ? newInCharge.id : undefined,
+        inChargeId: newInCharge ? newInCharge.member.id : undefined,
       },
     );
 

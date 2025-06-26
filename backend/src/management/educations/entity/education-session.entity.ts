@@ -5,7 +5,6 @@ import { BaseModel } from '../../../common/entity/base.entity';
 import { EducationSessionStatus } from '../const/education-status.enum';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationSessionReportModel } from '../../../report/entity/education-session-report.entity';
-import { MAX_RECEIVER_COUNT } from '../../../report/const/report.constraints';
 
 @Entity()
 export class EducationSessionModel extends BaseModel {
@@ -20,7 +19,7 @@ export class EducationSessionModel extends BaseModel {
   session: number; // 회차
 
   @Column({ default: '기본 제목', comment: '교육 회차명' })
-  name: string;
+  title: string;
 
   @Column({
     default: '',
@@ -31,12 +30,14 @@ export class EducationSessionModel extends BaseModel {
   @Column({
     type: 'timestamptz',
     comment: '교육 회차 시작 날까',
+    default: new Date('2025-01-01'),
   })
   startDate: Date;
 
   @Column({
     type: 'timestamptz',
     comment: '교육 회차 종료 날짜',
+    default: new Date('2025-01-01'),
   })
   endDate: Date;
 
@@ -70,8 +71,4 @@ export class EducationSessionModel extends BaseModel {
     (report) => report.educationSession,
   )
   reports: EducationSessionReportModel[];
-
-  canAddReport(newReceivers: number[] | MemberModel[]) {
-    return this.reports.length + newReceivers.length > MAX_RECEIVER_COUNT;
-  }
 }

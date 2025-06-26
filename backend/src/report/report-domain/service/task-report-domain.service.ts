@@ -9,24 +9,28 @@ import { TaskReportModel } from '../../entity/task-report.entity';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  In,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ITaskReportDomainService } from '../interface/task-report-domain.service.interface';
 import { TaskModel } from '../../../task/entity/task.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { TaskReportException } from '../../const/exception/task-report.exception';
 import { TaskReportDomainPaginationResultDto } from '../../dto/task-report/task-report-domain-pagination-result.dto';
-import {
-  MemberSummarizedRelation,
-  MemberSummarizedSelect,
-} from '../../../members/const/member-find-options.const';
 import { GetTaskReportDto } from '../../dto/task-report/get-task-report.dto';
 import { TaskReportOrderEnum } from '../../const/task-report-order.enum';
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
-import { UserRole } from '../../../user/const/user-role.enum';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { UpdateTaskReportDto } from '../../dto/task-report/request/update-task-report.dto';
+import {
+  TaskReportFindOptionsSelect,
+  TaskReportsFindOptionsRelation,
+  TaskReportsFindOptionsSelect,
+} from '../../const/report-find-options.const';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
 
 @Injectable()
 export class TaskReportDomainService implements ITaskReportDomainService {
@@ -41,53 +45,30 @@ export class TaskReportDomainService implements ITaskReportDomainService {
       : this.taskReportRepository;
   }
 
-  assertCanAddReceivers(
-    task: TaskModel & { reports: TaskReportModel[] },
-    newReceiverIds: number[] | MemberModel[],
-  ) {
-    let reports = task.reports;
-
-    if (reports === undefined) {
-      throw new InternalServerErrorException('업무의 보고 정보 불러오기 실패');
-    }
-
-    if (reports.length + newReceiverIds.length > MAX_RECEIVER_COUNT) {
-      throw new ConflictException(TaskReportException.EXCEED_RECEIVERS());
-    }
-  }
-
   async createTaskReports(
     task: TaskModel,
-    //sender: MemberModel,
-    receivers: MemberModel[],
+    receivers: ChurchUserModel[],
     qr: QueryRunner,
   ) {
     const repository = this.getTaskReportRepository(qr);
 
-    this.assertCanAddReceivers(task, receivers);
+    const oldReports = await repository.find({ where: { taskId: task.id } });
+    const oldReceiverIds = new Set(
+      oldReports.map((report) => report.receiverId),
+    );
+
+    if (oldReports.length + receivers.length > MAX_RECEIVER_COUNT) {
+      throw new ConflictException(TaskReportException.EXCEED_RECEIVERS);
+    }
 
     const failed: { receiverId: number; reason: string }[] = [];
 
-    const oldReceiverIds = new Set(task.reports.map((r) => r.receiverId));
-
+    // 피보고자 중복 체크
     for (const receiver of receivers) {
-      // 중복 체크
-      if (oldReceiverIds.has(receiver.id)) {
+      if (oldReceiverIds.has(receiver.member.id)) {
         failed.push({
-          receiverId: receiver.id,
+          receiverId: receiver.member.id,
           reason: TaskReportException.ALREADY_REPORTED_MEMBER,
-        });
-      }
-
-      // 피보고자의 권한 체크
-      if (
-        !receiver.user ||
-        (receiver.user.role !== UserRole.mainAdmin &&
-          receiver.user.role !== UserRole.manager)
-      ) {
-        failed.push({
-          receiverId: receiver.id,
-          reason: TaskReportException.INVALID_RECEIVER_AUTHORIZATION,
         });
       }
     }
@@ -99,8 +80,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     const reports = receivers.map((receiver) =>
       repository.create({
         task: task,
-        //senderId: sender ? sender.id : undefined,
-        receiver,
+        receiver: receiver.member,
         reportedAt: new Date(),
         isRead: false,
         isConfirmed: false,
@@ -133,20 +113,8 @@ export class TaskReportDomainService implements ITaskReportDomainService {
           isConfirmed: dto.isConfirmed && dto.isConfirmed,
         },
         order,
-        /*relations: {
-          task: {
-            inCharge: MemberSummarizedRelation,
-          },
-        },
-        select: {
-          task: {
-            id: true,
-            title: true,
-            taskStartDate: true,
-            taskEndDate: true,
-            inCharge: MemberSummarizedSelect,
-          },
-        },*/
+        relations: TaskReportsFindOptionsRelation,
+        select: TaskReportsFindOptionsSelect,
       }),
       repository.count({
         where: {
@@ -165,7 +133,6 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     reportId: number,
     checkIsRead: boolean,
     qr?: QueryRunner,
-    //relationOptions?: FindOptionsRelations<TaskReportModel>,
   ) {
     const repository = this.getTaskReportRepository(qr);
 
@@ -174,20 +141,8 @@ export class TaskReportDomainService implements ITaskReportDomainService {
         id: reportId,
         receiverId: receiver.id,
       },
-      relations: {
-        //sender: MemberSummarizedRelation,
-        task: { inCharge: MemberSummarizedRelation },
-      },
-      select: {
-        //sender: MemberSummarizedSelect,
-        task: {
-          title: true,
-          taskStatus: true,
-          taskStartDate: true,
-          taskEndDate: true,
-          inCharge: MemberSummarizedSelect,
-        },
-      },
+      relations: TaskReportsFindOptionsRelation,
+      select: TaskReportFindOptionsSelect,
     });
 
     if (!report) {
@@ -260,11 +215,49 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     return result;
   }
 
-  async deleteTaskReports(taskReports: TaskReportModel[], qr?: QueryRunner) {
+  async deleteTaskReportCascade(
+    task: TaskModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
     const repository = this.getTaskReportRepository(qr);
 
-    const reportIds = taskReports.map((taskReport) => taskReport.id);
+    return repository.softDelete({ taskId: task.id });
+  }
 
-    return repository.softDelete(reportIds);
+  async deleteTaskReports(
+    task: TaskModel,
+    receiverIds: number[],
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getTaskReportRepository(qr);
+
+    const reports = await repository.find({
+      where: {
+        taskId: task.id,
+      },
+    });
+    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
+
+    const notExistReceiverIds = receiverIds.filter(
+      (id) => !oldReceiverIds.has(id),
+    );
+
+    if (notExistReceiverIds.length > 0) {
+      throw new RemoveConflictException(
+        TaskReportException.NOT_EXIST_REPORTED_MEMBER,
+        notExistReceiverIds,
+      );
+    }
+
+    const result = await repository.softDelete({
+      taskId: task.id,
+      receiverId: In(receiverIds),
+    });
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(TaskReportException.DELETE_ERROR);
+    }
+
+    return result;
   }
 }

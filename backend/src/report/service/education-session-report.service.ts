@@ -136,8 +136,8 @@ export class EducationSessionReportService {
         { educationSession: true },
       );
 
-    await this.educationSessionReportDomainService.deleteEducationSessionReports(
-      [deleteTarget],
+    await this.educationSessionReportDomainService.deleteEducationSessionReport(
+      deleteTarget,
       qr,
     );
 
@@ -147,7 +147,7 @@ export class EducationSessionReportService {
       deleteTarget.educationId,
       deleteTarget.educationTermId,
       deleteTarget.educationSessionId,
-      deleteTarget.educationSession.name,
+      deleteTarget.educationSession.title,
       true,
     );
   }

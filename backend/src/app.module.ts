@@ -44,12 +44,27 @@ import { VisitationDetailModel } from './visitation/entity/visitation-detail.ent
 import { ReportModule } from './report/report.module';
 import { ReportModel } from './report/entity/report.entity';
 import { VisitationReportModel } from './report/entity/visitation-report.entity';
-import { ChurchJoinRequestModel } from './churches/entity/church-join-request.entity';
-import { ChurchJoinRequestStatModel } from './churches/entity/church-join-request-stat.entity';
+import { ChurchJoinModel } from './church-join/entity/church-join.entity';
+import { ChurchJoinStatModel } from './church-join/entity/church-join-stat.entity';
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
 import { TaskReportModel } from './report/entity/task-report.entity';
 import { EducationSessionReportModel } from './report/entity/education-session-report.entity';
+import { PermissionModule } from './permission/permission.module';
+import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
+import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
+import { PermissionTemplateModel } from './permission/entity/permission-template.entity';
+import { ManagerModule } from './manager/manager.module';
+import { ChurchUserModule } from './church-user/church-user.module';
+import { ChurchUserModel } from './church-user/entity/church-user.entity';
+import { PermissionScopeModel } from './permission/entity/permission-scope.entity';
+import { ChurchJoinModule } from './church-join/church-join.module';
+import { WorshipModel } from './worship/entity/worship.entity';
+import { WorshipEnrollmentModel } from './worship/entity/worship-enrollment.entity';
+import { WorshipSessionModel } from './worship/entity/worship-session.entity';
+import { WorshipAttendanceModel } from './worship/entity/worship-attendance.entity';
+import { WorshipModule } from './worship/worship.module';
+import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.entity';
 
 @Module({
   imports: [
@@ -122,8 +137,9 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
           // 교회 관련 엔티티
           ChurchModel,
           // 교회 가입 엔티티
-          ChurchJoinRequestModel,
-          ChurchJoinRequestStatModel,
+          ChurchUserModel,
+          ChurchJoinModel,
+          ChurchJoinStatModel,
           // 교인 관련 엔티티
           RequestInfoModel,
           MemberModel,
@@ -156,6 +172,16 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
           EducationSessionReportModel,
           // 업무 관련 엔티티
           TaskModel,
+          // 권한 관련
+          PermissionUnitModel,
+          PermissionTemplateModel,
+          PermissionScopeModel,
+          // 예배, 출석 관련
+          WorshipModel,
+          WorshipEnrollmentModel,
+          WorshipSessionModel,
+          WorshipAttendanceModel,
+          WorshipTargetGroupModel,
         ],
         synchronize: false,
       }),
@@ -172,6 +198,10 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
     AuthModule,
     UserModule,
     ChurchesModule,
+    ChurchJoinModule,
+    ChurchUserModule,
+    ManagerModule,
+    PermissionModule,
     RequestInfoModule,
     MembersModule,
     FamilyRelationModule,
@@ -180,9 +210,11 @@ import { EducationSessionReportModel } from './report/entity/education-session-r
     ManagementModule,
     VisitationModule,
     TaskModule,
+    WorshipModule,
 
     ChurchesDomainModule,
     MembersDomainModule,
+    PermissionDomainModule,
   ],
   controllers: [AppController],
   providers: [

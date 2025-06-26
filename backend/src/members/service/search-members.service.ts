@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GetMemberDto } from '../dto/get-member.dto';
+import { GetMemberDto } from '../dto/request/get-member.dto';
 import {
   ArrayContains,
   Between,
@@ -228,10 +228,12 @@ export class SearchMembersService implements ISearchMembersService {
     return {
       id: true,
       registeredAt: true,
+      profileImageUrl: true,
       name: true,
       [dto.order]: this.isChurchManagementColumn(dto.order)
         ? { id: true, name: true }
         : true,
+      groupId: true,
     };
   }
 

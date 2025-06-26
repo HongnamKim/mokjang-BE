@@ -1,18 +1,16 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../../entity/user.entity';
-import { QueryRunner, Repository, UpdateResult } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { IUserDomainService } from '../interface/user-domain.service.interface';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateUserDto } from '../../dto/update-user.dto';
 import { UserRole } from '../../const/user-role.enum';
-import { MemberModel } from '../../../members/entity/member.entity';
 import { UserException } from '../../const/exception/user.exception';
 
 @Injectable()
@@ -29,15 +27,15 @@ export class UserDomainService implements IUserDomainService {
   async findUserById(id: number, qr?: QueryRunner) {
     const userRepository = this.getUserRepository(qr);
 
-    const user = await userRepository.findOne({
-      where: {
-        id,
-      },
-      relations: {
-        church: true,
-        member: true,
-      },
-    });
+    const user = await userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.churchUser',
+        'churchUser',
+        'churchUser.leftAt IS NULL',
+      )
+      .where('user.id = :id', { id: id })
+      .getOne();
 
     if (!user) {
       throw new NotFoundException(UserException.NOT_FOUND);
@@ -97,66 +95,6 @@ export class UserDomainService implements IUserDomainService {
     );
   }
 
-  isAbleToCreateChurch(user: UserModel): boolean {
-    if (user.role !== UserRole.none) {
-      throw new BadRequestException(UserException.CANNOT_CREATE_CHURCH);
-    }
-
-    return true;
-  }
-
-  async signInChurch(
-    user: UserModel,
-    church: ChurchModel,
-    role: UserRole,
-    qr?: QueryRunner,
-  ): Promise<UpdateResult> {
-    const userRepository = this.getUserRepository(qr);
-
-    return userRepository.update(
-      {
-        id: user.id,
-      },
-      {
-        church: church,
-        role,
-      },
-    );
-  }
-
-  async linkMemberToUser(
-    member: MemberModel,
-    user: UserModel,
-    qr?: QueryRunner,
-  ): Promise<UserModel> {
-    const userRepository = this.getUserRepository(qr);
-
-    await userRepository.update(
-      {
-        id: user.id,
-      },
-      {
-        member: member,
-      },
-    );
-
-    const updatedUser = await userRepository.findOne({
-      where: {
-        id: user.id,
-      },
-      relations: {
-        church: true,
-        member: true,
-      },
-    });
-
-    if (!updatedUser) {
-      throw new InternalServerErrorException(UserException.UPDATE_ERROR);
-    }
-
-    return updatedUser;
-  }
-
   async findMainAdminUser(
     church: ChurchModel,
     qr?: QueryRunner,
@@ -165,11 +103,8 @@ export class UserDomainService implements IUserDomainService {
 
     const mainAdmin = await userRepository.findOne({
       where: {
-        churchId: church.id,
-        role: UserRole.mainAdmin,
-      },
-      relations: {
-        member: true,
+        ownedChurch: { id: church.id },
+        role: UserRole.OWNER,
       },
     });
 
@@ -180,7 +115,7 @@ export class UserDomainService implements IUserDomainService {
     return mainAdmin;
   }
 
-  async transferMainAdmin(
+  async transferOwner(
     beforeMainAdmin: UserModel,
     newMainAdmin: UserModel,
     qr: QueryRunner,
@@ -190,12 +125,9 @@ export class UserDomainService implements IUserDomainService {
     await Promise.all([
       userRepository.update(
         { id: beforeMainAdmin.id },
-        { role: UserRole.manager },
+        { role: UserRole.MANAGER },
       ),
-      userRepository.update(
-        { id: newMainAdmin.id },
-        { role: UserRole.mainAdmin },
-      ),
+      userRepository.update({ id: newMainAdmin.id }, { role: UserRole.OWNER }),
     ]);
   }
 }
