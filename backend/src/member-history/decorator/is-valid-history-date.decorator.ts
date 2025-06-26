@@ -38,13 +38,13 @@ export class IsValidHistoryDateConstraint
 
     return true;
 
-    if (input.getTime() > now.getTime()) {
+    /*if (input.getTime() > now.getTime()) {
       throw new BadRequestException(
         '이력의 날짜는 현재 날짜를 넘어설 수 없습니다.',
       );
     }
 
-    return true;
+    return true;*/
   }
 }
 
