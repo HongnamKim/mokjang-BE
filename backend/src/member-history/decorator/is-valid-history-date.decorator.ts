@@ -36,8 +36,8 @@ export class IsValidHistoryDateConstraint
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    console.log(input, input.getTime());
-    console.log(now, now.getTime());
+    console.log(input, input.getTime(), input.toString());
+    console.log(now, now.getTime(), now.toString());
 
     if (input.getTime() > now.getTime()) {
       throw new BadRequestException(
