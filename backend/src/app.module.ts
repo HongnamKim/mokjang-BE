@@ -124,8 +124,8 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: configService.get<string>('DB_TYPE') as 'postgres',
-        //url: configService.get<string>('DB_HOST') as string,
-        host: configService.get<string>('DB_HOST'),
+        url: configService.get<string>('DB_HOST') as string,
+        //host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
@@ -183,7 +183,7 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
           WorshipAttendanceModel,
           WorshipTargetGroupModel,
         ],
-        synchronize: true,
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
