@@ -24,6 +24,12 @@ export interface IWorshipEnrollmentDomainService {
     qr?: QueryRunner,
   ): Promise<any>;
 
+  createNewMemberEnrollments(
+    newMember: MemberModel,
+    worships: WorshipModel[],
+    qr: QueryRunner,
+  ): Promise<WorshipEnrollmentModel[]>;
+
   findAllEnrollments(
     worship: WorshipModel,
     qr?: QueryRunner,
