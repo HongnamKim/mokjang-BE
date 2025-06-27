@@ -15,6 +15,11 @@ export interface IWorshipDomainService {
     qr?: QueryRunner,
   ): Promise<WorshipDomainPaginationResultDto>;
 
+  findAllWorships(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<WorshipModel[]>;
+
   findWorshipById(
     church: ChurchModel,
     worshipId: number,

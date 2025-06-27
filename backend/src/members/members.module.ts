@@ -13,10 +13,10 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 import { IMEMBER_FILTER_SERVICE } from './service/interface/member-filter.service.interface';
 import { MemberFilterService } from './service/member-filter.service';
+import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.module';
 
 @Module({
   imports: [
-    //TypeOrmModule.forFeature([MemberModel, ChurchModel]),
     RouterModule.register([
       { path: 'churches/:churchId', module: MembersModule },
     ]),
@@ -25,6 +25,7 @@ import { MemberFilterService } from './service/member-filter.service';
     MembersDomainModule,
     FamilyRelationDomainModule,
     GroupsDomainModule,
+    WorshipDomainModule,
   ],
   controllers: [MembersController],
   providers: [
