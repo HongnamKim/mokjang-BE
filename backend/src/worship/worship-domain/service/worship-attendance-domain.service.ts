@@ -132,7 +132,7 @@ export class WorshipAttendanceDomainService
   }
 
   async joinAttendance(
-    enrollment: WorshipEnrollmentModel,
+    enrollmentIds: number[],
     fromSessionDate?: Date,
     toSessionDate?: Date,
     qr?: QueryRunner,
@@ -143,40 +143,37 @@ export class WorshipAttendanceDomainService
       fromSessionDate && toSessionDate
         ? await repository.find({
             where: {
-              worshipEnrollmentId: enrollment.id,
+              worshipEnrollmentId: In(enrollmentIds),
               sessionDate: Between(fromSessionDate, toSessionDate),
             },
             order: {
-              sessionDate: 'ASC',
+              sessionDate: 'DESC',
             },
             select: {
               id: true,
+              worshipEnrollmentId: true,
               attendanceStatus: true,
               sessionDate: true,
             },
-            take: 14,
+            take: 14 * enrollmentIds.length,
           })
         : await repository.find({
             where: {
-              worshipEnrollmentId: enrollment.id,
+              worshipEnrollmentId: In(enrollmentIds),
             },
             order: {
-              sessionDate: 'ASC',
+              sessionDate: 'DESC',
             },
             select: {
               id: true,
+              worshipEnrollmentId: true,
               attendanceStatus: true,
               sessionDate: true,
             },
-            take: 14,
+            take: 14 * enrollmentIds.length,
           });
 
-    for (let i = 0; i < attendances.length / 2; i++) {
-      const temp = attendances[i];
-
-      attendances[i] = attendances[attendances.length - 1 - i];
-      attendances[attendances.length - 1 - i] = temp;
-    }
+    attendances.reverse();
 
     return attendances;
   }

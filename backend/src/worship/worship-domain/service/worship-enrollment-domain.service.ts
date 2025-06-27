@@ -8,6 +8,7 @@ import {
   In,
   QueryRunner,
   Repository,
+  SelectQueryBuilder,
 } from 'typeorm';
 import { WorshipModel } from '../../entity/worship.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
@@ -61,6 +62,111 @@ export class WorshipEnrollmentDomainService
 
       return orderOptions;
     }
+  }
+
+  private initEnrollmentQb(
+    repository: Repository<WorshipEnrollmentModel>,
+    worshipId: number,
+  ) {
+    return repository
+      .createQueryBuilder('enrollment')
+      .leftJoin('enrollment.member', 'member')
+      .leftJoin('member.officer', 'officer')
+      .leftJoin('member.group', 'group')
+      .leftJoin('member.groupRole', 'groupRole')
+      .addSelect([
+        'member.id',
+        'member.name',
+        'member.profileImageUrl',
+        'officer.id',
+        'officer.name',
+        'group.id',
+        'group.name',
+        'groupRole.id',
+        'groupRole.role',
+      ])
+      .addSelect(
+        `
+        CASE
+          WHEN enrollment."presentCount" + enrollment."absentCount" = 0 THEN NULL
+          ELSE enrollment."presentCount"::float / (enrollment."presentCount" + enrollment."absentCount")
+        END`,
+        'attendanceRate',
+      )
+      .where('enrollment.worshipId = :worshipId', { worshipId });
+  }
+
+  private applyOrderOption(
+    qb: SelectQueryBuilder<WorshipEnrollmentModel>,
+    dto: GetWorshipEnrollmentsDto,
+  ) {
+    if (dto.order === WorshipEnrollmentOrderEnum.ATTENDANCE_RATE) {
+      qb.orderBy(
+        'attendanceRate',
+        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
+      );
+      qb.addOrderBy('enrollment.id', 'ASC');
+    } else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
+      // 그룹 이름
+      qb.orderBy(
+        'group.name',
+        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
+      );
+      // 교인 이름
+      qb.addOrderBy(
+        'member.name',
+        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
+      );
+      qb.addOrderBy('enrollment.id', 'ASC');
+    } else if (dto.order === WorshipEnrollmentOrderEnum.NAME) {
+      // 교인 이름
+      qb.addOrderBy(
+        'member.name',
+        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
+      );
+      qb.addOrderBy('enrollment.id', 'ASC');
+    } else {
+      qb.addOrderBy(
+        `enrollment.${dto.order}`,
+        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
+      );
+    }
+  }
+
+  async findEnrollmentsByQueryBuilder(
+    worship: WorshipModel,
+    dto: GetWorshipEnrollmentsDto,
+    groupIds?: number[],
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const qb = this.initEnrollmentQb(repository, worship.id);
+
+    if (groupIds?.length) {
+      qb.andWhere('member.groupId IN (:...groupIds)', { groupIds });
+    }
+
+    this.applyOrderOption(qb, dto);
+
+    qb.skip(dto.take * (dto.page - 1)).take(dto.take);
+
+    const [{ entities, raw }, totalCount] = await Promise.all([
+      qb.getRawAndEntities(),
+      qb.getCount(),
+    ]);
+
+    const data = entities.map((entity, i) => {
+      const rate =
+        raw[i].attendanceRate !== null ? Number(raw[i].attendanceRate) : null;
+      return {
+        ...entity,
+        attendanceRate: rate,
+      };
+    });
+
+    return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
+    //return { data, totalCount };
   }
 
   async findEnrollments(
