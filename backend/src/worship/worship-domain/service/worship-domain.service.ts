@@ -68,6 +68,19 @@ export class WorshipDomainService implements IWorshipDomainService {
     return new WorshipDomainPaginationResultDto(data, totalCount);
   }
 
+  async findAllWorships(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<WorshipModel[]> {
+    const repository = this.getRepository(qr);
+
+    const qb = repository
+      .createQueryBuilder('worship')
+      .where('worship.churchId = :churchId', { churchId: church.id });
+
+    return qb.getMany();
+  }
+
   async findWorshipById(
     church: ChurchModel,
     worshipId: number,

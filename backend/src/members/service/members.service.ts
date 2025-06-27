@@ -35,6 +35,14 @@ import {
 } from './interface/member-filter.service.interface';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  IWORSHIP_DOMAIN_SERVICE,
+  IWorshipDomainService,
+} from '../../worship/worship-domain/interface/worship-domain.service.interface';
+import {
+  IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
+  IWorshipEnrollmentDomainService,
+} from '../../worship/worship-domain/interface/worship-enrollment-domain.service.interface';
 
 @Injectable()
 export class MembersService {
@@ -49,6 +57,10 @@ export class MembersService {
     private readonly searchMembersService: ISearchMembersService,
     @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
     private readonly familyDomainService: IFamilyRelationDomainService,
+    @Inject(IWORSHIP_DOMAIN_SERVICE)
+    private readonly worshipDomainService: IWorshipDomainService,
+    @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
 
     @Inject(IMEMBER_FILTER_SERVICE)
     private readonly memberFilterService: IMemberFilterService,
@@ -139,6 +151,17 @@ export class MembersService {
     const newMember = await this.membersDomainService.createMember(
       church,
       dto,
+      qr,
+    );
+
+    const worships = await this.worshipDomainService.findAllWorships(
+      church,
+      qr,
+    );
+
+    await this.worshipEnrollmentDomainService.createNewMemberEnrollments(
+      newMember,
+      worships,
       qr,
     );
 
