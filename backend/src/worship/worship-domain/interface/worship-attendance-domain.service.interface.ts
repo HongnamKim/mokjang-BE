@@ -19,7 +19,7 @@ export interface IWorshipAttendanceDomainService {
   ): Promise<WorshipAttendanceDomainPaginationResultDto>;
 
   joinAttendance(
-    enrollment: WorshipEnrollmentModel,
+    enrollmentIds: number[],
     fromSessionDate?: Date,
     toSessionDate?: Date,
     qr?: QueryRunner,
