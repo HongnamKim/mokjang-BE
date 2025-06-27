@@ -5,11 +5,7 @@ import {
   ValidatorConstraintInterface,
   ValidatorOptions,
 } from 'class-validator';
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 @ValidatorConstraint({ name: 'IsValidHistoryDate', async: false })
 @Injectable()
@@ -30,21 +26,8 @@ export class IsValidHistoryDateConstraint
       );
     }
 
-    const input = new Date(value);
-    input.setHours(0, 0, 0, 0);
-
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
 
     return true;
-
-    /*if (input.getTime() > now.getTime()) {
-      throw new BadRequestException(
-        '이력의 날짜는 현재 날짜를 넘어설 수 없습니다.',
-      );
-    }
-
-    return true;*/
   }
 }
 
