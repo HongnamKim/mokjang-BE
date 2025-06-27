@@ -242,6 +242,23 @@ export class WorshipEnrollmentDomainService
     return repository.save(enrollments, { chunk: 100 });
   }
 
+  createNewMemberEnrollments(
+    newMember: MemberModel,
+    worships: WorshipModel[],
+    qr: QueryRunner,
+  ): Promise<WorshipEnrollmentModel[]> {
+    const repository = this.getRepository(qr);
+
+    const newEnrollments = repository.create(
+      worships.map((worship) => ({
+        worshipId: worship.id,
+        memberId: newMember.id,
+      })),
+    );
+
+    return repository.save(newEnrollments, { chunk: 100 });
+  }
+
   async createEnrollmentCascade(
     newWorship: WorshipModel,
     members: MemberModel[],

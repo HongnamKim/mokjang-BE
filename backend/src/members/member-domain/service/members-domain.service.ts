@@ -386,7 +386,7 @@ export class MembersDomainService implements IMembersDomainService {
       }
     }
 
-    return membersRepository.save({ ...dto, church });
+    return membersRepository.save({ ...dto, churchId: church.id });
   }
 
   async updateMember(
