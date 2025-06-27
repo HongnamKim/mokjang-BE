@@ -212,7 +212,7 @@ export class WorshipAttendanceService {
     );
   }
 
-  async joinAttendance(
+  /*async joinAttendance(
     enrollment: WorshipEnrollmentModel,
     fromSessionDate?: Date,
     toSessionDate?: Date,
@@ -224,7 +224,7 @@ export class WorshipAttendanceService {
       toSessionDate,
       qr,
     );
-  }
+  }*/
 
   private async updatePresentAbsentCount(
     targetAttendance: WorshipAttendanceModel,

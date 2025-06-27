@@ -17,6 +17,13 @@ export interface IWorshipEnrollmentDomainService {
     qr?: QueryRunner,
   ): Promise<WorshipEnrollmentDomainPaginationResultDto>;
 
+  findEnrollmentsByQueryBuilder(
+    worship: WorshipModel,
+    dto: GetWorshipEnrollmentsDto,
+    groupIds?: number[],
+    qr?: QueryRunner,
+  ): Promise<any>;
+
   findAllEnrollments(
     worship: WorshipModel,
     qr?: QueryRunner,

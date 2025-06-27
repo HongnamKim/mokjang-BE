@@ -4,4 +4,5 @@ export enum WorshipEnrollmentOrderEnum {
   UPDATED_AT = 'updatedAt',
   NAME = 'name',
   GROUP_NAME = 'groupName',
+  ATTENDANCE_RATE = 'attendanceRate',
 }

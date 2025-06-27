@@ -28,6 +28,8 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
+import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
 
 @Injectable()
 export class WorshipEnrollmentService {
@@ -91,27 +93,37 @@ export class WorshipEnrollmentService {
     const groupIds = await this.getGroupIds(church, dto, qr);
 
     const { data, totalCount } =
-      await this.worshipEnrollmentDomainService.findEnrollments(
+      await this.worshipEnrollmentDomainService.findEnrollmentsByQueryBuilder(
         worship,
         dto,
         groupIds,
+      );
+
+    const enrollmentIds = data.map(
+      (enrollment: WorshipEnrollmentModel) => enrollment.id,
+    );
+
+    const attendances =
+      await this.worshipAttendanceDomainService.joinAttendance(
+        enrollmentIds,
+        dto.fromSessionDate,
+        dto.toSessionDate,
         qr,
       );
 
-    const attendances = await Promise.all(
-      data.map(async (enrollment) =>
-        this.worshipAttendanceDomainService.joinAttendance(
-          enrollment,
-          dto.fromSessionDate,
-          dto.toSessionDate,
-          qr,
-        ),
-      ),
-    );
+    const attendanceMap = new Map<number, WorshipAttendanceModel[]>();
 
-    data.forEach((enrollment, index) => {
-      enrollment.worshipAttendances = attendances[index];
-    });
+    for (const att of attendances) {
+      if (!attendanceMap.has(att.worshipEnrollmentId)) {
+        attendanceMap.set(att.worshipEnrollmentId, [att]);
+      } else {
+        attendanceMap.get(att.worshipEnrollmentId)?.push(att);
+      }
+    }
+
+    for (const enrollment of data) {
+      enrollment.worshipAttendances = attendanceMap.get(enrollment.id) ?? [];
+    }
 
     return new WorshipEnrollmentPaginationResponseDto(
       data,
