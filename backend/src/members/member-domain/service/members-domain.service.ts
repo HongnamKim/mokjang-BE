@@ -81,6 +81,19 @@ export class MembersDomainService implements IMembersDomainService {
     };
   }
 
+  async findAllMembers(church: ChurchModel, qr?: QueryRunner) {
+    const repository = this.getMembersRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+      },
+      order: {
+        id: 'asc',
+      },
+    });
+  }
+
   async findRecommendLinkMember(
     church: ChurchModel,
     dto: GetRecommendLinkMemberDto,
@@ -373,7 +386,7 @@ export class MembersDomainService implements IMembersDomainService {
       }
     }
 
-    return membersRepository.save({ ...dto, church });
+    return membersRepository.save({ ...dto, churchId: church.id });
   }
 
   async updateMember(

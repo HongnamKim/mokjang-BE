@@ -59,6 +59,12 @@ import { ChurchUserModule } from './church-user/church-user.module';
 import { ChurchUserModel } from './church-user/entity/church-user.entity';
 import { PermissionScopeModel } from './permission/entity/permission-scope.entity';
 import { ChurchJoinModule } from './church-join/church-join.module';
+import { WorshipModel } from './worship/entity/worship.entity';
+import { WorshipEnrollmentModel } from './worship/entity/worship-enrollment.entity';
+import { WorshipSessionModel } from './worship/entity/worship-session.entity';
+import { WorshipAttendanceModel } from './worship/entity/worship-attendance.entity';
+import { WorshipModule } from './worship/worship.module';
+import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.entity';
 
 @Module({
   imports: [
@@ -170,6 +176,12 @@ import { ChurchJoinModule } from './church-join/church-join.module';
           PermissionUnitModel,
           PermissionTemplateModel,
           PermissionScopeModel,
+          // 예배, 출석 관련
+          WorshipModel,
+          WorshipEnrollmentModel,
+          WorshipSessionModel,
+          WorshipAttendanceModel,
+          WorshipTargetGroupModel,
         ],
         synchronize: true,
       }),
@@ -198,6 +210,7 @@ import { ChurchJoinModule } from './church-join/church-join.module';
     ManagementModule,
     VisitationModule,
     TaskModule,
+    WorshipModule,
 
     ChurchesDomainModule,
     MembersDomainModule,
