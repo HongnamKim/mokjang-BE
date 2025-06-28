@@ -42,6 +42,7 @@ export const ApiPostSessionManual = () =>
 export const ApiGetSessionById = () =>
   applyDecorators(
     ApiOperation({
+      deprecated: true,
       summary: '예배 세션 단건 조회',
     }),
   );

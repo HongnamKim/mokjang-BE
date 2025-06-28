@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -28,6 +29,8 @@ import {
   ApiPostSessionManual,
 } from '../swagger/worship-session.swagger';
 import { CreateWorshipSessionDto } from '../dto/request/worship-session/create-worship-session.dto';
+import { WorshipReadGuard } from '../guard/worship-read.guard';
+import { WorshipWriteGuard } from '../guard/worship-write.guard';
 
 @ApiTags('Worships:Sessions')
 @Controller(':worshipId/sessions')
@@ -36,6 +39,7 @@ export class WorshipSessionController {
 
   @ApiGetSessions()
   @Get()
+  @WorshipReadGuard()
   getSessions(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
@@ -50,6 +54,7 @@ export class WorshipSessionController {
 
   @ApiGetOrPostSessionByDate()
   @Post()
+  @WorshipReadGuard()
   @UseInterceptors(TransactionInterceptor)
   getOrPostSessionByDate(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -67,6 +72,7 @@ export class WorshipSessionController {
 
   @ApiGetOrPostRecentSession()
   @Post('recent')
+  @WorshipReadGuard()
   @UseInterceptors(TransactionInterceptor)
   getOrPostRecentSession(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -82,6 +88,7 @@ export class WorshipSessionController {
 
   @ApiPostSessionManual()
   @Post('manual')
+  @WorshipWriteGuard()
   postSessionManual(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
@@ -101,15 +108,18 @@ export class WorshipSessionController {
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
   ) {
-    return this.worshipSessionService.getSessionById(
+    throw new GoneException('더이상 사용되지 않는 엔드포인트');
+
+    /*return this.worshipSessionService.getSessionById(
       churchId,
       worshipId,
       sessionId,
-    );
+    );*/
   }
 
   @ApiPatchSession()
   @Patch(':sessionId')
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -129,6 +139,7 @@ export class WorshipSessionController {
 
   @ApiDeleteSession()
   @Delete(':sessionId')
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   deleteSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,

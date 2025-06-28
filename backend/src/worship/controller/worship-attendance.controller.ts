@@ -16,6 +16,8 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateWorshipAttendanceDto } from '../dto/request/worship-attendance/update-worship-attendance.dto';
+import { WorshipReadGuard } from '../guard/worship-read.guard';
+import { WorshipWriteGuard } from '../guard/worship-write.guard';
 
 @ApiTags('Worships:Attendance')
 @Controller(':worshipId/sessions/:sessionId/attendances')
@@ -25,6 +27,7 @@ export class WorshipAttendanceController {
   ) {}
 
   @Get()
+  @WorshipReadGuard()
   getAttendances(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
@@ -40,6 +43,7 @@ export class WorshipAttendanceController {
   }
 
   @Post('refresh')
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshAttendance(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -56,6 +60,7 @@ export class WorshipAttendanceController {
   }
 
   @Patch(':attendanceId')
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchAttendance(
     @Param('churchId', ParseIntPipe) churchId: number,
