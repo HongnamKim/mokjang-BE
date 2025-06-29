@@ -5,6 +5,7 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { WorshipEnrollmentService } from '../service/worship-enrollment.service';
@@ -15,6 +16,17 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { WorshipReadGuard } from '../guard/worship-read.guard';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
+import { WorshipTargetGroupGuard } from '../guard/worship-target-group.guard';
+import { RequestWorship } from '../decorator/request-worship.decorator';
+import { WorshipModel } from '../entity/worship.entity';
+import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
+import { DomainType } from '../../permission/const/domain-type.enum';
+import { DomainName } from '../../permission/const/domain-name.enum';
+import { DomainAction } from '../../permission/const/domain-action.enum';
 
 @ApiTags('Worships:Enrollments')
 @Controller(':worshipId/enrollments')
@@ -25,14 +37,28 @@ export class WorshipEnrollmentController {
 
   @Get()
   @WorshipReadGuard()
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(
+      DomainType.WORSHIP,
+      DomainName.WORSHIP,
+      DomainAction.READ,
+    ),
+    WorshipTargetGroupGuard,
+    WorshipReadScopeGuard,
+  )
   getEnrollments(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Query() dto: GetWorshipEnrollmentsDto,
+    @PermissionChurch() church: ChurchModel,
+    @RequestWorship() worship: WorshipModel,
   ) {
     return this.worshipEnrollmentService.getEnrollments(
-      churchId,
-      worshipId,
+      //churchId,
+      //worshipId,
+      church,
+      worship,
       dto,
     );
   }

@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { WorshipAttendanceService } from '../service/worship-attendance.service';
@@ -18,6 +19,14 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateWorshipAttendanceDto } from '../dto/request/worship-attendance/update-worship-attendance.dto';
 import { WorshipReadGuard } from '../guard/worship-read.guard';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
+import { WorshipTargetGroupGuard } from '../guard/worship-target-group.guard';
+import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
+import { DomainType } from '../../permission/const/domain-type.enum';
+import { DomainName } from '../../permission/const/domain-name.enum';
+import { DomainAction } from '../../permission/const/domain-action.enum';
+import { WorshipAttendanceWriteScopeGuard } from '../guard/worship-attendance-write-scope.guard';
 
 @ApiTags('Worships:Attendance')
 @Controller(':worshipId/sessions/:sessionId/attendances')
@@ -27,6 +36,16 @@ export class WorshipAttendanceController {
   ) {}
 
   @Get()
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(
+      DomainType.WORSHIP,
+      DomainName.WORSHIP,
+      DomainAction.READ,
+    ),
+    WorshipTargetGroupGuard,
+    WorshipReadScopeGuard,
+  )
   @WorshipReadGuard()
   getAttendances(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -60,6 +79,7 @@ export class WorshipAttendanceController {
   }
 
   @Patch(':attendanceId')
+  @UseGuards(AccessTokenGuard, WorshipAttendanceWriteScopeGuard)
   @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchAttendance(
