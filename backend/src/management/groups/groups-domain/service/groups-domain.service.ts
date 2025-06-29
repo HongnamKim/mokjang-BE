@@ -200,6 +200,51 @@ export class GroupsDomainService implements IGroupsDomainService {
     return group;
   }
 
+  async findGroupAndDescendantsByIds(
+    church: ChurchModel,
+    rootGroupIds: number[],
+    qr?: QueryRunner,
+  ): Promise<GroupModel[]> {
+    const repository = this.getGroupsRepository(qr);
+
+    const allGroups = await repository.find({
+      where: {
+        churchId: church.id,
+      },
+    });
+
+    const groupMap = new Map<number, GroupModel>();
+    const parentToChildren = new Map<number, number[]>();
+
+    for (const group of allGroups) {
+      groupMap.set(group.id, group);
+      const parentId = group.parentGroupId;
+      if (parentId !== null) {
+        if (!parentToChildren.has(parentId)) {
+          parentToChildren.set(parentId, []);
+        }
+        parentToChildren.get(parentId)!.push(group.id);
+      }
+    }
+
+    const visited = new Set<number>();
+    const resultIds: number[] = [];
+    const queue = [...rootGroupIds];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (!currentId || visited.has(currentId)) continue;
+
+      visited.add(currentId);
+      resultIds.push(currentId);
+
+      const children = parentToChildren.get(currentId) || [];
+      queue.push(...children);
+    }
+
+    return resultIds.map((id) => groupMap.get(id)!);
+  }
+
   async findChildGroups(
     group: GroupModel,
     qr?: QueryRunner,

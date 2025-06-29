@@ -30,6 +30,7 @@ import {
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
 import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
+import { WorshipModel } from '../entity/worship.entity';
 
 @Injectable()
 export class WorshipEnrollmentService {
@@ -74,12 +75,14 @@ export class WorshipEnrollmentService {
   }
 
   async getEnrollments(
-    churchId: number,
-    worshipId: number,
+    //churchId: number,
+    //worshipId: number,
+    church: ChurchModel,
+    worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -88,7 +91,7 @@ export class WorshipEnrollmentService {
       church,
       worshipId,
       qr,
-    );
+    );*/
 
     const groupIds = await this.getGroupIds(church, dto, qr);
 
