@@ -30,6 +30,7 @@ import {
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { WorshipModel } from '../entity/worship.entity';
 
 @Injectable()
 export class WorshipAttendanceService {
@@ -49,7 +50,7 @@ export class WorshipAttendanceService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  private async getGroupIds(
+  private async getRequestGroupIds(
     church: ChurchModel,
     dto: GetWorshipAttendancesDto,
   ) {
@@ -71,27 +72,68 @@ export class WorshipAttendanceService {
     return groupIds;
   }
 
-  async getAttendances(
-    churchId: number,
-    worshipId: number,
-    sessionId: number,
-    dto: GetWorshipAttendancesDto,
-  ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
-    const worship = await this.worshipDomainService.findWorshipModelById(
-      church,
-      worshipId,
+  private async getDefaultGroupIds(church: ChurchModel, worship: WorshipModel) {
+    const rootTargetGroupIds = worship.worshipTargetGroups.map(
+      (group) => group.group.id,
     );
 
-    const groupIds = await this.getGroupIds(church, dto);
+    const defaultGroupIds = (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        rootTargetGroupIds,
+      )
+    ).map((group) => group.id);
 
+    if (defaultGroupIds.length) {
+      return defaultGroupIds;
+    } else {
+      return undefined;
+    }
+  }
+
+  private intersection(
+    defaultWorshipTargetGroupIds?: number[],
+    permissionScopeGroupIds?: number[],
+  ) {
+    if (!defaultWorshipTargetGroupIds) {
+      return permissionScopeGroupIds;
+    }
+    if (!permissionScopeGroupIds) {
+      return defaultWorshipTargetGroupIds;
+    }
+
+    const targetGroupIdSet = new Set(defaultWorshipTargetGroupIds);
+
+    return permissionScopeGroupIds.filter((scopeGroupId) =>
+      targetGroupIdSet.has(scopeGroupId),
+    );
+  }
+
+  async getAttendances(
+    church: ChurchModel,
+    worship: WorshipModel,
+    sessionId: number,
+    dto: GetWorshipAttendancesDto,
+    permissionScopeGroupIds?: number[],
+  ) {
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
         worship,
         sessionId,
       );
+
+    const requestGroupIds = await this.getRequestGroupIds(church, dto);
+    const defaultWorshipTargetGroupIds = await this.getDefaultGroupIds(
+      church,
+      worship,
+    );
+
+    const groupIds = requestGroupIds
+      ? requestGroupIds
+      : this.intersection(
+          defaultWorshipTargetGroupIds,
+          permissionScopeGroupIds,
+        );
 
     const { data, totalCount } =
       await this.worshipAttendanceDomainService.findAttendances(

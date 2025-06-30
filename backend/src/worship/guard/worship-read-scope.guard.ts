@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -17,14 +18,21 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
-import {
-  IWORSHIP_DOMAIN_SERVICE,
-  IWorshipDomainService,
-} from '../worship-domain/interface/worship-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { PermissionScopeModel } from '../../permission/entity/permission-scope.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
+import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
+import { WorshipModel } from '../entity/worship.entity';
+import { Request } from 'express';
+
+export interface CustomRequest extends Request {
+  church: ChurchModel;
+  worship: WorshipModel;
+  requestManager: ChurchUserModel;
+  permissionScopeGroupIds: number[];
+  tokenPayload: any;
+}
 
 @Injectable()
 export class WorshipReadScopeGuard implements CanActivate {
@@ -35,11 +43,9 @@ export class WorshipReadScopeGuard implements CanActivate {
     private readonly managerDomainService: IManagerDomainService,
     @Inject(IGROUPS_DOMAIN_SERVICE)
     private readonly groupsDomainService: IGroupsDomainService,
-    @Inject(IWORSHIP_DOMAIN_SERVICE)
-    private readonly worshipDomainService: IWorshipDomainService,
   ) {}
 
-  private async getRequestChurch(req) {
+  private async getRequestChurch(req: CustomRequest) {
     const churchId = parseInt(req.params.churchId);
 
     return req.church
@@ -48,7 +54,7 @@ export class WorshipReadScopeGuard implements CanActivate {
   }
 
   private async getRequestManager(
-    req: any,
+    req: CustomRequest,
     church: ChurchModel,
   ): Promise<ChurchUserModel> {
     const token = req.tokenPayload;
@@ -68,45 +74,58 @@ export class WorshipReadScopeGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
-
-    const requestGroupId = parseInt(req.query.groupId);
-
-    if (!requestGroupId) {
-      return true;
-    }
+    const req: CustomRequest = context.switchToHttp().getRequest();
 
     const church = await this.getRequestChurch(req);
 
     const requestManager = await this.getRequestManager(req, church);
 
+    // 소유자
     if (requestManager.role === ChurchUserRole.OWNER) {
       return true;
     }
 
-    const permissionScopeGroupIds = requestManager.permissionScopes.map(
+    // 전체 권한 범위
+    if (requestManager.permissionScopes.some((scope) => scope.isAllGroups)) {
+      return true;
+    }
+
+    const rootPermissionScopeGroupIds = requestManager.permissionScopes.map(
       (permissionScope: PermissionScopeModel) => permissionScope.group.id,
     );
 
-    const requestGroup = await this.groupsDomainService.findGroupModelById(
-      church,
-      requestGroupId,
-    );
+    const permissionGroupIds = (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        rootPermissionScopeGroupIds,
+      )
+    ).map((group) => group.id);
 
-    const parentGroups = await this.groupsDomainService.findParentGroups(
-      church,
-      requestGroup,
-    );
+    req.permissionScopeGroupIds = permissionGroupIds;
 
-    const parentGroupIds = parentGroups.map((parentGroup) => parentGroup.id);
-    parentGroupIds.push(requestGroup.id);
+    const requestGroupId = this.parseGroupId(req);
 
-    for (const permissionScopeGroupId of permissionScopeGroupIds) {
-      if (parentGroupIds.includes(permissionScopeGroupId)) {
-        return true;
-      }
+    if (requestGroupId === undefined) {
+      return true;
     }
 
-    return false;
+    if (!permissionGroupIds.includes(requestGroupId)) {
+      throw new ForbiddenException(PermissionScopeException.OUT_OF_SCOPE_GROUP);
+    }
+
+    return true;
+  }
+
+  private parseGroupId(req: Request) {
+    const requestGroupId = req.query.groupId;
+    if (!requestGroupId) {
+      return undefined;
+    }
+
+    if (typeof requestGroupId === 'string') {
+      return parseInt(requestGroupId, 10);
+    }
+
+    throw new InternalServerErrorException('알 수 없는 에러 발생');
   }
 }
