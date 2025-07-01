@@ -14,7 +14,6 @@ import { GetWorshipEnrollmentsDto } from '../dto/request/worship-enrollment/get-
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { WorshipReadGuard } from '../guard/worship-read.guard';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { WorshipTargetGroupGuard } from '../guard/worship-target-group.guard';
 import { RequestWorship } from '../decorator/request-worship.decorator';
@@ -37,7 +36,7 @@ export class WorshipEnrollmentController {
   ) {}
 
   @Get()
-  @WorshipReadGuard()
+  //@WorshipReadGuard()
   @UseGuards(
     AccessTokenGuard,
     createDomainGuard(

@@ -73,6 +73,19 @@ export class WorshipReadScopeGuard implements CanActivate {
         );
   }
 
+  private parseGroupId(req: Request) {
+    const requestGroupId = req.query.groupId;
+    if (!requestGroupId) {
+      return undefined;
+    }
+
+    if (typeof requestGroupId === 'string') {
+      return parseInt(requestGroupId, 10);
+    }
+
+    throw new InternalServerErrorException('알 수 없는 에러 발생');
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: CustomRequest = context.switchToHttp().getRequest();
 
@@ -114,18 +127,5 @@ export class WorshipReadScopeGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private parseGroupId(req: Request) {
-    const requestGroupId = req.query.groupId;
-    if (!requestGroupId) {
-      return undefined;
-    }
-
-    if (typeof requestGroupId === 'string') {
-      return parseInt(requestGroupId, 10);
-    }
-
-    throw new InternalServerErrorException('알 수 없는 에러 발생');
   }
 }
