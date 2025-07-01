@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -18,6 +19,12 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateWorshipDto } from '../dto/request/worship/update-worship.dto';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { WorshipWriteGuard } from '../guard/worship-write.guard';
+import { WorshipReadGuard } from '../guard/worship-read.guard';
 
 @ApiTags('Worships')
 @Controller()
@@ -25,24 +32,29 @@ export class WorshipController {
   constructor(private readonly worshipService: WorshipService) {}
 
   @Get()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getWorships(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetWorshipsDto,
+    @PermissionChurch() church: ChurchModel,
   ) {
-    return this.worshipService.findWorships(churchId, dto);
+    return this.worshipService.findWorships(church, dto);
   }
 
   @Post()
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postWorship(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateWorshipDto,
     @QueryRunner() qr: QR,
+    @PermissionChurch() church: ChurchModel,
   ) {
-    return this.worshipService.postWorship(churchId, dto, qr);
+    return this.worshipService.postWorship(church, dto, qr);
   }
 
   @Get(':worshipId')
+  @WorshipReadGuard()
   getWorshipById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
@@ -51,6 +63,7 @@ export class WorshipController {
   }
 
   @Patch(':worshipId')
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchWorshipById(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -66,6 +79,7 @@ export class WorshipController {
     description: '하위 enrollment, session, attendance 삭제',
   })
   @Delete(':worshipId')
+  @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   DeleteWorshipById(
     @Param('churchId', ParseIntPipe) churchId: number,

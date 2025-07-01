@@ -66,6 +66,5 @@ export class CreateWorshipDto extends PickType(WorshipModel, [
   @Transform(({ value }) => Array.from(new Set(value)))
   @IsNumber({}, { each: true })
   @IsArray()
-  //@ArrayMinSize(1)
-  worshipTargetGroupIds: number[];
+  worshipTargetGroupIds: number[] = [];
 }

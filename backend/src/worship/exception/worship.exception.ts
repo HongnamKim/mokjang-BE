@@ -3,4 +3,6 @@ export const WorshipException = {
   ALREADY_EXIST: '이미 존재하는 예배 제목입니다.',
   DELETE_ERROR: '예배 삭제 도중 에러 발생',
   UPDATE_ERROR: '예배 업데이트 도중 에러 발생',
+
+  INVALID_TARGET_GROUP: '에배 대상 그룹이 아닙니다.',
 };
