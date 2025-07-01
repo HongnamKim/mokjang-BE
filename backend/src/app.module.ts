@@ -65,6 +65,7 @@ import { WorshipSessionModel } from './worship/entity/worship-session.entity';
 import { WorshipAttendanceModel } from './worship/entity/worship-attendance.entity';
 import { WorshipModule } from './worship/worship.module';
 import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.entity';
+import { CalendarModule } from './calendar/calendar.module';
 
 @Module({
   imports: [
@@ -211,6 +212,7 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
     VisitationModule,
     TaskModule,
     WorshipModule,
+    CalendarModule,
 
     ChurchesDomainModule,
     MembersDomainModule,

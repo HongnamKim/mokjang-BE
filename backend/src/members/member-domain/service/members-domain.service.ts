@@ -39,6 +39,8 @@ import {
   MemberSummarizedSelect,
 } from '../../const/member-find-options.const';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
+import { GetBirthdayMembersDto } from '../../../calendar/dto/get-birthday-members.dto';
+import KoreanLunarCalendar from 'korean-lunar-calendar';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -79,6 +81,117 @@ export class MembersDomainService implements IMembersDomainService {
       data: result,
       totalCount,
     };
+  }
+
+  async migrationBirthdayMMDD(church: ChurchModel) {
+    const repository = this.getMembersRepository();
+
+    await repository
+      .createQueryBuilder()
+      .update()
+      .set({ birthdayMMDD: () => `to_char(birth, 'MM-DD')` })
+      .where(
+        `churchId = :churchId AND birth IS NOT NULL AND birthdayMMDD IS NULL`,
+        {
+          churchId: church.id,
+        },
+      )
+      .execute();
+
+    /*await repository.query(
+      `
+        UPDATE "member_model" SET "birthdayMMDD" = to_char("birth", 'MM-DD') WHERE "churchId" = $1 AND "birth" IS NOT NULL
+        `,
+      [church.id],
+    );*/
+  }
+
+  async findBirthdayMembers(
+    church: ChurchModel,
+    dto: GetBirthdayMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository(qr);
+
+    const fromLunarCalendar = new KoreanLunarCalendar();
+    const toLunarCalendar = new KoreanLunarCalendar();
+
+    // 음력 시작 날짜
+    fromLunarCalendar.setSolarDate(
+      dto.fromDate.getFullYear(),
+      dto.fromDate.getMonth() + 1,
+      dto.fromDate.getDate(),
+    );
+
+    // 음력 종료 날짜
+    toLunarCalendar.setSolarDate(
+      dto.toDate.getFullYear(),
+      dto.toDate.getMonth() + 1,
+      dto.toDate.getDate(),
+    );
+
+    const fromLunarObject = fromLunarCalendar.getLunarCalendar();
+    const toLunarObject = toLunarCalendar.getLunarCalendar();
+
+    const fromLunarDate = new Date(
+      `${fromLunarObject.year}-${fromLunarObject.month}-${fromLunarObject.day}`,
+    );
+    const toLunarDate = new Date(
+      `${toLunarObject.year}-${toLunarObject.month}-${toLunarObject.day}`,
+    );
+
+    const from = dto.fromDate.toISOString().slice(5, 10);
+    const to = dto.toDate.toISOString().slice(5, 10);
+
+    const fromLunar = `${fromLunarObject.month.toString().padStart(2, '0')}-${fromLunarObject.day.toString().padStart(2, '0')}`;
+    const toLunar = `${toLunarObject.month.toString().padStart(2, '0')}-${toLunarObject.day.toString().padStart(2, '0')}`;
+
+    const query = repository
+      .createQueryBuilder('member')
+      .select([
+        'member.id',
+        'member.churchId',
+        'member.name',
+        'member.profileImageUrl',
+        'member.birth',
+        'member.birthdayMMDD',
+        'member.isLunar',
+        'member.isLeafMonth',
+      ])
+      .where(`member.churchId = :churchId`, { churchId: church.id })
+      .andWhere(
+        `(
+         (
+          member.isLunar = false AND
+            CASE
+              WHEN :from <= :to THEN member.birthdayMMDD BETWEEN :from AND :to
+              ELSE (member.birthdayMMDD >= :from) OR (member.birthdayMMDD <= :to)
+            END
+         )
+        OR
+        (
+          member.isLunar = true AND
+            CASE
+              WHEN :fromLunar <= :toLunar THEN member.birthdayMMDD BETWEEN :fromLunar AND :toLunar
+              ELSE (member.birthdayMMDD >= :fromLunar) OR (member.birthdayMMDD <= :toLunar)
+            END
+        ))`,
+        { from, to, fromLunar, toLunar },
+      )
+      .leftJoin('member.officer', 'officer')
+      .leftJoin('member.group', 'group')
+      .leftJoin('member.groupRole', 'groupRole')
+      .addSelect([
+        'officer.id',
+        'officer.name',
+        'group.id',
+        'group.name',
+        'groupRole.id',
+        'groupRole.role',
+      ])
+      .orderBy('"birthdayMMDD"', 'ASC');
+
+    return query.getMany();
   }
 
   async findAllMembers(church: ChurchModel, qr?: QueryRunner) {
@@ -386,7 +499,13 @@ export class MembersDomainService implements IMembersDomainService {
       }
     }
 
-    return membersRepository.save({ ...dto, churchId: church.id });
+    return membersRepository.save({
+      ...dto,
+      birthdayMMDD: dto.birth
+        ? dto.birth.toISOString().slice(5, 10)
+        : undefined,
+      churchId: church.id,
+    });
   }
 
   async updateMember(
@@ -418,6 +537,9 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         ...dto,
+        birthdayMMDD: dto.birth
+          ? dto.birth.toISOString().slice(5, 10)
+          : undefined,
       },
     );
 
