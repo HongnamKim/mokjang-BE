@@ -88,10 +88,10 @@ export class WorshipEnrollmentDomainService
       .addSelect(
         `
         CASE
-          WHEN enrollment."presentCount" + enrollment."absentCount" = 0 THEN NULL
+          WHEN enrollment."presentCount" + enrollment."absentCount" = 0 THEN 0
           ELSE enrollment."presentCount"::float / (enrollment."presentCount" + enrollment."absentCount")
         END`,
-        'attendanceRate',
+        'attendance_rate',
       )
       .where('enrollment.worshipId = :worshipId', { worshipId });
   }
@@ -102,7 +102,7 @@ export class WorshipEnrollmentDomainService
   ) {
     if (dto.order === WorshipEnrollmentOrderEnum.ATTENDANCE_RATE) {
       qb.orderBy(
-        'attendanceRate',
+        'attendance_rate',
         dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
       );
       qb.addOrderBy('enrollment.id', 'ASC');
@@ -157,8 +157,7 @@ export class WorshipEnrollmentDomainService
     ]);
 
     const data = entities.map((entity, i) => {
-      const rate =
-        raw[i].attendanceRate !== null ? Number(raw[i].attendanceRate) : null;
+      const rate = Number(raw[i].attendance_rate);
       return {
         ...entity,
         attendanceRate: rate,
@@ -166,7 +165,6 @@ export class WorshipEnrollmentDomainService
     });
 
     return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
-    //return { data, totalCount };
   }
 
   async findEnrollments(
