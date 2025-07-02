@@ -6,7 +6,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { GetBirthdayMembersDto } from '../dto/get-birthday-members.dto';
+import { GetBirthdayMembersDto } from '../dto/request/birthday/get-birthday-members.dto';
 import { CalendarService } from '../service/calendar.service';
 
 @Controller()

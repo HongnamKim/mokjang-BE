@@ -66,6 +66,7 @@ import { WorshipAttendanceModel } from './worship/entity/worship-attendance.enti
 import { WorshipModule } from './worship/worship.module';
 import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.entity';
 import { CalendarModule } from './calendar/calendar.module';
+import { ChurchEventModel } from './calendar/entity/church-event.entity';
 
 @Module({
   imports: [
@@ -183,6 +184,8 @@ import { CalendarModule } from './calendar/calendar.module';
           WorshipSessionModel,
           WorshipAttendanceModel,
           WorshipTargetGroupModel,
+          // 교회 일정표/이벤트
+          ChurchEventModel,
         ],
         synchronize: true,
       }),

@@ -39,7 +39,7 @@ import {
   MemberSummarizedSelect,
 } from '../../const/member-find-options.const';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
-import { GetBirthdayMembersDto } from '../../../calendar/dto/get-birthday-members.dto';
+import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
 
 @Injectable()
@@ -133,12 +133,12 @@ export class MembersDomainService implements IMembersDomainService {
     const fromLunarObject = fromLunarCalendar.getLunarCalendar();
     const toLunarObject = toLunarCalendar.getLunarCalendar();
 
-    const fromLunarDate = new Date(
+    /*const fromLunarDate = new Date(
       `${fromLunarObject.year}-${fromLunarObject.month}-${fromLunarObject.day}`,
     );
     const toLunarDate = new Date(
       `${toLunarObject.year}-${toLunarObject.month}-${toLunarObject.day}`,
-    );
+    );*/
 
     const from = dto.fromDate.toISOString().slice(5, 10);
     const to = dto.toDate.toISOString().slice(5, 10);
@@ -189,7 +189,9 @@ export class MembersDomainService implements IMembersDomainService {
         'groupRole.id',
         'groupRole.role',
       ])
-      .orderBy('"birthdayMMDD"', 'ASC');
+      .orderBy('"birthdayMMDD"', 'ASC')
+      .addOrderBy('birth', 'ASC')
+      .addOrderBy('member.id', 'ASC');
 
     return query.getMany();
   }

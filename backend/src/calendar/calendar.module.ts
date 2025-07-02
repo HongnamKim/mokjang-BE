@@ -4,6 +4,9 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
 import { RouterModule } from '@nestjs/core';
 import { CalendarController } from './controller/calendar.controller';
 import { CalendarService } from './service/calendar.service';
+import { CalendarDomainModule } from './calendar-domain/calendar-domain.module';
+import { ChurchEventService } from './service/church-event.service';
+import { ChurchEventController } from './controller/church-event.controller';
 
 @Module({
   imports: [
@@ -12,8 +15,9 @@ import { CalendarService } from './service/calendar.service';
     ]),
     ChurchesDomainModule,
     MembersDomainModule,
+    CalendarDomainModule,
   ],
-  controllers: [CalendarController],
-  providers: [CalendarService],
+  controllers: [CalendarController, ChurchEventController],
+  providers: [CalendarService, ChurchEventService],
 })
 export class CalendarModule {}
