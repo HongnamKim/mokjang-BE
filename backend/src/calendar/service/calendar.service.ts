@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -7,7 +7,7 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
-import { GetBirthdayMembersDto } from '../dto/get-birthday-members.dto';
+import { GetBirthdayMembersDto } from '../dto/request/birthday/get-birthday-members.dto';
 
 @Injectable()
 export class CalendarService {
@@ -29,8 +29,8 @@ export class CalendarService {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const from = dto.fromDate.toISOString().slice(5, 10);
-    const to = dto.toDate.toISOString().slice(5, 10);
+    //const from = dto.fromDate.toISOString().slice(5, 10);
+    //const to = dto.toDate.toISOString().slice(5, 10);
 
     return this.membersDomainService.findBirthdayMembers(church, dto);
   }

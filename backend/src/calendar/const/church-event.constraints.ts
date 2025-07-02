@@ -1,0 +1,2 @@
+export const MAX_CHURCH_EVENT_TITLE = 50;
+export const MAX_CHURCH_EVENT_DESCRIPTION = 1000;
