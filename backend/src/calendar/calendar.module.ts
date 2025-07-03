@@ -7,6 +7,9 @@ import { CalendarService } from './service/calendar.service';
 import { CalendarDomainModule } from './calendar-domain/calendar-domain.module';
 import { ChurchEventService } from './service/church-event.service';
 import { ChurchEventController } from './controller/church-event.controller';
+import { CalendarEducationService } from './service/calendar-education.service';
+import { CalendarEducationController } from './controller/calendar-education.controller';
+import { EducationDomainModule } from '../management/educations/service/education-domain/education-domain.module';
 
 @Module({
   imports: [
@@ -16,8 +19,13 @@ import { ChurchEventController } from './controller/church-event.controller';
     ChurchesDomainModule,
     MembersDomainModule,
     CalendarDomainModule,
+    EducationDomainModule,
   ],
-  controllers: [CalendarController, ChurchEventController],
-  providers: [CalendarService, ChurchEventService],
+  controllers: [
+    CalendarController,
+    ChurchEventController,
+    CalendarEducationController,
+  ],
+  providers: [CalendarService, ChurchEventService, CalendarEducationService],
 })
 export class CalendarModule {}

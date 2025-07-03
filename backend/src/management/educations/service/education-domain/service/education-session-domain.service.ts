@@ -2,6 +2,7 @@ import { IEducationSessionDomainService } from '../interface/education-session-d
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationSessionModel } from '../../../entity/education-session.entity';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   MoreThan,
@@ -27,6 +28,9 @@ import { GetEducationSessionDto } from '../../../dto/sessions/request/get-educat
 import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
 import { EducationSessionOrderEnum } from '../../../const/order.enum';
 import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
+import { ChurchModel } from '../../../../../churches/entity/church.entity';
+import { GetEducationSessionForCalendarDto } from '../../../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
+import { session } from 'passport';
 
 export class EducationSessionDomainService
   implements IEducationSessionDomainService
@@ -40,6 +44,117 @@ export class EducationSessionDomainService
     return qr
       ? qr.manager.getRepository(EducationSessionModel)
       : this.educationSessionsRepository;
+  }
+
+  async findEducationSessionsForCalendar(
+    church: ChurchModel,
+    dto: GetEducationSessionForCalendarDto,
+    qr?: QueryRunner,
+  ): Promise<EducationSessionModel[]> {
+    const repository = this.getEducationSessionsRepository(qr);
+
+    return repository.find({
+      where: {
+        educationTerm: {
+          education: {
+            churchId: church.id,
+          },
+        },
+        startDate: Between(dto.fromDate, dto.toDate),
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        session: true,
+        title: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        inCharge: MemberSummarizedSelect,
+        educationTerm: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          term: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          education: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            name: true,
+          },
+        },
+      },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+        educationTerm: {
+          education: true,
+        },
+      },
+      order: {
+        startDate: 'asc',
+      },
+    });
+  }
+
+  async findEducationSessionByIdForCalendar(
+    church: ChurchModel,
+    sessionId: number,
+    qr?: QueryRunner,
+  ): Promise<EducationSessionModel> {
+    const repository = this.getEducationSessionsRepository(qr);
+
+    const educationSession = await repository.findOne({
+      where: {
+        id: sessionId,
+        educationTerm: {
+          education: {
+            churchId: church.id,
+          },
+        },
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        session: true,
+        title: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        inCharge: MemberSummarizedSelect,
+        educationTerm: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          term: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          education: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            name: true,
+          },
+        },
+      },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+        educationTerm: {
+          education: true,
+        },
+      },
+    });
+
+    if (!educationSession) {
+      throw new NotFoundException(EducationSessionException.NOT_FOUND);
+    }
+
+    return educationSession;
   }
 
   async findEducationSessions(
