@@ -6,12 +6,25 @@ import { CreateEducationSessionDto } from '../../../dto/sessions/request/create-
 import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
 import { GetEducationSessionDto } from '../../../dto/sessions/request/get-education-session.dto';
 import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
+import { ChurchModel } from '../../../../../churches/entity/church.entity';
+import { GetEducationSessionForCalendarDto } from '../../../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_DOMAIN_SERVICE',
 );
 
 export interface IEducationSessionDomainService {
+  findEducationSessionsForCalendar(
+    church: ChurchModel,
+    dto: GetEducationSessionForCalendarDto,
+    qr?: QueryRunner,
+  ): Promise<EducationSessionModel[]>;
+
+  findEducationSessionByIdForCalendar(
+    church: ChurchModel,
+    sessionId: number,
+  ): Promise<EducationSessionModel>;
+
   findEducationSessions(
     educationTerm: EducationTermModel,
     dto: GetEducationSessionDto,

@@ -65,6 +65,8 @@ import { WorshipSessionModel } from './worship/entity/worship-session.entity';
 import { WorshipAttendanceModel } from './worship/entity/worship-attendance.entity';
 import { WorshipModule } from './worship/worship.module';
 import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.entity';
+import { CalendarModule } from './calendar/calendar.module';
+import { ChurchEventModel } from './calendar/entity/church-event.entity';
 
 @Module({
   imports: [
@@ -182,6 +184,8 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
           WorshipSessionModel,
           WorshipAttendanceModel,
           WorshipTargetGroupModel,
+          // 교회 일정표/이벤트
+          ChurchEventModel,
         ],
         synchronize: false,
       }),
@@ -211,6 +215,7 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
     VisitationModule,
     TaskModule,
     WorshipModule,
+    CalendarModule,
 
     ChurchesDomainModule,
     MembersDomainModule,
