@@ -1,7 +1,9 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { CalendarEducationService } from '../service/calendar-education.service';
 import { GetEducationSessionForCalendarDto } from '../dto/request/education/get-education-session-for-calendar.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Calendar:Educations')
 @Controller('educations')
 export class CalendarEducationController {
   constructor(

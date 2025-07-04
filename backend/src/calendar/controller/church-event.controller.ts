@@ -13,7 +13,9 @@ import { ChurchEventService } from '../service/church-event.service';
 import { CreateChurchEventDto } from '../dto/request/event/create-church-event.dto';
 import { GetChurchEventsDto } from '../dto/request/event/get-church-events.dto';
 import { UpdateChurchEventDto } from '../dto/request/event/update-church-event.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Calendar:Events')
 @Controller('events')
 export class ChurchEventController {
   constructor(private readonly churchEventService: ChurchEventService) {}

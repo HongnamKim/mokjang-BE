@@ -10,7 +10,7 @@ import {
 import { GetBirthdayMembersDto } from '../dto/request/birthday/get-birthday-members.dto';
 
 @Injectable()
-export class CalendarService {
+export class CalendarBirthdayService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
