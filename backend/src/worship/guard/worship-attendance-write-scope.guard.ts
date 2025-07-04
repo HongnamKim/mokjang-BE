@@ -35,6 +35,8 @@ import {
 import { WorshipException } from '../exception/worship.exception';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
+import { WorshipModel } from '../entity/worship.entity';
+import { CustomRequest } from './worship-read-scope.guard';
 
 @Injectable()
 export class WorshipAttendanceWriteScopeGuard implements CanActivate {
@@ -54,7 +56,7 @@ export class WorshipAttendanceWriteScopeGuard implements CanActivate {
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
-  private async getRequestChurch(req: any) {
+  private async getRequestChurch(req: CustomRequest) {
     const churchId = parseInt(req.params.churchId);
 
     return req.church
@@ -63,7 +65,7 @@ export class WorshipAttendanceWriteScopeGuard implements CanActivate {
   }
 
   private async getRequestManager(
-    req: any,
+    req: CustomRequest,
     church: ChurchModel,
   ): Promise<ChurchUserModel> {
     const token = req.tokenPayload;
@@ -82,7 +84,7 @@ export class WorshipAttendanceWriteScopeGuard implements CanActivate {
         );
   }
 
-  private async getWorship(req, church: ChurchModel) {
+  private async getRequestWorship(req: CustomRequest, church: ChurchModel) {
     const worshipId = parseInt(req.params.worshipId);
     const sessionId = parseInt(req.params.sessionId);
     const attendanceId = parseInt(req.params.attendanceId);
@@ -109,37 +111,70 @@ export class WorshipAttendanceWriteScopeGuard implements CanActivate {
     return { worship, session, targetAttendance };
   }
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
-
-    const church = await this.getRequestChurch(req);
-    const requestManager = await this.getRequestManager(req, church);
-
-    const { worship, targetAttendance } = await this.getWorship(req, church);
-
-    const targetAttendanceMemberGroupId =
-      targetAttendance.worshipEnrollment.member.group.id;
-
+  private async getTargetWorshipGroupIds(
+    church: ChurchModel,
+    worship: WorshipModel,
+  ) {
     const rootTargetWorshipGroupIds = worship.worshipTargetGroups.map(
       (targetGroup) => targetGroup.group.id,
     );
 
     // 모든 예배 대상 그룹 ID
-    const targetWorshipGroupIds = (
+    return (
       await this.groupsDomainService.findGroupAndDescendantsByIds(
         church,
         rootTargetWorshipGroupIds,
       )
     ).map((group) => group.id);
+  }
+
+  private async getScopeGroupIds(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+  ) {
+    const rootPermissionScopeGroupIds = requestManager.permissionScopes.map(
+      (scope) => scope.group.id,
+    );
+
+    return (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        rootPermissionScopeGroupIds,
+      )
+    ).map((group) => group.id);
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const req: CustomRequest = context.switchToHttp().getRequest();
+
+    const church = await this.getRequestChurch(req);
+    const requestManager = await this.getRequestManager(req, church);
+
+    const { worship, targetAttendance } = await this.getRequestWorship(
+      req,
+      church,
+    );
+
+    // 그룹에 속하지 않을 경우 undefined
+    const targetAttendanceMemberGroupId: number | undefined =
+      targetAttendance.worshipEnrollment.member?.group?.id;
 
     // 해당 출석 기록이 예배 대상 그룹에 속하는지 검증
-    if (!targetWorshipGroupIds.includes(targetAttendanceMemberGroupId)) {
+    const targetWorshipGroupIds = await this.getTargetWorshipGroupIds(
+      church,
+      worship,
+    );
+
+    // 대상 그룹이 지정된 예배일 경우만 체크
+    if (
+      targetWorshipGroupIds.length &&
+      !targetWorshipGroupIds.includes(targetAttendanceMemberGroupId)
+    ) {
       throw new ForbiddenException(WorshipException.INVALID_TARGET_GROUP);
     }
     // ------------------------------------
 
     // 요청한 사람이 해당 교인 출석에 대한 권한 범위를 갖고 있는지 체크
-
     // 소유자
     if (requestManager.role === ChurchUserRole.OWNER) {
       return true;
@@ -151,16 +186,7 @@ export class WorshipAttendanceWriteScopeGuard implements CanActivate {
     }
 
     // 관리자의 권한 범위 내에 있는 출석 정보인지 체크
-    const rootPermissionScopeGroupIds = requestManager.permissionScopes.map(
-      (scope) => scope.group.id,
-    );
-
-    const scopeGroupIds = (
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        rootPermissionScopeGroupIds,
-      )
-    ).map((group) => group.id);
+    const scopeGroupIds = await this.getScopeGroupIds(church, requestManager);
 
     if (!scopeGroupIds.includes(targetAttendanceMemberGroupId)) {
       throw new ForbiddenException(
