@@ -18,9 +18,14 @@ import {
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { WorshipException } from '../exception/worship.exception';
+import { CustomRequest } from './worship-read-scope.guard';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
+/**
+ * 필터링 요청한 그룹이 해당 예배의 대상 그룹인지 검사
+ */
 @Injectable()
-export class WorshipTargetGroupGuard implements CanActivate {
+export class WorshipGroupFilterGuard implements CanActivate {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -30,26 +35,49 @@ export class WorshipTargetGroupGuard implements CanActivate {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
-
+  private async getRequestChurch(req: CustomRequest) {
     const churchId = parseInt(req.params.churchId);
+
+    if (req.church) {
+      return req.church;
+    } else {
+      const church =
+        await this.churchesDomainService.findChurchModelById(churchId);
+
+      req.church = church;
+
+      return church;
+    }
+  }
+
+  private async getRequestWorship(req: CustomRequest, church: ChurchModel) {
     const worshipId = parseInt(req.params.worshipId);
+
+    if (req.worship) {
+      return req.worship;
+    } else {
+      const worship = await this.worshipDomainService.findWorshipModelById(
+        church,
+        worshipId,
+        undefined,
+        { worshipTargetGroups: { group: true } },
+      );
+
+      req.worship = worship;
+
+      return worship;
+    }
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const req: CustomRequest = context.switchToHttp().getRequest();
+
+    const church = await this.getRequestChurch(req);
+
+    const worship = await this.getRequestWorship(req, church);
+
     // 조회 요청 그룹 ID
-    const requestGroupId = parseInt(req.query.groupId);
-
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
-    const worship = await this.worshipDomainService.findWorshipModelById(
-      church,
-      worshipId,
-      undefined,
-      { worshipTargetGroups: { group: true } },
-    );
-
-    req.church = church;
-    req.worship = worship;
+    const requestGroupId = parseInt(req.query.groupId as string);
 
     // 필터링할 그룹이 없을 경우 통과
     if (!requestGroupId) return true;

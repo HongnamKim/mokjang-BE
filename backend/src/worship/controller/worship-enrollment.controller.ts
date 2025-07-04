@@ -15,7 +15,7 @@ import { TransactionInterceptor } from '../../common/interceptor/transaction.int
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
-import { WorshipTargetGroupGuard } from '../guard/worship-target-group.guard';
+import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
 import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
@@ -44,7 +44,7 @@ export class WorshipEnrollmentController {
       DomainName.WORSHIP,
       DomainAction.READ,
     ),
-    WorshipTargetGroupGuard,
+    WorshipGroupFilterGuard,
     WorshipReadScopeGuard,
   )
   getEnrollments(

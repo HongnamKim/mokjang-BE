@@ -21,7 +21,7 @@ import { WorshipReadGuard } from '../guard/worship-read.guard';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
-import { WorshipTargetGroupGuard } from '../guard/worship-target-group.guard';
+import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
 import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainName } from '../../permission/const/domain-name.enum';
@@ -48,7 +48,7 @@ export class WorshipAttendanceController {
       DomainName.WORSHIP,
       DomainAction.READ,
     ),
-    WorshipTargetGroupGuard,
+    WorshipGroupFilterGuard,
     WorshipReadScopeGuard,
   )
   @WorshipReadGuard()
