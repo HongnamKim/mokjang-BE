@@ -106,7 +106,16 @@ export class CreateMemberDto {
   })
   @IsBoolean()
   @IsOptional()
-  isLunar?: boolean = false;
+  isLunar?: boolean;
+
+  @ApiProperty({
+    description: '윤달 여부',
+    default: false,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isLeafMonth?: boolean;
 
   @ApiProperty({
     name: 'birth',

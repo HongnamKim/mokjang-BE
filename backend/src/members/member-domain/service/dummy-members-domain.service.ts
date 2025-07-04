@@ -21,7 +21,10 @@ export class DummyMembersDomainService implements IDummyMembersDomainService {
   ): MemberModel {
     const membersRepository = this.getMembersRepository();
 
-    return membersRepository.create(dto);
+    return membersRepository.create({
+      ...dto,
+      birthdayMMDD: dto.birth?.toISOString().slice(5, 10),
+    });
   }
 
   createDummyMembers(members: MemberModel[], qr?: QueryRunner) {

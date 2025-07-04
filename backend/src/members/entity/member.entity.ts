@@ -34,14 +34,6 @@ import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
-  /*@Index()
-  @Column({ nullable: true })
-  userId: number;
-
-  @OneToOne(() => UserModel, (user) => user.member)
-  @JoinColumn({ name: 'userId' })
-  user: UserModel;*/
-
   @OneToOne(() => ChurchUserModel, (churchUser) => churchUser.member)
   churchUser: ChurchUserModel;
 
@@ -75,9 +67,16 @@ export class MemberModel extends BaseModel {
   @Column({ default: false, comment: '생일 음력 여부' })
   isLunar: boolean;
 
+  @Column({ default: false, comment: '윤달 여부' })
+  isLeafMonth: boolean;
+
   @Index()
   @Column({ nullable: true, comment: '생년 월일' })
   birth: Date;
+
+  @Index()
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  birthdayMMDD: string;
 
   @Index()
   @Column({ enum: GenderEnum, nullable: true, comment: '성별' })

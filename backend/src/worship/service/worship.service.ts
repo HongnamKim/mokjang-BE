@@ -65,9 +65,12 @@ export class WorshipService {
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
-  async findWorships(churchId: number, dto: GetWorshipsDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+  async findWorships(
+    church: ChurchModel /*churchId: number*/,
+    dto: GetWorshipsDto,
+  ) {
+    /*const church =
+      await this.churchesDomainService.findChurchModelById(churchId);*/
 
     const { data, totalCount } = await this.worshipDomainService.findWorships(
       church,
@@ -98,11 +101,15 @@ export class WorshipService {
     return new GetWorshipResponseDto(worship);
   }
 
-  async postWorship(churchId: number, dto: CreateWorshipDto, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
+  async postWorship(
+    church: ChurchModel,
+    dto: CreateWorshipDto,
+    qr: QueryRunner,
+  ) {
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
 
     const newWorship = await this.worshipDomainService.createWorship(
       church,

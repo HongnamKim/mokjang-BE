@@ -89,6 +89,12 @@ export interface IGroupsDomainService {
 
   findChildGroups(group: GroupModel, qr?: QueryRunner): Promise<ChildGroup[]>;
 
+  findGroupAndDescendantsByIds(
+    church: ChurchModel,
+    rootGroupIds: number[],
+    qr?: QueryRunner,
+  ): Promise<GroupModel[]>;
+
   incrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
 
   decrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
