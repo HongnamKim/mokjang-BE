@@ -34,6 +34,9 @@ export interface CustomRequest extends Request {
   tokenPayload: any;
 }
 
+/**
+ * 필터링 요청한 그룹이 요청자의 권한 범위 내에 속하는지 검사
+ */
 @Injectable()
 export class WorshipReadScopeGuard implements CanActivate {
   constructor(
@@ -48,9 +51,16 @@ export class WorshipReadScopeGuard implements CanActivate {
   private async getRequestChurch(req: CustomRequest) {
     const churchId = parseInt(req.params.churchId);
 
-    return req.church
-      ? req.church
-      : await this.churchesDomainService.findChurchModelById(churchId);
+    if (req.church) {
+      return req.church;
+    } else {
+      const church =
+        await this.churchesDomainService.findChurchModelById(churchId);
+
+      req.church = church;
+
+      return church;
+    }
   }
 
   private async getRequestManager(
@@ -65,25 +75,36 @@ export class WorshipReadScopeGuard implements CanActivate {
 
     const requestUserId = token.id;
 
-    return req.requestManager
-      ? req.requestManager
-      : this.managerDomainService.findManagerForPermissionCheck(
+    if (req.requestManager) {
+      return req.requestManager;
+    } else {
+      const requestManager =
+        await this.managerDomainService.findManagerForPermissionCheck(
           church,
           requestUserId,
         );
+
+      req.requestManager = requestManager;
+
+      return requestManager;
+    }
   }
 
-  private parseGroupId(req: Request) {
-    const requestGroupId = req.query.groupId;
-    if (!requestGroupId) {
-      return undefined;
-    }
+  private async getPermissionScopeGroupIds(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+  ) {
+    const rootPermissionScopeGroupIds = requestManager.permissionScopes.map(
+      (permissionScope: PermissionScopeModel) => permissionScope.group.id,
+    );
 
-    if (typeof requestGroupId === 'string') {
-      return parseInt(requestGroupId, 10);
-    }
-
-    throw new InternalServerErrorException('알 수 없는 에러 발생');
+    // 제한된 권한 범위의 관리자 검증
+    return (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        rootPermissionScopeGroupIds,
+      )
+    ).map((group) => group.id);
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -103,22 +124,17 @@ export class WorshipReadScopeGuard implements CanActivate {
       return true;
     }
 
-    const rootPermissionScopeGroupIds = requestManager.permissionScopes.map(
-      (permissionScope: PermissionScopeModel) => permissionScope.group.id,
+    // 제한된 권한 범위의 관리자 검증
+    const permissionGroupIds = await this.getPermissionScopeGroupIds(
+      church,
+      requestManager,
     );
-
-    const permissionGroupIds = (
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        rootPermissionScopeGroupIds,
-      )
-    ).map((group) => group.id);
 
     req.permissionScopeGroupIds = permissionGroupIds;
 
-    const requestGroupId = this.parseGroupId(req);
+    const requestGroupId = parseInt(req.query.groupId as string);
 
-    if (requestGroupId === undefined) {
+    if (!requestGroupId) {
       return true;
     }
 
