@@ -7,11 +7,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { GetBirthdayMembersDto } from '../dto/request/birthday/get-birthday-members.dto';
-import { CalendarService } from '../service/calendar.service';
+import { CalendarBirthdayService } from '../service/calendar-birthday.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Calendar:Birthday')
 @Controller()
-export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+export class CalendarBirthdayController {
+  constructor(private readonly calendarService: CalendarBirthdayService) {}
 
   @Get('birthday')
   getBirthdayMembers(

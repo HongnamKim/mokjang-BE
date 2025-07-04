@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { RouterModule } from '@nestjs/core';
-import { CalendarController } from './controller/calendar.controller';
-import { CalendarService } from './service/calendar.service';
+import { CalendarBirthdayController } from './controller/calendar-birthday.controller';
+import { CalendarBirthdayService } from './service/calendar-birthday.service';
 import { CalendarDomainModule } from './calendar-domain/calendar-domain.module';
 import { ChurchEventService } from './service/church-event.service';
 import { ChurchEventController } from './controller/church-event.controller';
@@ -22,10 +22,14 @@ import { EducationDomainModule } from '../management/educations/service/educatio
     EducationDomainModule,
   ],
   controllers: [
-    CalendarController,
+    CalendarBirthdayController,
     ChurchEventController,
     CalendarEducationController,
   ],
-  providers: [CalendarService, ChurchEventService, CalendarEducationService],
+  providers: [
+    CalendarBirthdayService,
+    ChurchEventService,
+    CalendarEducationService,
+  ],
 })
 export class CalendarModule {}
