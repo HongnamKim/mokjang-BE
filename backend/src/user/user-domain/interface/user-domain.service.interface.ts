@@ -7,7 +7,9 @@ import { UpdateUserDto } from '../../dto/update-user.dto';
 export const IUSER_DOMAIN_SERVICE = Symbol('IUserDomainService');
 
 export interface IUserDomainService {
-  findUserById(id: number, qr?: QueryRunner): Promise<UserModel>;
+  findUserById(userId: number, qr?: QueryRunner): Promise<UserModel>;
+
+  findUserModelById(id: number, qr?: QueryRunner): Promise<UserModel>;
 
   findUserModelByOAuth(
     provider: string,

@@ -59,7 +59,7 @@ export class ChurchesService {
     dto: CreateChurchDto,
     qr: QueryRunner,
   ) {
-    const ownerUser = await this.userDomainService.findUserById(
+    const ownerUser = await this.userDomainService.findUserModelById(
       accessPayload.id,
       qr,
     );
@@ -141,7 +141,7 @@ export class ChurchesService {
       qr,
     );
 
-    const oldOwnerUser = await this.userDomainService.findUserById(
+    const oldOwnerUser = await this.userDomainService.findUserModelById(
       church.ownerUserId,
       qr,
     );
@@ -160,7 +160,7 @@ export class ChurchesService {
         qr,
       );
 
-    const newOwnerUser = await this.userDomainService.findUserById(
+    const newOwnerUser = await this.userDomainService.findUserModelById(
       newOwnerChurchUser.userId,
       qr,
     );

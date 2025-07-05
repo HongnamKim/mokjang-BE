@@ -11,16 +11,21 @@ import { TaskReportDomainModule } from './report-domain/task-report-domain.modul
 import { EducationSessionReportController } from './controller/education-session-report.controller';
 import { EducationSessionReportService } from './service/education-session-report.service';
 import { EducationSessionReportDomainModule } from './report-domain/education-session-report-domain.module';
+import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
+import { UserDomainModule } from '../user/user-domain/user-domain.module';
 
 @Module({
   imports: [
     RouterModule.register([
       {
-        path: 'churches/:churchId/members/:memberId/reports',
+        //path: 'churches/:churchId/members/:memberId/reports',
+        path: 'me/reports',
         module: ReportModule,
       },
     ]),
+    UserDomainModule,
     ChurchesDomainModule,
+    ChurchUserDomainModule,
     MembersDomainModule,
     VisitationReportDomainModule,
     TaskReportDomainModule,

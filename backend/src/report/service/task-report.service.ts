@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   ITASK_REPORT_DOMAIN_SERVICE,
   ITaskReportDomainService,
@@ -18,6 +18,14 @@ import { GetTaskReportResponseDto } from '../dto/task-report/response/get-task-r
 import { UpdateTaskReportDto } from '../dto/task-report/request/update-task-report.dto';
 import { PatchTaskReportResponseDto } from '../dto/task-report/response/patch-task-report-response.dto';
 import { DeleteTaskReportResponseDto } from '../dto/task-report/response/delete-task-report-response.dto';
+import {
+  ICHURCH_USER_DOMAIN_SERVICE,
+  IChurchUserDomainService,
+} from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../../user/user-domain/interface/user-domain.service.interface';
 
 @Injectable()
 export class TaskReportService {
@@ -29,25 +37,26 @@ export class TaskReportService {
 
     @Inject(ITASK_REPORT_DOMAIN_SERVICE)
     private readonly taskReportDomainService: ITaskReportDomainService,
+    @Inject(ICHURCH_USER_DOMAIN_SERVICE)
+    private readonly churchUserDomainService: IChurchUserDomainService,
+    @Inject(IUSER_DOMAIN_SERVICE)
+    private readonly userDomainService: IUserDomainService,
   ) {}
 
-  async getTaskReports(
-    churchId: number,
-    memberId: number,
-    dto: GetTaskReportDto,
-  ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-    const receiver = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      undefined,
-      //{ user: true },
+  async getTaskReports(userId: number, dto: GetTaskReportDto) {
+    const user = await this.userDomainService.findUserById(userId);
+
+    const currentChurchUser = user.churchUser.find(
+      (churchUser) => churchUser.leftAt === null,
     );
+
+    if (!currentChurchUser) {
+      throw new BadRequestException('교회에 가입되지 않은 사용자');
+    }
 
     const { data, totalCount } =
       await this.taskReportDomainService.findTaskReportsByReceiver(
-        receiver,
+        currentChurchUser.member,
         dto,
       );
 
@@ -61,12 +70,11 @@ export class TaskReportService {
   }
 
   async getTaskReportById(
-    churchId: number,
-    memberId: number,
+    userId: number,
     taskReportId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -75,10 +83,20 @@ export class TaskReportService {
       memberId,
       qr,
       //{ user: true },
+    );*/
+    const user = await this.userDomainService.findUserById(userId);
+
+    const currentChurchUser = user.churchUser.find(
+      (churchUser) => churchUser.leftAt === null,
     );
 
+    if (!currentChurchUser) {
+      throw new BadRequestException('교회에 가입되지 않은 사용자');
+    }
+
     const report = await this.taskReportDomainService.findTaskReportById(
-      receiver,
+      //receiver,
+      currentChurchUser.member,
       taskReportId,
       true,
       qr,
