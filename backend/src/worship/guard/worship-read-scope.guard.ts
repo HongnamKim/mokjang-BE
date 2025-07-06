@@ -25,13 +25,14 @@ import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
 import { WorshipModel } from '../entity/worship.entity';
 import { Request } from 'express';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 
 export interface CustomRequest extends Request {
   church: ChurchModel;
   worship: WorshipModel;
   requestManager: ChurchUserModel;
   permissionScopeGroupIds: number[];
-  tokenPayload: any;
+  tokenPayload: JwtAccessPayload;
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -22,65 +23,66 @@ import {
   ApiPatchVisitationReport,
 } from '../const/swagger/visitation-report.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 
-@ApiTags('Churches:Members:Reports:Visitations')
+@ApiTags('Me:Reports:Visitations')
 @Controller('visitations')
 export class VisitationReportController {
   constructor(private readonly reportService: VisitationReportService) {}
 
   @ApiGetVisitationReports()
+  @UseGuards(AccessTokenGuard)
   @Get()
   getVisitationReports(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Query() dto: GetVisitationReportDto,
   ) {
-    return this.reportService.getVisitationReport(churchId, memberId, dto);
+    return this.reportService.getVisitationReport(accessToken.id, dto);
   }
 
   @ApiGetVisitationReportById()
+  @UseGuards(AccessTokenGuard)
   @Get(':visitationReportId')
   @UseInterceptors(TransactionInterceptor)
   getVisitationReportById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('visitationReportId', ParseIntPipe) visitationReportId: number,
     @QueryRunner() qr: QR,
   ) {
     return this.reportService.getVisitationReportById(
-      churchId,
-      memberId,
+      accessToken.id,
       visitationReportId,
       qr,
     );
   }
 
   @ApiPatchVisitationReport()
+  @UseGuards(AccessTokenGuard)
   @Patch(':visitationReportId')
   patchVisitationReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('visitationReportId', ParseIntPipe) visitationReportId: number,
     @Body() dto: UpdateVisitationReportDto,
   ) {
     return this.reportService.updateVisitationReport(
-      churchId,
-      memberId,
+      accessToken.id,
       visitationReportId,
       dto,
     );
   }
 
   @ApiDeleteVisitationReport()
+  @UseGuards(AccessTokenGuard)
   @Delete(':visitationReportId')
   deleteVisitationReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('visitationReportId', ParseIntPipe) visitationReportId: number,
   ) {
     return this.reportService.deleteVisitationReport(
-      churchId,
-      memberId,
+      accessToken.id,
       visitationReportId,
     );
   }

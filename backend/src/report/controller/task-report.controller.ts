@@ -28,7 +28,7 @@ import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 
-@ApiTags('Churches:Members:Reports:Tasks')
+@ApiTags('Me:Reports:Tasks')
 @Controller('tasks')
 export class TaskReportController {
   constructor(private readonly taskReportService: TaskReportService) {}
@@ -60,31 +60,29 @@ export class TaskReportController {
   }
 
   @ApiPatchTaskReport()
+  @UseGuards(AccessTokenGuard)
   @Patch(':taskReportId')
   patchTaskReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
     @Body() dto: UpdateTaskReportDto,
   ) {
     return this.taskReportService.patchTaskReport(
-      churchId,
-      memberId,
+      accessToken.id,
       taskReportId,
       dto,
     );
   }
 
   @ApiDeleteTaskReport()
+  @UseGuards(AccessTokenGuard)
   @Delete(':taskReportId')
   deleteTaskReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
   ) {
     return this.taskReportService.deleteTaskReport(
-      churchId,
-      memberId,
+      accessToken.id,
       taskReportId,
     );
   }
