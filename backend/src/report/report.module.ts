@@ -15,14 +15,11 @@ import { UserDomainModule } from '../user/user-domain/user-domain.module';
   imports: [
     RouterModule.register([
       {
-        //path: 'churches/:churchId/members/:memberId/reports',
         path: 'me/reports',
         module: ReportModule,
       },
     ]),
     UserDomainModule,
-    //ChurchesDomainModule,
-    //MembersDomainModule,
     VisitationReportDomainModule,
     TaskReportDomainModule,
     EducationSessionReportDomainModule,

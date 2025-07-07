@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import {
   IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
   IEducationSessionReportDomainService,
@@ -34,7 +34,11 @@ export class EducationSessionReportService {
     );
 
     if (!currentChurchUser) {
-      throw new BadRequestException('교회에 가입되지 않은 사용자');
+      throw new ForbiddenException('교회에 가입되지 않은 사용자');
+    }
+
+    if (!currentChurchUser.member) {
+      throw new ForbiddenException('교인 정보 없음');
     }
 
     return currentChurchUser.member;

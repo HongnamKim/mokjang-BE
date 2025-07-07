@@ -49,13 +49,29 @@ export class UserDomainService implements IUserDomainService {
 
     const user = await repository
       .createQueryBuilder('user')
-      .leftJoinAndSelect(
-        'user.churchUser',
-        'churchUser',
-        'churchUser.leftAt IS NULL',
-      )
-      .leftJoinAndSelect('churchUser.church', 'church') // 교회
-      .leftJoinAndSelect('churchUser.member', 'member') // 교인
+      .leftJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
+      .addSelect([
+        'churchUser.id',
+        'churchUser.createdAt',
+        'churchUser.updatedAt',
+        'churchUser.churchId',
+        'churchUser.memberId',
+        'churchUser.role',
+        'churchUser.joinedAt',
+      ])
+      .leftJoin('churchUser.church', 'church') // 교회
+      .addSelect([
+        'church.id',
+        'church.createdAt',
+        'church.updatedAt',
+        'church.name',
+        'church.phone',
+        'church.denomination',
+        'church.address',
+        'church.detailAddress',
+      ])
+      .leftJoin('churchUser.member', 'member') // 교인
+      .addSelect(['member.id', 'member.name', 'member.profileImageUrl'])
       .leftJoin('member.group', 'group') // 교인 - 그룹
       .addSelect(['group.id', 'group.name'])
       .leftJoin('member.officer', 'officer') // 교인 - 직분
