@@ -28,7 +28,7 @@ import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 
-@ApiTags('Me:Reports:Tasks')
+@ApiTags('MyPage:Reports:Tasks')
 @Controller('tasks')
 export class TaskReportController {
   constructor(private readonly taskReportService: TaskReportService) {}

@@ -24,7 +24,7 @@ import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 
-@ApiTags('Me:Reports:Education-Sessions')
+@ApiTags('MyPage:Reports:Education-Sessions')
 @Controller('education-session')
 export class EducationSessionReportController {
   constructor(
