@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { EducationSessionReportService } from '../service/education-session-report.service';
 import { GetEducationSessionReportDto } from '../dto/education-report/session/request/get-education-session-report.dto';
@@ -18,8 +19,12 @@ import {
   ApiGetEducationSessionReports,
   ApiPatchEducationSessionReport,
 } from '../const/swagger/education-session-report.swagger';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 
-@ApiTags('Churches:Members:Reports:Education-Sessions')
+@ApiTags('MyPage:Reports:Education-Sessions')
 @Controller('education-session')
 export class EducationSessionReportController {
   constructor(
@@ -27,59 +32,55 @@ export class EducationSessionReportController {
   ) {}
 
   @ApiGetEducationSessionReports()
+  @UseGuards(AccessTokenGuard)
   @Get()
   getEducationSessionReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Query() dto: GetEducationSessionReportDto,
   ) {
     return this.educationSessionReportService.getEducationSessionReports(
-      churchId,
-      memberId,
+      accessToken.id,
       dto,
     );
   }
 
   @ApiGetEducationSessionReportById()
+  @UseGuards(AccessTokenGuard)
   @Get(':educationSessionReportId')
   getEducationSessionReportById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('educationSessionReportId', ParseIntPipe) reportId: number,
   ) {
     return this.educationSessionReportService.getEducationSessionReportById(
-      churchId,
-      memberId,
+      accessToken.id,
       reportId,
     );
   }
 
   @ApiPatchEducationSessionReport()
+  @UseGuards(AccessTokenGuard)
   @Patch(':educationSessionReportId')
   patchEducationSessionReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('educationSessionReportId', ParseIntPipe) reportId: number,
     @Body() dto: UpdateEducationSessionReportDto,
   ) {
     return this.educationSessionReportService.patchEducationSessionReport(
-      churchId,
-      memberId,
+      accessToken.id,
       reportId,
       dto,
     );
   }
 
   @ApiDeleteEducationSessionReport()
+  @UseGuards(AccessTokenGuard)
   @Delete(':educationSessionReportId')
   deleteEducationSessionReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('educationSessionReportId', ParseIntPipe) reportId: number,
   ) {
     return this.educationSessionReportService.deleteEducationSessionReport(
-      churchId,
-      memberId,
+      accessToken.id,
       reportId,
     );
   }

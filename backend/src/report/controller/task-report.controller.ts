@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -22,65 +23,66 @@ import {
   ApiGetTaskReports,
   ApiPatchTaskReport,
 } from '../const/swagger/task-report.swagger';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 
-@ApiTags('Churches:Members:Reports:Tasks')
+@ApiTags('MyPage:Reports:Tasks')
 @Controller('tasks')
 export class TaskReportController {
   constructor(private readonly taskReportService: TaskReportService) {}
 
   @ApiGetTaskReports()
   @Get()
+  @UseGuards(AccessTokenGuard)
   getTaskReports(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
     @Query() dto: GetTaskReportDto,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
   ) {
-    return this.taskReportService.getTaskReports(churchId, memberId, dto);
+    return this.taskReportService.getTaskReports(accessToken.id, dto);
   }
 
   @ApiGetTaskReportById()
   @Get(':taskReportId')
+  @UseGuards(AccessTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   getTaskReportById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
     @QueryRunner() qr: QR,
   ) {
     return this.taskReportService.getTaskReportById(
-      churchId,
-      memberId,
+      accessToken.id,
       taskReportId,
       qr,
     );
   }
 
   @ApiPatchTaskReport()
+  @UseGuards(AccessTokenGuard)
   @Patch(':taskReportId')
   patchTaskReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
     @Body() dto: UpdateTaskReportDto,
   ) {
     return this.taskReportService.patchTaskReport(
-      churchId,
-      memberId,
+      accessToken.id,
       taskReportId,
       dto,
     );
   }
 
   @ApiDeleteTaskReport()
+  @UseGuards(AccessTokenGuard)
   @Delete(':taskReportId')
   deleteTaskReport(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
   ) {
     return this.taskReportService.deleteTaskReport(
-      churchId,
-      memberId,
+      accessToken.id,
       taskReportId,
     );
   }

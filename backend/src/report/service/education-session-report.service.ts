@@ -1,12 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
-  IMEMBERS_DOMAIN_SERVICE,
-  IMembersDomainService,
-} from '../../members/member-domain/interface/members-domain.service.interface';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import {
   IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
   IEducationSessionReportDomainService,
@@ -18,34 +10,49 @@ import { PatchEducationSessionReportResponseDto } from '../dto/education-report/
 import { GetEducationSessionReportResponseDto } from '../dto/education-report/session/response/get-education-session-report-response.dto';
 import { QueryRunner } from 'typeorm';
 import { DeleteEducationSessionReportResponseDto } from '../dto/education-report/session/response/delete-education-session-report-response.dto';
+import {
+  IUSER_DOMAIN_SERVICE,
+  IUserDomainService,
+} from '../../user/user-domain/interface/user-domain.service.interface';
+import { MemberModel } from '../../members/entity/member.entity';
 
 @Injectable()
 export class EducationSessionReportService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,
+    @Inject(IUSER_DOMAIN_SERVICE)
+    private readonly userDomainService: IUserDomainService,
 
     @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
     private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
   ) {}
 
+  private async getCurrentMember(userId: number): Promise<MemberModel> {
+    const user = await this.userDomainService.findUserById(userId);
+
+    const currentChurchUser = user.churchUser.find(
+      (churchUser) => churchUser.leftAt === null,
+    );
+
+    if (!currentChurchUser) {
+      throw new ForbiddenException('교회에 가입되지 않은 사용자');
+    }
+
+    if (!currentChurchUser.member) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
+
+    return currentChurchUser.member;
+  }
+
   async getEducationSessionReports(
-    churchId: number,
-    memberId: number,
+    userId: number,
     dto: GetEducationSessionReportDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-    const receiver = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-    );
+    const currentMember = await this.getCurrentMember(userId);
 
     const { data, totalCount } =
       await this.educationSessionReportDomainService.findEducationSessionReports(
-        receiver,
+        currentMember,
         dto,
       );
 
@@ -58,17 +65,8 @@ export class EducationSessionReportService {
     );
   }
 
-  async getEducationSessionReportById(
-    churchId: number,
-    receiverId: number,
-    reportId: number,
-  ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-    const receiver = await this.membersDomainService.findMemberModelById(
-      church,
-      receiverId,
-    );
+  async getEducationSessionReportById(userId: number, reportId: number) {
+    const receiver = await this.getCurrentMember(userId);
 
     const report =
       await this.educationSessionReportDomainService.findEducationSessionReportById(
@@ -81,17 +79,11 @@ export class EducationSessionReportService {
   }
 
   async patchEducationSessionReport(
-    churchId: number,
-    memberId: number,
+    userId: number,
     reportId: number,
     dto: UpdateEducationSessionReportDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-    const receiver = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-    );
+    const receiver = await this.getCurrentMember(userId);
 
     const targetReport =
       await this.educationSessionReportDomainService.findEducationSessionReportModelById(
@@ -115,18 +107,11 @@ export class EducationSessionReportService {
   }
 
   async deleteEducationSessionReport(
-    churchId: number,
-    receiverId: number,
+    userId: number,
     reportId: number,
     qr?: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
-    const receiver = await this.membersDomainService.findMemberModelById(
-      church,
-      receiverId,
-    );
+    const receiver = await this.getCurrentMember(userId);
 
     const deleteTarget =
       await this.educationSessionReportDomainService.findEducationSessionReportModelById(

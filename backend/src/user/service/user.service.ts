@@ -21,11 +21,11 @@ export class UserService {
   ) {}
 
   async getUserById(id: number) {
-    return this.userDomainService.findUserById(id);
+    return this.userDomainService.findUserModelById(id);
   }
 
   async getMyJoinRequest(userId: number, qr?: QueryRunner) {
-    const user = await this.userDomainService.findUserById(userId, qr);
+    const user = await this.userDomainService.findUserModelById(userId, qr);
 
     return this.churchJoinRequestsDomainService.findMyChurchJoinRequest(
       user,
@@ -34,7 +34,7 @@ export class UserService {
   }
 
   async cancelMyJoinRequest(userId: number, qr?: QueryRunner) {
-    const user = await this.userDomainService.findUserById(userId, qr);
+    const user = await this.userDomainService.findUserModelById(userId, qr);
 
     const joinRequest =
       await this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
@@ -56,7 +56,7 @@ export class UserService {
   }
 
   async getMyPendingJoinRequest(userId: number) {
-    const user = await this.userDomainService.findUserById(userId);
+    const user = await this.userDomainService.findUserModelById(userId);
 
     return this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
       user,

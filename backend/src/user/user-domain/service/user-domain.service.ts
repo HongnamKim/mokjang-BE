@@ -24,7 +24,7 @@ export class UserDomainService implements IUserDomainService {
     return qr ? qr.manager.getRepository(UserModel) : this.userRepository;
   }
 
-  async findUserById(id: number, qr?: QueryRunner) {
+  async findUserModelById(id: number, qr?: QueryRunner) {
     const userRepository = this.getUserRepository(qr);
 
     const user = await userRepository
@@ -39,6 +39,60 @@ export class UserDomainService implements IUserDomainService {
 
     if (!user) {
       throw new NotFoundException(UserException.NOT_FOUND);
+    }
+
+    return user;
+  }
+
+  async findUserById(userId: number, qr?: QueryRunner) {
+    const repository = this.getUserRepository(qr);
+
+    const user = await repository
+      .createQueryBuilder('user')
+      .leftJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
+      .addSelect([
+        'churchUser.id',
+        'churchUser.createdAt',
+        'churchUser.updatedAt',
+        'churchUser.churchId',
+        'churchUser.memberId',
+        'churchUser.role',
+        'churchUser.joinedAt',
+      ])
+      .leftJoin('churchUser.church', 'church') // 교회
+      .addSelect([
+        'church.id',
+        'church.createdAt',
+        'church.updatedAt',
+        'church.name',
+        'church.phone',
+        'church.denomination',
+        'church.address',
+        'church.detailAddress',
+      ])
+      .leftJoin('churchUser.member', 'member') // 교인
+      .addSelect(['member.id', 'member.name', 'member.profileImageUrl'])
+      .leftJoin('member.group', 'group') // 교인 - 그룹
+      .addSelect(['group.id', 'group.name'])
+      .leftJoin('member.officer', 'officer') // 교인 - 직분
+      .addSelect(['officer.id', 'officer.name'])
+      .leftJoin('member.groupRole', 'groupRole') // 교인 - 그룹 역할
+      .addSelect(['groupRole.id', 'groupRole.role'])
+      .leftJoin('churchUser.permissionTemplate', 'permissionTemplate') // 관리자 - 권한 유형
+      .addSelect(['permissionTemplate.id', 'permissionTemplate.title'])
+      .leftJoinAndSelect(
+        'permissionTemplate.permissionUnits',
+        'permissionUnits',
+      ) // 관리자 - 권한 유형 - 권한 단위
+      .leftJoin('churchUser.permissionScopes', 'permissionScopes') // 관리자 - 권한 범위
+      .addSelect(['permissionScopes.id', 'permissionScopes.isAllGroups'])
+      .leftJoin('permissionScopes.group', 'permissionScopeGroup') // 관리자 - 권한 범위 - 그룹
+      .addSelect(['permissionScopeGroup.id', 'permissionScopeGroup.name'])
+      .where('user.id = :id', { id: userId })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('유저 정보 없음');
     }
 
     return user;
