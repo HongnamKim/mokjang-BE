@@ -67,6 +67,7 @@ import { WorshipModule } from './worship/worship.module';
 import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.entity';
 import { CalendarModule } from './calendar/calendar.module';
 import { ChurchEventModel } from './calendar/entity/church-event.entity';
+import { MyPageModule } from './my-page/my-page.module';
 
 @Module({
   imports: [
@@ -198,8 +199,9 @@ import { ChurchEventModel } from './calendar/entity/church-event.entity';
       }),
       inject: [ConfigService],
     }),
-    //CommonModule,
     AuthModule,
+    MyPageModule,
+    ReportModule,
     UserModule,
     ChurchesModule,
     ChurchJoinModule,
@@ -210,7 +212,6 @@ import { ChurchEventModel } from './calendar/entity/church-event.entity';
     MembersModule,
     FamilyRelationModule,
     MemberHistoryModule,
-    ReportModule,
     ManagementModule,
     VisitationModule,
     TaskModule,

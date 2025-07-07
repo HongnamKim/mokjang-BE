@@ -66,7 +66,7 @@ export class ChurchJoinService {
     qr: QueryRunner,
   ) {
     const userId = accessPayload.id;
-    const user = await this.userDomainService.findUserById(userId);
+    const user = await this.userDomainService.findUserModelById(userId);
 
     /**
      * ChurchUserModel 조회로 소속된 교회가 있는지 확인
