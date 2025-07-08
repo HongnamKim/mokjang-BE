@@ -360,18 +360,25 @@ export class WorshipSessionService {
   }
 
   private getRecentSessionDate(worship: WorshipModel) {
-    const today = new Date(new Date().setHours(0, 0, 0, 0));
+    const today = new Date();
+
+    const now = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+
     let recentSessionDate: Date;
 
-    if (worship.worshipDay < today.getDay()) {
+    if (worship.worshipDay < now.getDay()) {
       recentSessionDate = new Date(
-        today.getTime() -
-          (today.getDay() - worship.worshipDay) * 24 * 60 * 60 * 1000,
+        now.getTime() -
+          (now.getDay() - worship.worshipDay) * 24 * 60 * 60 * 1000,
       );
     } else {
       recentSessionDate = new Date(
-        today.getTime() -
-          (7 - (worship.worshipDay - today.getDay())) * 24 * 60 * 60 * 1000,
+        now.getTime() -
+          (7 - (worship.worshipDay - now.getDay())) * 24 * 60 * 60 * 1000,
       );
     }
 
