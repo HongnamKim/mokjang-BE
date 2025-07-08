@@ -361,6 +361,11 @@ export class WorshipSessionService {
 
   private getRecentSessionDate(worship: WorshipModel) {
     const today = new Date();
+    console.log(today.getTimezoneOffset());
+    console.log(
+      '타임존 이름:',
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
 
     const now = new Date(
       today.getFullYear(),
