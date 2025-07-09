@@ -39,6 +39,8 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { startOfDay, subDays } from 'date-fns';
 
 @Injectable()
 export class WorshipSessionService {
@@ -360,21 +362,25 @@ export class WorshipSessionService {
   }
 
   private getRecentSessionDate(worship: WorshipModel) {
-    const today = new Date(new Date().setHours(0, 0, 0, 0));
-    let recentSessionDate: Date;
+    const serverToday = new Date(); // UTC 로 현재 시간
 
-    if (worship.worshipDay < today.getDay()) {
-      recentSessionDate = new Date(
-        today.getTime() -
-          (today.getDay() - worship.worshipDay) * 24 * 60 * 60 * 1000,
-      );
-    } else {
-      recentSessionDate = new Date(
-        today.getTime() -
-          (7 - (worship.worshipDay - today.getDay())) * 24 * 60 * 60 * 1000,
-      );
-    }
+    const nowInKorea = toZonedTime(serverToday, 'Asia/Seoul'); // 현재 한국 시간
+    const todayDay = nowInKorea.getDay(); // 한국 요일
 
-    return recentSessionDate;
+    // 오늘이 예배일보다 이후(=같거나 이후)면 오늘 기준
+    // 예) 오늘 화요일(2), 예배일 일요일(0) → 지난 일요일
+    //     오늘 일요일(0), 예배일 일요일(0) → 오늘
+    const daysToSubtract = (todayDay - worship.worshipDay + 7) % 7;
+    console.log(`daysToSubtract: ${daysToSubtract}`);
+
+    // 예배 날짜의 00시 00분 (한국 기준)
+    const recentWorshipDateInKorea = startOfDay(
+      subDays(nowInKorea, daysToSubtract),
+    );
+
+    // 한국 시간 기준 예배일을 UTC Date 객체로 변환 (-9시간)
+    return fromZonedTime(recentWorshipDateInKorea, 'Asia/Seoul');
+
+    //return recentWorshipDateUTC;
   }
 }
