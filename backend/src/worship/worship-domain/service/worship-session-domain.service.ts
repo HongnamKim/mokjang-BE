@@ -193,14 +193,12 @@ export class WorshipSessionDomainService
   ): Promise<WorshipSessionModel> {
     const repository = this.getRepository(qr);
 
-    await this.assertValidNewSession(worship, dto.sessionDate, repository);
+    await this.assertValidNewSession(worship, dto.sessionDateUtc, repository);
     this.assertValidInChargeMember(inCharge);
 
     return repository.save({
       worshipId: worship.id,
-      //inChargeId: inCharge ? inCharge.id : null,
-      //...dto,
-      sessionDate: dto.sessionDate,
+      sessionDate: dto.sessionDateUtc,
       title: dto.title,
       bibleTitle: dto.title,
       description: dto.description,

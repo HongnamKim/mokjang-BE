@@ -41,6 +41,7 @@ import {
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { startOfDay, subDays } from 'date-fns';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
 
 @Injectable()
 export class WorshipSessionService {
@@ -86,11 +87,13 @@ export class WorshipSessionService {
 
   /**
    * 가장 최근의 예배 세션 조회 or 생성
+   * @param timeZone
    * @param churchId
    * @param worshipId
    * @param qr
    */
   async getOrPostRecentSession(
+    timeZone: TIME_ZONE,
     churchId: number,
     worshipId: number,
     qr: QueryRunner,
@@ -106,7 +109,10 @@ export class WorshipSessionService {
       qr,
     );
 
-    const recentSessionDate: Date = this.getRecentSessionDate(worship);
+    const recentSessionDate: Date = this.getRecentSessionDate(
+      worship,
+      timeZone,
+    );
 
     const recentSession =
       await this.worshipSessionDomainService.findOrCreateRecentWorshipSession(
@@ -174,7 +180,9 @@ export class WorshipSessionService {
       qr,
     );
 
-    if (sessionDate.getDay() !== worship.worshipDay) {
+    const zonedSessionDate = toZonedTime(sessionDate, TIME_ZONE.SEOUL);
+
+    if (zonedSessionDate.getDay() !== worship.worshipDay) {
       throw new ConflictException(WorshipSessionException.INVALID_SESSION_DAY);
     }
 
@@ -222,7 +230,9 @@ export class WorshipSessionService {
       worshipId,
     );
 
-    if (dto.sessionDate.getDay() !== worship.worshipDay) {
+    const zonedSessionDate = toZonedTime(dto.sessionDateUtc, TIME_ZONE.SEOUL);
+
+    if (zonedSessionDate.getDay() !== worship.worshipDay) {
       throw new ConflictException(WorshipSessionException.INVALID_SESSION_DAY);
     }
 
@@ -243,7 +253,7 @@ export class WorshipSessionService {
     return new PostWorshipSessionResponseDto(newSession);
   }
 
-  async getSessionById(churchId: number, worshipId: number, sessionId: number) {
+  /*async getSessionById(churchId: number, worshipId: number, sessionId: number) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
@@ -259,7 +269,7 @@ export class WorshipSessionService {
       );
 
     return new GetWorshipSessionResponseDto(session);
-  }
+  }*/
 
   /**
    * 예배 세션 수정
@@ -361,17 +371,16 @@ export class WorshipSessionService {
     );
   }
 
-  private getRecentSessionDate(worship: WorshipModel) {
+  private getRecentSessionDate(worship: WorshipModel, timeZone: TIME_ZONE) {
     const serverToday = new Date(); // UTC 로 현재 시간
 
-    const nowInKorea = toZonedTime(serverToday, 'Asia/Seoul'); // 현재 한국 시간
+    const nowInKorea = toZonedTime(serverToday, timeZone); // 현재 한국 시간
     const todayDay = nowInKorea.getDay(); // 한국 요일
 
     // 오늘이 예배일보다 이후(=같거나 이후)면 오늘 기준
     // 예) 오늘 화요일(2), 예배일 일요일(0) → 지난 일요일
     //     오늘 일요일(0), 예배일 일요일(0) → 오늘
     const daysToSubtract = (todayDay - worship.worshipDay + 7) % 7;
-    console.log(`daysToSubtract: ${daysToSubtract}`);
 
     // 예배 날짜의 00시 00분 (한국 기준)
     const recentWorshipDateInKorea = startOfDay(
@@ -379,8 +388,6 @@ export class WorshipSessionService {
     );
 
     // 한국 시간 기준 예배일을 UTC Date 객체로 변환 (-9시간)
-    return fromZonedTime(recentWorshipDateInKorea, 'Asia/Seoul');
-
-    //return recentWorshipDateUTC;
+    return fromZonedTime(recentWorshipDateInKorea, timeZone);
   }
 }
