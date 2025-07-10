@@ -4,6 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNumber, Matches } from 'class-validator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 
 export class GetWorshipEnrollmentsDto extends BaseOffsetPaginationRequestDto<WorshipEnrollmentOrderEnum> {
   @ApiProperty({
@@ -45,13 +46,13 @@ export class GetWorshipEnrollmentsDto extends BaseOffsetPaginationRequestDto<Wor
 
   get fromSessionDateUtc(): Date | undefined {
     return this.fromSessionDate
-      ? fromZonedTime(`${this.fromSessionDate}T00:00:00`, 'Asia/Seoul')
+      ? fromZonedTime(`${this.fromSessionDate}T00:00:00`, TIME_ZONE.SEOUL)
       : undefined;
   }
 
   get toSessionDateUtc(): Date | undefined {
     return this.toSessionDate
-      ? fromZonedTime(`${this.toSessionDate}T00:00:00`, 'Asia/Seoul')
+      ? fromZonedTime(`${this.toSessionDate}T00:00:00`, TIME_ZONE.SEOUL)
       : undefined;
   }
 }

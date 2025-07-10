@@ -6,27 +6,33 @@ import {
   MAX_WORSHIP_TITLE,
 } from '../../../constraints/worship.constraints';
 import {
-  IsDate,
   IsNumber,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
   Min,
 } from 'class-validator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
-import { Transform } from 'class-transformer';
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 
 @SanitizeDto()
 export class CreateWorshipSessionDto {
   @ApiProperty({
-    description: '예배 세션 진행 날짜 (필수)',
+    description: '예배 세션 진행 날짜 (필수, YYYY-MM-DD)',
   })
-  @IsDate()
-  @Transform(({ value }) => new Date(value.setHours(0, 0, 0, 0)))
-  sessionDate: Date;
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'sessionDate는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  sessionDate: string;
+
+  get sessionDateUtc(): Date {
+    return fromZonedTime(`${this.sessionDate}T00:00:00`, TIME_ZONE.SEOUL);
+  }
 
   @ApiProperty({
     description: '예배 세션 제목',
