@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   GoneException,
+  Headers,
   Param,
   ParseIntPipe,
   Patch,
@@ -31,6 +32,7 @@ import {
 import { CreateWorshipSessionDto } from '../dto/request/worship-session/create-worship-session.dto';
 import { WorshipReadGuard } from '../guard/worship-read.guard';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
 
 @ApiTags('Worships:Sessions')
 @Controller(':worshipId/sessions')
@@ -75,11 +77,13 @@ export class WorshipSessionController {
   @WorshipReadGuard()
   @UseInterceptors(TransactionInterceptor)
   getOrPostRecentSession(
+    @Headers('time-zone') timeZone: TIME_ZONE = TIME_ZONE.SEOUL,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @QueryRunner() qr: QR,
   ) {
     return this.worshipSessionService.getOrPostRecentSession(
+      timeZone,
       churchId,
       worshipId,
       qr,

@@ -131,8 +131,6 @@ export class OfficersDomainService implements IOfficersDomainService {
     });
 
     if (officer && officer.deletedAt) {
-      console.log(officer);
-
       await officersRepository.remove(officer);
 
       return false;
