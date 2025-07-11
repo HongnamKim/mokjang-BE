@@ -1,8 +1,8 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { OfficerModel } from '../../entity/officer.entity';
-import { CreateOfficerDto } from '../../dto/create-officer.dto';
-import { UpdateOfficerDto } from '../../dto/update-officer.dto';
+import { CreateOfficerDto } from '../../dto/request/create-officer.dto';
+import { UpdateOfficerNameDto } from '../../dto/request/update-officer-name.dto';
 import { GetOfficersDto } from '../../dto/request/get-officers.dto';
 import { OfficerDomainPaginationResultDto } from '../../dto/officer-domain-pagination-result.dto';
 
@@ -34,12 +34,19 @@ export interface IOfficersDomainService {
     qr: QueryRunner,
   ): Promise<OfficerModel>;
 
-  updateOfficer(
+  updateOfficerName(
     church: ChurchModel,
     officer: OfficerModel,
-    dto: UpdateOfficerDto,
+    dto: UpdateOfficerNameDto,
     qr?: QueryRunner,
   ): Promise<OfficerModel>;
+
+  updateOfficerStructure(
+    church: ChurchModel,
+    targetOfficer: OfficerModel,
+    order: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 
   deleteOfficer(officer: OfficerModel, qr?: QueryRunner): Promise<void>;
 

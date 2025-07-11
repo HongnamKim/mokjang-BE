@@ -15,10 +15,18 @@ export const ApiPostOfficer = () =>
     }),
   );
 
-export const ApiPatchOfficer = () =>
+export const ApiPatchOfficerName = () =>
   applyDecorators(
     ApiOperation({
-      summary: '직분 수정',
+      summary: '직분 이름 수정',
+    }),
+  );
+
+export const ApiPatchOfficerStructure = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '직분 구조 수정',
+      description: '<h2>교회 내 직분 구조(순서)를 수정합니다.</h2>',
     }),
   );
 
