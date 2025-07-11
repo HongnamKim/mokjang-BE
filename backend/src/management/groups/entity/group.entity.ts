@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { GroupRoleModel } from './group-role.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -6,7 +6,7 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { GroupHistoryModel } from '../../../member-history/entity/group-history.entity';
 
 @Entity()
-@Unique(['name', 'parentGroupId', 'churchId'])
+//@Unique(['name', 'parentGroupId', 'churchId'])
 export class GroupModel extends BaseModel {
   @Column()
   name: string;

@@ -5,12 +5,12 @@ import { IsEnum, IsOptional } from 'class-validator';
 
 export class GetOfficersDto extends BaseOffsetPaginationRequestDto<OfficerOrderEnum> {
   @ApiProperty({
-    description: '정렬 기준 (생성일, 수정일, 이름)',
+    description: '정렬 기준 (지정 순서, 생성일, 수정일, 이름)',
     enum: OfficerOrderEnum,
-    default: OfficerOrderEnum.createdAt,
+    default: OfficerOrderEnum.order,
     required: false,
   })
   @IsEnum(OfficerOrderEnum)
   @IsOptional()
-  order: OfficerOrderEnum = OfficerOrderEnum.createdAt;
+  order: OfficerOrderEnum = OfficerOrderEnum.order;
 }
