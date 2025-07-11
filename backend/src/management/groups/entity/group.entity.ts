@@ -11,6 +11,9 @@ export class GroupModel extends BaseModel {
   @Column()
   name: string;
 
+  @Column({ default: 1 })
+  order: number;
+
   @Index()
   @Column({ type: 'int', nullable: true })
   parentGroupId: number | null;

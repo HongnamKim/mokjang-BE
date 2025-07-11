@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupDto } from '../dto/group/update-group.dto';
+import { UpdateGroupNameDto } from '../dto/group/update-group-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -15,6 +15,7 @@ import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
 import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
 import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
+import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
 
 @Injectable()
 export class GroupsService {
@@ -103,10 +104,10 @@ export class GroupsService {
     return this.groupsDomainService.createGroup(church, dto, qr);
   }
 
-  async updateGroup(
+  async updateGroupStructure(
     churchId: number,
     groupId: number,
-    dto: UpdateGroupDto,
+    dto: UpdateGroupStructureDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -132,13 +133,43 @@ export class GroupsService {
               qr,
             ); // 새 상위 그룹으로 변경
 
-    return this.groupsDomainService.updateGroup(
+    await this.groupsDomainService.updateGroupStructure(
       church,
       targetGroup,
       dto,
       qr,
       newParentGroup,
     );
+
+    return this.groupsDomainService.findGroupById(church, targetGroup.id, qr);
+  }
+
+  async updateGroupName(
+    churchId: number,
+    groupId: number,
+    dto: UpdateGroupNameDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetGroup = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+      qr,
+      { parentGroup: true },
+    );
+
+    await this.groupsDomainService.updateGroupName(
+      church,
+      targetGroup,
+      dto,
+      qr,
+    );
+
+    return this.groupsDomainService.findGroupById(church, targetGroup.id, qr);
   }
 
   async deleteGroup(churchId: number, groupId: number, qr: QueryRunner) {
