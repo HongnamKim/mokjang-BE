@@ -9,6 +9,8 @@ import { TIME_ZONE } from '../../common/const/time-zone.const';
 export class ParseDatePipe implements PipeTransform {
   private static readonly DATE_REGEX: RegExp = /^\d{4}-\d{2}-\d{2}$/;
 
+  constructor(private readonly timeZone: TIME_ZONE = TIME_ZONE.SEOUL) {}
+
   transform(value: string, metadata: ArgumentMetadata): any {
     if (!ParseDatePipe.DATE_REGEX.test(value.trim())) {
       throw new BadRequestException(
@@ -16,7 +18,7 @@ export class ParseDatePipe implements PipeTransform {
       );
     }
 
-    const parsed = fromZonedTime(value + 'T00:00:00.000', TIME_ZONE.SEOUL);
+    const parsed = fromZonedTime(value + 'T00:00:00.000', this.timeZone);
 
     if (isNaN(parsed.getTime())) {
       throw new BadRequestException('유효하지 않은 날짜 형식입니다.');
