@@ -40,16 +40,28 @@ export const ApiGetGroupById = () =>
     }),
   );
 
-export const ApiPatchGroup = () =>
+export const ApiPatchGroupName = () =>
   applyDecorators(
     ApiOperation({
-      summary: '그룹 수정',
+      summary: '그룹 이름 수정',
       description:
-        '<h2>교회 내의 그룹을 수정합니다.</h2>' +
+        '<h2>교회 내의 그룹의 이름을 수정합니다.</h2>' +
         '<p>수정 가능 요소</p>' +
-        '<p>1. 그룹 이름 (중복 불가)</p>' +
+        '<p>1. 그룹 이름 (중복 불가)</p>' /* +
         '<p>2. 상위 그룹</p>' +
-        '<p>상위 그룹을 없애려는 경우 ministryGroupId 를 null 로 설정</p>',
+        '<p>상위 그룹을 없애려는 경우 ministryGroupId 를 null 로 설정</p>',*/,
+    }),
+  );
+
+export const ApiPatchGroupStructure = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '그룹 구조 수정',
+      description:
+        '<h2>교회 내의 그룹의 구조를 수정합니다.</h2>' +
+        '<p>수정 가능 요소</p>' +
+        '<p>1. 순서 (order): 필수값</p>' +
+        '<p>2. 상위 그룹 (최상위 그룹으로 바꿀 경우 parentGroupId 를 null 로 설정</p>',
     }),
   );
 

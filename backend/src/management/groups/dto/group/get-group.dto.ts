@@ -13,12 +13,12 @@ export class GetGroupDto extends BaseOffsetPaginationRequestDto<GroupOrderEnum> 
   parentGroupId: number = 0;
 
   @ApiProperty({
-    description: '정렬 기준 (생성일, 수정일, 이름)',
+    description: '정렬 기준 (지정 순서, 생성일, 수정일, 이름)',
     enum: GroupOrderEnum,
-    default: GroupOrderEnum.createdAt,
+    default: GroupOrderEnum.order,
     required: false,
   })
   @IsEnum(GroupOrderEnum)
   @IsOptional()
-  order: GroupOrderEnum = GroupOrderEnum.createdAt;
+  order: GroupOrderEnum = GroupOrderEnum.order;
 }

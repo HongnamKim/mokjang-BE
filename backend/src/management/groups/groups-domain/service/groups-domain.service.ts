@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -19,11 +20,13 @@ import {
   ILike,
   In,
   IsNull,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { GroupModel } from '../../entity/group.entity';
-import { UpdateGroupDto } from '../../dto/group/update-group.dto';
+import { UpdateGroupNameDto } from '../../dto/group/update-group-name.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
@@ -31,6 +34,7 @@ import { GetGroupDto } from '../../dto/group/get-group.dto';
 import { GroupOrderEnum } from '../../const/group-order.enum';
 import { GetGroupByNameDto } from '../../dto/group/get-group-by-name.dto';
 import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
+import { UpdateGroupStructureDto } from '../../dto/group/update-group-structure.dto';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -358,58 +362,67 @@ export class GroupsDomainService implements IGroupsDomainService {
       : this.handleNodeGroup(church, dto, qr);
   }
 
-  async updateGroup(
+  async updateGroupStructure(
     church: ChurchModel,
     targetGroup: GroupModel,
-    dto: UpdateGroupDto,
+    dto: UpdateGroupStructureDto,
     qr: QueryRunner,
     newParentGroup: GroupModel | null,
-  ): Promise<GroupModel> {
-    const newName = dto.name ?? targetGroup.name;
-
-    // 계층 이동 또는 이름 변경 시 가능한 이름인지 확인
-    const isExist = await this.isExistGroup(
-      church,
-      newParentGroup,
-      newName,
-      qr,
-    );
-
-    if (isExist) {
-      throw new BadRequestException(GroupException.ALREADY_EXIST);
-    }
-
-    // 새로운 상위 그룹으로 이동
-    if (
-      newParentGroup !== null && // 다른 상위 그룹을 지정
-      newParentGroup.id !== targetGroup.parentGroupId // 기존 상위 그룹과 다른 경우
-    ) {
-      await this.validateUpdateHierarchy(
+  ): Promise<UpdateResult> {
+    // 계층 이동 시 가능한 이름인지 확인
+    if (dto.parentGroupId !== undefined) {
+      const isExist = await this.isExistGroup(
         church,
         newParentGroup,
-        targetGroup,
+        targetGroup.name,
         qr,
       );
-    }
 
-    // 계층을 이동하는 경우 (최상위 계층으로 이동 포함)
-    if (dto.parentGroupId !== undefined) {
-      // newParentGroup 이 null 또는 새로운 상위 그룹
-      await Promise.all([
-        this.appendChildGroupId(targetGroup, newParentGroup, qr),
-        this.removeChildGroupId(targetGroup, targetGroup.parentGroup, qr),
-      ]);
+      if (isExist) {
+        throw new BadRequestException(GroupException.ALREADY_EXIST);
+      }
+
+      // 새로운 상위 그룹으로 이동
+      if (dto.parentGroupId && newParentGroup) {
+        await this.validateUpdateHierarchy(
+          church,
+          targetGroup,
+          newParentGroup,
+          qr,
+        );
+      }
+
+      // 계층을 이동하는 경우 (최상위 계층으로 이동 포함)
+      if (dto.parentGroupId !== undefined) {
+        // newParentGroup 이 null 또는 새로운 상위 그룹
+        await Promise.all([
+          this.appendChildGroupId(targetGroup, newParentGroup, qr),
+          this.removeChildGroupId(targetGroup, targetGroup.parentGroup, qr),
+        ]);
+      }
     }
 
     const groupsRepository = this.getGroupsRepository(qr);
+
+    if (dto.order) {
+      await groupsRepository.update(
+        {
+          parentGroupId: dto.parentGroupId ? dto.parentGroupId : IsNull(),
+          order: MoreThanOrEqual(dto.order),
+        },
+        {
+          order: () => 'order + 1',
+        },
+      );
+    }
+
     // 업데이트 수행
     const result = await groupsRepository.update(
       {
         id: targetGroup.id,
-        deletedAt: IsNull(),
       },
       {
-        name: dto.name,
+        order: dto.order,
         parentGroupId: newParentGroup === null ? null : dto.parentGroupId,
       },
     );
@@ -418,33 +431,46 @@ export class GroupsDomainService implements IGroupsDomainService {
       throw new NotFoundException(GroupException.UPDATE_ERROR);
     }
 
-    const updatedGroup = await groupsRepository.findOne({
-      where: { id: targetGroup.id },
-    });
+    return result;
+  }
 
-    if (!updatedGroup) {
+  async updateGroupName(
+    church: ChurchModel,
+    targetGroup: GroupModel,
+    dto: UpdateGroupNameDto,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    if (targetGroup.parentGroupId && !targetGroup.parentGroup) {
+      throw new InternalServerErrorException('상위 그룹 불러오기 실패');
+    }
+
+    const isExist = await this.isExistGroup(
+      church,
+      targetGroup.parentGroup,
+      dto.name,
+      qr,
+    );
+
+    if (isExist) {
+      throw new ConflictException(GroupException.ALREADY_EXIST);
+    }
+
+    const repository = this.getGroupsRepository(qr);
+
+    const result = await repository.update(
+      { id: targetGroup.id },
+      { name: dto.name },
+    );
+
+    if (result.affected === 0) {
       throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
     }
 
-    return updatedGroup;
+    return result;
   }
 
   async deleteGroup(deleteTarget: GroupModel, qr: QueryRunner): Promise<void> {
     const groupsRepository = this.getGroupsRepository(qr);
-
-    /*const deleteTarget = await this.groupsRepository.findOne({
-      where: {
-        id: groupId,
-        churchId,
-      },
-      relations: {
-        parentGroup: true,
-      },
-    });
-
-    if (!deleteTarget) {
-      throw new NotFoundException(GroupException.NOT_FOUND);
-    }*/
 
     if (
       deleteTarget.childGroupIds.length > 0 ||
@@ -506,9 +532,21 @@ export class GroupsDomainService implements IGroupsDomainService {
   ) {
     const groupsRepository = this.getGroupsRepository(qr);
 
+    const lastOrderGroup = await groupsRepository.findOne({
+      where: {
+        churchId: church.id,
+      },
+      order: {
+        order: 'DESC',
+      },
+    });
+
+    const order = lastOrderGroup ? lastOrderGroup.order + 1 : 1;
+
     return groupsRepository.save({
       churchId: church.id,
       ...dto,
+      order,
     });
   }
 
@@ -519,17 +557,6 @@ export class GroupsDomainService implements IGroupsDomainService {
     qr: QueryRunner,
   ) {
     const groupsRepository = this.getGroupsRepository(qr);
-
-    /*const parentGroup = await groupsRepository.findOne({
-      where: {
-        id: dto.parentGroupId,
-        churchId: church.id,
-      },
-    });
-
-    if (!parentGroup) {
-      throw new NotFoundException(GroupException.NOT_FOUND);
-    }*/
 
     const grandParentGroups = await this.findParentGroups(
       church,
@@ -542,9 +569,22 @@ export class GroupsDomainService implements IGroupsDomainService {
       throw new BadRequestException(GroupException.LIMIT_DEPTH_REACHED);
     }
 
+    const lastOrderGroup = await groupsRepository.findOne({
+      where: {
+        churchId: church.id,
+        parentGroupId: parentGroup.id,
+      },
+      order: {
+        order: 'DESC',
+      },
+    });
+
+    const order = lastOrderGroup ? lastOrderGroup.order + 1 : 1;
+
     const newGroup = await groupsRepository.save({
       churchId: church.id,
       ...dto,
+      order,
     });
 
     await this.appendChildGroupId(newGroup, parentGroup, qr);
@@ -608,6 +648,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     const allChildGroups = await this.findChildGroups(targetGroup, qr);
 
     const allChildGroupIds = allChildGroups.map((group) => group.id);
+
     const maxChildGroupDepth =
       allChildGroupIds.length > 0
         ? Math.max(...allChildGroups.map((group) => group.depth))
