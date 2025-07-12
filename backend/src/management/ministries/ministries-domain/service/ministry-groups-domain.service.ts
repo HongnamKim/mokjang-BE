@@ -397,8 +397,8 @@ export class MinistryGroupsDomainService
     qr: QueryRunner,
     newParentMinistryGroup: MinistryGroupModel | null,
   ) {
-    // 계층 이동 시 사용 가능한 이름, 그룹 depth 확인
     if (dto.parentMinistryGroupId !== undefined) {
+      // 계층 이동 시 사용 가능한 이름, 그룹 depth 확인
       const isExist = await this.isExistMinistryGroup(
         church,
         newParentMinistryGroup,
@@ -436,21 +436,32 @@ export class MinistryGroupsDomainService
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
     if (dto.order) {
-      let parentMinistryGroupId: any;
+      const parentMinistryGroupId =
+        dto.parentMinistryGroupId === undefined
+          ? (targetMinistryGroup.parentMinistryGroupId ?? IsNull()) // 기존 상위그룹 or null
+          : (dto.parentMinistryGroupId ?? IsNull()); // 새로운 상위그룹 or null
 
-      if (dto.parentMinistryGroupId === null) {
-        // 루트 그룹으로 이동
-        parentMinistryGroupId = IsNull();
-      } else if (dto.parentMinistryGroupId === undefined) {
-        // 계층 이동 X
-        parentMinistryGroupId = targetMinistryGroup.parentMinistryGroupId;
-        if (parentMinistryGroupId === null) {
-          // 기존 계층이 루트인 경우
-          parentMinistryGroupId = IsNull();
-        }
-      } else {
-        // 계층 이동
-        parentMinistryGroupId = dto.parentMinistryGroupId;
+      const lastOrderMinistryGroup = await ministryGroupsRepository.findOne({
+        where: {
+          churchId: church.id,
+          parentMinistryGroupId: parentMinistryGroupId,
+        },
+        order: {
+          order: 'desc',
+        },
+      });
+
+      const lastOrder = lastOrderMinistryGroup
+        ? lastOrderMinistryGroup.order
+        : 1;
+
+      if (dto.parentMinistryGroupId === undefined && dto.order > lastOrder) {
+        throw new BadRequestException(MinistryGroupException.INVALID_ORDER);
+      } else if (
+        dto.parentMinistryGroupId !== undefined &&
+        dto.order > lastOrder + 1
+      ) {
+        throw new BadRequestException(MinistryGroupException.INVALID_ORDER);
       }
 
       // 계층이 변하는 경우
@@ -460,9 +471,7 @@ export class MinistryGroupsDomainService
           {
             churchId: church.id,
             parentMinistryGroupId:
-              targetMinistryGroup.parentMinistryGroupId === null
-                ? IsNull()
-                : targetMinistryGroup.parentMinistryGroupId,
+              targetMinistryGroup.parentMinistryGroupId ?? IsNull(),
             order: MoreThanOrEqual(targetMinistryGroup.order),
           },
           {
@@ -481,34 +490,21 @@ export class MinistryGroupsDomainService
           },
         );
       } else {
-        // 계층이 바뀌지 않는 경우
-        // case 1. 뒷 순서로 이동
-        // --> 기존 순서의 뒤부터 새로운 순서까지 order 를 앞으로 이동
-        if (dto.order > targetMinistryGroup.order) {
-          await ministryGroupsRepository.update(
-            {
-              churchId: church.id,
-              parentMinistryGroupId: parentMinistryGroupId,
-              order: Between(targetMinistryGroup.order + 1, dto.order),
-            },
-            {
-              order: () => 'order - 1',
-            },
-          );
-        } else {
-          // case 2. 앞 순서로 이동
-          // --> 새로운 순서부터 기존 순서의 앞까지 order 를 뒤로 이동
-          await ministryGroupsRepository.update(
-            {
-              churchId: church.id,
-              parentMinistryGroupId,
-              order: Between(dto.order, targetMinistryGroup.order - 1),
-            },
-            {
-              order: () => 'order + 1',
-            },
-          );
-        }
+        const isMovingDown = dto.order > targetMinistryGroup.order;
+        const [from, to] = isMovingDown
+          ? [targetMinistryGroup.order + 1, dto.order]
+          : [dto.order, targetMinistryGroup.order - 1];
+
+        await ministryGroupsRepository.update(
+          {
+            churchId: church.id,
+            parentMinistryGroupId,
+            order: Between(from, to),
+          },
+          {
+            order: () => (isMovingDown ? 'order - 1' : 'order + 1'),
+          },
+        );
       }
     }
 

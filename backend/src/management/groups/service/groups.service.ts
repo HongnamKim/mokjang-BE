@@ -122,16 +122,19 @@ export class GroupsService {
       { parentGroup: true },
     );
 
-    const newParentGroup: GroupModel | null =
-      dto.parentGroupId === undefined
-        ? targetGroup.parentGroup // 상위 그룹을 변경하지 않는 경우 (기존 값 유지) nullable
-        : dto.parentGroupId === null
-          ? null // 상위 그룹을 없애는 경우 (최상위 계층으로 이동)
-          : await this.groupsDomainService.findGroupModelById(
-              church,
-              dto.parentGroupId,
-              qr,
-            ); // 새 상위 그룹으로 변경
+    let newParentGroup: GroupModel | null;
+
+    if (dto.parentGroupId === undefined) {
+      newParentGroup = targetGroup.parentGroup;
+    } else if (dto.parentGroupId === null) {
+      newParentGroup = null;
+    } else {
+      newParentGroup = await this.groupsDomainService.findGroupModelById(
+        church,
+        dto.parentGroupId,
+        qr,
+      );
+    }
 
     await this.groupsDomainService.updateGroupStructure(
       church,
