@@ -9,11 +9,11 @@ import { IOfficersDomainService } from '../interface/officers-domain.service.int
 import { OfficerModel } from '../../entity/officer.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   IsNull,
   MoreThan,
-  MoreThanOrEqual,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -205,15 +205,29 @@ export class OfficersDomainService implements IOfficersDomainService {
     }
 
     // 그 외 직분 순서 일괄 변경
-    await officersRepository.update(
-      {
-        churchId: church.id,
-        order: MoreThanOrEqual(order),
-      },
-      {
-        order: () => 'order + 1',
-      },
-    );
+    if (order > targetOfficer.order) {
+      // 뒷 순서로 이동
+      await officersRepository.update(
+        {
+          churchId: church.id,
+          order: Between(targetOfficer.order + 1, order),
+        },
+        {
+          order: () => 'order - 1',
+        },
+      );
+    } else {
+      // 앞 순서로 이동
+      await officersRepository.update(
+        {
+          churchId: church.id,
+          order: Between(order, targetOfficer.order - 1),
+        },
+        {
+          order: () => 'order + 1',
+        },
+      );
+    }
 
     // 수정 대상 직분 순서 변경
     const result = await officersRepository.update(
