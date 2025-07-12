@@ -394,34 +394,37 @@ export class GroupsDomainService implements IGroupsDomainService {
         );
       }
 
-      // 계층을 이동하는 경우 (최상위 계층으로 이동 포함)
-      if (dto.parentGroupId !== undefined) {
-        // newParentGroup 이 null 또는 새로운 상위 그룹
-        await Promise.all([
-          this.appendChildGroupId(targetGroup, newParentGroup, qr),
-          this.removeChildGroupId(targetGroup, targetGroup.parentGroup, qr),
-        ]);
-      }
+      await this.appendChildGroupId(targetGroup, newParentGroup, qr);
+      await this.removeChildGroupId(targetGroup, targetGroup.parentGroup, qr);
     }
 
     const groupsRepository = this.getGroupsRepository(qr);
 
     if (dto.order) {
-      let parentGroupId: any;
+      const parentGroupId =
+        dto.parentGroupId === undefined
+          ? (targetGroup.parentGroupId ?? IsNull())
+          : (dto.parentGroupId ?? IsNull());
 
-      if (dto.parentGroupId === null) {
-        // 최상위로 이동하는 경우
-        parentGroupId = IsNull();
-      } else if (dto.parentGroupId === undefined) {
-        // 유지하는 경우
-        parentGroupId = targetGroup.parentGroupId;
-        if (parentGroupId === null) {
-          parentGroupId = IsNull();
-        }
-      } else {
-        parentGroupId = dto.parentGroupId;
+      const lastOrderGroup = await groupsRepository.findOne({
+        where: {
+          churchId: church.id,
+          parentGroupId,
+        },
+        order: {
+          order: 'desc',
+        },
+      });
+
+      const lastOrder = lastOrderGroup ? lastOrderGroup.order : 1;
+
+      if (dto.parentGroupId === undefined && dto.order > lastOrder) {
+        throw new BadRequestException(GroupException.INVALID_ORDER);
+      } else if (dto.parentGroupId !== undefined && dto.order > lastOrder + 1) {
+        throw new BadRequestException(GroupException.INVALID_ORDER);
       }
 
+      // 계층이 변하는 경우
       if (dto.parentGroupId !== undefined) {
         await groupsRepository.update(
           {
@@ -448,29 +451,21 @@ export class GroupsDomainService implements IGroupsDomainService {
           },
         );
       } else {
-        if (dto.order > targetGroup.order) {
-          await groupsRepository.update(
-            {
-              churchId: church.id,
-              parentGroupId: parentGroupId,
-              order: Between(targetGroup.order + 1, dto.order),
-            },
-            {
-              order: () => 'order - 1',
-            },
-          );
-        } else {
-          await groupsRepository.update(
-            {
-              churchId: church.id,
-              parentGroupId,
-              order: Between(dto.order, targetGroup.order - 1),
-            },
-            {
-              order: () => 'order + 1',
-            },
-          );
-        }
+        const isMovingDown = dto.order > targetGroup.order;
+        const [from, to] = isMovingDown
+          ? [targetGroup.order + 1, dto.order]
+          : [dto.order, targetGroup.order - 1];
+
+        await groupsRepository.update(
+          {
+            churchId: church.id,
+            parentGroupId,
+            order: Between(from, to),
+          },
+          {
+            order: () => (isMovingDown ? 'order - 1' : 'order + 1'),
+          },
+        );
       }
     }
 
@@ -486,7 +481,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
-      throw new NotFoundException(GroupException.UPDATE_ERROR);
+      throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
     }
 
     return result;
