@@ -148,13 +148,19 @@ export class MinistryGroupService {
               qr,
             ); // 새 상위 사역 그룹으로 변경
 
+    await this.ministryGroupsDomainService.updateMinistryGroupStructure(
+      church,
+      targetMinistryGroup,
+      dto,
+      qr,
+      newParentMinistryGroup,
+    );
+
     const updatedMinistryGroup =
-      await this.ministryGroupsDomainService.updateMinistryGroupStructure(
+      await this.ministryGroupsDomainService.findMinistryGroupById(
         church,
-        targetMinistryGroup,
-        dto,
+        ministryGroupId,
         qr,
-        newParentMinistryGroup,
       );
 
     return new MinistryGroupPatchResponseDto(updatedMinistryGroup);

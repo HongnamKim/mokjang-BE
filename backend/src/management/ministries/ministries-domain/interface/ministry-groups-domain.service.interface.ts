@@ -75,7 +75,7 @@ export interface IMinistryGroupsDomainService {
     dto: UpdateMinistryGroupStructureDto,
     qr: QueryRunner,
     newParentMinistryGroup: MinistryGroupModel | null,
-  ): Promise<MinistryGroupWithParentGroups>;
+  ): Promise<UpdateResult>;
 
   deleteMinistryGroup(
     church: ChurchModel,

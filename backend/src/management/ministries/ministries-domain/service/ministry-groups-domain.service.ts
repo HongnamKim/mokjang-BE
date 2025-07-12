@@ -241,11 +241,6 @@ export class MinistryGroupsDomainService
     );
 
     return subGroupsQuery;
-    /*
-    subGroupsQuery.forEach(console.log);
-    //subGroupsQuery.forEach((row) => console.log(row));
-
-    return subGroupsQuery.map((row: any) => row.id);*/
   }
 
   async createMinistryGroup(
@@ -534,7 +529,7 @@ export class MinistryGroupsDomainService
       );
     }
 
-    return this.findMinistryGroupById(church, targetMinistryGroup.id, qr);
+    return result;
   }
 
   private async validateUpdateHierarchy(
