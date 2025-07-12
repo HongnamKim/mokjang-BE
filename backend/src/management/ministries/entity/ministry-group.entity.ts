@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
 import { MinistryModel } from './ministry.entity';
 import {
   BaseModel,
@@ -7,10 +7,13 @@ import {
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @Entity()
-@Unique(['parentMinistryGroupId', 'churchId', 'name'])
+//@Unique(['parentMinistryGroupId', 'churchId', 'name'])
 export class MinistryGroupModel extends BaseModel {
   @Column({ length: 50, comment: '사역 그룹 이름' })
   name: string;
+
+  @Column({ default: 1 })
+  order: number;
 
   @Column({ nullable: true })
   @Index()

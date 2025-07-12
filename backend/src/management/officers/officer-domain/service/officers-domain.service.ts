@@ -12,6 +12,7 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   IsNull,
+  MoreThan,
   MoreThanOrEqual,
   QueryRunner,
   Repository,
@@ -258,6 +259,16 @@ export class OfficersDomainService implements IOfficersDomainService {
     }
 
     await officersRepository.softDelete({ id: officer.id });
+
+    await officersRepository.update(
+      {
+        churchId: officer.churchId,
+        order: MoreThan(officer.order),
+      },
+      {
+        order: () => 'order + 1',
+      },
+    );
 
     return;
   }

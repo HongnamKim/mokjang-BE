@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { CreateMinistryGroupDto } from '../dto/ministry-group/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../dto/ministry-group/update-ministry-group.dto';
+import { UpdateMinistryGroupNameDto } from '../dto/ministry-group/update-ministry-group-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -16,6 +16,7 @@ import { MinistryGroupPaginationResultDto } from '../dto/ministry-group/response
 import { MinistryGroupPostResponseDto } from '../dto/ministry-group/response/ministry-group-post-response.dto';
 import { MinistryGroupPatchResponseDto } from '../dto/ministry-group/response/ministry-group-patch-response.dto';
 import { MinistryGroupDeleteResponseDto } from '../dto/ministry-group/response/ministry-group-delete-response.dto';
+import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/update-ministry-group-structure.dto';
 
 @Injectable()
 export class MinistryGroupService {
@@ -117,10 +118,10 @@ export class MinistryGroupService {
     return new MinistryGroupPostResponseDto(newMinistryGroup);
   }
 
-  async updateMinistryGroup(
+  async updateMinistryGroupStructure(
     churchId: number,
     ministryGroupId: number,
-    dto: UpdateMinistryGroupDto,
+    dto: UpdateMinistryGroupStructureDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -148,12 +149,50 @@ export class MinistryGroupService {
             ); // 새 상위 사역 그룹으로 변경
 
     const updatedMinistryGroup =
-      await this.ministryGroupsDomainService.updateMinistryGroup(
+      await this.ministryGroupsDomainService.updateMinistryGroupStructure(
         church,
         targetMinistryGroup,
         dto,
         qr,
         newParentMinistryGroup,
+      );
+
+    return new MinistryGroupPatchResponseDto(updatedMinistryGroup);
+  }
+
+  async updateMinistryGroupName(
+    churchId: number,
+    ministryGroupId: number,
+    dto: UpdateMinistryGroupNameDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+        {
+          parentMinistryGroup: true,
+        },
+      );
+
+    await this.ministryGroupsDomainService.updateMinistryGroupName(
+      church,
+      targetMinistryGroup,
+      dto,
+      qr,
+    );
+
+    const updatedMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupById(
+        church,
+        targetMinistryGroup.id,
+        qr,
       );
 
     return new MinistryGroupPatchResponseDto(updatedMinistryGroup);

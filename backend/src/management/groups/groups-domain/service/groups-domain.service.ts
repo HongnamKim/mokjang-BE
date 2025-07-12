@@ -14,12 +14,14 @@ import {
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { CreateGroupDto } from '../../dto/group/create-group.dto';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsWhere,
   ILike,
   In,
   IsNull,
+  MoreThan,
   MoreThanOrEqual,
   QueryRunner,
   Repository,
@@ -379,7 +381,7 @@ export class GroupsDomainService implements IGroupsDomainService {
       );
 
       if (isExist) {
-        throw new BadRequestException(GroupException.ALREADY_EXIST);
+        throw new ConflictException(GroupException.ALREADY_EXIST);
       }
 
       // 새로운 상위 그룹으로 이동
@@ -405,15 +407,71 @@ export class GroupsDomainService implements IGroupsDomainService {
     const groupsRepository = this.getGroupsRepository(qr);
 
     if (dto.order) {
-      await groupsRepository.update(
-        {
-          parentGroupId: dto.parentGroupId ? dto.parentGroupId : IsNull(),
-          order: MoreThanOrEqual(dto.order),
-        },
-        {
-          order: () => 'order + 1',
-        },
-      );
+      let parentGroupId: any;
+
+      if (dto.parentGroupId === null) {
+        // 최상위로 이동하는 경우
+        parentGroupId = IsNull();
+      } else if (dto.parentGroupId === undefined) {
+        // 유지하는 경우
+        parentGroupId = targetGroup.parentGroupId;
+        if (parentGroupId === null) {
+          parentGroupId = IsNull();
+        }
+      } else {
+        parentGroupId = dto.parentGroupId;
+      }
+
+      if (dto.parentGroupId !== undefined) {
+        await groupsRepository.update(
+          {
+            churchId: church.id,
+            parentGroupId:
+              targetGroup.parentGroupId === null
+                ? IsNull()
+                : targetGroup.parentGroupId,
+            order: MoreThanOrEqual(targetGroup.order),
+          },
+          {
+            order: () => 'order - 1',
+          },
+        );
+
+        await groupsRepository.update(
+          {
+            churchId: church.id,
+            parentGroupId: parentGroupId,
+            order: MoreThanOrEqual(dto.order),
+          },
+          {
+            order: () => 'order + 1',
+          },
+        );
+      } else {
+        if (dto.order > targetGroup.order) {
+          await groupsRepository.update(
+            {
+              churchId: church.id,
+              parentGroupId: parentGroupId,
+              order: Between(targetGroup.order + 1, dto.order),
+            },
+            {
+              order: () => 'order - 1',
+            },
+          );
+        } else {
+          await groupsRepository.update(
+            {
+              churchId: church.id,
+              parentGroupId,
+              order: Between(dto.order, targetGroup.order - 1),
+            },
+            {
+              order: () => 'order + 1',
+            },
+          );
+        }
+      }
     }
 
     // 업데이트 수행
@@ -480,6 +538,19 @@ export class GroupsDomainService implements IGroupsDomainService {
     }
 
     await groupsRepository.softRemove(deleteTarget);
+
+    await groupsRepository.update(
+      {
+        churchId: deleteTarget.churchId,
+        parentGroupId: deleteTarget.parentGroupId
+          ? deleteTarget.parentGroupId
+          : IsNull(),
+        order: MoreThan(deleteTarget.order),
+      },
+      {
+        order: () => 'order - 1',
+      },
+    );
 
     // 부모 그룹의 자식 그룹 ID 배열 업데이트
     await this.removeChildGroupId(deleteTarget, deleteTarget.parentGroup, qr);
