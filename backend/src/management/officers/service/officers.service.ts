@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { CreateOfficerDto } from '../dto/create-officer.dto';
-import { UpdateOfficerDto } from '../dto/update-officer.dto';
+import { CreateOfficerDto } from '../dto/request/create-officer.dto';
+import { UpdateOfficerNameDto } from '../dto/request/update-officer-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -15,6 +15,7 @@ import { OfficerPaginationResponseDto } from '../dto/response/officer-pagination
 import { OfficerPostResponse } from '../dto/response/officer-post-response.dto';
 import { OfficerPatchResponse } from '../dto/response/officer-patch.response.dto';
 import { OfficerDeleteResponse } from '../dto/response/officer-delete-response.dto';
+import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
 
 @Injectable()
 export class OfficersService {
@@ -65,10 +66,41 @@ export class OfficersService {
     return new OfficerPostResponse(officer);
   }
 
-  async updateOfficer(
+  async updateOfficerStructure(
     churchId: number,
     officerId: number,
-    dto: UpdateOfficerDto,
+    dto: UpdateOfficerStructureDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetOfficer = await this.officersDomainService.findOfficerModelById(
+      church,
+      officerId,
+      qr,
+    );
+
+    await this.officersDomainService.updateOfficerStructure(
+      church,
+      targetOfficer,
+      dto.order,
+      qr,
+    );
+
+    return this.officersDomainService.findOfficerById(
+      church,
+      targetOfficer.id,
+      qr,
+    );
+  }
+
+  async updateOfficerName(
+    churchId: number,
+    officerId: number,
+    dto: UpdateOfficerNameDto,
     qr?: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -82,7 +114,7 @@ export class OfficersService {
       qr,
     );
 
-    const updatedOfficer = await this.officersDomainService.updateOfficer(
+    const updatedOfficer = await this.officersDomainService.updateOfficerName(
       church,
       officer,
       dto,

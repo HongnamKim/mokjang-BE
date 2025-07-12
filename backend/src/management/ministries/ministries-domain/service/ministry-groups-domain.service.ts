@@ -13,20 +13,25 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   IsNull,
+  MoreThan,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { MinistryGroupException } from '../../const/exception/ministry-group.exception';
 import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../../dto/ministry-group/update-ministry-group.dto';
+import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/update-ministry-group-name.dto';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetMinistryGroupDto } from '../../dto/ministry-group/get-ministry-group.dto';
 import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
 import { MinistryGroupOrderEnum } from '../../const/ministry-group-order.enum';
+import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/update-ministry-group-structure.dto';
 
 @Injectable()
 export class MinistryGroupsDomainService
@@ -59,16 +64,7 @@ export class MinistryGroupsDomainService
           : IsNull(),
         name,
       },
-      withDeleted: true,
     });
-
-    if (group) {
-      if (group.deletedAt) {
-        await ministryGroupsRepository.remove(group);
-
-        return false;
-      }
-    }
 
     return !!group;
   }
@@ -85,7 +81,7 @@ export class MinistryGroupsDomainService
       [dto.order]: dto.orderDirection,
     };
 
-    if (dto.order !== MinistryGroupOrderEnum.createdAt) {
+    if (dto.order !== MinistryGroupOrderEnum.CREATED_AT) {
       order.createdAt = 'asc';
     }
 
@@ -258,14 +254,6 @@ export class MinistryGroupsDomainService
     dto: CreateMinistryGroupDto,
     qr: QueryRunner,
   ) {
-    /*const parentMinistryGroup = dto.parentMinistryGroupId
-      ? await this.findMinistryGroupModelById(
-          church,
-          dto.parentMinistryGroupId,
-          qr,
-        )
-      : null;*/
-
     await this.checkIsAvailableName(church, parentMinistryGroup, dto.name, qr);
 
     return parentMinistryGroup
@@ -291,10 +279,24 @@ export class MinistryGroupsDomainService
       throw new BadRequestException(MinistryGroupException.LIMIT_DEPTH_REACHED);
     }
 
+    const [lastOrderMinistryGroup] = await this.ministryGroupsRepository.find({
+      where: {
+        churchId: church.id,
+        parentMinistryGroupId: parentGroup.id,
+      },
+      order: {
+        order: 'desc',
+      },
+      take: 1,
+    });
+
+    const order = lastOrderMinistryGroup ? lastOrderMinistryGroup.order + 1 : 1;
+
     const newGroup = await ministryGroupsRepository.save({
       churchId: church.id,
       name: dto.name,
       parentMinistryGroupId: parentGroup.id,
+      order,
     });
 
     await this.appendChildMinistryGroupId(parentGroup, newGroup, qr);
@@ -309,9 +311,23 @@ export class MinistryGroupsDomainService
   ) {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
+    const [lastOrderMinistryGroup] = await this.ministryGroupsRepository.find({
+      where: {
+        churchId: church.id,
+        parentMinistryGroupId: IsNull(),
+      },
+      order: {
+        order: 'desc',
+      },
+      take: 1,
+    });
+
+    const order = lastOrderMinistryGroup ? lastOrderMinistryGroup.order + 1 : 1;
+
     return ministryGroupsRepository.save({
       churchId: church.id,
       ...dto,
+      order,
     });
   }
 
@@ -335,37 +351,79 @@ export class MinistryGroupsDomainService
     return true;
   }
 
-  async updateMinistryGroup(
+  async updateMinistryGroupName(
     church: ChurchModel,
     targetMinistryGroup: MinistryGroupModel,
-    dto: UpdateMinistryGroupDto,
+    dto: UpdateMinistryGroupNameDto,
     qr: QueryRunner,
-    newParentMinistryGroup: MinistryGroupModel | null,
-  ) {
-    const newName = dto.name ?? targetMinistryGroup.name;
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
 
-    // 사용 가능한 그룹인지 체크 --> 불가능할 경우 ConflictException
-    await this.checkIsAvailableName(
+    if (
+      targetMinistryGroup.parentMinistryGroupId &&
+      targetMinistryGroup.parentMinistryGroup === null
+    ) {
+      throw new InternalServerErrorException('상위 사역 그룹 불러오기 실패');
+    }
+
+    const isExist = await this.isExistMinistryGroup(
       church,
-      newParentMinistryGroup,
-      newName,
+      targetMinistryGroup.parentMinistryGroup,
+      dto.name,
       qr,
     );
 
-    // 새로운 상위 그룹에 넣을 경우
-    if (
-      newParentMinistryGroup &&
-      newParentMinistryGroup.id !== targetMinistryGroup.parentMinistryGroupId
-    ) {
-      await this.validateUpdateHierarchy(
-        church,
-        targetMinistryGroup,
-        newParentMinistryGroup,
-        qr,
+    if (isExist) {
+      throw new ConflictException(MinistryGroupException.ALREADY_EXIST);
+    }
+
+    const result = await repository.update(
+      {
+        id: targetMinistryGroup.id,
+      },
+      {
+        name: dto.name,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
       );
     }
 
+    return result;
+  }
+
+  async updateMinistryGroupStructure(
+    church: ChurchModel,
+    targetMinistryGroup: MinistryGroupModel,
+    dto: UpdateMinistryGroupStructureDto,
+    qr: QueryRunner,
+    newParentMinistryGroup: MinistryGroupModel | null,
+  ) {
+    // 계층 이동 시 사용 가능한 이름, 그룹 depth 확인
     if (dto.parentMinistryGroupId !== undefined) {
+      const isExist = await this.isExistMinistryGroup(
+        church,
+        newParentMinistryGroup,
+        targetMinistryGroup.name,
+        qr,
+      );
+
+      if (isExist) {
+        throw new ConflictException(MinistryGroupException.ALREADY_EXIST);
+      }
+
+      if (dto.parentMinistryGroupId && newParentMinistryGroup) {
+        await this.validateUpdateHierarchy(
+          church,
+          targetMinistryGroup,
+          newParentMinistryGroup,
+          qr,
+        );
+      }
+
       // 기존 상위 그룹에서 타겟 그룹 id 제거
       await this.removeChildMinistryGroupId(
         targetMinistryGroup.parentMinistryGroup,
@@ -382,12 +440,89 @@ export class MinistryGroupsDomainService
 
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
+    if (dto.order) {
+      let parentMinistryGroupId: any;
+
+      if (dto.parentMinistryGroupId === null) {
+        // 루트 그룹으로 이동
+        parentMinistryGroupId = IsNull();
+      } else if (dto.parentMinistryGroupId === undefined) {
+        // 계층 이동 X
+        parentMinistryGroupId = targetMinistryGroup.parentMinistryGroupId;
+        if (parentMinistryGroupId === null) {
+          // 기존 계층이 루트인 경우
+          parentMinistryGroupId = IsNull();
+        }
+      } else {
+        // 계층 이동
+        parentMinistryGroupId = dto.parentMinistryGroupId;
+      }
+
+      // 계층이 변하는 경우
+      if (dto.parentMinistryGroupId !== undefined) {
+        // 기존 계층 순서 변경
+        await ministryGroupsRepository.update(
+          {
+            churchId: church.id,
+            parentMinistryGroupId:
+              targetMinistryGroup.parentMinistryGroupId === null
+                ? IsNull()
+                : targetMinistryGroup.parentMinistryGroupId,
+            order: MoreThanOrEqual(targetMinistryGroup.order),
+          },
+          {
+            order: () => 'order - 1',
+          },
+        );
+        // 새로운 계층 순서 변경
+        await ministryGroupsRepository.update(
+          {
+            churchId: church.id,
+            parentMinistryGroupId: parentMinistryGroupId,
+            order: MoreThanOrEqual(dto.order),
+          },
+          {
+            order: () => 'order + 1',
+          },
+        );
+      } else {
+        // 계층이 바뀌지 않는 경우
+        // case 1. 뒷 순서로 이동
+        // --> 기존 순서의 뒤부터 새로운 순서까지 order 를 앞으로 이동
+        if (dto.order > targetMinistryGroup.order) {
+          await ministryGroupsRepository.update(
+            {
+              churchId: church.id,
+              parentMinistryGroupId: parentMinistryGroupId,
+              order: Between(targetMinistryGroup.order + 1, dto.order),
+            },
+            {
+              order: () => 'order - 1',
+            },
+          );
+        } else {
+          // case 2. 앞 순서로 이동
+          // --> 새로운 순서부터 기존 순서의 앞까지 order 를 뒤로 이동
+          await ministryGroupsRepository.update(
+            {
+              churchId: church.id,
+              parentMinistryGroupId,
+              order: Between(dto.order, targetMinistryGroup.order - 1),
+            },
+            {
+              order: () => 'order + 1',
+            },
+          );
+        }
+      }
+    }
+
     const result = await ministryGroupsRepository.update(
       {
         id: targetMinistryGroup.id,
       },
       {
-        name: dto.name,
+        order: dto.order,
         parentMinistryGroupId:
           newParentMinistryGroup === null ? null : newParentMinistryGroup.id,
       },
@@ -449,17 +584,9 @@ export class MinistryGroupsDomainService
   async deleteMinistryGroup(
     church: ChurchModel,
     targetMinistryGroup: MinistryGroupModel,
-    //ministryGroupId: number,
     qr: QueryRunner,
   ) {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
-
-    /*const ministryGroup = await this.findMinistryGroupModelById(
-      church,
-      ministryGroupId,
-      qr,
-      { parentMinistryGroup: true, ministries: true },
-    );*/
 
     // 하위 그룹 or 사역 체크
     if (
@@ -475,6 +602,19 @@ export class MinistryGroupsDomainService
       id: targetMinistryGroup.id,
       deletedAt: IsNull(),
     });
+
+    await ministryGroupsRepository.update(
+      {
+        churchId: church.id,
+        parentMinistryGroupId: targetMinistryGroup.parentMinistryGroupId
+          ? targetMinistryGroup.parentMinistryGroupId
+          : IsNull(),
+        order: MoreThan(targetMinistryGroup.order),
+      },
+      {
+        order: () => 'order - 1',
+      },
+    );
 
     await this.removeChildMinistryGroupId(
       targetMinistryGroup.parentMinistryGroup,
