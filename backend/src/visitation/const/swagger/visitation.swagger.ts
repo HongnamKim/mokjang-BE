@@ -4,6 +4,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiParam,
 } from '@nestjs/swagger';
 
 export const ApiGetVisitations = () =>
@@ -39,6 +40,14 @@ export const ApiPostVisitation = () =>
         '<p>기록 생성 시 --> VisitationStatus: DONE</p>' +
         '<p>예약 생성이더라도 VisitationDetail 의 내용을 기재할 수 있습니다.</p>' +
         '<p>VisitationDetail 의 개수에 따라 개인 / 그룹 심방이 결정됩니다.</p>',
+    }),
+  );
+
+export const ApiRefreshVisitationCount = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '교회 심방 개수 새로고침',
     }),
   );
 

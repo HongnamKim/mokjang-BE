@@ -82,4 +82,6 @@ export interface IMinistryGroupsDomainService {
     targetMinistryGroup: MinistryGroupModel,
     qr: QueryRunner,
   ): Promise<void>;
+
+  countAllMinistryGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

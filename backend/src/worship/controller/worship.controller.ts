@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { WorshipService } from '../service/worship.service';
 import { GetWorshipsDto } from '../dto/request/worship/get-worships.dto';
 import { CreateWorshipDto } from '../dto/request/worship/create-worship.dto';
@@ -51,6 +51,17 @@ export class WorshipController {
     @PermissionChurch() church: ChurchModel,
   ) {
     return this.worshipService.postWorship(church, dto, qr);
+  }
+
+  @ApiParam({ name: 'churchId' })
+  @Patch('refresh-count')
+  @WorshipWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  refreshWorshipCount(
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.worshipService.refreshWorshipCount(church, qr);
   }
 
   @Get(':worshipId')

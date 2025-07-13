@@ -21,6 +21,10 @@ import { MinistryOffsetPaginationResponseDto } from '../dto/ministry/response/mi
 import { MinistryDeleteResponseDto } from '../dto/ministry/response/ministry-delete-response.dto';
 import { MinistryPostResponseDto } from '../dto/ministry/response/ministry-post-response.dto';
 import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class MinistryService {
@@ -117,6 +121,12 @@ export class MinistryService {
       qr,
     );
 
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.MINISTRY,
+      qr,
+    );
+
     return new MinistryPostResponseDto(ministry);
   }
 
@@ -189,6 +199,11 @@ export class MinistryService {
     );
 
     await this.ministriesDomainService.deleteMinistry(ministry, qr);
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.MINISTRY,
+      qr,
+    );
 
     return new MinistryDeleteResponseDto(new Date(), ministry.id, true);
   }
@@ -222,5 +237,21 @@ export class MinistryService {
       );
 
     return new MinistryPatchResponseDto(updatedMinistry);
+  }
+
+  async refreshMinistryCount(church: ChurchModel, qr: QueryRunner) {
+    const ministryCount = await this.ministriesDomainService.countAllMinistries(
+      church,
+      qr,
+    );
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.MINISTRY,
+      ministryCount,
+      qr,
+    );
+
+    return { ministryCount };
   }
 }

@@ -24,12 +24,15 @@ import {
   ApiPatchOfficerName,
   ApiPatchOfficerStructure,
   ApiPostOfficer,
+  ApiRefreshOfficerCount,
 } from '../const/swagger/officers.swagger';
 import { GetOfficersDto } from '../dto/request/get-officers.dto';
 import { OfficerWriteGuard } from '../guard/officer-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
+import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -56,6 +59,18 @@ export class OfficersController {
     @QueryRunner() qr: QR,
   ) {
     return this.officersService.createOfficer(churchId, dto, qr);
+  }
+
+  @ApiRefreshOfficerCount()
+  @Patch('refresh-count')
+  @OfficerWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  refreshOfficerCount(
+    //@Param('churchId', ParseIntPipe) churchId: number,
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.officersService.refreshOfficerCount(church, qr);
   }
 
   @ApiDeleteOfficer()

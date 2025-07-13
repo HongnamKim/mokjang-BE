@@ -25,6 +25,7 @@ import {
   ApiPatchGroupName,
   ApiPatchGroupStructure,
   ApiPostGroups,
+  ApiRefreshGroupCount,
 } from '../const/swagger/group.swagger';
 import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GroupReadGuard } from '../guard/group-read.guard';
@@ -32,6 +33,8 @@ import { GroupWriteGuard } from '../guard/group-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
+import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -58,6 +61,17 @@ export class GroupsController {
     @QueryRunner() qr: QR,
   ) {
     return this.groupsService.createGroup(churchId, dto, qr);
+  }
+
+  @ApiRefreshGroupCount()
+  @Patch('refresh-count')
+  @GroupWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  refreshGroupCount(
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.groupsService.refreshGroupCount(church, qr);
   }
 
   @ApiGetGroupById()

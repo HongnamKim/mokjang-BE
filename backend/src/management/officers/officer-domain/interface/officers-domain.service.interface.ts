@@ -59,4 +59,6 @@ export interface IOfficersDomainService {
     officer: OfficerModel,
     qr: QueryRunner,
   ): Promise<boolean>;
+
+  countAllOfficers(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

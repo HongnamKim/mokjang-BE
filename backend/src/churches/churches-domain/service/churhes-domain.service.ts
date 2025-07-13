@@ -14,7 +14,7 @@ import {
   Repository,
   UpdateResult,
 } from 'typeorm';
-import { ChurchModel } from '../../entity/church.entity';
+import { ChurchModel, ManagementCountType } from '../../entity/church.entity';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
@@ -339,6 +339,68 @@ export class ChurchesDomainService implements IChurchesDomainService {
       { id: church.id },
       'memberCount',
       1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async decrementManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.decrement(
+      {
+        id: church.id,
+      },
+      countType,
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async incrementManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.increment({ id: church.id }, countType, 1);
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async refreshManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    refreshCount: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: church.id,
+      },
+      {
+        [countType]: refreshCount,
+      },
     );
 
     if (result.affected === 0) {

@@ -17,6 +17,10 @@ import { MinistryGroupPostResponseDto } from '../dto/ministry-group/response/min
 import { MinistryGroupPatchResponseDto } from '../dto/ministry-group/response/ministry-group-patch-response.dto';
 import { MinistryGroupDeleteResponseDto } from '../dto/ministry-group/response/ministry-group-delete-response.dto';
 import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/update-ministry-group-structure.dto';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class MinistryGroupService {
@@ -115,6 +119,12 @@ export class MinistryGroupService {
         qr,
       );
 
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.MINISTRY_GROUP,
+      qr,
+    );
+
     return new MinistryGroupPostResponseDto(newMinistryGroup);
   }
 
@@ -137,16 +147,20 @@ export class MinistryGroupService {
         { parentMinistryGroup: true },
       );
 
-    const newParentMinistryGroup: MinistryGroupModel | null =
-      dto.parentMinistryGroupId === undefined
-        ? targetMinistryGroup.parentMinistryGroup // 변경하지 않는 경우 (기존 값 유지) nullable
-        : dto.parentMinistryGroupId === null
-          ? null // 상위 사역 그룹을 없애는 경우 (최상위 계층으로 이동)
-          : await this.ministryGroupsDomainService.findMinistryGroupModelById(
-              church,
-              dto.parentMinistryGroupId,
-              qr,
-            ); // 새 상위 사역 그룹으로 변경
+    let newParentMinistryGroup: MinistryGroupModel | null;
+
+    if (dto.parentMinistryGroupId === undefined) {
+      newParentMinistryGroup = targetMinistryGroup.parentMinistryGroup;
+    } else if (dto.parentMinistryGroupId === null) {
+      newParentMinistryGroup = null;
+    } else {
+      newParentMinistryGroup =
+        await this.ministryGroupsDomainService.findMinistryGroupModelById(
+          church,
+          dto.parentMinistryGroupId,
+          qr,
+        );
+    }
 
     await this.ministryGroupsDomainService.updateMinistryGroupStructure(
       church,
@@ -225,7 +239,12 @@ export class MinistryGroupService {
     await this.ministryGroupsDomainService.deleteMinistryGroup(
       church,
       targetMinistryGroup,
-      //ministryGroupId,
+      qr,
+    );
+
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.MINISTRY_GROUP,
       qr,
     );
 
@@ -252,5 +271,19 @@ export class MinistryGroupService {
       ministryGroupId,
       qr,
     );
+  }
+
+  async refreshMinistryGroupCount(church: ChurchModel, qr: QueryRunner) {
+    const ministryGroupCount =
+      await this.ministryGroupsDomainService.countAllMinistryGroups(church, qr);
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.MINISTRY_GROUP,
+      ministryGroupCount,
+      qr,
+    );
+
+    return { ministryGroupCount };
   }
 }

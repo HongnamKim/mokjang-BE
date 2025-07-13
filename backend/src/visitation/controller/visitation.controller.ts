@@ -23,6 +23,7 @@ import {
   ApiGetVisitations,
   ApiPatchVisitationMeta,
   ApiPostVisitation,
+  ApiRefreshVisitationCount,
 } from '../const/swagger/visitation.swagger';
 import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
 import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
@@ -31,6 +32,8 @@ import { VisitationReadGuard } from '../guard/visitation-read.guard';
 import { VisitationWriteGuard } from '../guard/visitation-write.guard';
 import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -52,19 +55,24 @@ export class VisitationController {
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postVisitationReservation(
-    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @PermissionManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.visitationService.createVisitation(
-      //accessPayload.id,
-      manager,
-      churchId,
-      dto,
-      qr,
-    );
+    return this.visitationService.createVisitation(manager, churchId, dto, qr);
+  }
+
+  @ApiRefreshVisitationCount()
+  @Patch('refresh-count')
+  @VisitationWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  refreshVisitationCount(
+    //@Param('churchId', ParseIntPipe) churchId: number,
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.visitationService.refreshVisitationCount(church, qr);
   }
 
   @ApiGetVisitationById()

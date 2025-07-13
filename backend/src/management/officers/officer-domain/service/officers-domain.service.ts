@@ -39,6 +39,16 @@ export class OfficersDomainService implements IOfficersDomainService {
       : this.officersRepository;
   }
 
+  countAllOfficers(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getOfficersRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findOfficers(
     church: ChurchModel,
     dto: GetOfficersDto,
@@ -188,46 +198,35 @@ export class OfficersDomainService implements IOfficersDomainService {
   ): Promise<UpdateResult> {
     const officersRepository = this.getOfficersRepository(qr);
 
-    const lastOrderOfficer = await this.officersRepository.find({
+    const lastOrderOfficer = await officersRepository.findOne({
       where: {
         churchId: church.id,
       },
       order: {
-        order: 'desc',
+        order: 'DESC',
       },
-      take: 1,
     });
 
-    if (lastOrderOfficer[0]) {
-      if (lastOrderOfficer[0].order < order) {
-        throw new ConflictException(OfficersException.INVALID_ORDER);
-      }
+    const lastOrder = lastOrderOfficer ? lastOrderOfficer.order : 1;
+
+    if (lastOrder < order) {
+      throw new BadRequestException(OfficersException.INVALID_ORDER);
     }
 
-    // 그 외 직분 순서 일괄 변경
-    if (order > targetOfficer.order) {
-      // 뒷 순서로 이동
-      await officersRepository.update(
-        {
-          churchId: church.id,
-          order: Between(targetOfficer.order + 1, order),
-        },
-        {
-          order: () => 'order - 1',
-        },
-      );
-    } else {
-      // 앞 순서로 이동
-      await officersRepository.update(
-        {
-          churchId: church.id,
-          order: Between(order, targetOfficer.order - 1),
-        },
-        {
-          order: () => 'order + 1',
-        },
-      );
-    }
+    const isMovingDown = order > targetOfficer.order; // 뒷 순서로 이동하는지
+    const range: [number, number] = isMovingDown
+      ? [targetOfficer.order + 1, order]
+      : [order, targetOfficer.order - 1];
+
+    await officersRepository.update(
+      {
+        churchId: church.id,
+        order: Between(...range),
+      },
+      {
+        order: () => (isMovingDown ? 'order - 1' : 'order + 1'),
+      },
+    );
 
     // 수정 대상 직분 순서 변경
     const result = await officersRepository.update(

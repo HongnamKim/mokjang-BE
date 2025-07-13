@@ -6,4 +6,5 @@ export const GroupException = {
     '현재 하위 그룹을 새로운 상위 그룹으로 지정할 수 없습니다.',
   GROUP_HAS_DEPENDENCIES: '해당 그룹에 속한 하위 그룹 또는 교인이 존재합니다.',
   UPDATE_ERROR: '업데이트 도중 에러 발생',
+  INVALID_ORDER: '지정할 수 없는 순서입니다.',
 };
