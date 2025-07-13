@@ -100,6 +100,16 @@ export class GroupsDomainService implements IGroupsDomainService {
     return new GroupDomainPaginationResultDto(data, totalCount);
   }
 
+  async countAllGroups(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getGroupsRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findGroups(
     church: ChurchModel,
     dto: GetGroupDto,

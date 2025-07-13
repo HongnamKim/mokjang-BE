@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
 
 export const ApiGetEducation = () =>
   applyDecorators(
@@ -34,6 +34,21 @@ export const ApiPostEducation = () =>
         '<p><b>제약 조건</b></p>' +
         '<p>교육 이름: 최대 50자, 연속 공백 불가능, 특수문자 사용불가능 (띄어쓰기, - 허용)</p>' +
         '<p>교육 설명: 최대 300자, 내용이 없는 공백 입력 시 입력을 무시함(undefined 처리)</p>',
+    }),
+  );
+
+export const ApiGetInProgressEducations = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '진행중인 교육 조회',
+    }),
+  );
+
+export const ApiRefreshEducationCount = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '교회 교육 개수 새로고침',
     }),
   );
 

@@ -61,4 +61,6 @@ export interface IMinistriesDomainService {
     membersCount: number,
     qr?: QueryRunner,
   ): Promise<MinistryModel>;
+
+  countAllMinistries(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

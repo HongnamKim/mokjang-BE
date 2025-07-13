@@ -14,8 +14,11 @@ import {
 import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
 import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
-import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
 import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class GroupsService {
@@ -81,23 +84,15 @@ export class GroupsService {
     );
   }
 
-  async getParentGroups(churchId: number, groupId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const group = await this.groupsDomainService.findGroupById(
-      church,
-      groupId,
-      qr,
-    );
-
-    return this.groupsDomainService.findParentGroups(church, group, qr);
-  }
-
   async createGroup(churchId: number, dto: CreateGroupDto, qr: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
+      qr,
+    );
+
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.GROUP,
       qr,
     );
 
@@ -190,11 +185,46 @@ export class GroupsService {
     );
 
     await this.groupsDomainService.deleteGroup(group, qr);
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.GROUP,
+      qr,
+    );
 
     return new GroupDeleteResponseDto(new Date(), groupId, group.name, true);
   }
 
-  async getChildGroupIds(churchId: number, groupId: number, qr?: QueryRunner) {
+  async refreshGroupCount(church: ChurchModel, qr: QueryRunner) {
+    const groupCount = await this.groupsDomainService.countAllGroups(
+      church,
+      qr,
+    );
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.GROUP,
+      groupCount,
+      qr,
+    );
+
+    return { groupCount };
+  }
+
+  /*async getParentGroups(churchId: number, groupId: number, qr?: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const group = await this.groupsDomainService.findGroupById(
+      church,
+      groupId,
+      qr,
+    );
+
+    return this.groupsDomainService.findParentGroups(church, group, qr);
+  }*/
+
+  /*async getChildGroupIds(churchId: number, groupId: number, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -207,9 +237,9 @@ export class GroupsService {
     );
 
     return this.groupsDomainService.findChildGroups(group, qr);
-  }
+  }*/
 
-  async getGroupsByName(
+  /*async getGroupsByName(
     churchId: number,
     dto: GetGroupByNameDto,
     qr?: QueryRunner,
@@ -229,5 +259,5 @@ export class GroupsService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
-  }
+  }*/
 }

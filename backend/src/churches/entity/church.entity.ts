@@ -21,6 +21,7 @@ import { ChurchJoinModel } from '../../church-join/entity/church-join.entity';
 import { Exclude } from 'class-transformer';
 import { TaskModel } from '../../task/entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { WorshipModel } from '../../worship/entity/worship.entity';
 
 @Entity()
 @Unique(['joinCode'])
@@ -62,17 +63,32 @@ export class ChurchModel extends BaseModel {
   @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.church)
   churchUsers: ChurchUserModel[];
 
+  @Column({ default: 0 })
+  groupCount: number;
+
   @OneToMany(() => GroupModel, (group) => group.church)
   groups: GroupModel[];
+
+  @Column({ default: 0 })
+  educationCount: number;
 
   @OneToMany(() => EducationModel, (education) => education.church)
   educations: EducationModel[];
 
+  @Column({ default: 0 })
+  officerCount: number;
+
   @OneToMany(() => OfficerModel, (officer) => officer.church)
   officers: OfficerModel[];
 
+  @Column({ default: 0 })
+  ministryGroupCount: number;
+
   @OneToMany(() => MinistryGroupModel, (ministryGroup) => ministryGroup.church)
   ministryGroups: MinistryGroupModel[];
+
+  @Column({ default: 0 })
+  ministryCount: number;
 
   @OneToMany(() => MinistryModel, (ministry) => ministry.church)
   ministries: MinistryModel[];
@@ -100,7 +116,30 @@ export class ChurchModel extends BaseModel {
   @OneToMany(() => VisitationMetaModel, (visitingMeta) => visitingMeta.church)
   visitations: VisitationMetaModel[];
 
+  @Column({ default: 0 })
+  visitationCount: number;
+
   // 업무
   @OneToMany(() => TaskModel, (task) => task.church)
   tasks: TaskModel[];
+
+  @Column({ default: 0 })
+  taskCount: number;
+
+  @OneToMany(() => WorshipModel, (worship) => worship.church)
+  worships: WorshipModel[];
+
+  @Column({ default: 0 })
+  worshipCount: number;
+}
+
+export enum ManagementCountType {
+  GROUP = 'groupCount',
+  MINISTRY_GROUP = 'ministryGroupCount',
+  MINISTRY = 'ministryCount',
+  OFFICER = 'officerCount',
+  EDUCATION = 'educationCount',
+  VISITATION = 'visitationCount',
+  TASK = 'taskCount',
+  WORSHIP = 'worshipCount',
 }

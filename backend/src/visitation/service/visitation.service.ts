@@ -23,7 +23,10 @@ import { CreateVisitationMetaDto } from '../dto/internal/meta/create-visitation-
 import { GetVisitationDto } from '../dto/request/get-visitation.dto';
 import { VisitationType } from '../const/visitation-type.enum';
 import { UpdateVisitationDto } from '../dto/request/update-visitation.dto';
-import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../churches/entity/church.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
@@ -411,5 +414,19 @@ export class VisitationService {
       deleteReceiverIds: deleteReceiverIds,
       deletedCount: result.affected,
     };
+  }
+
+  async refreshVisitationCount(church: ChurchModel, qr: QueryRunner) {
+    const visitationCount =
+      await this.visitationMetaDomainService.countAllVisitations(church, qr);
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.VISITATION,
+      visitationCount,
+      qr,
+    );
+
+    return { visitationCount };
   }
 }

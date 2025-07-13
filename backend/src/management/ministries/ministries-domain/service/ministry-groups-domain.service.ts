@@ -69,6 +69,19 @@ export class MinistryGroupsDomainService
     return !!group;
   }
 
+  countAllMinistryGroups(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<number> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findMinistryGroups(
     church: ChurchModel,
     parentMinistryGroup: MinistryGroupModel | null,

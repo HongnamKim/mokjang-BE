@@ -25,7 +25,10 @@ import { DeleteWorshipResponseDto } from '../dto/response/worship/delete-worship
 import { UpdateWorshipDto } from '../dto/request/worship/update-worship.dto';
 import { PatchWorshipResponseDto } from '../dto/response/worship/patch-worship-response.dto';
 import { WorshipModel } from '../entity/worship.entity';
-import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../churches/entity/church.entity';
 import {
   IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
   IWorshipEnrollmentDomainService,
@@ -106,14 +109,15 @@ export class WorshipService {
     dto: CreateWorshipDto,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );*/
-
     const newWorship = await this.worshipDomainService.createWorship(
       church,
       dto,
+      qr,
+    );
+
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.WORSHIP,
       qr,
     );
 
@@ -211,6 +215,11 @@ export class WorshipService {
     );
 
     await this.worshipDomainService.deleteWorship(targetWorship, qr);
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.WORSHIP,
+      qr,
+    );
 
     // 예배 대상 그룹 중간 테이블 삭제
     await this.worshipTargetGroupDomainService.deleteWorshipTargetGroupCascade(
@@ -299,5 +308,21 @@ export class WorshipService {
         qr,
       );
     }
+  }
+
+  async refreshWorshipCount(church: ChurchModel, qr: QueryRunner) {
+    const worshipCount = await this.worshipDomainService.countAllWorships(
+      church,
+      qr,
+    );
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.WORSHIP,
+      worshipCount,
+      qr,
+    );
+
+    return { worshipCount };
   }
 }

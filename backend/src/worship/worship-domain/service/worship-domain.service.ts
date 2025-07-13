@@ -33,6 +33,16 @@ export class WorshipDomainService implements IWorshipDomainService {
     return qr ? qr.manager.getRepository(WorshipModel) : this.repository;
   }
 
+  countAllWorships(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findWorships(
     church: ChurchModel,
     dto: GetWorshipsDto,

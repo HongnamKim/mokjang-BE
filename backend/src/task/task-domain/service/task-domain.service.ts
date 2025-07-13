@@ -66,6 +66,16 @@ export class TaskDomainService implements ITaskDomainService {
     }
   }
 
+  countAllTasks(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getTaskRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findTasks(church: ChurchModel, dto: GetTasksDto, qr?: QueryRunner) {
     const taskRepository = this.getTaskRepository(qr);
 

@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
 
 export const ApiGetTasks = () =>
   applyDecorators(
@@ -28,6 +28,14 @@ export const ApiPostTask = () =>
         '<p>comment - 업무 내용, 서식 지정 가능 (script, iframe 등 태그 사용 불가능)</p>' +
         '<p>inChargeId - 업무 담당자 ID, manager 이상 권한 필요</p>' +
         '<p>receiverIds - 피보고자 ID, manager 이상 권한 필요</p>',
+    }),
+  );
+
+export const ApiRefreshTaskCount = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '교회 업무 개수 새로고침',
     }),
   );
 

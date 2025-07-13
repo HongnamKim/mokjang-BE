@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
 
 export const ApiGetOfficers = () =>
   applyDecorators(
@@ -12,6 +12,15 @@ export const ApiPostOfficer = () =>
   applyDecorators(
     ApiOperation({
       summary: '직분 생성',
+    }),
+  );
+
+export const ApiRefreshOfficerCount = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '교회 직분 개수 새로고침',
+      description: '<h2>교회 내 직분 개수를 새로고침합니다.</h2>',
     }),
   );
 
