@@ -27,6 +27,15 @@ export const ApiPostGroups = () =>
     }),
   );
 
+export const ApiRefreshGroupCount = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '교회 그룹 개수 새로고침',
+      description: '<h2>교회 내의 그룹 개수를 새로고침합니다.</h2>',
+    }),
+  );
+
 export const ApiGetGroupById = () =>
   applyDecorators(
     ApiOperation({

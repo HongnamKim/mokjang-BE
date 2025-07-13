@@ -39,6 +39,16 @@ export class OfficersDomainService implements IOfficersDomainService {
       : this.officersRepository;
   }
 
+  countAllOfficers(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getOfficersRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findOfficers(
     church: ChurchModel,
     dto: GetOfficersDto,

@@ -60,4 +60,6 @@ export interface ITaskDomainService {
   ): Promise<UpdateResult>;
 
   deleteTask(targetTask: TaskModel, qr: QueryRunner): Promise<void>;
+
+  countAllTasks(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

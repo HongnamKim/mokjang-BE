@@ -50,4 +50,6 @@ export interface IWorshipDomainService {
     targetWorship: WorshipModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  countAllWorships(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

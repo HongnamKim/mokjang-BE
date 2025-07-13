@@ -1,4 +1,4 @@
-import { ChurchModel } from '../../entity/church.entity';
+import { ChurchModel, ManagementCountType } from '../../entity/church.entity';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateChurchDto } from '../../dto/create-church.dto';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
@@ -55,6 +55,7 @@ export interface IChurchesDomainService {
     qr: QueryRunner | undefined,
   ): Promise<UpdateResult>;
 
+  // -------교인 수 업데이트---------
   incrementMemberCount(
     church: ChurchModel,
     qr: QueryRunner,
@@ -64,10 +65,30 @@ export interface IChurchesDomainService {
     church: ChurchModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+  // -------교인 수 업데이트---------
 
   transferOwner(
     church: ChurchModel,
     newOwnerChurchUser: ChurchUserModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  incrementManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  refreshManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    refreshCount: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 }

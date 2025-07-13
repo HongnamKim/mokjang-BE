@@ -68,6 +68,16 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     return !!ministry;
   }
 
+  countAllMinistries(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getMinistriesRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findMinistries(
     church: ChurchModel,
     dto: GetMinistryDto,

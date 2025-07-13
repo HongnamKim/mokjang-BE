@@ -33,6 +33,15 @@ export const ApiPostMinistry = () =>
     }),
   );
 
+export const ApiRefreshMinistryCount = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '교회 사역 개수 새로고침',
+      description: '<h2>교회 내 사역 개수를 새로고침합니다.</h2>',
+    }),
+  );
+
 export const ApiPatchMinistry = () =>
   applyDecorators(
     ApiOperation({

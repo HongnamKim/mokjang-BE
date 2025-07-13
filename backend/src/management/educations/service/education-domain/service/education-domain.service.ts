@@ -57,6 +57,16 @@ export class EducationDomainService implements IEducationDomainService {
     return !!isExist;
   }
 
+  countAllEducations(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getEducationsRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
+  }
+
   async findEducations(
     church: ChurchModel,
     dto: GetEducationDto,

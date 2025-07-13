@@ -17,6 +17,10 @@ import { MinistryGroupPostResponseDto } from '../dto/ministry-group/response/min
 import { MinistryGroupPatchResponseDto } from '../dto/ministry-group/response/ministry-group-patch-response.dto';
 import { MinistryGroupDeleteResponseDto } from '../dto/ministry-group/response/ministry-group-delete-response.dto';
 import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/update-ministry-group-structure.dto';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class MinistryGroupService {
@@ -114,6 +118,12 @@ export class MinistryGroupService {
         dto,
         qr,
       );
+
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.MINISTRY_GROUP,
+      qr,
+    );
 
     return new MinistryGroupPostResponseDto(newMinistryGroup);
   }
@@ -229,7 +239,12 @@ export class MinistryGroupService {
     await this.ministryGroupsDomainService.deleteMinistryGroup(
       church,
       targetMinistryGroup,
-      //ministryGroupId,
+      qr,
+    );
+
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.MINISTRY_GROUP,
       qr,
     );
 
@@ -256,5 +271,19 @@ export class MinistryGroupService {
       ministryGroupId,
       qr,
     );
+  }
+
+  async refreshMinistryGroupCount(church: ChurchModel, qr: QueryRunner) {
+    const ministryGroupCount =
+      await this.ministryGroupsDomainService.countAllMinistryGroups(church, qr);
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.MINISTRY_GROUP,
+      ministryGroupCount,
+      qr,
+    );
+
+    return { ministryGroupCount };
   }
 }

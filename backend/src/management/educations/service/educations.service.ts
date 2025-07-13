@@ -22,6 +22,10 @@ import {
   IManagerDomainService,
 } from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class EducationsService {
@@ -77,26 +81,24 @@ export class EducationsService {
   }
 
   async createEducation(
-    //userId: number,
     creatorManager: ChurchUserModel,
     churchId: number,
     dto: CreateEducationDto,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const church = await this.churchDomainService.findChurchModelById(
       churchId,
       qr,
     );
 
-    /*const creatorMember = await this.managerDomainService.findManagerByUserId(
+    await this.churchDomainService.incrementManagementCount(
       church,
-      userId,
+      ManagementCountType.EDUCATION,
       qr,
-    );*/
+    );
 
     return this.educationDomainService.createEducation(
       church,
-      //creatorMember,
       creatorManager,
       dto,
       qr,
@@ -140,7 +142,7 @@ export class EducationsService {
   async deleteEducation(
     churchId: number,
     educationId: number,
-    qr?: QueryRunner,
+    qr: QueryRunner,
   ) {
     const church = await this.churchDomainService.findChurchModelById(
       churchId,
@@ -155,6 +157,11 @@ export class EducationsService {
       );
 
     await this.educationDomainService.deleteEducation(targetEducation, qr);
+    await this.churchDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.EDUCATION,
+      qr,
+    );
 
     return new EducationDeleteResponseDto(
       new Date(),
@@ -162,5 +169,21 @@ export class EducationsService {
       targetEducation.name,
       true,
     );
+  }
+
+  async refreshEducationCount(church: ChurchModel, qr: QueryRunner) {
+    const educationCount = await this.educationDomainService.countAllEducations(
+      church,
+      qr,
+    );
+
+    await this.churchDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.EDUCATION,
+      educationCount,
+      qr,
+    );
+
+    return { educationCount };
   }
 }

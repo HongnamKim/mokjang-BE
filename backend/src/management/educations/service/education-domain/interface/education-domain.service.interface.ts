@@ -47,4 +47,6 @@ export interface IEducationDomainService {
     targetEducation: EducationModel,
     qr?: QueryRunner,
   ): Promise<void>;
+
+  countAllEducations(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

@@ -83,7 +83,6 @@ export interface IGroupsDomainService {
     targetGroup: GroupModel,
     dto: UpdateGroupNameDto,
     qr: QueryRunner,
-    //newParentGroup: GroupModel | null,
   ): Promise<UpdateResult>;
 
   updateGroupStructure(
@@ -107,4 +106,6 @@ export interface IGroupsDomainService {
   incrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
 
   decrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
+
+  countAllGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }
