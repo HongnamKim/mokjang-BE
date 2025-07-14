@@ -68,6 +68,7 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
 import { CalendarModule } from './calendar/calendar.module';
 import { ChurchEventModel } from './calendar/entity/church-event.entity';
 import { MyPageModule } from './my-page/my-page.module';
+import { HomeModule } from './home/home.module';
 
 @Module({
   imports: [
@@ -217,6 +218,7 @@ import { MyPageModule } from './my-page/my-page.module';
     TaskModule,
     WorshipModule,
     CalendarModule,
+    HomeModule,
 
     ChurchesDomainModule,
     MembersDomainModule,
