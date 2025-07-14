@@ -1,11 +1,12 @@
 import { GroupModel } from '../../entity/group.entity';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateGroupDto } from '../../dto/group/create-group.dto';
-import { UpdateGroupDto } from '../../dto/group/update-group.dto';
+import { UpdateGroupNameDto } from '../../dto/group/update-group-name.dto';
 import { GetGroupDto } from '../../dto/group/get-group.dto';
 import { GetGroupByNameDto } from '../../dto/group/get-group-by-name.dto';
 import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
+import { UpdateGroupStructureDto } from '../../dto/group/update-group-structure.dto';
 
 export interface ParentGroup {
   id: number;
@@ -77,13 +78,20 @@ export interface IGroupsDomainService {
     qr: QueryRunner,
   ): Promise<GroupModel>;
 
-  updateGroup(
+  updateGroupName(
     church: ChurchModel,
     targetGroup: GroupModel,
-    dto: UpdateGroupDto,
+    dto: UpdateGroupNameDto,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updateGroupStructure(
+    church: ChurchModel,
+    targetGroup: GroupModel,
+    dto: UpdateGroupStructureDto,
     qr: QueryRunner,
     newParentGroup: GroupModel | null,
-  ): Promise<GroupModel>;
+  ): Promise<UpdateResult>;
 
   deleteGroup(deleteTarget: GroupModel, qr: QueryRunner): Promise<void>;
 
@@ -98,4 +106,6 @@ export interface IGroupsDomainService {
   incrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
 
   decrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
+
+  countAllGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

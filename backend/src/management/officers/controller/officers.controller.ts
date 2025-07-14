@@ -12,8 +12,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateOfficerDto } from '../dto/create-officer.dto';
-import { UpdateOfficerDto } from '../dto/update-officer.dto';
+import { CreateOfficerDto } from '../dto/request/create-officer.dto';
+import { UpdateOfficerNameDto } from '../dto/request/update-officer-name.dto';
 import { OfficersService } from '../service/officers.service';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
@@ -21,13 +21,18 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import {
   ApiDeleteOfficer,
   ApiGetOfficers,
-  ApiPatchOfficer,
+  ApiPatchOfficerName,
+  ApiPatchOfficerStructure,
   ApiPostOfficer,
+  ApiRefreshOfficerCount,
 } from '../const/swagger/officers.swagger';
 import { GetOfficersDto } from '../dto/request/get-officers.dto';
 import { OfficerWriteGuard } from '../guard/officer-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
+import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -56,17 +61,16 @@ export class OfficersController {
     return this.officersService.createOfficer(churchId, dto, qr);
   }
 
-  @ApiPatchOfficer()
+  @ApiRefreshOfficerCount()
+  @Patch('refresh-count')
   @OfficerWriteGuard()
-  @Patch(':officerId')
   @UseInterceptors(TransactionInterceptor)
-  patchOfficer(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('officerId', ParseIntPipe) officerId: number,
-    @Body() dto: UpdateOfficerDto,
+  refreshOfficerCount(
+    //@Param('churchId', ParseIntPipe) churchId: number,
+    @PermissionChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.officersService.updateOfficer(churchId, officerId, dto, qr);
+    return this.officersService.refreshOfficerCount(church, qr);
   }
 
   @ApiDeleteOfficer()
@@ -79,5 +83,36 @@ export class OfficersController {
     @QueryRunner() qr: QR,
   ) {
     return this.officersService.deleteOfficer(churchId, officerId, qr);
+  }
+
+  @ApiPatchOfficerName()
+  @OfficerWriteGuard()
+  @Patch(':officerId/name')
+  @UseInterceptors(TransactionInterceptor)
+  patchOfficer(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('officerId', ParseIntPipe) officerId: number,
+    @Body() dto: UpdateOfficerNameDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.officersService.updateOfficerName(churchId, officerId, dto, qr);
+  }
+
+  @ApiPatchOfficerStructure()
+  @OfficerWriteGuard()
+  @Patch(':officerId/structure')
+  @UseInterceptors(TransactionInterceptor)
+  patchOfficerStructure(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('officerId', ParseIntPipe) officerId: number,
+    @Body() dto: UpdateOfficerStructureDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.officersService.updateOfficerStructure(
+      churchId,
+      officerId,
+      dto,
+      qr,
+    );
   }
 }

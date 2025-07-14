@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { CreateOfficerDto } from '../dto/create-officer.dto';
-import { UpdateOfficerDto } from '../dto/update-officer.dto';
+import { CreateOfficerDto } from '../dto/request/create-officer.dto';
+import { UpdateOfficerNameDto } from '../dto/request/update-officer-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -15,6 +15,11 @@ import { OfficerPaginationResponseDto } from '../dto/response/officer-pagination
 import { OfficerPostResponse } from '../dto/response/officer-post-response.dto';
 import { OfficerPatchResponse } from '../dto/response/officer-patch.response.dto';
 import { OfficerDeleteResponse } from '../dto/response/officer-delete-response.dto';
+import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class OfficersService {
@@ -61,14 +66,50 @@ export class OfficersService {
       dto,
       qr,
     );
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.OFFICER,
+      qr,
+    );
 
     return new OfficerPostResponse(officer);
   }
 
-  async updateOfficer(
+  async updateOfficerStructure(
     churchId: number,
     officerId: number,
-    dto: UpdateOfficerDto,
+    dto: UpdateOfficerStructureDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetOfficer = await this.officersDomainService.findOfficerModelById(
+      church,
+      officerId,
+      qr,
+    );
+
+    await this.officersDomainService.updateOfficerStructure(
+      church,
+      targetOfficer,
+      dto.order,
+      qr,
+    );
+
+    return this.officersDomainService.findOfficerById(
+      church,
+      targetOfficer.id,
+      qr,
+    );
+  }
+
+  async updateOfficerName(
+    churchId: number,
+    officerId: number,
+    dto: UpdateOfficerNameDto,
     qr?: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -82,7 +123,7 @@ export class OfficersService {
       qr,
     );
 
-    const updatedOfficer = await this.officersDomainService.updateOfficer(
+    const updatedOfficer = await this.officersDomainService.updateOfficerName(
       church,
       officer,
       dto,
@@ -92,7 +133,7 @@ export class OfficersService {
     return new OfficerPatchResponse(updatedOfficer);
   }
 
-  async deleteOfficer(churchId: number, officerId: number, qr?: QueryRunner) {
+  async deleteOfficer(churchId: number, officerId: number, qr: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -106,6 +147,11 @@ export class OfficersService {
     );
 
     await this.officersDomainService.deleteOfficer(officer, qr);
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.OFFICER,
+      qr,
+    );
 
     return new OfficerDeleteResponse(
       new Date(),
@@ -115,41 +161,19 @@ export class OfficersService {
     );
   }
 
-  /*async incrementMembersCount(
-    churchId: number,
-    officerId: number,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const officer = await this.officersDomainService.findOfficerModelById(
+  async refreshOfficerCount(church: ChurchModel, qr: QueryRunner) {
+    const officerCount = await this.officersDomainService.countAllOfficers(
       church,
-      officerId,
       qr,
     );
 
-    return this.officersDomainService.incrementMembersCount(officer, qr);
-  }*/
-
-  /*async decrementMembersCount(
-    churchId: number,
-    officerId: number,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const officer = await this.officersDomainService.findOfficerModelById(
+    await this.churchesDomainService.refreshManagementCount(
       church,
-      officerId,
+      ManagementCountType.OFFICER,
+      officerCount,
       qr,
     );
 
-    return this.officersDomainService.decrementMembersCount(officer, qr);
-  }*/
+    return { officerCount };
+  }
 }

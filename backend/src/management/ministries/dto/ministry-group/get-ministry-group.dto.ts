@@ -15,10 +15,10 @@ export class GetMinistryGroupDto extends BaseOffsetPaginationRequestDto<Ministry
   @ApiProperty({
     description: '정렬 기준 (생성일, 수정일, 이름)',
     enum: MinistryGroupOrderEnum,
-    default: MinistryGroupOrderEnum.createdAt,
+    default: MinistryGroupOrderEnum.ORDER,
     required: false,
   })
   @IsEnum(MinistryGroupOrderEnum)
   @IsOptional()
-  order: MinistryGroupOrderEnum = MinistryGroupOrderEnum.createdAt;
+  order: MinistryGroupOrderEnum = MinistryGroupOrderEnum.ORDER;
 }

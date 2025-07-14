@@ -22,7 +22,10 @@ import {
   ITaskReportDomainService,
 } from '../../report/report-domain/interface/task-report-domain.service.interface';
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
-import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../churches/entity/church.entity';
 import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
@@ -301,5 +304,18 @@ export class TaskService {
       deletedReceiverIds: dto.receiverIds,
       deletedCount: result.affected,
     };
+  }
+
+  async refreshTaskCount(church: ChurchModel, qr: QueryRunner) {
+    const taskCount = await this.taskDomainService.countAllTasks(church, qr);
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.TASK,
+      taskCount,
+      qr,
+    );
+
+    return { taskCount };
   }
 }

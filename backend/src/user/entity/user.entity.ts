@@ -44,7 +44,4 @@ export class UserModel extends BaseModel {
 
   @OneToMany(() => ChurchJoinModel, (joinRequest) => joinRequest.user)
   joinRequest: ChurchJoinModel;
-
-  /*@OneToOne(() => MemberModel, (member) => member.user)
-  member: MemberModel;*/
 }

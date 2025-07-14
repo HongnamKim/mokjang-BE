@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -23,15 +22,16 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import {
   ApiDeleteMinistry,
   ApiGetMinistries,
-  ApiGetMinistryById,
   ApiPatchMinistry,
   ApiPostMinistry,
+  ApiRefreshMinistryCount,
   ApiRefreshMinistryMembersCount,
 } from '../const/swagger/ministry.swagger';
-import { MinistryReadGuard } from '../guard/ministry-read.guard';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:Ministries')
 @Controller('ministries')
@@ -60,16 +60,15 @@ export class MinistriesController {
     return this.ministryService.createMinistry(churchId, dto, qr);
   }
 
-  @ApiGetMinistryById()
-  @MinistryReadGuard()
-  @Get(':ministryId')
-  getMinistryById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
+  @ApiRefreshMinistryCount()
+  @MinistryWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  @Patch('refresh-count')
+  refreshMinistryCount(
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
   ) {
-    throw new GoneException('더 이상 사용되지 않는 요청');
-
-    //return this.ministryService.getMinistryById(churchId, ministryId);
+    return this.ministryService.refreshMinistryCount(church, qr);
   }
 
   @ApiPatchMinistry()
@@ -109,4 +108,16 @@ export class MinistriesController {
       ministryId,
     );
   }
+
+  /*@ApiGetMinistryById()
+  @MinistryReadGuard()
+  @Get(':ministryId')
+  getMinistryById(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('ministryId', ParseIntPipe) ministryId: number,
+  ) {
+    throw new GoneException('더 이상 사용되지 않는 요청');
+
+    //return this.ministryService.getMinistryById(churchId, ministryId);
+  }*/
 }

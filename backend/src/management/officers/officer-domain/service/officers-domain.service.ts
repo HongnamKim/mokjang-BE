@@ -2,22 +2,26 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { IOfficersDomainService } from '../interface/officers-domain.service.interface';
 import { OfficerModel } from '../../entity/officer.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   IsNull,
+  MoreThan,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { OfficersException } from '../../const/exception/officers.exception';
-import { CreateOfficerDto } from '../../dto/create-officer.dto';
-import { UpdateOfficerDto } from '../../dto/update-officer.dto';
+import { CreateOfficerDto } from '../../dto/request/create-officer.dto';
+import { UpdateOfficerNameDto } from '../../dto/request/update-officer-name.dto';
 import { GetOfficersDto } from '../../dto/request/get-officers.dto';
 import { OfficerDomainPaginationResultDto } from '../../dto/officer-domain-pagination-result.dto';
 import { OfficerOrderEnum } from '../../const/officer-order.enum';
@@ -33,6 +37,16 @@ export class OfficersDomainService implements IOfficersDomainService {
     return qr
       ? qr.manager.getRepository(OfficerModel)
       : this.officersRepository;
+  }
+
+  countAllOfficers(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getOfficersRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
   }
 
   async findOfficers(
@@ -131,8 +145,6 @@ export class OfficersDomainService implements IOfficersDomainService {
     });
 
     if (officer && officer.deletedAt) {
-      console.log(officer);
-
       await officersRepository.remove(officer);
 
       return false;
@@ -153,27 +165,90 @@ export class OfficersDomainService implements IOfficersDomainService {
         churchId: church.id,
         name: dto.name,
       },
-      withDeleted: true,
     });
 
     if (existOfficer) {
-      if (existOfficer.deletedAt) {
-        await officersRepository.remove(existOfficer);
-      } else {
-        throw new ConflictException(OfficersException.ALREADY_EXIST);
-      }
+      throw new ConflictException(OfficersException.ALREADY_EXIST);
     }
+
+    const lastOrderOfficer = await this.officersRepository.find({
+      where: {
+        churchId: church.id,
+      },
+      order: {
+        order: 'DESC',
+      },
+      take: 1,
+    });
+
+    const order = lastOrderOfficer ? lastOrderOfficer[0].order + 1 : 1;
 
     return officersRepository.save({
       churchId: church.id,
       ...dto,
+      order,
     });
   }
 
-  async updateOfficer(
+  async updateOfficerStructure(
+    church: ChurchModel,
+    targetOfficer: OfficerModel,
+    order: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const officersRepository = this.getOfficersRepository(qr);
+
+    const lastOrderOfficer = await officersRepository.findOne({
+      where: {
+        churchId: church.id,
+      },
+      order: {
+        order: 'DESC',
+      },
+    });
+
+    const lastOrder = lastOrderOfficer ? lastOrderOfficer.order : 1;
+
+    if (lastOrder < order) {
+      throw new BadRequestException(OfficersException.INVALID_ORDER);
+    }
+
+    const isMovingDown = order > targetOfficer.order; // 뒷 순서로 이동하는지
+    const range: [number, number] = isMovingDown
+      ? [targetOfficer.order + 1, order]
+      : [order, targetOfficer.order - 1];
+
+    await officersRepository.update(
+      {
+        churchId: church.id,
+        order: Between(...range),
+      },
+      {
+        order: () => (isMovingDown ? 'order - 1' : 'order + 1'),
+      },
+    );
+
+    // 수정 대상 직분 순서 변경
+    const result = await officersRepository.update(
+      {
+        id: targetOfficer.id,
+      },
+      {
+        order,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(OfficersException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async updateOfficerName(
     church: ChurchModel,
     officer: OfficerModel,
-    dto: UpdateOfficerDto,
+    dto: UpdateOfficerNameDto,
     qr?: QueryRunner,
   ) {
     const officersRepository = this.getOfficersRepository(qr);
@@ -197,6 +272,16 @@ export class OfficersDomainService implements IOfficersDomainService {
     }
 
     await officersRepository.softDelete({ id: officer.id });
+
+    await officersRepository.update(
+      {
+        churchId: officer.churchId,
+        order: MoreThan(officer.order),
+      },
+      {
+        order: () => 'order + 1',
+      },
+    );
 
     return;
   }

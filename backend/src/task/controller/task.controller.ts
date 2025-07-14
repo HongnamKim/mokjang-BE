@@ -27,6 +27,7 @@ import {
   ApiGetTasks,
   ApiPatchTask,
   ApiPostTask,
+  ApiRefreshTaskCount,
 } from '../const/swagger/task.swagger';
 import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
 import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
@@ -34,6 +35,8 @@ import { TaskReadGuard } from '../guard/task-read.guard';
 import { TaskWriteGuard } from '../guard/task-write.guard';
 import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Tasks')
 @Controller()
@@ -53,16 +56,25 @@ export class TaskController {
   @ApiPostTask()
   @TaskWriteGuard()
   @Post()
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postTask(
-    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @PermissionManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateTaskDto,
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.postTask(churchId, manager, dto, qr);
+  }
+
+  @ApiRefreshTaskCount()
+  @TaskWriteGuard()
+  @Patch('refresh-count')
+  @UseInterceptors(TransactionInterceptor)
+  refreshTaskCount(
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.taskService.refreshTaskCount(church, qr);
   }
 
   @ApiGetTaskById()

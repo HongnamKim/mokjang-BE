@@ -1,5 +1,6 @@
 export enum MinistryGroupOrderEnum {
-  createdAt = 'createdAt',
-  updatedAt = 'updatedAt',
-  name = 'name',
+  CREATED_AT = 'createdAt',
+  UPDATED_AT = 'updatedAt',
+  NAME = 'name',
+  ORDER = 'order',
 }

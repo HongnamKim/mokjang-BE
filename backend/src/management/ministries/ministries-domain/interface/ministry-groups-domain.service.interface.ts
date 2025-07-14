@@ -1,10 +1,11 @@
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
-import { UpdateMinistryGroupDto } from '../../dto/ministry-group/update-ministry-group.dto';
+import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/update-ministry-group-name.dto';
 import { GetMinistryGroupDto } from '../../dto/ministry-group/get-ministry-group.dto';
 import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
+import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/update-ministry-group-structure.dto';
 
 export const IMINISTRY_GROUPS_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_GROUPS_DOMAIN_SERVICE',
@@ -61,18 +62,26 @@ export interface IMinistryGroupsDomainService {
     qr: QueryRunner,
   ): Promise<MinistryGroupModel>;
 
-  updateMinistryGroup(
+  updateMinistryGroupName(
     church: ChurchModel,
     targetMinistryGroup: MinistryGroupModel,
-    dto: UpdateMinistryGroupDto,
+    dto: UpdateMinistryGroupNameDto,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updateMinistryGroupStructure(
+    church: ChurchModel,
+    targetMinistryGroup: MinistryGroupModel,
+    dto: UpdateMinistryGroupStructureDto,
     qr: QueryRunner,
     newParentMinistryGroup: MinistryGroupModel | null,
-  ): Promise<MinistryGroupWithParentGroups>;
+  ): Promise<UpdateResult>;
 
   deleteMinistryGroup(
     church: ChurchModel,
-    //ministryGroupId: number,
     targetMinistryGroup: MinistryGroupModel,
     qr: QueryRunner,
   ): Promise<void>;
+
+  countAllMinistryGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
 }

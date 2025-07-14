@@ -34,7 +34,6 @@ import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/const/exception/member.exception';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
-import { UpdateVisitationDto } from '../../dto/request/update-visitation.dto';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -74,6 +73,16 @@ export class VisitationMetaDomainService
       title: dto.title && ILike(`%${dto.title}%`),
       inChargeId: dto.inChargeId,
     };
+  }
+
+  countAllVisitations(church: ChurchModel, qr: QueryRunner): Promise<number> {
+    const repository = this.getVisitationMetaRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+      },
+    });
   }
 
   async paginateVisitations(

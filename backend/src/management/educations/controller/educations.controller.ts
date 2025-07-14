@@ -17,8 +17,10 @@ import {
   ApiDeleteEducation,
   ApiGetEducation,
   ApiGetEducationById,
+  ApiGetInProgressEducations,
   ApiPatchEducation,
   ApiPostEducation,
+  ApiRefreshEducationCount,
 } from '../const/swagger/education.swagger';
 import { CreateEducationDto } from '../dto/education/create-education.dto';
 import { QueryRunner as QR } from 'typeorm';
@@ -31,6 +33,8 @@ import { EducationReadGuard } from '../guard/education-read.guard';
 import { EducationWriteGuard } from '../guard/education-write.guard';
 import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:Educations')
 @Controller('educations')
@@ -55,16 +59,15 @@ export class EducationsController {
   @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postEducation(
-    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @PermissionManager() pm: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateEducationDto,
     @QueryRunner() qr: QR,
   ) {
-    //const userId = accessPayload.id;
     return this.educationsService.createEducation(pm, churchId, dto, qr);
   }
 
+  @ApiGetInProgressEducations()
   @Get('in-progress')
   @EducationReadGuard()
   getInProgressEducations(
@@ -72,6 +75,17 @@ export class EducationsController {
     @Query() dto: GetInProgressEducationTermDto,
   ) {
     return this.educationTermService.getInProgressEducationTerms(churchId, dto);
+  }
+
+  @ApiRefreshEducationCount()
+  @Patch('refresh-count')
+  @EducationWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  refreshEducationCount(
+    @PermissionChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.educationsService.refreshEducationCount(church, qr);
   }
 
   @ApiGetEducationById()
@@ -104,11 +118,13 @@ export class EducationsController {
 
   @ApiDeleteEducation()
   @EducationWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
   @Delete(':educationId')
   deleteEducation(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
+    @QueryRunner() qr: QR,
   ) {
-    return this.educationsService.deleteEducation(churchId, educationId);
+    return this.educationsService.deleteEducation(churchId, educationId, qr);
   }
 }

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupDto } from '../dto/group/update-group.dto';
+import { UpdateGroupNameDto } from '../dto/group/update-group-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -14,7 +14,11 @@ import {
 import { GetGroupDto } from '../dto/group/get-group.dto';
 import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
 import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
-import { GetGroupByNameDto } from '../dto/group/get-group-by-name.dto';
+import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
+import {
+  ChurchModel,
+  ManagementCountType,
+} from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class GroupsService {
@@ -80,33 +84,25 @@ export class GroupsService {
     );
   }
 
-  async getParentGroups(churchId: number, groupId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const group = await this.groupsDomainService.findGroupById(
-      church,
-      groupId,
-      qr,
-    );
-
-    return this.groupsDomainService.findParentGroups(church, group, qr);
-  }
-
   async createGroup(churchId: number, dto: CreateGroupDto, qr: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
 
+    await this.churchesDomainService.incrementManagementCount(
+      church,
+      ManagementCountType.GROUP,
+      qr,
+    );
+
     return this.groupsDomainService.createGroup(church, dto, qr);
   }
 
-  async updateGroup(
+  async updateGroupStructure(
     churchId: number,
     groupId: number,
-    dto: UpdateGroupDto,
+    dto: UpdateGroupStructureDto,
     qr: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -121,24 +117,57 @@ export class GroupsService {
       { parentGroup: true },
     );
 
-    const newParentGroup: GroupModel | null =
-      dto.parentGroupId === undefined
-        ? targetGroup.parentGroup // 상위 그룹을 변경하지 않는 경우 (기존 값 유지) nullable
-        : dto.parentGroupId === null
-          ? null // 상위 그룹을 없애는 경우 (최상위 계층으로 이동)
-          : await this.groupsDomainService.findGroupModelById(
-              church,
-              dto.parentGroupId,
-              qr,
-            ); // 새 상위 그룹으로 변경
+    let newParentGroup: GroupModel | null;
 
-    return this.groupsDomainService.updateGroup(
+    if (dto.parentGroupId === undefined) {
+      newParentGroup = targetGroup.parentGroup;
+    } else if (dto.parentGroupId === null) {
+      newParentGroup = null;
+    } else {
+      newParentGroup = await this.groupsDomainService.findGroupModelById(
+        church,
+        dto.parentGroupId,
+        qr,
+      );
+    }
+
+    await this.groupsDomainService.updateGroupStructure(
       church,
       targetGroup,
       dto,
       qr,
       newParentGroup,
     );
+
+    return this.groupsDomainService.findGroupById(church, targetGroup.id, qr);
+  }
+
+  async updateGroupName(
+    churchId: number,
+    groupId: number,
+    dto: UpdateGroupNameDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const targetGroup = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+      qr,
+      { parentGroup: true },
+    );
+
+    await this.groupsDomainService.updateGroupName(
+      church,
+      targetGroup,
+      dto,
+      qr,
+    );
+
+    return this.groupsDomainService.findGroupById(church, targetGroup.id, qr);
   }
 
   async deleteGroup(churchId: number, groupId: number, qr: QueryRunner) {
@@ -156,11 +185,46 @@ export class GroupsService {
     );
 
     await this.groupsDomainService.deleteGroup(group, qr);
+    await this.churchesDomainService.decrementManagementCount(
+      church,
+      ManagementCountType.GROUP,
+      qr,
+    );
 
     return new GroupDeleteResponseDto(new Date(), groupId, group.name, true);
   }
 
-  async getChildGroupIds(churchId: number, groupId: number, qr?: QueryRunner) {
+  async refreshGroupCount(church: ChurchModel, qr: QueryRunner) {
+    const groupCount = await this.groupsDomainService.countAllGroups(
+      church,
+      qr,
+    );
+
+    await this.churchesDomainService.refreshManagementCount(
+      church,
+      ManagementCountType.GROUP,
+      groupCount,
+      qr,
+    );
+
+    return { groupCount };
+  }
+
+  /*async getParentGroups(churchId: number, groupId: number, qr?: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const group = await this.groupsDomainService.findGroupById(
+      church,
+      groupId,
+      qr,
+    );
+
+    return this.groupsDomainService.findParentGroups(church, group, qr);
+  }*/
+
+  /*async getChildGroupIds(churchId: number, groupId: number, qr?: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -173,9 +237,9 @@ export class GroupsService {
     );
 
     return this.groupsDomainService.findChildGroups(group, qr);
-  }
+  }*/
 
-  async getGroupsByName(
+  /*async getGroupsByName(
     churchId: number,
     dto: GetGroupByNameDto,
     qr?: QueryRunner,
@@ -195,5 +259,5 @@ export class GroupsService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
-  }
+  }*/
 }
