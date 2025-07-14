@@ -371,6 +371,7 @@ export class WorshipSessionService {
     );
   }
 
+
   private getRecentSessionDate(worship: WorshipModel, timeZone: TIME_ZONE) {
     const serverToday = new Date(); // UTC 로 현재 시간
 
