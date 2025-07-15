@@ -13,13 +13,15 @@ import { HomeService } from '../service/home.service';
 import { GetNewMemberSummaryDto } from '../dto/request/get-new-member-summary.dto';
 import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto';
 import {
-  ApiGetMyTasks,
+  ApiGetMyInChargedTasks,
+  ApiGetMyInChargedVisitations,
   ApiGetNewMemberDetail,
   ApiGetNewMemberSummary,
 } from '../swagger/home.swagger';
 import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GetMyTasksDto } from '../dto/request/get-my-tasks.dto';
+import { GetMyInChargedVisitationsDto } from '../dto/request/get-my-in-charged-visitations.dto';
 
 @Controller()
 export class HomeController {
@@ -45,10 +47,10 @@ export class HomeController {
     return this.homeService.getNewMemberDetails(church, dto);
   }
 
-  @ApiGetMyTasks()
+  @ApiGetMyInChargedTasks()
   @Get('tasks')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
-  getMyTasks(
+  getMyInChargedTasks(
     @Query() dto: GetMyTasksDto,
     @PermissionManager() pm: ChurchUserModel,
   ) {
@@ -56,6 +58,20 @@ export class HomeController {
       throw new BadRequestException('from, to 에러');
     }
 
-    return this.homeService.getMyTasks(pm, dto);
+    return this.homeService.getMyInChargedTasks(pm, dto);
+  }
+
+  @ApiGetMyInChargedVisitations()
+  @Get('visitations')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getMyInChargedVisitations(
+    @Query() dto: GetMyInChargedVisitationsDto,
+    @PermissionManager() pm: ChurchUserModel,
+  ) {
+    if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
+      throw new BadRequestException('from, to 에러');
+    }
+
+    return this.homeService.getMyInChargedVisitations(pm, dto);
   }
 }

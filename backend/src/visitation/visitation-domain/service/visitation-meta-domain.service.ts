@@ -34,6 +34,7 @@ import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/const/exception/member.exception';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
+import { GetMyInChargedVisitationsDto } from '../../../home/dto/request/get-my-in-charged-visitations.dto';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -292,5 +293,28 @@ export class VisitationMetaDomainService
     }
 
     return result;
+  }
+
+  async findMyVisitations(
+    inCharge: MemberModel,
+    dto: GetMyInChargedVisitationsDto,
+    from: Date,
+    to: Date,
+  ): Promise<VisitationMetaModel[]> {
+    const repository = this.getVisitationMetaRepository();
+
+    return repository.find({
+      where: {
+        inChargeId: inCharge.id,
+        startDate: LessThanOrEqual(to),
+        endDate: MoreThanOrEqual(from),
+      },
+      order: {
+        [dto.order]: dto.orderDirection,
+      },
+      select: {},
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 }
