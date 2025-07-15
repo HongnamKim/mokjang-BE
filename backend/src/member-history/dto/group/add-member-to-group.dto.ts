@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
-import { IsValidHistoryDate } from '../../decorator/is-valid-history-date.decorator';
-import { TransformStartDate } from '../../decorator/transform-start-date.decorator';
+import { IsDateString, IsNumber, Min } from 'class-validator';
+import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { IsValidHistoryDateString } from '../../decorator/is-valid-history-date-string.decorator';
 
 export class AddMemberToGroupDto {
   @ApiProperty({
@@ -13,22 +13,11 @@ export class AddMemberToGroupDto {
   groupId: number;
 
   @ApiProperty({
-    description: '그룹 내 역할 ID',
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  @Min(1)
-  groupRoleId: number;
-
-  @ApiProperty({
     description: '그룹 시작일',
-    default: new Date(),
-    required: false,
+    default: 'YYYY-MM-DD',
   })
-  @IsOptional()
-  @IsDate()
-  @IsValidHistoryDate()
-  @TransformStartDate()
-  startDate: Date = new Date();
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('startDate')
+  @IsValidHistoryDateString('startDate')
+  startDate: string;
 }

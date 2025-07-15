@@ -22,7 +22,6 @@ import { OfficerModel } from './management/officers/entity/officer.entity';
 import { MinistryModel } from './management/ministries/entity/ministry.entity';
 import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
 import { GroupModel } from './management/groups/entity/group.entity';
-import { GroupRoleModel } from './management/groups/entity/group-role.entity';
 import { ManagementModule } from './management/management.module';
 import { MemberModel } from './members/entity/member.entity';
 import { FamilyRelationModel } from './family-relation/entity/family-relation.entity';
@@ -164,7 +163,7 @@ import { HomeModule } from './home/home.module';
           MinistryHistoryModel,
           // 그룹 관련 엔티티
           GroupModel,
-          GroupRoleModel,
+          //GroupRoleModel,
           GroupHistoryModel,
           // 심방 관련 엔티티
           VisitationMetaModel,

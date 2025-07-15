@@ -21,7 +21,7 @@ import {
   IOfficerHistoryDomainService,
 } from '../member-history-domain/interface/officer-history-domain.service.interface';
 import { OfficerHistoryPaginationResultDto } from '../dto/officer/officer-history-pagination-result.dto';
-import { OfficerHistoryException } from '../const/exception/officer-history.exception';
+import { OfficerHistoryException } from '../exception/officer-history.exception';
 
 @Injectable()
 export class OfficerHistoryService {

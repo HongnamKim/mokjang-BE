@@ -1,3 +1,4 @@
+/*
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
@@ -14,3 +15,4 @@ export class CreateGroupRoleDto {
   @Transform(({ value }) => value.replaceAll(' ', ''))
   role: string;
 }
+*/

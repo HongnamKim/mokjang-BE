@@ -2,7 +2,7 @@ import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { GetEducationHistoryDto } from '../dto/education/get-education-history.dto';
 import { EducationHistoryService } from '../service/education-history.service';
-import { ApiGetEducationHistory } from '../const/swagger/education-history.swagger';
+import { ApiGetEducationHistory } from '../swagger/education-history.swagger';
 import { HistoryReadGuard } from '../guard/history-read.guard';
 
 @ApiTags('Churches:Members:Educations')

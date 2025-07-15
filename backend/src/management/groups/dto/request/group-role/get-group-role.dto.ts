@@ -1,3 +1,4 @@
+/*
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
 import { GroupRoleOrderEnum } from '../../const/group-role-order.enum';
@@ -14,3 +15,4 @@ export class GetGroupRoleDto extends BaseOffsetPaginationRequestDto<GroupRoleOrd
   @IsOptional()
   order: GroupRoleOrderEnum = GroupRoleOrderEnum.createdAt;
 }
+*/

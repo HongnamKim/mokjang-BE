@@ -27,18 +27,6 @@ export class IsValidHistoryDateConstraint
     }
 
     return true;
-
-    /*const input = value.setHours(0, 0, 0, 0);
-
-    const now = new Date().setHours(0, 0, 0, 0);
-
-    if (input > now) {
-      throw new BadRequestException(
-        '이력의 날짜는 현재 날짜를 넘어설 수 없습니다.',
-      );
-    }*/
-
-    //return true;
   }
 }
 
