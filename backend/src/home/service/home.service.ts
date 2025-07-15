@@ -29,7 +29,14 @@ import {
   ITaskDomainService,
 } from '../../task/task-domain/interface/task-domain.service.interface';
 import { GetMyTasksDto } from '../dto/request/get-my-tasks.dto';
-import { GetMyTasksResponseDto } from '../dto/response/get-my-tasks-response.dto';
+import { GetMyInChargedVisitationsDto } from '../dto/request/get-my-in-charged-visitations.dto';
+import {
+  IVISITATION_META_DOMAIN_SERVICE,
+  IVisitationMetaDomainService,
+} from '../../visitation/visitation-domain/interface/visitation-meta-domain.service.interface';
+import { GetMySchedulesResponseDto } from '../dto/response/get-my-schedules-response.dto';
+import { ScheduleDto } from '../dto/response/schedule.dto';
+import { ScheduleType } from '../const/schedule-type.enum';
 
 @Injectable()
 export class HomeService {
@@ -38,6 +45,8 @@ export class HomeService {
     private readonly membersDomainService: IMembersDomainService,
     @Inject(ITASK_DOMAIN_SERVICE)
     private readonly taskDomainService: ITaskDomainService,
+    @Inject(IVISITATION_META_DOMAIN_SERVICE)
+    private readonly visitationMetaDomainService: IVisitationMetaDomainService,
   ) {}
 
   private getDateRange(range: 'weekly' | 'monthly') {
@@ -136,7 +145,7 @@ export class HomeService {
     };
   }
 
-  async getMyTasks(pm: ChurchUserModel, dto: GetMyTasksDto) {
+  async getMyInChargedTasks(pm: ChurchUserModel, dto: GetMyTasksDto) {
     const me = pm.member;
 
     const defaultRange = this.getScheduleRange(dto.range);
@@ -151,6 +160,66 @@ export class HomeService {
 
     const tasks = await this.taskDomainService.findMyTasks(me, dto, from, to);
 
-    return new GetMyTasksResponseDto(dto.range, from, to, tasks);
+    const scheduleTasks = tasks.map(
+      (task) =>
+        new ScheduleDto(
+          task.id,
+          ScheduleType.TASK,
+          task.title,
+          task.startDate,
+          task.endDate,
+          task.status,
+        ),
+    );
+
+    return new GetMySchedulesResponseDto<ScheduleDto>(
+      dto.range,
+      from,
+      to,
+      scheduleTasks,
+    );
+  }
+
+  async getMyInChargedVisitations(
+    pm: ChurchUserModel,
+    dto: GetMyInChargedVisitationsDto,
+  ) {
+    const me = pm.member;
+    const defaultRange = this.getScheduleRange(dto.range);
+
+    const [from, to] =
+      dto.from && dto.to
+        ? [
+            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
+            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
+          ]
+        : [defaultRange.from, defaultRange.to];
+
+    const visitations =
+      await this.visitationMetaDomainService.findMyVisitations(
+        me,
+        dto,
+        from,
+        to,
+      );
+
+    const scheduleVisitations = visitations.map(
+      (visitation) =>
+        new ScheduleDto(
+          visitation.id,
+          ScheduleType.VISITATION,
+          visitation.title,
+          visitation.startDate,
+          visitation.endDate,
+          visitation.status,
+        ),
+    );
+
+    return new GetMySchedulesResponseDto<ScheduleDto>(
+      dto.range,
+      from,
+      to,
+      scheduleVisitations,
+    );
   }
 }

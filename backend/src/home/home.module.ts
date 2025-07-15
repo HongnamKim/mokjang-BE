@@ -8,6 +8,7 @@ import { HomePermissionService } from './service/home-permission.service';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { HomeService } from './service/home.service';
 import { TaskDomainModule } from '../task/task-domain/task-domain.module';
+import { VisitationDomainModule } from '../visitation/visitation-domain/visitation-domain.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TaskDomainModule } from '../task/task-domain/task-domain.module';
 
     MembersDomainModule,
     TaskDomainModule,
+    VisitationDomainModule,
   ],
   controllers: [HomeController],
   providers: [

@@ -27,13 +27,25 @@ export const ApiGetNewMemberDetail = () =>
     }),
   );
 
-export const ApiGetMyTasks = () =>
+export const ApiGetMyInChargedTasks = () =>
   applyDecorators(
     ApiParam({ name: 'churchId' }),
     ApiOperation({
       summary: '내가 담당한 업무 목록 조회',
       description:
         '<h2>이번주/이번달 내가 담당한 업무 목록을 조회합니다.</h2>' +
+        '<p>range: 월간 / 주간 선택</p>' +
+        '<p>from, to: 수동으로 기간을 선택, 값이 없을 경우 이번주 or 이번달 (선택값)</p>',
+    }),
+  );
+
+export const ApiGetMyInChargedVisitations = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '내가 담당한 심방 목록 조회',
+      description:
+        '<h2>이번주/이번달 내가 담당한 심방 목록을 조회합니다.</h2>' +
         '<p>range: 월간 / 주간 선택</p>' +
         '<p>from, to: 수동으로 기간을 선택, 값이 없을 경우 이번주 or 이번달 (선택값)</p>',
     }),
