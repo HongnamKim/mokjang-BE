@@ -6,9 +6,6 @@ import {
 } from '../../members/const/member-find-options.const';
 
 export const TasksFindOptionsRelation: FindOptionsRelations<TaskModel> = {
-  /*subTasks: {
-    inCharge: MemberSummarizedRelation,
-  },*/
   inCharge: MemberSummarizedRelation,
 };
 
@@ -35,7 +32,6 @@ export const TasksFindOptionsSelect: FindOptionsSelect<TaskModel> = {
   status: true,
   startDate: true,
   endDate: true,
-  //subTasks: SubTaskFindOptionsSelect,
   inCharge: MemberSummarizedSelect,
 };
 

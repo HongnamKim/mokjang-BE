@@ -1,4 +1,4 @@
-export enum GetNewMemberSummaryRangeEnum {
+export enum WidgetRangeEnum {
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
 }

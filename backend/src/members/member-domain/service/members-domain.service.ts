@@ -42,7 +42,7 @@ import {
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
-import { GetNewMemberSummaryRangeEnum } from '../../../home/const/get-new-member-summary-range.enum';
+import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/response/new-member-summary.dto';
 
@@ -685,7 +685,7 @@ export class MembersDomainService implements IMembersDomainService {
 
   async getNewMemberSummary(
     church: ChurchModel,
-    range: GetNewMemberSummaryRangeEnum,
+    range: WidgetRangeEnum,
     from: Date,
     to: Date,
   ): Promise<NewMemberSummaryDto[]> {
@@ -693,7 +693,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     const qb = repository.createQueryBuilder('member');
 
-    if (range === GetNewMemberSummaryRangeEnum.WEEKLY) {
+    if (range === WidgetRangeEnum.WEEKLY) {
       qb.select([
         `
         (

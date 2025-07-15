@@ -7,6 +7,7 @@ import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permiss
 import { HomePermissionService } from './service/home-permission.service';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { HomeService } from './service/home.service';
+import { TaskDomainModule } from '../task/task-domain/task-domain.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HomeService } from './service/home.service';
     ManagerDomainModule,
 
     MembersDomainModule,
+    TaskDomainModule,
   ],
   controllers: [HomeController],
   providers: [
