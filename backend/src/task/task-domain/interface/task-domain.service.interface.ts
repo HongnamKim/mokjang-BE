@@ -6,7 +6,6 @@ import { GetTasksDto } from '../../dto/request/get-tasks.dto';
 import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-result.dto';
 import { UpdateTaskDto } from '../../dto/request/update-task.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
-import { GetMyTasksDto } from '../../../home/dto/request/get-my-tasks.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 
 export const ITASK_DOMAIN_SERVICE = Symbol('ITASK_DOMAIN_SERVICE');
@@ -67,7 +66,6 @@ export interface ITaskDomainService {
 
   findMyTasks(
     inCharge: MemberModel,
-    dto: GetMyTasksDto,
     from: Date,
     to: Date,
   ): Promise<TaskModel[]>;

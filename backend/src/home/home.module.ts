@@ -9,6 +9,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
 import { HomeService } from './service/home.service';
 import { TaskDomainModule } from '../task/task-domain/task-domain.module';
 import { VisitationDomainModule } from '../visitation/visitation-domain/visitation-domain.module';
+import { EducationDomainModule } from '../management/educations/service/education-domain/education-domain.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { VisitationDomainModule } from '../visitation/visitation-domain/visitati
     MembersDomainModule,
     TaskDomainModule,
     VisitationDomainModule,
+    EducationDomainModule,
   ],
   controllers: [HomeController],
   providers: [
