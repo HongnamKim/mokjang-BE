@@ -44,7 +44,7 @@ import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/ge
 import KoreanLunarCalendar from 'korean-lunar-calendar';
 import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
-import { NewMemberSummaryDto } from '../../../home/dto/response/new-member-summary.dto';
+import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {

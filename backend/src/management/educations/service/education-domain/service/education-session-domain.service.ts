@@ -5,7 +5,9 @@ import {
   Between,
   FindOptionsOrder,
   FindOptionsRelations,
+  LessThanOrEqual,
   MoreThan,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -30,7 +32,7 @@ import { EducationSessionOrderEnum } from '../../../const/order.enum';
 import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationSessionForCalendarDto } from '../../../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
-import { session } from 'passport';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export class EducationSessionDomainService
   implements IEducationSessionDomainService
@@ -472,5 +474,36 @@ export class EducationSessionDomainService
       'session',
       1,
     );
+  }
+
+  findMyEducationSessions(
+    inCharge: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationSessionModel[]> {
+    const repository = this.getEducationSessionsRepository();
+
+    return repository.find({
+      where: {
+        inChargeId: inCharge.id,
+        startDate: LessThanOrEqual(to),
+        endDate: MoreThanOrEqual(from),
+      },
+      order: {
+        //[dto.order]: dto.orderDirection,
+        endDate: 'ASC',
+      },
+      relations: {
+        educationTerm: true,
+      },
+      select: {
+        educationTerm: {
+          id: true,
+          educationId: true,
+        },
+      },
+      take: 50, //dto.take,
+      //skip: dto.take * (dto.page - 1),
+    });
   }
 }

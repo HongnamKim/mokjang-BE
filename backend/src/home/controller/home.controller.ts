@@ -13,15 +13,13 @@ import { HomeService } from '../service/home.service';
 import { GetNewMemberSummaryDto } from '../dto/request/get-new-member-summary.dto';
 import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto';
 import {
-  ApiGetMyInChargedTasks,
-  ApiGetMyInChargedVisitations,
+  ApiGetMyInChargedSchedules,
   ApiGetNewMemberDetail,
   ApiGetNewMemberSummary,
 } from '../swagger/home.swagger';
 import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
-import { GetMyTasksDto } from '../dto/request/get-my-tasks.dto';
-import { GetMyInChargedVisitationsDto } from '../dto/request/get-my-in-charged-visitations.dto';
+import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 
 @Controller()
 export class HomeController {
@@ -47,11 +45,25 @@ export class HomeController {
     return this.homeService.getNewMemberDetails(church, dto);
   }
 
-  @ApiGetMyInChargedTasks()
-  @Get('tasks')
+  @ApiGetMyInChargedSchedules()
+  @Get('schedules')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getMyInChargedSchedules(
+    @Query() dto: GetMyInChargedSchedulesDto,
+    @PermissionManager() pm: ChurchUserModel,
+  ) {
+    if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
+      throw new BadRequestException('from, to 에러');
+    }
+
+    return this.homeService.getMyInChargedSchedules(pm, dto);
+  }
+
+  /*@ApiGetMyInChargedTasks()
+  @Get('schedules/tasks')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMyInChargedTasks(
-    @Query() dto: GetMyTasksDto,
+    @Query() dto: GetMyInChargedSchedulesDto,
     @PermissionManager() pm: ChurchUserModel,
   ) {
     if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
@@ -59,13 +71,13 @@ export class HomeController {
     }
 
     return this.homeService.getMyInChargedTasks(pm, dto);
-  }
+  }*/
 
-  @ApiGetMyInChargedVisitations()
-  @Get('visitations')
+  /*@ApiGetMyInChargedVisitations()
+  @Get('schedules/visitations')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMyInChargedVisitations(
-    @Query() dto: GetMyInChargedVisitationsDto,
+    @Query() dto: GetMyInChargedSchedulesDto,
     @PermissionManager() pm: ChurchUserModel,
   ) {
     if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
@@ -73,5 +85,19 @@ export class HomeController {
     }
 
     return this.homeService.getMyInChargedVisitations(pm, dto);
-  }
+  }*/
+
+  /*@ApiGetMyInChargedEducations()
+  @Get('schedules/educations')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getMyInChargedEducations(
+    @PermissionManager() pm: ChurchUserModel,
+    @Query() dto: GetMyInChargedSchedulesDto,
+  ) {
+    if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
+      throw new BadRequestException('from, to 에러');
+    }
+
+    return this.homeService.getMyInChargedEducations(pm, dto);
+  }*/
 }

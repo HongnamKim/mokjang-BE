@@ -27,6 +27,18 @@ export const ApiGetNewMemberDetail = () =>
     }),
   );
 
+export const ApiGetMyInChargedSchedules = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '내가 담당한 일정 조회',
+      description:
+        '<h2>이번주/이번달 내가 담당한 일정을 조회합니다.</h2>' +
+        '<p>업무, 심방, 교육을 각각 최대 50개씩 총 150개의 일정 조회</p>' +
+        '<p>endDate 를 기준으로 내림차순 정렬</p>',
+    }),
+  );
+
 export const ApiGetMyInChargedTasks = () =>
   applyDecorators(
     ApiParam({ name: 'churchId' }),
@@ -44,6 +56,18 @@ export const ApiGetMyInChargedVisitations = () =>
     ApiParam({ name: 'churchId' }),
     ApiOperation({
       summary: '내가 담당한 심방 목록 조회',
+      description:
+        '<h2>이번주/이번달 내가 담당한 심방 목록을 조회합니다.</h2>' +
+        '<p>range: 월간 / 주간 선택</p>' +
+        '<p>from, to: 수동으로 기간을 선택, 값이 없을 경우 이번주 or 이번달 (선택값)</p>',
+    }),
+  );
+
+export const ApiGetMyInChargedEducations = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '내가 담당한 교육 목록 조회',
       description:
         '<h2>이번주/이번달 내가 담당한 심방 목록을 조회합니다.</h2>' +
         '<p>range: 월간 / 주간 선택</p>' +

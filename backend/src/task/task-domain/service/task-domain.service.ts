@@ -33,7 +33,7 @@ import { TaskType } from '../../const/task-type.enum';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/const/exception/member.exception';
 import { GetTasksDto } from '../../dto/request/get-tasks.dto';
-import { TaskOrder } from '../../const/task-order.enum';
+import { EducationSessionOrderEnum } from '../../const/task-order.enum';
 import { MAX_SUB_TASK_COUNT } from '../../const/task.constraints';
 import { UpdateTaskDto } from '../../dto/request/update-task.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
@@ -42,7 +42,6 @@ import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
-import { GetMyTasksDto } from '../../../home/dto/request/get-my-tasks.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
@@ -85,7 +84,7 @@ export class TaskDomainService implements ITaskDomainService {
       [dto.order]: dto.orderDirection,
     };
 
-    if (dto.order !== TaskOrder.createdAt) {
+    if (dto.order !== EducationSessionOrderEnum.createdAt) {
       order.createdAt = 'asc';
     }
 
@@ -427,7 +426,7 @@ export class TaskDomainService implements ITaskDomainService {
 
   async findMyTasks(
     inCharge: MemberModel,
-    dto: GetMyTasksDto,
+    //dto: GetMyInChargedSchedulesDto,
     from: Date,
     to: Date,
   ): Promise<TaskModel[]> {
@@ -440,11 +439,12 @@ export class TaskDomainService implements ITaskDomainService {
         endDate: MoreThanOrEqual(from),
       },
       order: {
-        [dto.order]: dto.orderDirection,
+        //[dto.order]: dto.orderDirection,
+        endDate: 'ASC',
       },
       select: { ...TasksFindOptionsSelect },
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
+      take: 50, //dto.take,
+      //skip: dto.take * (dto.page - 1),
     });
   }
 }
