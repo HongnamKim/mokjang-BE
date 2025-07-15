@@ -293,4 +293,24 @@ export class VisitationMetaDomainService
 
     return result;
   }
+
+  async findMyVisitations(
+    inCharge: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<VisitationMetaModel[]> {
+    const repository = this.getVisitationMetaRepository();
+
+    return repository.find({
+      where: {
+        inChargeId: inCharge.id,
+        startDate: LessThanOrEqual(to),
+        endDate: MoreThanOrEqual(from),
+      },
+      order: {
+        endDate: 'ASC',
+      },
+      take: 50,
+    });
+  }
 }

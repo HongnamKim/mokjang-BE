@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsSelect,
@@ -41,6 +42,9 @@ import {
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
+import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
+import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
+import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -677,5 +681,75 @@ export class MembersDomainService implements IMembersDomainService {
         groupRoleId: null,
       },
     );
+  }
+
+  async getNewMemberSummary(
+    church: ChurchModel,
+    range: WidgetRangeEnum,
+    from: Date,
+    to: Date,
+  ): Promise<NewMemberSummaryDto[]> {
+    const repository = this.getMembersRepository();
+
+    const qb = repository.createQueryBuilder('member');
+
+    if (range === WidgetRangeEnum.WEEKLY) {
+      qb.select([
+        `
+        (
+          DATE_TRUNC('day', member.registeredAt AT TIME ZONE 'UTC' AT TIME ZONE :tz)  -- 타임존 적용
+          - (EXTRACT(DOW FROM (member.registeredAt AT TIME ZONE 'UTC') AT TIME ZONE :tz)::int) * INTERVAL '1 day'
+        ) AS period_start
+        `,
+        `COUNT(*)::int AS count`,
+      ]);
+    } else {
+      qb.select([
+        `
+          DATE_TRUNC('month',(member.registeredAt AT TIME ZONE 'UTC') AT TIME ZONE :tz) AS period_start
+          `,
+        `COUNT(*)::int AS count`,
+      ]);
+    }
+
+    qb.where('member.churchId = :churchId', { churchId: church.id })
+      .andWhere(`member.registeredAt BETWEEN :from AND :to`, {
+        from,
+        to,
+      })
+      .groupBy('period_start')
+      .orderBy('period_start', 'ASC')
+      .setParameters({
+        tz: 'Asia/Seoul', // 원하는 타임존
+      });
+
+    const data: { period_start: string; count: number }[] =
+      await qb.getRawMany();
+
+    return data.map((d) => new NewMemberSummaryDto(d.period_start, d.count));
+  }
+
+  async findNewMemberDetails(
+    church: ChurchModel,
+    dto: GetNewMemberDetailDto,
+    from: Date,
+    to: Date,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository();
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        registeredAt: Between(from, to),
+      },
+      relations: MemberSummarizedRelation,
+      select: { ...MemberSummarizedSelect, registeredAt: true },
+      order: {
+        [dto.order]: dto.orderDirection,
+        id: 'ASC',
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 }

@@ -1,5 +1,5 @@
 import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base-offset-pagination-request.dto';
-import { TaskOrder } from '../../const/task-order.enum';
+import { EducationSessionOrderEnum } from '../../const/task-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDate,
@@ -14,16 +14,16 @@ import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-speci
 import { TaskStatus } from '../../const/task-status.enum';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
 
-export class GetTasksDto extends BaseOffsetPaginationRequestDto<TaskOrder> {
+export class GetTasksDto extends BaseOffsetPaginationRequestDto<EducationSessionOrderEnum> {
   @ApiProperty({
     description: '정렬 조건',
-    enum: TaskOrder,
-    default: TaskOrder.startDate,
+    enum: EducationSessionOrderEnum,
+    default: EducationSessionOrderEnum.startDate,
     required: false,
   })
   @IsOptional()
-  @IsEnum(TaskOrder)
-  order: TaskOrder = TaskOrder.startDate;
+  @IsEnum(EducationSessionOrderEnum)
+  order: EducationSessionOrderEnum = EducationSessionOrderEnum.startDate;
 
   @ApiProperty({
     description: '업무 제목',

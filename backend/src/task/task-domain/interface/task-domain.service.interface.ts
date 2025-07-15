@@ -6,6 +6,7 @@ import { GetTasksDto } from '../../dto/request/get-tasks.dto';
 import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-result.dto';
 import { UpdateTaskDto } from '../../dto/request/update-task.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 export const ITASK_DOMAIN_SERVICE = Symbol('ITASK_DOMAIN_SERVICE');
 
@@ -44,16 +45,16 @@ export interface ITaskDomainService {
 
   createTask(
     church: ChurchModel,
-    creatorManager: ChurchUserModel, //MemberModel,
+    creatorManager: ChurchUserModel,
     parentTask: TaskModel | null,
-    inChargeMember: ChurchUserModel | null, //MemberModel | null,
+    inChargeMember: ChurchUserModel | null,
     dto: CreateTaskDto,
     qr: QueryRunner,
   ): Promise<TaskModel>;
 
   updateTask(
     targetTask: TaskModel,
-    newInChargeMember: ChurchUserModel | null, //MemberModel | null,
+    newInChargeMember: ChurchUserModel | null,
     newParentTask: TaskModel | null,
     dto: UpdateTaskDto,
     qr: QueryRunner,
@@ -62,4 +63,10 @@ export interface ITaskDomainService {
   deleteTask(targetTask: TaskModel, qr: QueryRunner): Promise<void>;
 
   countAllTasks(church: ChurchModel, qr: QueryRunner): Promise<number>;
+
+  findMyTasks(
+    inCharge: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<TaskModel[]>;
 }

@@ -19,6 +19,8 @@ import { MembersDomainPaginationResultDto } from '../dto/members-domain-paginati
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
+import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
+import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -172,4 +174,18 @@ export interface IMembersDomainService {
   ): Promise<UpdateResult>;
 
   endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
+
+  getNewMemberSummary(
+    church: ChurchModel,
+    range: WidgetRangeEnum,
+    from: Date,
+    to: Date,
+  ): Promise<any[]>;
+
+  findNewMemberDetails(
+    church: ChurchModel,
+    dto: GetNewMemberDetailDto,
+    from: Date,
+    to: Date,
+  ): Promise<MemberModel[]>;
 }

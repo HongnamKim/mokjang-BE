@@ -8,6 +8,7 @@ import { GetEducationSessionDto } from '../../../dto/sessions/request/get-educat
 import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
 import { ChurchModel } from '../../../../../churches/entity/church.entity';
 import { GetEducationSessionForCalendarDto } from '../../../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_DOMAIN_SERVICE',
@@ -86,4 +87,10 @@ export interface IEducationSessionDomainService {
     deletedSession: EducationSessionModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findMyEducationSessions(
+    inCharge: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationSessionModel[]>;
 }
