@@ -10,8 +10,9 @@ export function IsYYYYMMDD(
 ) {
   return function (object: object, propertyName: string) {
     registerDecorator({
+      name: 'isYYYYMMDD',
       target: object.constructor,
-      propertyName,
+      propertyName: propertyName,
       options: {
         message: `${fieldLabel} 은 YYYY-MM-DD 형식이어야 합니다.`,
         ...validationOptions,

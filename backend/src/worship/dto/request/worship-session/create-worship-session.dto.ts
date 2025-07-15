@@ -6,10 +6,10 @@ import {
   MAX_WORSHIP_TITLE,
 } from '../../../constraints/worship.constraints';
 import {
+  IsDateString,
   IsNumber,
   IsString,
   IsUrl,
-  Matches,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -19,15 +19,15 @@ import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decora
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
+import { IsYYYYMMDD } from '../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
 @SanitizeDto()
 export class CreateWorshipSessionDto {
   @ApiProperty({
     description: '예배 세션 진행 날짜 (필수, YYYY-MM-DD)',
   })
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
-    message: 'sessionDate는 YYYY-MM-DD 형식이어야 합니다.',
-  })
+  @IsYYYYMMDD('sessionDate')
+  @IsDateString({ strict: true })
   sessionDate: string;
 
   get sessionDateUtc(): Date {
