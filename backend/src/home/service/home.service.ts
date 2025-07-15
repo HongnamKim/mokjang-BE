@@ -6,12 +6,16 @@ import {
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
-import { GetNewMemberSummaryRangeEnum } from '../const/get-new-member-summary-range.enum';
+import { WidgetRangeEnum } from '../const/widget-range.enum';
 import {
   add,
   endOfDay,
+  endOfMonth,
+  endOfWeek,
   getWeekOfMonth,
   startOfDay,
+  startOfMonth,
+  startOfWeek,
   subMonths,
   subWeeks,
 } from 'date-fns';
@@ -19,12 +23,21 @@ import { GetNewMemberSummaryDto } from '../dto/request/get-new-member-summary.dt
 import { GetNewMemberSummaryResponseDto } from '../dto/response/get-new-member-summary-response.dto';
 import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto';
 import { GetNewMemberDetailResponseDto } from '../dto/response/get-new-member-detail-response.dto';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import {
+  ITASK_DOMAIN_SERVICE,
+  ITaskDomainService,
+} from '../../task/task-domain/interface/task-domain.service.interface';
+import { GetMyTasksDto } from '../dto/request/get-my-tasks.dto';
+import { GetMyTasksResponseDto } from '../dto/response/get-my-tasks-response.dto';
 
 @Injectable()
 export class HomeService {
   constructor(
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(ITASK_DOMAIN_SERVICE)
+    private readonly taskDomainService: ITaskDomainService,
   ) {}
 
   private getDateRange(range: 'weekly' | 'monthly') {
@@ -76,7 +89,7 @@ export class HomeService {
 
     return new GetNewMemberSummaryResponseDto(
       dto.range,
-      dto.range === GetNewMemberSummaryRangeEnum.WEEKLY ? 'week' : 'month',
+      dto.range === WidgetRangeEnum.WEEKLY ? 'week' : 'month',
       result,
     );
   }
@@ -96,5 +109,48 @@ export class HomeService {
     );
 
     return new GetNewMemberDetailResponseDto(newMembers);
+  }
+
+  private getScheduleRange(range: WidgetRangeEnum) {
+    if (range === 'weekly') {
+      const now = new Date();
+      const start = fromZonedTime(
+        startOfWeek(startOfDay(now)),
+        TIME_ZONE.SEOUL,
+      );
+      const end = fromZonedTime(endOfWeek(endOfDay(now)), TIME_ZONE.SEOUL);
+
+      return {
+        from: start,
+        to: end,
+      };
+    }
+
+    const now = new Date();
+    const start = fromZonedTime(startOfMonth(startOfDay(now)), TIME_ZONE.SEOUL);
+    const end = fromZonedTime(endOfMonth(endOfDay(now)), TIME_ZONE.SEOUL);
+
+    return {
+      from: start,
+      to: end,
+    };
+  }
+
+  async getMyTasks(pm: ChurchUserModel, dto: GetMyTasksDto) {
+    const me = pm.member;
+
+    const defaultRange = this.getScheduleRange(dto.range);
+
+    const [from, to] =
+      dto.from && dto.to
+        ? [
+            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
+            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
+          ]
+        : [defaultRange.from, defaultRange.to];
+
+    const tasks = await this.taskDomainService.findMyTasks(me, dto, from, to);
+
+    return new GetMyTasksResponseDto(dto.range, from, to, tasks);
   }
 }

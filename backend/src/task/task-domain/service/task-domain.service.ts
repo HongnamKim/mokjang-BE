@@ -42,6 +42,8 @@ import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
+import { GetMyTasksDto } from '../../../home/dto/request/get-my-tasks.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
 export class TaskDomainService implements ITaskDomainService {
@@ -421,5 +423,28 @@ export class TaskDomainService implements ITaskDomainService {
     }
 
     return;
+  }
+
+  async findMyTasks(
+    inCharge: MemberModel,
+    dto: GetMyTasksDto,
+    from: Date,
+    to: Date,
+  ): Promise<TaskModel[]> {
+    const repository = this.getTaskRepository();
+
+    return repository.find({
+      where: {
+        inChargeId: inCharge.id,
+        startDate: LessThanOrEqual(to),
+        endDate: MoreThanOrEqual(from),
+      },
+      order: {
+        [dto.order]: dto.orderDirection,
+      },
+      select: { ...TasksFindOptionsSelect },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 }

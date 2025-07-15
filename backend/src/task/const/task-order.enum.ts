@@ -3,4 +3,5 @@ export enum TaskOrder {
   updatedAt = 'updatedAt',
   title = 'title',
   startDate = 'startDate',
+  endDate = 'endDate',
 }
