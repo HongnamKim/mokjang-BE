@@ -1,3 +1,5 @@
+/*
 import { CreateGroupRoleDto } from './create-group-role.dto';
 
 export class UpdateGroupRoleDto extends CreateGroupRoleDto {}
+*/

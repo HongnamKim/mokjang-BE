@@ -4,7 +4,7 @@ import { MemberModel } from '../entity/member.entity';
 export const MemberSummarizedRelation: FindOptionsRelations<MemberModel> = {
   officer: true,
   group: true,
-  groupRole: true,
+  //groupRole: true,
 };
 
 export const MemberSummarizedSelect: FindOptionsSelect<MemberModel> = {
@@ -19,8 +19,5 @@ export const MemberSummarizedSelect: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  groupRole: {
-    id: true,
-    role: true,
-  },
+  groupRole: true,
 };

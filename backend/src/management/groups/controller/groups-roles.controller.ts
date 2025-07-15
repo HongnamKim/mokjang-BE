@@ -1,3 +1,4 @@
+/*
 import {
   Body,
   Controller,
@@ -54,8 +55,6 @@ export class GroupsRolesController {
     @QueryRunner() qr: QR,
   ) {
     return this.groupsRolesService.createGroupRole(churchId, groupId, dto, qr);
-
-    //return new PostGroupRoleResponseDto(groupRole);
   }
 
   @ApiPatchGroupRole()
@@ -86,3 +85,4 @@ export class GroupsRolesController {
     return this.groupsRolesService.deleteGroupRole(churchId, groupId, roleId);
   }
 }
+*/

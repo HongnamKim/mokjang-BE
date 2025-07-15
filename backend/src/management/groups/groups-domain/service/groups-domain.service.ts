@@ -12,7 +12,7 @@ import {
   ParentGroup,
 } from '../interface/groups-domain.service.interface';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { CreateGroupDto } from '../../dto/group/create-group.dto';
+import { CreateGroupDto } from '../../dto/request/create-group.dto';
 import {
   Between,
   FindOptionsOrder,
@@ -28,15 +28,15 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { GroupModel } from '../../entity/group.entity';
-import { UpdateGroupNameDto } from '../../dto/group/update-group-name.dto';
+import { UpdateGroupNameDto } from '../../dto/request/update-group-name.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
-import { GetGroupDto } from '../../dto/group/get-group.dto';
+import { GetGroupDto } from '../../dto/request/get-group.dto';
 import { GroupOrderEnum } from '../../const/group-order.enum';
-import { GetGroupByNameDto } from '../../dto/group/get-group-by-name.dto';
+import { GetGroupByNameDto } from '../../dto/request/get-group-by-name.dto';
 import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
-import { UpdateGroupStructureDto } from '../../dto/group/update-group-structure.dto';
+import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -204,9 +204,9 @@ export class GroupsDomainService implements IGroupsDomainService {
         churchId: church.id,
         id: groupId,
       },
-      relations: {
+      /*relations: {
         groupRoles: true,
-      },
+      },*/
     });
 
     if (!group) {

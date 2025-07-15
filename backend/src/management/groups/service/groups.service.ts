@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupNameDto } from '../dto/group/update-group-name.dto';
+import { CreateGroupDto } from '../dto/request/create-group.dto';
+import { UpdateGroupNameDto } from '../dto/request/update-group-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -11,10 +11,10 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../groups-domain/interface/groups-domain.service.interface';
-import { GetGroupDto } from '../dto/group/get-group.dto';
+import { GetGroupDto } from '../dto/request/get-group.dto';
 import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
 import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
-import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
+import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
 import {
   ChurchModel,
   ManagementCountType,

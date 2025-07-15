@@ -31,7 +31,6 @@ import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
@@ -41,6 +40,7 @@ import {
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
+import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -649,7 +649,7 @@ export class MembersDomainService implements IMembersDomainService {
   async startMemberGroup(
     member: MemberModel,
     group: GroupModel,
-    groupRole: GroupRoleModel | undefined,
+    //groupRole: GroupRole | undefined,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
@@ -660,7 +660,7 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         group,
-        groupRole,
+        groupRole: GroupRole.MEMBER, //groupRole ?? GroupRole.MEMBER,
       },
     );
   }
@@ -674,7 +674,7 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         groupId: null,
-        groupRoleId: null,
+        groupRole: GroupRole.NONE,
       },
     );
   }

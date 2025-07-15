@@ -22,7 +22,7 @@ import {
   ApiGetMemberGroupHistory,
   ApiPatchGroupHistory,
   ApiPostMemberGroup,
-} from '../const/swagger/group-history.swagger';
+} from '../swagger/group-history.swagger';
 import { EndMemberGroupDto } from '../dto/group/end-member-group.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';

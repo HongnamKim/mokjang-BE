@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { GroupsService } from '../service/groups.service';
-import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupNameDto } from '../dto/group/update-group-name.dto';
+import { CreateGroupDto } from '../dto/request/create-group.dto';
+import { UpdateGroupNameDto } from '../dto/request/update-group-name.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -27,12 +27,12 @@ import {
   ApiPostGroups,
   ApiRefreshGroupCount,
 } from '../const/swagger/group.swagger';
-import { GetGroupDto } from '../dto/group/get-group.dto';
+import { GetGroupDto } from '../dto/request/get-group.dto';
 import { GroupReadGuard } from '../guard/group-read.guard';
 import { GroupWriteGuard } from '../guard/group-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
-import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
+import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 

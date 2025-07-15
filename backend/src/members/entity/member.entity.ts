@@ -21,7 +21,7 @@ import { OfficerModel } from '../../management/officers/entity/officer.entity';
 import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
 import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
+//import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 import { MinistryHistoryModel } from '../../member-history/entity/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/entity/officer-history.entity';
@@ -31,6 +31,7 @@ import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.ent
 import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { GroupRole } from '../../management/groups/const/group-role.enum';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -194,14 +195,17 @@ export class MemberModel extends BaseModel {
   @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 
-  @Index()
+  @Column({ default: GroupRole.NONE })
+  groupRole: GroupRole;
+
+  /*@Index()
   @Column({ comment: '그룹 역할 ID', nullable: true })
   @Exclude({ toPlainOnly: true })
   groupRoleId: number | null;
 
   @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)
   @JoinColumn({ name: 'groupRoleId' })
-  groupRole: GroupRoleModel;
+  groupRole: GroupRoleModel;*/
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];

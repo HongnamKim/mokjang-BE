@@ -17,10 +17,9 @@ import {
 } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetGroupHistoryDto } from '../../dto/group/get-group-history.dto';
-import { GroupHistoryException } from '../../const/exception/group-history.exception';
+import { GroupHistoryException } from '../../exception/group-history.exception';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
-import { UpdateGroupHistoryDto } from '../../dto/group/update-group-history.dto';
+import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 @Injectable()
 export class GroupHistoryDomainService implements IGroupHistoryDomainService {
@@ -49,7 +48,6 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
         },
         relations: {
           group: true,
-          groupRole: true,
         },
         order: {
           endDate: dto.orderDirection,
@@ -130,7 +128,7 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
   async createGroupHistory(
     member: MemberModel,
     group: GroupModel,
-    groupRole: GroupRoleModel | undefined,
+    //groupRole: GroupRole,
     startDate: Date,
     qr: QueryRunner,
   ) {
@@ -145,17 +143,14 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
     return groupHistoryRepository.save({
       memberId: member.id,
       group,
-      groupRole,
+      groupRole: GroupRole.MEMBER,
       startDate,
     });
   }
 
   async endGroupHistory(
     groupHistory: GroupHistoryModel,
-    snapShot: {
-      groupSnapShot: string;
-      groupRoleSnapShot: string | null;
-    },
+    groupSnapShot: string,
     endDate: Date,
     qr: QueryRunner,
   ) {
@@ -171,9 +166,7 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
       },
       {
         groupId: null,
-        groupRoleId: null,
-        groupRoleSnapShot: snapShot.groupRoleSnapShot,
-        groupSnapShot: snapShot.groupSnapShot,
+        groupSnapShot: groupSnapShot,
         endDate: endDate,
       },
     );
@@ -189,39 +182,35 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
 
   private isValidUpdateDate(
     targetHistory: GroupHistoryModel,
-    dto: UpdateGroupHistoryDto,
+    startDate: Date | undefined,
+    endDate: Date | undefined,
   ) {
-    if (targetHistory.endDate === null && dto.endDate) {
+    if (targetHistory.endDate === null && endDate) {
       throw new BadRequestException(
         GroupHistoryException.CANNOT_UPDATE_END_DATE,
       );
     }
 
-    if (dto.startDate && !dto.endDate) {
-      if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
-        throw new BadRequestException(
-          GroupHistoryException.INVALID_START_DATE,
-          //'이력 시작일은 종료일보다 늦을 수 없습니다.',
-        );
+    if (startDate && !endDate) {
+      if (targetHistory.endDate && startDate > targetHistory.endDate) {
+        throw new BadRequestException(GroupHistoryException.INVALID_START_DATE);
       }
     }
 
-    if (dto.endDate && !dto.startDate) {
-      if (dto.endDate < targetHistory.startDate) {
-        throw new BadRequestException(
-          GroupHistoryException.INVALID_END_DATE,
-          //'이력 종료일은 시작일보다 빠를 수 없습니다.',
-        );
+    if (endDate && !startDate) {
+      if (endDate < targetHistory.startDate) {
+        throw new BadRequestException(GroupHistoryException.INVALID_END_DATE);
       }
     }
   }
 
   async updateGroupHistory(
     groupHistory: GroupHistoryModel,
-    dto: UpdateGroupHistoryDto,
+    startDate: Date | undefined,
+    endDate: Date | undefined,
     qr: QueryRunner,
   ) {
-    this.isValidUpdateDate(groupHistory, dto);
+    this.isValidUpdateDate(groupHistory, startDate, endDate);
 
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
@@ -230,8 +219,8 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
         id: groupHistory.id,
       },
       {
-        startDate: dto.startDate,
-        endDate: dto.endDate,
+        startDate: startDate,
+        endDate: endDate,
       },
     );
 

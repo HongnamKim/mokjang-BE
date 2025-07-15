@@ -7,29 +7,29 @@ export const VisitationRelationOptions: FindOptionsRelations<VisitationMetaModel
     members: {
       officer: true,
       group: true,
-      groupRole: true,
+      //groupRole: true,
     },
     inCharge: {
       officer: true,
       group: true,
-      groupRole: true,
+      //groupRole: true,
     },
     creator: {
       officer: true,
       group: true,
-      groupRole: true,
+      //groupRole: true,
     },
     reports: {
       receiver: {
         officer: true,
         group: true,
-        groupRole: true,
+        //groupRole: true,
       },
     },
     visitationDetails: {
       member: {
         group: true,
-        groupRole: true,
+        //groupRole: true,
         officer: true,
       },
     },
@@ -47,10 +47,7 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
       id: true,
       name: true,
     },
-    groupRole: {
-      id: true,
-      role: true,
-    },
+    groupRole: true,
   },
   inCharge: {
     id: true,
@@ -63,10 +60,7 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
       id: true,
       name: true,
     },
-    groupRole: {
-      id: true,
-      role: true,
-    },
+    groupRole: true,
   },
   members: {
     id: true,
@@ -79,10 +73,7 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
       id: true,
       name: true,
     },
-    groupRole: {
-      id: true,
-      role: true,
-    },
+    groupRole: true,
   },
   reports: {
     id: true,
@@ -99,10 +90,7 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
         id: true,
         name: true,
       },
-      groupRole: {
-        id: true,
-        role: true,
-      },
+      groupRole: true,
     },
   },
   visitationDetails: {
@@ -122,10 +110,7 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
         id: true,
         name: true,
       },
-      groupRole: {
-        id: true,
-        role: true,
-      },
+      groupRole: true,
     },
   },
 };
@@ -135,7 +120,7 @@ export const VisitationDetailRelationOptions: FindOptionsRelations<VisitationDet
     member: {
       officer: true,
       group: true,
-      groupRole: true,
+      //groupRole: true,
     },
   };
 
@@ -152,9 +137,6 @@ export const VisitationDetailSelectOptions: FindOptionsSelect<VisitationDetailMo
         id: true,
         name: true,
       },
-      groupRole: {
-        id: true,
-        role: true,
-      },
+      groupRole: true,
     },
   };
