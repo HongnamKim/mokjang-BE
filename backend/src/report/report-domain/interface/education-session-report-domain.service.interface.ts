@@ -62,4 +62,10 @@ export interface IEducationSessionReportDomainService {
     deleteReceiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findMyReports(
+    receiver: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationSessionReportModel[]>;
 }

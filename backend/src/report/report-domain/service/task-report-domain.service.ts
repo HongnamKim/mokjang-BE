@@ -10,6 +10,8 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -31,6 +33,11 @@ import {
 } from '../../const/report-find-options.const';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
+import { differenceInDays } from 'date-fns';
 
 @Injectable()
 export class TaskReportDomainService implements ITaskReportDomainService {
@@ -259,5 +266,49 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     }
 
     return result;
+  }
+
+  findMyReports(
+    receiver: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<TaskReportModel[]> {
+    const repository = this.getTaskReportRepository();
+
+    const take = differenceInDays(to, from) > 14 ? 100 : 50;
+
+    return repository.find({
+      take,
+      where: {
+        receiverId: receiver.id,
+        task: {
+          startDate: LessThanOrEqual(to),
+          endDate: MoreThanOrEqual(from),
+        },
+      },
+      order: {
+        task: {
+          endDate: 'ASC',
+        },
+      },
+      relations: {
+        task: {
+          inCharge: MemberSummarizedRelation,
+        },
+      },
+      select: {
+        task: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          taskType: true,
+          title: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          inCharge: MemberSummarizedSelect,
+        },
+      },
+    });
   }
 }
