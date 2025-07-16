@@ -5,6 +5,8 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -31,6 +33,11 @@ import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
 import { TaskReportException } from '../../const/exception/task-report.exception';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
+import { differenceInDays } from 'date-fns';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
 
 export class VisitationReportDomainService
   implements IVisitationReportDomainService
@@ -270,5 +277,48 @@ export class VisitationReportDomainService
     }
 
     return result;
+  }
+
+  async findMyReports(
+    receiver: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<VisitationReportModel[]> {
+    const repository = this.getRepository();
+
+    const take = differenceInDays(to, from) > 14 ? 100 : 50;
+
+    return repository.find({
+      take,
+      where: {
+        receiverId: receiver.id,
+        visitation: {
+          startDate: LessThanOrEqual(to),
+          endDate: MoreThanOrEqual(from),
+        },
+      },
+      order: {
+        visitation: {
+          endDate: 'ASC',
+        },
+      },
+      relations: {
+        visitation: {
+          inCharge: MemberSummarizedRelation,
+        },
+      },
+      select: {
+        visitation: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          title: true,
+          inCharge: MemberSummarizedSelect,
+        },
+      },
+    });
   }
 }

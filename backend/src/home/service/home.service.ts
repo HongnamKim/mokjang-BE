@@ -39,6 +39,24 @@ import {
   IEducationSessionDomainService,
 } from '../../management/educations/service/education-domain/interface/education-session-domain.service.interface';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
+import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
+import {
+  ITASK_REPORT_DOMAIN_SERVICE,
+  ITaskReportDomainService,
+} from '../../report/report-domain/interface/task-report-domain.service.interface';
+import {
+  IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
+  IEducationSessionReportDomainService,
+} from '../../report/report-domain/interface/education-session-report-domain.service.interface';
+import {
+  IVISITATION_REPORT_DOMAIN_SERVICE,
+  IVisitationReportDomainService,
+} from '../../report/report-domain/interface/visitation-report-domain.service.interface';
+import { ScheduleReportDto } from '../dto/schedule-report.dto';
+import { TaskModel } from '../../task/entity/task.entity';
+import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
+import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
+import { GetMyScheduleReportsResponseDto } from '../dto/response/get-my-schedule-reports-response.dto';
 
 @Injectable()
 export class HomeService {
@@ -51,6 +69,13 @@ export class HomeService {
     private readonly visitationMetaDomainService: IVisitationMetaDomainService,
     @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
     private readonly educationSessionDomainService: IEducationSessionDomainService,
+
+    @Inject(ITASK_REPORT_DOMAIN_SERVICE)
+    private readonly taskReportDomainService: ITaskReportDomainService,
+    @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
+    private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
+    @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
+    private readonly visitationReportDomainService: IVisitationReportDomainService,
   ) {}
 
   private getDateRange(range: 'weekly' | 'monthly') {
@@ -149,6 +174,41 @@ export class HomeService {
     };
   }
 
+  private createTaskSchedule(task: TaskModel) {
+    return new ScheduleDto(
+      task.id,
+      ScheduleType.TASK,
+      task.title,
+      task.startDate,
+      task.endDate,
+      task.status,
+    );
+  }
+
+  private createVisitationSchedule(visitation: VisitationMetaModel) {
+    return new ScheduleDto(
+      visitation.id,
+      ScheduleType.VISITATION,
+      visitation.title,
+      visitation.startDate,
+      visitation.endDate,
+      visitation.status,
+    );
+  }
+
+  private createEducationSchedule(educationSession: EducationSessionModel) {
+    return new ScheduleDto(
+      educationSession.id,
+      ScheduleType.EDUCATION,
+      educationSession.title,
+      educationSession.startDate,
+      educationSession.endDate,
+      educationSession.status,
+      educationSession.educationTerm.id,
+      educationSession.educationTerm.educationId,
+    );
+  }
+
   async getMyInChargedSchedules(
     pm: ChurchUserModel,
     dto: GetMyInChargedSchedulesDto,
@@ -166,48 +226,22 @@ export class HomeService {
         : [defaultRange.from, defaultRange.to];
 
     const tasks = await this.taskDomainService.findMyTasks(me, from, to);
-    const scheduleTasks = tasks.map(
-      (task) =>
-        new ScheduleDto(
-          task.id,
-          ScheduleType.TASK,
-          task.title,
-          task.startDate,
-          task.endDate,
-          task.status,
-        ),
-    );
+    const scheduleTasks = tasks.map((task) => this.createTaskSchedule(task));
+
     const visitations =
       await this.visitationMetaDomainService.findMyVisitations(me, from, to);
-    const scheduleVisitations = visitations.map(
-      (visitation) =>
-        new ScheduleDto(
-          visitation.id,
-          ScheduleType.VISITATION,
-          visitation.title,
-          visitation.startDate,
-          visitation.endDate,
-          visitation.status,
-        ),
+    const scheduleVisitations = visitations.map((visitation) =>
+      this.createVisitationSchedule(visitation),
     );
+
     const educations =
       await this.educationSessionDomainService.findMyEducationSessions(
         me,
         from,
         to,
       );
-    const scheduleEducations = educations.map(
-      (educationSession) =>
-        new ScheduleDto(
-          educationSession.id,
-          ScheduleType.EDUCATION,
-          educationSession.title,
-          educationSession.startDate,
-          educationSession.endDate,
-          educationSession.status,
-          educationSession.educationTermId,
-          educationSession.educationTerm.educationId,
-        ),
+    const scheduleEducations = educations.map((educationSession) =>
+      this.createEducationSchedule(educationSession),
     );
 
     const schedules = [
@@ -216,16 +250,13 @@ export class HomeService {
       ...scheduleVisitations,
     ];
 
-    schedules.sort((a, b) => b.endDate.getTime() - a.endDate.getTime());
+    schedules.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 
     return schedules;
   }
 
-  /*async getMyInChargedTasks(
-    pm: ChurchUserModel,
-    dto: GetMyInChargedSchedulesDto,
-  ) {
-    const me = pm.member;
+  async getMyScheduleReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
+    const receiver = pm.member;
 
     const defaultRange = this.getScheduleRange(dto.range);
 
@@ -237,107 +268,68 @@ export class HomeService {
           ]
         : [defaultRange.from, defaultRange.to];
 
-    const tasks = await this.taskDomainService.findMyTasks(me, from, to);
-
-    const scheduleTasks = tasks.map(
-      (task) =>
-        new ScheduleDto(
-          task.id,
+    const taskReports = await this.taskReportDomainService.findMyReports(
+      receiver,
+      from,
+      to,
+    );
+    const taskScheduleReports = taskReports.map(
+      (taskReport) =>
+        new ScheduleReportDto(
+          taskReport.id,
           ScheduleType.TASK,
-          task.title,
-          task.startDate,
-          task.endDate,
-          task.status,
+          taskReport.task.inCharge,
+          this.createTaskSchedule(taskReport.task),
         ),
     );
 
-    return new GetMySchedulesResponseDto<ScheduleDto>(
-      dto.range,
-      from,
-      to,
-      scheduleTasks,
-    );
-  }*/
-
-  /*async getMyInChargedVisitations(
-    pm: ChurchUserModel,
-    dto: GetMyInChargedSchedulesDto,
-  ) {
-    const me = pm.member;
-    const defaultRange = this.getScheduleRange(dto.range);
-
-    const [from, to] =
-      dto.from && dto.to
-        ? [
-            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
-            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
-          ]
-        : [defaultRange.from, defaultRange.to];
-
-    const visitations =
-      await this.visitationMetaDomainService.findMyVisitations(me, from, to);
-
-    const scheduleVisitations = visitations.map(
-      (visitation) =>
-        new ScheduleDto(
-          visitation.id,
-          ScheduleType.VISITATION,
-          visitation.title,
-          visitation.startDate,
-          visitation.endDate,
-          visitation.status,
-        ),
-    );
-
-    return new GetMySchedulesResponseDto<ScheduleDto>(
-      dto.range,
-      from,
-      to,
-      scheduleVisitations,
-    );
-  }*/
-
-  /*async getMyInChargedEducations(
-    pm: ChurchUserModel,
-    dto: GetMyInChargedSchedulesDto,
-  ) {
-    const me = pm.member;
-    const defaultRange = this.getScheduleRange(dto.range);
-
-    const [from, to] =
-      dto.from && dto.to
-        ? [
-            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
-            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
-          ]
-        : [defaultRange.from, defaultRange.to];
-
-    const educationSessions =
-      await this.educationSessionDomainService.findMyEducationSessions(
-        me,
+    const educationReports =
+      await this.educationSessionReportDomainService.findMyReports(
+        receiver,
         from,
         to,
       );
-
-    const scheduleEducations = educationSessions.map(
-      (educationSession) =>
-        new ScheduleDto(
-          educationSession.id,
+    const educationScheduleReports = educationReports.map(
+      (educationReport) =>
+        new ScheduleReportDto(
+          educationReport.id,
           ScheduleType.EDUCATION,
-          educationSession.title,
-          educationSession.startDate,
-          educationSession.endDate,
-          educationSession.status,
-          educationSession.educationTermId,
-          educationSession.educationTerm.educationId,
+          educationReport.educationSession.inCharge,
+          this.createEducationSchedule(educationReport.educationSession),
         ),
     );
 
-    return new GetMySchedulesResponseDto<ScheduleDto>(
-      dto.range,
-      from,
-      to,
-      scheduleEducations,
+    const visitationReports =
+      await this.visitationReportDomainService.findMyReports(
+        receiver,
+        from,
+        to,
+      );
+    const visitationScheduleReports = visitationReports.map(
+      (visitationReport) =>
+        new ScheduleReportDto(
+          visitationReport.id,
+          ScheduleType.VISITATION,
+          visitationReport.visitation.inCharge,
+          this.createVisitationSchedule(visitationReport.visitation),
+        ),
     );
-  }*/
+
+    const scheduleReports = [
+      ...taskScheduleReports,
+      ...educationScheduleReports,
+      ...visitationScheduleReports,
+    ];
+
+    scheduleReports.sort(
+      (a, b) => a.schedule.endDate.getTime() - b.schedule.endDate.getTime(),
+    );
+
+    const data = scheduleReports.slice(
+      (dto.page - 1) * 50,
+      (dto.page - 1) * 50 + 50,
+    );
+
+    return new GetMyScheduleReportsResponseDto(data);
+  }
 }

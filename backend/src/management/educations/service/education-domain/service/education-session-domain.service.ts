@@ -490,13 +490,20 @@ export class EducationSessionDomainService
         endDate: MoreThanOrEqual(from),
       },
       order: {
-        //[dto.order]: dto.orderDirection,
         endDate: 'ASC',
       },
       relations: {
         educationTerm: true,
       },
       select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        session: true,
+        title: true,
+        startDate: true,
+        endDate: true,
+        status: true,
         educationTerm: {
           id: true,
           educationId: true,

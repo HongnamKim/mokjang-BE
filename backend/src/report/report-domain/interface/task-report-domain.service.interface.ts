@@ -59,4 +59,10 @@ export interface ITaskReportDomainService {
     receiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findMyReports(
+    receiver: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<TaskReportModel[]>;
 }
