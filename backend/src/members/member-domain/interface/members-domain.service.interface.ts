@@ -20,6 +20,8 @@ import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
+import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
+import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -149,10 +151,17 @@ export interface IMembersDomainService {
   startMemberGroup(
     member: MemberModel,
     group: GroupModel,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
   endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
+
+  updateGroupRole(
+    group: GroupModel,
+    newLeaderMember: MemberModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 
   getNewMemberSummary(
     church: ChurchModel,
@@ -166,5 +175,12 @@ export interface IMembersDomainService {
     dto: GetNewMemberDetailDto,
     from: Date,
     to: Date,
+  ): Promise<MemberModel[]>;
+
+  findGroupMembers(
+    church: ChurchModel,
+    group: GroupModel,
+    dto: GetGroupMembersDto,
+    qr?: QueryRunner,
   ): Promise<MemberModel[]>;
 }

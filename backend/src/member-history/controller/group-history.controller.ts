@@ -91,7 +91,6 @@ export class GroupHistoryController {
     @Body() dto: UpdateGroupHistoryDto,
     @QueryRunner() qr: QR,
   ) {
-    //return dto;
     return this.groupHistoryService.updateGroupHistory(
       churchId,
       memberId,

@@ -7,6 +7,8 @@ import { RouterModule } from '@nestjs/core';
 import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
 import { ManagementPermissionService } from '../management-permission.service';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
+import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
+import { MemberHistoryDomainModule } from '../../member-history/member-history-domain/member-history-domain.module';
 
 @Module({
   imports: [
@@ -17,13 +19,14 @@ import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain
       },
     ]),
     GroupsDomainModule,
+    MemberHistoryDomainModule,
+    MembersDomainModule,
     ChurchesDomainModule,
     ManagerDomainModule,
   ],
-  controllers: [GroupsController /*GroupsRolesController*/],
+  controllers: [GroupsController],
   providers: [
     GroupsService,
-    //GroupRolesService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: ManagementPermissionService,
