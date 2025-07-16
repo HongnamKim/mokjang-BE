@@ -39,38 +39,16 @@ export const ApiGetMyInChargedSchedules = () =>
     }),
   );
 
-export const ApiGetMyInChargedTasks = () =>
+export const ApiGetMyScheduleReports = () =>
   applyDecorators(
     ApiParam({ name: 'churchId' }),
     ApiOperation({
-      summary: '내가 담당한 업무 목록 조회',
+      summary: '보고받은 일정',
       description:
-        '<h2>이번주/이번달 내가 담당한 업무 목록을 조회합니다.</h2>' +
-        '<p>range: 월간 / 주간 선택</p>' +
-        '<p>from, to: 수동으로 기간을 선택, 값이 없을 경우 이번주 or 이번달 (선택값)</p>',
-    }),
-  );
-
-export const ApiGetMyInChargedVisitations = () =>
-  applyDecorators(
-    ApiParam({ name: 'churchId' }),
-    ApiOperation({
-      summary: '내가 담당한 심방 목록 조회',
-      description:
-        '<h2>이번주/이번달 내가 담당한 심방 목록을 조회합니다.</h2>' +
-        '<p>range: 월간 / 주간 선택</p>' +
-        '<p>from, to: 수동으로 기간을 선택, 값이 없을 경우 이번주 or 이번달 (선택값)</p>',
-    }),
-  );
-
-export const ApiGetMyInChargedEducations = () =>
-  applyDecorators(
-    ApiParam({ name: 'churchId' }),
-    ApiOperation({
-      summary: '내가 담당한 교육 목록 조회',
-      description:
-        '<h2>이번주/이번달 내가 담당한 심방 목록을 조회합니다.</h2>' +
-        '<p>range: 월간 / 주간 선택</p>' +
-        '<p>from, to: 수동으로 기간을 선택, 값이 없을 경우 이번주 or 이번달 (선택값)</p>',
+        '<h2>이번주/이번달 보고받은 일정을 조회합니다.</h2>' +
+        '<p>각 조회마다 보고는 50개씩 조회됩니다.</p>' +
+        '<p>이번주 조회 시 각 최대 50개씩 총 150개 보고 조회 가능</p>' +
+        '<p>이번달 조회 시 각 최대 100개씩 총 300개 보고 조회 가능</p>' +
+        '<p>page 쿼리 파라미터로 페이징 처리</p>',
     }),
   );

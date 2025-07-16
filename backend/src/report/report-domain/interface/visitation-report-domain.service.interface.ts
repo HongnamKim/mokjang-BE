@@ -58,4 +58,10 @@ export interface IVisitationReportDomainService {
     receiverIds: number[],
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findMyReports(
+    receiver: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<VisitationReportModel[]>;
 }

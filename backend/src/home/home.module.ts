@@ -10,6 +10,9 @@ import { HomeService } from './service/home.service';
 import { TaskDomainModule } from '../task/task-domain/task-domain.module';
 import { VisitationDomainModule } from '../visitation/visitation-domain/visitation-domain.module';
 import { EducationDomainModule } from '../management/educations/service/education-domain/education-domain.module';
+import { TaskReportDomainModule } from '../report/report-domain/task-report-domain.module';
+import { VisitationReportDomainModule } from '../report/report-domain/visitation-report-domain.module';
+import { EducationSessionReportDomainModule } from '../report/report-domain/education-session-report-domain.module';
 
 @Module({
   imports: [
@@ -20,9 +23,14 @@ import { EducationDomainModule } from '../management/educations/service/educatio
     ManagerDomainModule,
 
     MembersDomainModule,
+
     TaskDomainModule,
     VisitationDomainModule,
     EducationDomainModule,
+
+    TaskReportDomainModule,
+    VisitationReportDomainModule,
+    EducationSessionReportDomainModule,
   ],
   controllers: [HomeController],
   providers: [
