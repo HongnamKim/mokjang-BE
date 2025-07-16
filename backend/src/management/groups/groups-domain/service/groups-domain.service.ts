@@ -37,6 +37,8 @@ import { GroupOrderEnum } from '../../const/group-order.enum';
 import { GetGroupByNameDto } from '../../dto/request/get-group-by-name.dto';
 import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
+import { MemberModel } from '../../../../members/entity/member.entity';
+import { GroupRole } from '../../const/group-role.enum';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -130,7 +132,6 @@ export class GroupsDomainService implements IGroupsDomainService {
           churchId: church.id,
           parentGroupId: dto.parentGroupId === 0 ? IsNull() : dto.parentGroupId,
         },
-        //relations: { groupRoles: true },
         order,
         take: dto.take,
         skip: dto.take * (dto.page - 1),
@@ -204,9 +205,6 @@ export class GroupsDomainService implements IGroupsDomainService {
         churchId: church.id,
         id: groupId,
       },
-      /*relations: {
-        groupRoles: true,
-      },*/
     });
 
     if (!group) {
@@ -288,8 +286,6 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     return subGroupsQuery;
-
-    //return subGroupsQuery.map((row: any) => row.id as number);
   }
 
   async findGroupByIdWithParents(
@@ -372,6 +368,48 @@ export class GroupsDomainService implements IGroupsDomainService {
     return parentGroup
       ? this.handleLeafGroup(church, parentGroup, dto, qr)
       : this.handleNodeGroup(church, dto, qr);
+  }
+
+  async updateGroupLeader(
+    group: GroupModel,
+    newLeaderMember: MemberModel | null,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    if (newLeaderMember) {
+      if (newLeaderMember.groupId !== group.id) {
+        throw new ConflictException('해당 그룹에 속한 교인이 아닙니다.');
+      }
+
+      if (newLeaderMember.groupRole === GroupRole.LEADER) {
+        throw new ConflictException('이미 그룹 리더로 지정된 교인입니다.');
+      }
+
+      const repository = this.getGroupsRepository(qr);
+
+      const result = await repository.update(
+        { id: group.id },
+        { leaderMemberId: newLeaderMember.id },
+      );
+
+      if (result.affected === 0) {
+        throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
+      }
+
+      return result;
+    }
+
+    const repository = this.getGroupsRepository(qr);
+
+    const result = await repository.update(
+      { id: group.id },
+      { leaderMemberId: null },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   async updateGroupStructure(

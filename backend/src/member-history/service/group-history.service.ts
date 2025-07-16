@@ -30,6 +30,7 @@ import { GroupHistoryException } from '../exception/group-history.exception';
 import { startOfDay } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { GroupRole } from '../../management/groups/const/group-role.enum';
 
 @Injectable()
 export class GroupHistoryService {
@@ -150,6 +151,7 @@ export class GroupHistoryService {
       this.groupHistoryDomainService.createGroupHistory(
         member,
         group,
+        GroupRole.MEMBER,
         startDate,
         qr,
       ),
@@ -158,7 +160,12 @@ export class GroupHistoryService {
       this.groupDomainService.incrementMembersCount(group, qr),
 
       // 교인의 그룹 정보 업데이트
-      this.membersDomainService.startMemberGroup(member, group, qr),
+      this.membersDomainService.startMemberGroup(
+        member,
+        group,
+        GroupRole.MEMBER,
+        qr,
+      ),
     ]);
 
     newGroupHistory.groupSnapShot = await this.createCurrentGroupSnapShot(
@@ -204,6 +211,14 @@ export class GroupHistoryService {
     );
 
     const endDate = fromZonedTime(startOfDay(dto.endDate), TIME_ZONE.SEOUL);
+
+    if (member.groupRole === GroupRole.LEADER) {
+      await this.groupDomainService.updateGroupLeader(
+        groupHistory.group,
+        null,
+        qr,
+      );
+    }
 
     await Promise.all([
       // 그룹 이력 종료 날짜 추가, 스냅샷 추가

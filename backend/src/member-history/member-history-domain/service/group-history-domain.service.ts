@@ -128,7 +128,7 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
   async createGroupHistory(
     member: MemberModel,
     group: GroupModel,
-    //groupRole: GroupRole,
+    groupRole: GroupRole,
     startDate: Date,
     qr: QueryRunner,
   ) {
@@ -143,7 +143,7 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
     return groupHistoryRepository.save({
       memberId: member.id,
       group,
-      groupRole: GroupRole.MEMBER,
+      groupRole,
       startDate,
     });
   }

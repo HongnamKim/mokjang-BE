@@ -21,7 +21,9 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import {
   ApiDeleteGroup,
   ApiGetGroupById,
+  ApiGetGroupMembers,
   ApiGetGroups,
+  ApiPatchGroupLeader,
   ApiPatchGroupName,
   ApiPatchGroupStructure,
   ApiPostGroups,
@@ -35,6 +37,8 @@ import { ChurchManagerGuard } from '../../../permission/guard/church-manager.gua
 import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
+import { GetGroupMembersDto } from '../dto/request/get-group-members.dto';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -94,6 +98,30 @@ export class GroupsController {
     @QueryRunner() qr: QR,
   ) {
     return this.groupsService.deleteGroup(churchId, groupId, qr);
+  }
+
+  @ApiGetGroupMembers()
+  @Get(':groupId/members')
+  @GroupReadGuard()
+  getGroupMembers(
+    @PermissionChurch() church: ChurchModel,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Query() dto: GetGroupMembersDto,
+  ) {
+    return this.groupsService.getGroupMembers(church, groupId, dto);
+  }
+
+  @ApiPatchGroupLeader()
+  @Patch(':groupId/leader')
+  @GroupWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  patchGroupLeader(
+    @PermissionChurch() church: ChurchModel,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Body() dto: UpdateGroupLeaderDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.groupsService.updateGroupLeader(church, groupId, dto, qr);
   }
 
   @ApiPatchGroupName()

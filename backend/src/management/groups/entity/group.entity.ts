@@ -37,11 +37,11 @@ export class GroupModel extends BaseModel {
   @Column({ default: 0 })
   membersCount: number;
 
+  @Column({ type: 'int', nullable: true })
+  leaderMemberId: number | null;
+
   @OneToMany(() => MemberModel, (member) => member.group)
   members: MemberModel[];
-
-  /*@OneToMany(() => GroupRoleModel, (groupRole) => groupRole.group)
-  groupRoles: GroupRoleModel[];*/
 
   @OneToMany(() => GroupHistoryModel, (history) => history.group)
   history: GroupHistoryModel[];

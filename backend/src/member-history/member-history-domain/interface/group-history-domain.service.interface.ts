@@ -3,6 +3,7 @@ import { GetGroupHistoryDto } from '../../dto/group/get-group-history.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { GroupHistoryModel } from '../../entity/group-history.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
+import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 export const IGROUP_HISTORY_DOMAIN_SERVICE = Symbol(
   'IGROUP_HISTORY_DOMAIN_SERVICE',
@@ -31,7 +32,7 @@ export interface IGroupHistoryDomainService {
   createGroupHistory(
     member: MemberModel,
     group: GroupModel,
-    //groupRole: GroupRole,
+    groupRole: GroupRole,
     startDate: Date,
     qr: QueryRunner,
   ): Promise<GroupHistoryModel>;

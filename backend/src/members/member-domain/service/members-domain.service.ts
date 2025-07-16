@@ -19,6 +19,7 @@ import {
   Not,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetMemberDto } from '../../dto/request/get-member.dto';
@@ -45,6 +46,8 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
+import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
+import { GroupMemberOrder } from '../../../management/groups/const/group-member-order.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -326,53 +329,6 @@ export class MembersDomainService implements IMembersDomainService {
     return member;
   }
 
-  /*async findMemberModelByUserId(
-    church: ChurchModel,
-    userId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const member = await membersRepository.findOne({
-      where: {
-        userId,
-        churchId: church.id,
-      },
-      relations: relationOptions,
-    });
-
-    if (!member) {
-      throw new NotFoundException(MemberException.NOT_FOUND);
-    }
-
-    return member;
-  }*/
-
-  /*async linkUserToMember(
-    member: MemberModel,
-    user: UserModel,
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getMembersRepository(qr);
-
-    const result = await repository.update(
-      {
-        id: member.id,
-      },
-      {
-        user: user,
-        //isPermissionActive: true,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(MemberException.LINK_ERROR);
-    }
-
-    return result;
-  }*/
-
   async findMemberModelById(
     church: ChurchModel,
     memberId: number,
@@ -653,7 +609,7 @@ export class MembersDomainService implements IMembersDomainService {
   async startMemberGroup(
     member: MemberModel,
     group: GroupModel,
-    //groupRole: GroupRole | undefined,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
@@ -664,7 +620,7 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         group,
-        groupRole: GroupRole.MEMBER, //groupRole ?? GroupRole.MEMBER,
+        groupRole,
       },
     );
   }
@@ -681,6 +637,68 @@ export class MembersDomainService implements IMembersDomainService {
         groupRole: GroupRole.NONE,
       },
     );
+  }
+
+  async updateGroupRole(
+    group: GroupModel,
+    newLeaderMember: MemberModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMembersRepository(qr);
+
+    // 기존 리더를 다시 그룹원으로 수정
+    await repository.update(
+      { groupId: group.id, groupRole: GroupRole.LEADER },
+      { groupRole: GroupRole.MEMBER },
+    );
+
+    // 새로운 리더 지정
+    const result = await repository.update(
+      { id: newLeaderMember.id },
+      { groupRole: GroupRole.LEADER },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(MemberException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async findGroupMembers(
+    church: ChurchModel,
+    group: GroupModel,
+    dto: GetGroupMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository(qr);
+
+    // 그룹장 최상위 고정
+    const order: FindOptionsOrder<MemberModel> = {
+      groupRole: 'ASC',
+    };
+
+    if (dto.order === GroupMemberOrder.OFFICER) {
+      order.officer = {
+        name: dto.orderDirection,
+      };
+      order.id = dto.orderDirection;
+    } else {
+      order[dto.order] = dto.orderDirection;
+      order.id = dto.orderDirection;
+    }
+
+    return repository.find({
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+      where: {
+        churchId: church.id,
+        groupId: group.id,
+      },
+      order,
+      relations: MemberSummarizedRelation,
+      select: MemberSummarizedSelect,
+    });
   }
 
   async getNewMemberSummary(
