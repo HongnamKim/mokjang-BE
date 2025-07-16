@@ -250,7 +250,7 @@ export class EducationEnrollmentsDomainService
       relations: {
         member: {
           group: true,
-          groupRole: true,
+          //groupRole: true,
           officer: true,
         },
       },

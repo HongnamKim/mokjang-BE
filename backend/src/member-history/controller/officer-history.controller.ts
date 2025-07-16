@@ -23,7 +23,7 @@ import {
   ApiGetMemberOfficerHistory,
   ApiPatchOfficerHistory,
   ApiPostMemberOfficer,
-} from '../const/swagger/officer-history.swagger';
+} from '../swagger/officer-history.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { HistoryReadGuard } from '../guard/history-read.guard';

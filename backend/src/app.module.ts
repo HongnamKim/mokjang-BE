@@ -22,7 +22,6 @@ import { OfficerModel } from './management/officers/entity/officer.entity';
 import { MinistryModel } from './management/ministries/entity/ministry.entity';
 import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
 import { GroupModel } from './management/groups/entity/group.entity';
-import { GroupRoleModel } from './management/groups/entity/group-role.entity';
 import { ManagementModule } from './management/management.module';
 import { MemberModel } from './members/entity/member.entity';
 import { FamilyRelationModel } from './family-relation/entity/family-relation.entity';
@@ -68,6 +67,7 @@ import { WorshipTargetGroupModel } from './worship/entity/worship-target-group.e
 import { CalendarModule } from './calendar/calendar.module';
 import { ChurchEventModel } from './calendar/entity/church-event.entity';
 import { MyPageModule } from './my-page/my-page.module';
+import { HomeModule } from './home/home.module';
 
 @Module({
   imports: [
@@ -163,7 +163,7 @@ import { MyPageModule } from './my-page/my-page.module';
           MinistryHistoryModel,
           // 그룹 관련 엔티티
           GroupModel,
-          GroupRoleModel,
+          //GroupRoleModel,
           GroupHistoryModel,
           // 심방 관련 엔티티
           VisitationMetaModel,
@@ -217,6 +217,7 @@ import { MyPageModule } from './my-page/my-page.module';
     TaskModule,
     WorshipModule,
     CalendarModule,
+    HomeModule,
 
     ChurchesDomainModule,
     MembersDomainModule,

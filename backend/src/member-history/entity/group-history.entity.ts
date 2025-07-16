@@ -2,7 +2,8 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { MemberModel } from '../../members/entity/member.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
+//import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
+import { GroupRole } from '../../management/groups/const/group-role.enum';
 
 @Entity()
 export class GroupHistoryModel extends BaseModel {
@@ -25,17 +26,8 @@ export class GroupHistoryModel extends BaseModel {
   @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 
-  @Index()
-  @Column({
-    type: 'int',
-    comment: '현재 그룹 역할 ID (현재 그룹일 경우에만 값이 있음)',
-    nullable: true,
-  })
-  groupRoleId: number | null;
-
-  @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.history)
-  @JoinColumn({ name: 'groupRoleId' })
-  groupRole: GroupRoleModel;
+  @Column({ default: GroupRole.MEMBER })
+  groupRole: GroupRole;
 
   @Column({
     comment: '그룹 종료일 시점의 그룹, 그룹 위계는 __ 로 구분',
@@ -43,12 +35,12 @@ export class GroupHistoryModel extends BaseModel {
   })
   groupSnapShot: string;
 
-  @Column({
+  /*@Column({
     type: 'varchar',
     comment: '그룹 종료일 시점의 그룹 내 역할',
     nullable: true,
   })
-  groupRoleSnapShot: string | null;
+  groupRoleSnapShot: string | null;*/
 
   @Index()
   @Column({ type: 'timestamptz' })

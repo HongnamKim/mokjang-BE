@@ -1,3 +1,4 @@
+/*
 import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { GroupModel } from './group.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
@@ -23,3 +24,4 @@ export class GroupRoleModel extends BaseModel {
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.groupRole)
   history: GroupHistoryModel[];
 }
+*/

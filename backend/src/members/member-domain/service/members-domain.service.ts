@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import {
+  Between,
   FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsSelect,
@@ -18,6 +19,7 @@ import {
   Not,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetMemberDto } from '../../dto/request/get-member.dto';
@@ -31,7 +33,6 @@ import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
@@ -41,6 +42,12 @@ import {
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
+import { GroupRole } from '../../../management/groups/const/group-role.enum';
+import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
+import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
+import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
+import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
+import { GroupMemberOrder } from '../../../management/groups/const/group-member-order.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -322,53 +329,6 @@ export class MembersDomainService implements IMembersDomainService {
     return member;
   }
 
-  /*async findMemberModelByUserId(
-    church: ChurchModel,
-    userId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const member = await membersRepository.findOne({
-      where: {
-        userId,
-        churchId: church.id,
-      },
-      relations: relationOptions,
-    });
-
-    if (!member) {
-      throw new NotFoundException(MemberException.NOT_FOUND);
-    }
-
-    return member;
-  }*/
-
-  /*async linkUserToMember(
-    member: MemberModel,
-    user: UserModel,
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getMembersRepository(qr);
-
-    const result = await repository.update(
-      {
-        id: member.id,
-      },
-      {
-        user: user,
-        //isPermissionActive: true,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(MemberException.LINK_ERROR);
-    }
-
-    return result;
-  }*/
-
   async findMemberModelById(
     church: ChurchModel,
     memberId: number,
@@ -649,7 +609,7 @@ export class MembersDomainService implements IMembersDomainService {
   async startMemberGroup(
     member: MemberModel,
     group: GroupModel,
-    groupRole: GroupRoleModel | undefined,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ) {
     const membersRepository = this.getMembersRepository(qr);
@@ -674,8 +634,140 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         groupId: null,
-        groupRoleId: null,
+        groupRole: GroupRole.NONE,
       },
     );
+  }
+
+  async updateGroupRole(
+    group: GroupModel,
+    newLeaderMember: MemberModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMembersRepository(qr);
+
+    // 기존 리더를 다시 그룹원으로 수정
+    await repository.update(
+      { groupId: group.id, groupRole: GroupRole.LEADER },
+      { groupRole: GroupRole.MEMBER },
+    );
+
+    // 새로운 리더 지정
+    const result = await repository.update(
+      { id: newLeaderMember.id },
+      { groupRole: GroupRole.LEADER },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(MemberException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async findGroupMembers(
+    church: ChurchModel,
+    group: GroupModel,
+    dto: GetGroupMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository(qr);
+
+    // 그룹장 최상위 고정
+    const order: FindOptionsOrder<MemberModel> = {
+      groupRole: 'ASC',
+    };
+
+    if (dto.order === GroupMemberOrder.OFFICER) {
+      order.officer = {
+        name: dto.orderDirection,
+      };
+      order.id = dto.orderDirection;
+    } else {
+      order[dto.order] = dto.orderDirection;
+      order.id = dto.orderDirection;
+    }
+
+    return repository.find({
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+      where: {
+        churchId: church.id,
+        groupId: group.id,
+      },
+      order,
+      relations: MemberSummarizedRelation,
+      select: MemberSummarizedSelect,
+    });
+  }
+
+  async getNewMemberSummary(
+    church: ChurchModel,
+    range: WidgetRangeEnum,
+    from: Date,
+    to: Date,
+  ): Promise<NewMemberSummaryDto[]> {
+    const repository = this.getMembersRepository();
+
+    const qb = repository.createQueryBuilder('member');
+
+    if (range === WidgetRangeEnum.WEEKLY) {
+      qb.select([
+        `
+        (
+          DATE_TRUNC('day', member.registeredAt AT TIME ZONE 'UTC' AT TIME ZONE :tz)  -- 타임존 적용
+          - (EXTRACT(DOW FROM (member.registeredAt AT TIME ZONE 'UTC') AT TIME ZONE :tz)::int) * INTERVAL '1 day'
+        ) AS period_start
+        `,
+        `COUNT(*)::int AS count`,
+      ]);
+    } else {
+      qb.select([
+        `
+          DATE_TRUNC('month',(member.registeredAt AT TIME ZONE 'UTC') AT TIME ZONE :tz) AS period_start
+          `,
+        `COUNT(*)::int AS count`,
+      ]);
+    }
+
+    qb.where('member.churchId = :churchId', { churchId: church.id })
+      .andWhere(`member.registeredAt BETWEEN :from AND :to`, {
+        from,
+        to,
+      })
+      .groupBy('period_start')
+      .orderBy('period_start', 'ASC')
+      .setParameters({
+        tz: 'Asia/Seoul', // 원하는 타임존
+      });
+
+    const data: { period_start: string; count: number }[] =
+      await qb.getRawMany();
+
+    return data.map((d) => new NewMemberSummaryDto(d.period_start, d.count));
+  }
+
+  async findNewMemberDetails(
+    church: ChurchModel,
+    dto: GetNewMemberDetailDto,
+    from: Date,
+    to: Date,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository();
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        registeredAt: Between(from, to),
+      },
+      relations: MemberSummarizedRelation,
+      select: { ...MemberSummarizedSelect, registeredAt: true },
+      order: {
+        [dto.order]: dto.orderDirection,
+        id: 'ASC',
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 }

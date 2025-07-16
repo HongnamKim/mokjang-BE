@@ -1,3 +1,4 @@
+/*
 import { GroupRoleModel } from '../../entity/group-role.entity';
 import { BaseDomainOffsetPaginationResultDto } from '../../../../common/dto/base-domain-offset-pagination-result.dto';
 
@@ -9,3 +10,4 @@ export class GroupRoleDomainPaginationResultDto extends BaseDomainOffsetPaginati
     super(data, totalCount);
   }
 }
+*/

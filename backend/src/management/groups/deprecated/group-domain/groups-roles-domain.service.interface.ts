@@ -1,3 +1,4 @@
+/*
 import { GroupRoleModel } from '../../entity/group-role.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
 import { CreateGroupRoleDto } from '../../dto/group-role/create-group-role.dto';
@@ -42,3 +43,4 @@ export interface IGroupRolesDomainService {
 
   deleteGroupRole(targetGroupRole: GroupRoleModel): Promise<void>;
 }
+*/

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateGroupDto } from '../dto/group/create-group.dto';
-import { UpdateGroupNameDto } from '../dto/group/update-group-name.dto';
+import { CreateGroupDto } from '../dto/request/create-group.dto';
+import { UpdateGroupNameDto } from '../dto/request/update-group-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -11,14 +11,29 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../groups-domain/interface/groups-domain.service.interface';
-import { GetGroupDto } from '../dto/group/get-group.dto';
+import { GetGroupDto } from '../dto/request/get-group.dto';
 import { GroupPaginationResultDto } from '../dto/response/group-pagination-result.dto';
 import { GroupDeleteResponseDto } from '../dto/response/group-delete-response.dto';
-import { UpdateGroupStructureDto } from '../dto/group/update-group-structure.dto';
+import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
 import {
   ChurchModel,
   ManagementCountType,
 } from '../../../churches/entity/church.entity';
+import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/interface/members-domain.service.interface';
+import {
+  IGROUP_HISTORY_DOMAIN_SERVICE,
+  IGroupHistoryDomainService,
+} from '../../../member-history/member-history-domain/interface/group-history-domain.service.interface';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { startOfDay } from 'date-fns';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { GroupRole } from '../const/group-role.enum';
+import { GetGroupMembersDto } from '../dto/request/get-group-members.dto';
+import { GetGroupMembersResponseDto } from '../dto/response/get-group-members-response.dto';
 
 @Injectable()
 export class GroupsService {
@@ -28,6 +43,10 @@ export class GroupsService {
 
     @Inject(IGROUPS_DOMAIN_SERVICE)
     private readonly groupsDomainService: IGroupsDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
+    @Inject(IGROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly groupHistoryDomainService: IGroupHistoryDomainService,
   ) {}
 
   async getGroups(churchId: number, dto: GetGroupDto) {
@@ -97,6 +116,107 @@ export class GroupsService {
     );
 
     return this.groupsDomainService.createGroup(church, dto, qr);
+  }
+
+  async updateGroupLeader(
+    church: ChurchModel,
+    groupId: number,
+    dto: UpdateGroupLeaderDto,
+    qr: QueryRunner,
+  ) {
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+      qr,
+    );
+
+    const oldLeaderMember = group.leaderMemberId
+      ? await this.membersDomainService.findMemberModelById(
+          church,
+          group.leaderMemberId,
+          qr,
+        )
+      : null;
+
+    const newLeaderMember = await this.membersDomainService.findMemberModelById(
+      church,
+      dto.newLeaderMemberId,
+      qr,
+    );
+
+    // 그룹의 리더 설정 (group.leaderMemberId)
+    await this.groupsDomainService.updateGroupLeader(
+      group,
+      newLeaderMember,
+      qr,
+    );
+
+    // 교인의 groupRole 설정 (member.groupRole), 기존 리더가 있을 경우 GroupRole.MEMBER 로 변경
+    await this.membersDomainService.updateGroupRole(group, newLeaderMember, qr);
+
+    const now = new Date();
+
+    const today = fromZonedTime(
+      startOfDay(toZonedTime(now, TIME_ZONE.SEOUL)),
+      TIME_ZONE.SEOUL,
+    );
+
+    const parentGroups = await this.groupsDomainService.findParentGroups(
+      church,
+      group,
+      qr,
+    );
+
+    const groupSnapShot = parentGroups
+      .map((parentGroup) => parentGroup.name)
+      .concat(group.name)
+      .join('__');
+
+    // 그룹 이력 수정
+    if (oldLeaderMember) {
+      const oldLeaderMemberGroupHistory =
+        await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+          oldLeaderMember,
+          qr,
+        );
+
+      // 리더 이력 종료
+      await this.groupHistoryDomainService.endGroupHistory(
+        oldLeaderMemberGroupHistory,
+        groupSnapShot,
+        today,
+        qr,
+      );
+      // 그룹원 이력 시작
+      await this.groupHistoryDomainService.createGroupHistory(
+        oldLeaderMember,
+        group,
+        GroupRole.MEMBER,
+        today,
+        qr,
+      );
+    }
+    const newLeaderGroupHistory =
+      await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+        newLeaderMember,
+        qr,
+      );
+
+    // 그룹원 이력 종료
+    await this.groupHistoryDomainService.endGroupHistory(
+      newLeaderGroupHistory,
+      groupSnapShot,
+      today,
+      qr,
+    );
+    // 리더 이력 시작
+    await this.groupHistoryDomainService.createGroupHistory(
+      newLeaderMember,
+      group,
+      GroupRole.LEADER,
+      today,
+      qr,
+    );
   }
 
   async updateGroupStructure(
@@ -260,4 +380,22 @@ export class GroupsService {
       Math.ceil(totalCount / dto.take),
     );
   }*/
+  async getGroupMembers(
+    church: ChurchModel,
+    groupId: number,
+    dto: GetGroupMembersDto,
+  ) {
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+    );
+
+    const groupMembers = await this.membersDomainService.findGroupMembers(
+      church,
+      group,
+      dto,
+    );
+
+    return new GetGroupMembersResponseDto(groupMembers);
+  }
 }

@@ -14,11 +14,14 @@ import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { GroupRoleModel } from '../../../management/groups/entity/group-role.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
+import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
+import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
+import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
+import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -75,19 +78,6 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel>;
-
-  /*findMemberModelByUserId(
-    church: ChurchModel,
-    userId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<MemberModel>,
-  ): Promise<MemberModel>;*/
-
-  /*linkUserToMember(
-    member: MemberModel,
-    user: UserModel,
-    qr?: QueryRunner,
-  ): Promise<UpdateResult>;*/
 
   findDeleteMemberModelById(
     church: ChurchModel,
@@ -158,18 +148,39 @@ export interface IMembersDomainService {
     qr: QueryRunner,
   ): Promise<MemberModel>;
 
-  /*endMemberEducation(
-    member: MemberModel,
-    educationEnrollmentId: number,
-    qr: QueryRunner,
-  ): Promise<MemberModel>;*/
-
   startMemberGroup(
     member: MemberModel,
     group: GroupModel,
-    groupRole: GroupRoleModel | undefined,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
   endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
+
+  updateGroupRole(
+    group: GroupModel,
+    newLeaderMember: MemberModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  getNewMemberSummary(
+    church: ChurchModel,
+    range: WidgetRangeEnum,
+    from: Date,
+    to: Date,
+  ): Promise<any[]>;
+
+  findNewMemberDetails(
+    church: ChurchModel,
+    dto: GetNewMemberDetailDto,
+    from: Date,
+    to: Date,
+  ): Promise<MemberModel[]>;
+
+  findGroupMembers(
+    church: ChurchModel,
+    group: GroupModel,
+    dto: GetGroupMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
 }

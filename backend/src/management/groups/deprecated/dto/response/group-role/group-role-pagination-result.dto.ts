@@ -1,3 +1,4 @@
+/*
 import { BaseOffsetPaginationResponseDto } from '../../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { GroupRoleModel } from '../../entity/group-role.entity';
 
@@ -12,3 +13,4 @@ export class GroupRolePaginationResultDto extends BaseOffsetPaginationResponseDt
     super(data, totalCount, count, page, totalPage);
   }
 }
+*/

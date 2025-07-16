@@ -1,3 +1,4 @@
+/*
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { CreateGroupRoleDto } from '../dto/group-role/create-group-role.dto';
@@ -31,7 +32,7 @@ export class GroupRolesService {
     private readonly groupRoleDomainService: IGroupRolesDomainService,
   ) {}
 
-  /*async createRoleForAllGroups(churchId: number, dto: CreateGroupRoleDto) {
+  /!*async createRoleForAllGroups(churchId: number, dto: CreateGroupRoleDto) {
     const leafGroups = (await this.groupsService.getGroups(churchId))
       .filter((group) => !group.childGroupIds.length)
       .map((group) => ({ id: group.id, name: group.name }));
@@ -85,7 +86,7 @@ export class GroupRolesService {
       successResults,
       failedResults,
     };
-  }*/
+  }*!/
 
   async getGroupRoles(churchId: number, groupId: number, dto: GetGroupRoleDto) {
     const church =
@@ -199,3 +200,4 @@ export class GroupRolesService {
     );
   }
 }
+*/
