@@ -13,6 +13,8 @@ import { EducationDomainModule } from '../management/educations/service/educatio
 import { TaskReportDomainModule } from '../report/report-domain/task-report-domain.module';
 import { VisitationReportDomainModule } from '../report/report-domain/visitation-report-domain.module';
 import { EducationSessionReportDomainModule } from '../report/report-domain/education-session-report-domain.module';
+import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.module';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -31,6 +33,9 @@ import { EducationSessionReportDomainModule } from '../report/report-domain/educ
     TaskReportDomainModule,
     VisitationReportDomainModule,
     EducationSessionReportDomainModule,
+
+    WorshipDomainModule,
+    GroupsDomainModule,
   ],
   controllers: [HomeController],
   providers: [

@@ -18,7 +18,7 @@ import { MembersDomainPaginationResultDto } from '../dto/members-domain-paginati
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
-import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
+import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
@@ -165,7 +165,7 @@ export interface IMembersDomainService {
 
   getNewMemberSummary(
     church: ChurchModel,
-    range: WidgetRangeEnum,
+    range: WidgetRange,
     from: Date,
     to: Date,
   ): Promise<any[]>;

@@ -64,4 +64,9 @@ export interface IWorshipAttendanceDomainService {
     deletedSessionIds: number[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  /*countPresentAndAbsent(enrollment: WorshipEnrollmentModel): Promise<{
+    presentCount: number;
+    absentCount: number;
+  }>;*/
 }

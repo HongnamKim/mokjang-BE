@@ -2,7 +2,7 @@ import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base
 import { GetNewMemberDetailOrderEnum } from '../../const/get-new-member-detail-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsOptional } from 'class-validator';
-import { WidgetRangeEnum } from '../../const/widget-range.enum';
+import { WidgetRange } from '../../const/widget-range.enum';
 import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
 export class GetNewMemberDetailDto extends BaseOffsetPaginationRequestDto<GetNewMemberDetailOrderEnum> {
@@ -18,11 +18,11 @@ export class GetNewMemberDetailDto extends BaseOffsetPaginationRequestDto<GetNew
 
   @ApiProperty({
     description: '신규 교인 검색 단위 범위',
-    enum: WidgetRangeEnum,
-    default: WidgetRangeEnum.WEEKLY,
+    enum: WidgetRange,
+    default: WidgetRange.WEEKLY,
   })
-  @IsEnum(WidgetRangeEnum)
-  range: WidgetRangeEnum = WidgetRangeEnum.WEEKLY;
+  @IsEnum(WidgetRange)
+  range: WidgetRange = WidgetRange.WEEKLY;
 
   @ApiProperty({})
   @IsOptional()

@@ -43,7 +43,7 @@ import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
-import { WidgetRangeEnum } from '../../../home/const/widget-range.enum';
+import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
@@ -104,13 +104,6 @@ export class MembersDomainService implements IMembersDomainService {
         },
       )
       .execute();
-
-    /*await repository.query(
-      `
-        UPDATE "member_model" SET "birthdayMMDD" = to_char("birth", 'MM-DD') WHERE "churchId" = $1 AND "birth" IS NOT NULL
-        `,
-      [church.id],
-    );*/
   }
 
   async findBirthdayMembers(
@@ -140,13 +133,6 @@ export class MembersDomainService implements IMembersDomainService {
     const fromLunarObject = fromLunarCalendar.getLunarCalendar();
     const toLunarObject = toLunarCalendar.getLunarCalendar();
 
-    /*const fromLunarDate = new Date(
-      `${fromLunarObject.year}-${fromLunarObject.month}-${fromLunarObject.day}`,
-    );
-    const toLunarDate = new Date(
-      `${toLunarObject.year}-${toLunarObject.month}-${toLunarObject.day}`,
-    );*/
-
     const from = dto.fromDate.toISOString().slice(5, 10);
     const to = dto.toDate.toISOString().slice(5, 10);
 
@@ -164,6 +150,7 @@ export class MembersDomainService implements IMembersDomainService {
         'member.birthdayMMDD',
         'member.isLunar',
         'member.isLeafMonth',
+        'member.groupRole',
       ])
       .where(`member.churchId = :churchId`, { churchId: church.id })
       .andWhere(
@@ -187,15 +174,7 @@ export class MembersDomainService implements IMembersDomainService {
       )
       .leftJoin('member.officer', 'officer')
       .leftJoin('member.group', 'group')
-      .leftJoin('member.groupRole', 'groupRole')
-      .addSelect([
-        'officer.id',
-        'officer.name',
-        'group.id',
-        'group.name',
-        'groupRole.id',
-        'groupRole.role',
-      ])
+      .addSelect(['officer.id', 'officer.name', 'group.id', 'group.name'])
       .orderBy('"birthdayMMDD"', 'ASC')
       .addOrderBy('birth', 'ASC')
       .addOrderBy('member.id', 'ASC');
@@ -703,7 +682,7 @@ export class MembersDomainService implements IMembersDomainService {
 
   async getNewMemberSummary(
     church: ChurchModel,
-    range: WidgetRangeEnum,
+    range: WidgetRange,
     from: Date,
     to: Date,
   ): Promise<NewMemberSummaryDto[]> {
@@ -711,7 +690,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     const qb = repository.createQueryBuilder('member');
 
-    if (range === WidgetRangeEnum.WEEKLY) {
+    if (range === WidgetRange.WEEKLY) {
       qb.select([
         `
         (

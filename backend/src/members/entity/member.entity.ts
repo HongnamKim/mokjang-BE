@@ -21,7 +21,6 @@ import { OfficerModel } from '../../management/officers/entity/officer.entity';
 import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
 import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
-//import { GroupRoleModel } from '../../management/groups/entity/group-role.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 import { MinistryHistoryModel } from '../../member-history/entity/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/entity/officer-history.entity';

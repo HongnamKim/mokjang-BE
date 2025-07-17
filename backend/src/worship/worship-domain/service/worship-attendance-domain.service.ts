@@ -300,7 +300,7 @@ export class WorshipAttendanceDomainService
     });
   }
 
-  deleteAttendanceCascadeWorship(
+  async deleteAttendanceCascadeWorship(
     deletedSessionIds: number[],
     qr: QueryRunner,
   ): Promise<UpdateResult> {
@@ -310,4 +310,24 @@ export class WorshipAttendanceDomainService
       worshipSessionId: In(deletedSessionIds),
     });
   }
+
+  /*async countPresentAndAbsent(enrollment: WorshipEnrollmentModel) {
+    const repository = this.getRepository();
+
+    const presentCount = await repository.count({
+      where: {
+        worshipEnrollmentId: enrollment.id,
+        attendanceStatus: AttendanceStatus.PRESENT,
+      },
+    });
+
+    const absentCount = await repository.count({
+      where: {
+        worshipEnrollmentId: enrollment.id,
+        attendanceStatus: AttendanceStatus.ABSENT,
+      },
+    });
+
+    return { presentCount, absentCount };
+  }*/
 }
