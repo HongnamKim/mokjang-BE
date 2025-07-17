@@ -82,6 +82,8 @@ export class ChurchesService {
       qr,
     );
 
+    await this.churchesDomainService.incrementMemberCount(newChurch, qr);
+
     await this.churchUserDomainService.createChurchUser(
       newChurch,
       ownerUser,
