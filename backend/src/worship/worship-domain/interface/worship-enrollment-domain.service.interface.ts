@@ -4,6 +4,7 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
 import { WorshipEnrollmentDomainPaginationResultDto } from '../dto/worship-enrollment-domain-pagination-result.dto';
+import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
 
 export const IWORSHIP_ENROLLMENT_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ENROLLMENT_DOMAIN',
@@ -71,4 +72,18 @@ export interface IWorshipEnrollmentDomainService {
     enrollment: WorshipEnrollmentModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findLowAttendanceEnrollments(
+    worship: WorshipModel,
+    from: Date,
+    to: Date,
+    dto: GetLowWorshipAttendanceMembersDto,
+    groupIds: number[],
+  ): Promise<any[]>;
+
+  /*updatePresentAbsentCount(
+    enrollment: WorshipEnrollmentModel,
+    presentCount: number,
+    absentCount: number,
+  ): Promise<UpdateResult>;*/
 }

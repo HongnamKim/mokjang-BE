@@ -19,6 +19,12 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { WorshipEnrollmentOrderEnum } from '../../const/worship-enrollment-order.enum';
+import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
+import { LowAttendanceOrder } from '../../../home/const/low-attendance-order.enum';
+import { SimpleMemberDto } from '../../../members/dto/simple-member.dto';
+import { SimpleGroupDto } from '../../../management/groups/dto/simple-group.dto';
+import { SimpleOfficerDto } from '../../../management/officers/dto/simple-officer.dto';
+import { LowAttendanceMemberDto } from '../../../home/dto/low-attendance-member.dto';
 
 @Injectable()
 export class WorshipEnrollmentDomainService
@@ -73,17 +79,18 @@ export class WorshipEnrollmentDomainService
       .leftJoin('enrollment.member', 'member')
       .leftJoin('member.officer', 'officer')
       .leftJoin('member.group', 'group')
-      .leftJoin('member.groupRole', 'groupRole')
       .addSelect([
         'member.id',
         'member.name',
         'member.profileImageUrl',
+        'member.groupRole',
+        'member.birth',
+        'member.isLunar',
+        'member.isLeafMonth',
         'officer.id',
         'officer.name',
         'group.id',
         'group.name',
-        'groupRole.id',
-        'groupRole.role',
       ])
       .addSelect(
         `
@@ -317,4 +324,150 @@ export class WorshipEnrollmentDomainService
 
     return repository.decrement({ id: enrollment.id }, 'absentCount', 1);
   }
+
+  async findLowAttendanceEnrollments(
+    worship: WorshipModel,
+    from: Date,
+    to: Date,
+    dto: GetLowWorshipAttendanceMembersDto,
+    groupIds: number[],
+  ): Promise<LowAttendanceMemberDto[]> {
+    const repository = this.getRepository();
+
+    const subQuery = repository
+      .createQueryBuilder('enrollment')
+      .leftJoin('enrollment.worshipAttendances', 'attendance')
+      .select('enrollment.id', 'enrollmentId')
+      .addSelect(
+        `COUNT(*) FILTER (WHERE attendance.attendanceStatus IN ('present', 'absent'))`,
+        'total',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE attendance.attendanceStatus IN ('present'))`,
+        'presentCount',
+      )
+      .addSelect(
+        `MAX(CASE WHEN attendance.attendanceStatus = 'present' THEN attendance.sessionDate ELSE NULL END)`,
+        'lastPresentDate',
+      )
+      .where('enrollment.worshipId = :worshipId', { worshipId: worship.id })
+      .andWhere('attendance.sessionDate BETWEEN :from AND :to', { from, to })
+      .groupBy('enrollment.id');
+
+    const query = repository
+      .createQueryBuilder('enrollment')
+      .innerJoin(
+        `(${subQuery.getQuery()})`,
+        'attendance_summary',
+        'attendance_summary."enrollmentId" = enrollment.id',
+      )
+      .leftJoin('enrollment.member', 'member')
+      .addSelect([
+        'member.id',
+        'member.name',
+        'member.mobilePhone',
+        'member.profileImageUrl',
+        'member.birth',
+        'member.isLunar',
+        'member.isLeafMonth',
+      ])
+      .leftJoin('member.group', 'group')
+      .addSelect(['group.id', 'group.name'])
+      .leftJoin('member.officer', 'officer')
+      .addSelect(['officer.id', 'officer.name'])
+      .where('enrollment.worshipId = :worshipId', { worshipId: worship.id })
+      .setParameters(subQuery.getParameters()) // 서브쿼리에서 사용한 파라미터도 반영
+      .addSelect('attendance_summary.total', 'total')
+      .addSelect('attendance_summary."presentCount"', 'presentCount')
+      .addSelect('attendance_summary."lastPresentDate"', 'lastPresentDate')
+      .addSelect(
+        `CASE 
+       WHEN attendance_summary.total::int = 0 THEN 0
+       ELSE (attendance_summary."presentCount"::float / attendance_summary.total::float)
+     END`,
+        'attendanceRate',
+      )
+      .andWhere(
+        `(attendance_summary."presentCount"::float / NULLIF(attendance_summary.total::float, 0)) <= :threshold`,
+        { threshold: dto.threshold },
+      );
+
+    if (groupIds.length > 0) {
+      query.andWhere('group.id IN (:...groupIds)', { groupIds });
+    }
+
+    if (dto.order === LowAttendanceOrder.NAME) {
+      query.orderBy(
+        'member_name',
+        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
+          ? 'ASC'
+          : 'DESC',
+      );
+    } else {
+      query.orderBy(
+        `"${dto.order}"`,
+        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
+          ? 'ASC'
+          : 'DESC',
+      );
+    }
+
+    query
+      .addOrderBy(
+        'enrollment_id',
+        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
+          ? 'ASC'
+          : 'DESC',
+      )
+      .limit(dto.take)
+      .offset(dto.take * (dto.page - 1));
+
+    const raw = await query.getRawMany();
+
+    // 객체 매핑
+    return raw.map((r) => {
+      const member = new SimpleMemberDto(
+        Number(r.member_id),
+        r.member_name,
+        r.member_mobilePhone,
+        r.member_profileImageUrl,
+        r.member_birth,
+        r.member_isLunar,
+        r.member_isLeafMonth,
+        r.group_id
+          ? new SimpleGroupDto(Number(r.group_id), r.group_name)
+          : null,
+        r.officer_id
+          ? new SimpleOfficerDto(Number(r.officer_id), r.officer_name)
+          : null,
+      );
+
+      return new LowAttendanceMemberDto(
+        Number(r.enrollmentId),
+        Number(r.total),
+        Number(r.presentCount),
+        r.lastPresentDate,
+        r.attendanceRate,
+        member,
+      );
+    });
+  }
+
+  /*async updatePresentAbsentCount(
+    enrollment: WorshipEnrollmentModel,
+    presentCount: number,
+    absentCount: number,
+  ) {
+    const repository = this.getRepository();
+
+    return repository.update(
+      {
+        id: enrollment.id,
+      },
+      {
+        presentCount: presentCount,
+        absentCount: absentCount,
+      },
+    );
+  }*/
 }

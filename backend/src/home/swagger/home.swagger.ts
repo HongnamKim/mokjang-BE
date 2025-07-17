@@ -52,3 +52,11 @@ export const ApiGetMyScheduleReports = () =>
         '<p>page 쿼리 파라미터로 페이징 처리</p>',
     }),
   );
+
+export const ApiGetLowWorshipAttendanceMembers = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '출석률 저조 교인 목록 조회',
+    }),
+  );

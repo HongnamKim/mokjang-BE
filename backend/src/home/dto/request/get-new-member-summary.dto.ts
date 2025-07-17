@@ -1,4 +1,4 @@
-import { WidgetRangeEnum } from '../../const/widget-range.enum';
+import { WidgetRange } from '../../const/widget-range.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
@@ -7,11 +7,11 @@ import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.va
 export class GetNewMemberSummaryDto {
   @ApiProperty({
     description: '신규 교인 검색 단위 범위',
-    enum: WidgetRangeEnum,
-    default: WidgetRangeEnum.WEEKLY,
+    enum: WidgetRange,
+    default: WidgetRange.WEEKLY,
   })
-  @IsEnum(WidgetRangeEnum)
-  range: WidgetRangeEnum = WidgetRangeEnum.WEEKLY;
+  @IsEnum(WidgetRange)
+  range: WidgetRange = WidgetRange.WEEKLY;
 
   @ApiProperty({
     description: '등록기간 시작 날짜 (YYYY-MM-DD)',

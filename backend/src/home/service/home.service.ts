@@ -4,9 +4,9 @@ import {
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
-import { WidgetRangeEnum } from '../const/widget-range.enum';
+import { WidgetRange } from '../const/widget-range.enum';
 import {
   add,
   endOfDay,
@@ -57,12 +57,29 @@ import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { GetMyScheduleReportsResponseDto } from '../dto/response/get-my-schedule-reports-response.dto';
+import { GetLowWorshipAttendanceMembersDto } from '../dto/request/get-low-worship-attendance-members.dto';
+import {
+  IWORSHIP_DOMAIN_SERVICE,
+  IWorshipDomainService,
+} from '../../worship/worship-domain/interface/worship-domain.service.interface';
+import {
+  IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
+  IWorshipEnrollmentDomainService,
+} from '../../worship/worship-domain/interface/worship-enrollment-domain.service.interface';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import { WorshipModel } from '../../worship/entity/worship.entity';
+import { GetLowWorshipAttendanceMembersResponseDto } from '../dto/response/get-low-worship-attendance-members-response.dto';
+import { AttendanceRange } from '../const/attendance-range.enum';
 
 @Injectable()
 export class HomeService {
   constructor(
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+
     @Inject(ITASK_DOMAIN_SERVICE)
     private readonly taskDomainService: ITaskDomainService,
     @Inject(IVISITATION_META_DOMAIN_SERVICE)
@@ -76,10 +93,16 @@ export class HomeService {
     private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
     @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
     private readonly visitationReportDomainService: IVisitationReportDomainService,
+
+    @Inject(IWORSHIP_DOMAIN_SERVICE)
+    private readonly worshipDomainService: IWorshipDomainService,
+    @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
+    private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
   private getDateRange(range: 'weekly' | 'monthly') {
-    const timeZone = TIME_ZONE.SEOUL;
     const now = new Date();
 
     if (range === 'weekly') {
@@ -87,8 +110,8 @@ export class HomeService {
       const end = endOfDay(now);
 
       return {
-        from: fromZonedTime(start, timeZone),
-        to: fromZonedTime(end, timeZone),
+        from: fromZonedTime(start, TIME_ZONE.SEOUL),
+        to: fromZonedTime(end, TIME_ZONE.SEOUL),
       };
     }
 
@@ -97,8 +120,8 @@ export class HomeService {
     const end = endOfDay(now);
 
     return {
-      from: fromZonedTime(start, timeZone),
-      to: toZonedTime(end, timeZone),
+      from: fromZonedTime(start, TIME_ZONE.SEOUL),
+      to: fromZonedTime(end, TIME_ZONE.SEOUL),
     };
   }
 
@@ -127,7 +150,7 @@ export class HomeService {
 
     return new GetNewMemberSummaryResponseDto(
       dto.range,
-      dto.range === WidgetRangeEnum.WEEKLY ? 'week' : 'month',
+      dto.range === WidgetRange.WEEKLY ? 'week' : 'month',
       result,
     );
   }
@@ -149,7 +172,7 @@ export class HomeService {
     return new GetNewMemberDetailResponseDto(newMembers);
   }
 
-  private getScheduleRange(range: WidgetRangeEnum) {
+  private getScheduleRange(range: WidgetRange) {
     if (range === 'weekly') {
       const now = new Date();
       const start = fromZonedTime(
@@ -331,5 +354,119 @@ export class HomeService {
     );
 
     return new GetMyScheduleReportsResponseDto(data);
+  }
+
+  async getLowWorshipAttendanceMembers(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    dto: GetLowWorshipAttendanceMembersDto,
+  ) {
+    const worship = await this.worshipDomainService.findWorshipModelById(
+      church,
+      dto.worshipId,
+      undefined,
+      { worshipTargetGroups: { group: true } },
+    );
+
+    const groupRange = await this.getGroupRange(
+      church,
+      worship,
+      requestManager,
+    );
+
+    const { from, to } = this.getAttendanceDateRange(dto.range);
+
+    const data =
+      await this.worshipEnrollmentDomainService.findLowAttendanceEnrollments(
+        worship,
+        from,
+        to,
+        dto,
+        groupRange,
+      );
+
+    return new GetLowWorshipAttendanceMembersResponseDto(data);
+  }
+
+  private getAttendanceDateRange(range: AttendanceRange) {
+    const now = new Date();
+
+    let subMonthsAmount: number;
+    switch (range) {
+      case AttendanceRange.MONTHLY:
+        subMonthsAmount = 1;
+        break;
+      case AttendanceRange.QUARTER:
+        subMonthsAmount = 3;
+        break;
+      case AttendanceRange.HALF:
+        subMonthsAmount = 6;
+        break;
+    }
+
+    const start = subMonths(startOfDay(now), subMonthsAmount);
+    const end = endOfDay(now);
+
+    return {
+      from: fromZonedTime(start, TIME_ZONE.SEOUL),
+      to: fromZonedTime(end, TIME_ZONE.SEOUL),
+    };
+  }
+
+  private async getGroupRange(
+    church: ChurchModel,
+    worship: WorshipModel,
+    requestManager: ChurchUserModel,
+  ) {
+    const worshipTargetGroupIds = worship.worshipTargetGroups.map(
+      (targetGroup) => targetGroup.groupId,
+    );
+
+    const allWorshipTargetGroupIds = (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        worshipTargetGroupIds,
+      )
+    ).map((group) => group.id);
+
+    const isAllGroupPermission = requestManager.permissionScopes.some(
+      (permissionScope) => permissionScope.isAllGroups,
+    );
+
+    if (isAllGroupPermission) {
+      return allWorshipTargetGroupIds;
+    }
+
+    const permissionScopeIds = requestManager.permissionScopes.map(
+      (permissionScope) => permissionScope.group.id,
+    );
+
+    const allPermissionGroupIds = (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        permissionScopeIds,
+      )
+    ).map((group) => group.id);
+
+    return this.getIntersections(
+      allWorshipTargetGroupIds,
+      allPermissionGroupIds,
+    );
+  }
+
+  private getIntersections(
+    allWorshipTargetGroupIds: number[],
+    allPermissionGroupIds: number[],
+  ) {
+    // 예배 대상이 전체인 경우
+    if (allWorshipTargetGroupIds.length === 0) {
+      return allPermissionGroupIds;
+    }
+
+    const allPermissionGroupIdSet = new Set(allPermissionGroupIds);
+
+    return allWorshipTargetGroupIds.filter((targetGroupId) =>
+      allPermissionGroupIdSet.has(targetGroupId),
+    );
   }
 }

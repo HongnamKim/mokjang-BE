@@ -2,8 +2,6 @@ import {
   BadRequestException,
   Controller,
   Get,
-  Param,
-  ParseIntPipe,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +13,7 @@ import { HomeService } from '../service/home.service';
 import { GetNewMemberSummaryDto } from '../dto/request/get-new-member-summary.dto';
 import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto';
 import {
+  ApiGetLowWorshipAttendanceMembers,
   ApiGetMyInChargedSchedules,
   ApiGetMyScheduleReports,
   ApiGetNewMemberDetail,
@@ -24,6 +23,7 @@ import { PermissionManager } from '../../permission/decorator/permission-manager
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
+import { GetLowWorshipAttendanceMembersDto } from '../dto/request/get-low-worship-attendance-members.dto';
 
 @Controller()
 export class HomeController {
@@ -67,7 +67,6 @@ export class HomeController {
   @Get('reports')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMyScheduleReports(
-    @Param('churchId', ParseIntPipe) churchId: number,
     @PermissionManager() pm: ChurchUserModel,
     @Query() dto: GetMyReportsDto,
   ) {
@@ -76,5 +75,16 @@ export class HomeController {
     }
 
     return this.homeService.getMyScheduleReports(pm, dto);
+  }
+
+  @ApiGetLowWorshipAttendanceMembers()
+  @Get('worship-attendances')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getLowWorshipAttendanceMembers(
+    @PermissionChurch() church: ChurchModel,
+    @PermissionManager() pm: ChurchUserModel,
+    @Query() dto: GetLowWorshipAttendanceMembersDto,
+  ) {
+    return this.homeService.getLowWorshipAttendanceMembers(church, pm, dto);
   }
 }
