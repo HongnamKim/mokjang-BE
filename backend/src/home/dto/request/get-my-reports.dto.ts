@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { WidgetRangeEnum } from '../../const/widget-range.enum';
+import { WidgetRange } from '../../const/widget-range.enum';
 import { IsDateString, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
@@ -7,10 +7,10 @@ import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.d
 export class GetMyReportsDto {
   @ApiProperty({
     description: '검색 단위 (주간 / 월간)',
-    enum: WidgetRangeEnum,
+    enum: WidgetRange,
   })
-  @IsEnum(WidgetRangeEnum)
-  range: WidgetRangeEnum;
+  @IsEnum(WidgetRange)
+  range: WidgetRange;
 
   @ApiProperty({
     description: '조회할 페이지',
