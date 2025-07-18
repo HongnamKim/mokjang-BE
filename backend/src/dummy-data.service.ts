@@ -74,10 +74,11 @@ export class DummyDataService {
     });
 
     try {
-      /*const church =
-        await this.churchesDomainService.findChurchModelById(churchId);*/
+      const result =
+        await this.dummyMembersDomainService.createDummyMembers(members);
+      await this.churchesDomainService.dummyMemberCount(church, count);
 
-      return this.dummyMembersDomainService.createDummyMembers(members);
+      return result;
     } catch (e) {
       throw new InternalServerErrorException(
         '더미 데이터 생성 중 문제가 발생했습니다.',

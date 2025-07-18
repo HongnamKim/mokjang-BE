@@ -65,6 +65,12 @@ export interface IChurchesDomainService {
     church: ChurchModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  dummyMemberCount(
+    church: ChurchModel,
+    count: number,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
   // -------교인 수 업데이트---------
 
   transferOwner(
