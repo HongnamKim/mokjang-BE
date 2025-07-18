@@ -12,7 +12,7 @@ import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetMinistryHistoryDto } from '../../dto/ministry/get-ministry-history.dto';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
-import { MinistryHistoryException } from '../../const/exception/ministry-history.exception';
+import { MinistryHistoryException } from '../../exception/ministry-history.exception';
 import { UpdateMinistryHistoryDto } from '../../dto/ministry/update-ministry-history.dto';
 
 @Injectable()

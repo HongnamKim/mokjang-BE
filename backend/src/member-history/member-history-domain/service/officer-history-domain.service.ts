@@ -12,7 +12,7 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { GetOfficerHistoryDto } from '../../dto/officer/get-officer-history.dto';
 import { IOfficerHistoryDomainService } from '../interface/officer-history-domain.service.interface';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { OfficerHistoryException } from '../../const/exception/officer-history.exception';
+import { OfficerHistoryException } from '../../exception/officer-history.exception';
 import { UpdateOfficerHistoryDto } from '../../dto/officer/update-officer-history.dto';
 
 @Injectable()

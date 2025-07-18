@@ -11,6 +11,8 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -33,6 +35,11 @@ import {
   EducationReportsFindOptionsSelect,
 } from '../../const/report-find-options.const';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { differenceInDays } from 'date-fns';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
 
 @Injectable()
 export class EducationSessionReportDomainService
@@ -288,5 +295,54 @@ export class EducationSessionReportDomainService
     }
 
     return result;
+  }
+
+  findMyReports(
+    receiver: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationSessionReportModel[]> {
+    const repository = this.getRepository();
+
+    const take = differenceInDays(to, from) > 14 ? 100 : 50;
+
+    return repository.find({
+      take,
+      where: {
+        receiverId: receiver.id,
+        educationSession: {
+          startDate: LessThanOrEqual(to),
+          endDate: MoreThanOrEqual(from),
+        },
+      },
+      order: {
+        educationSession: {
+          endDate: 'ASC',
+        },
+      },
+      relations: {
+        educationSession: {
+          inCharge: MemberSummarizedRelation,
+          educationTerm: true,
+        },
+      },
+      select: {
+        educationSession: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          session: true,
+          title: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          inCharge: MemberSummarizedSelect,
+          educationTerm: {
+            id: true,
+            educationId: true,
+          },
+        },
+      },
+    });
   }
 }

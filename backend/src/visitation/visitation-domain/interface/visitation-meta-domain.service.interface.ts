@@ -54,4 +54,10 @@ export interface IVisitationMetaDomainService {
   ): Promise<UpdateResult>;
 
   countAllVisitations(church: ChurchModel, qr: QueryRunner): Promise<number>;
+
+  findMyVisitations(
+    me: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<VisitationMetaModel[]>;
 }

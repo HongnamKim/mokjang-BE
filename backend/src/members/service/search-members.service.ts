@@ -60,7 +60,7 @@ export class SearchMembersService implements ISearchMembersService {
         break;
       case 'group':
         relationOptions[column] = value;
-        relationOptions['groupRole'] = value;
+        //relationOptions['groupRole'] = value;
         break;
       default:
         relationOptions[column] = value;
@@ -191,10 +191,7 @@ export class SearchMembersService implements ISearchMembersService {
           id: true,
           name: true,
         };
-        selectOptions['groupRole'] = {
-          id: true,
-          role: true,
-        };
+        selectOptions['groupRole'] = true;
         break;
       default:
         selectOptions[column] = {

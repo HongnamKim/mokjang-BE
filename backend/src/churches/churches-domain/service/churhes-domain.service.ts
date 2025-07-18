@@ -348,6 +348,26 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return result;
   }
 
+  async dummyMemberCount(
+    church: ChurchModel,
+    count: number,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.increment(
+      { id: church.id },
+      'memberCount',
+      count,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
   async decrementManagementCount(
     church: ChurchModel,
     countType: ManagementCountType,

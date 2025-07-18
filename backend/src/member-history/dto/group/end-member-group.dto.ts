@@ -1,17 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsOptional } from 'class-validator';
-import { IsValidHistoryDate } from '../../decorator/is-valid-history-date.decorator';
-import { TransformEndDate } from '../../decorator/transform-end-date.decorator';
+import { IsDateString } from 'class-validator';
+import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { IsValidHistoryDateString } from '../../decorator/is-valid-history-date-string.decorator';
 
 export class EndMemberGroupDto {
   @ApiProperty({
     description: '그룹 종료 날짜',
-    default: new Date(),
-    required: false,
+    default: 'YYYY-MM-DD',
   })
-  @IsDate()
-  @IsOptional()
-  @IsValidHistoryDate()
-  @TransformEndDate()
-  endDate: Date = new Date();
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('endDate')
+  @IsValidHistoryDateString('endDate')
+  endDate: string;
 }

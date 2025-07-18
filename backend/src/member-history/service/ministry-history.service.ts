@@ -32,7 +32,7 @@ import {
 } from '../member-history-domain/interface/ministry-history-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MinistryHistoryPaginationResultDto } from '../dto/ministry/ministry-history-pagination-result.dto';
-import { MinistryHistoryException } from '../const/exception/ministry-history.exception';
+import { MinistryHistoryException } from '../exception/ministry-history.exception';
 
 @Injectable()
 export class MinistryHistoryService {

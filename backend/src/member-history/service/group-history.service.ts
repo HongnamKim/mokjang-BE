@@ -26,11 +26,11 @@ import {
   IGroupHistoryDomainService,
 } from '../member-history-domain/interface/group-history-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
-import {
-  IGROUP_ROLES_DOMAIN_SERVICE,
-  IGroupRolesDomainService,
-} from '../../management/groups/groups-domain/interface/groups-roles-domain.service.interface';
-import { GroupHistoryException } from '../const/exception/group-history.exception';
+import { GroupHistoryException } from '../exception/group-history.exception';
+import { startOfDay } from 'date-fns';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { GroupRole } from '../../management/groups/const/group-role.enum';
 
 @Injectable()
 export class GroupHistoryService {
@@ -39,8 +39,6 @@ export class GroupHistoryService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IGROUPS_DOMAIN_SERVICE)
     private readonly groupDomainService: IGroupsDomainService,
-    @Inject(IGROUP_ROLES_DOMAIN_SERVICE)
-    private readonly groupRolesDomainService: IGroupRolesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
     @Inject(IGROUP_HISTORY_DOMAIN_SERVICE)
@@ -72,22 +70,18 @@ export class GroupHistoryService {
 
     // 현재 속한 그룹 이력
     const currentGroup = groupHistories.find((history) => !history.endDate);
+
     // 현재 그룹 snapShot 처리
     if (currentGroup) {
-      const snapShot = await this.createCurrentGroupSnapShot(
+      currentGroup.groupSnapShot = await this.createCurrentGroupSnapShot(
         church,
         currentGroup,
         qr,
       );
-
-      currentGroup.groupSnapShot = snapShot.groupSnapShot;
-      currentGroup.groupRoleSnapShot = snapShot.groupRoleSnapShot;
     }
 
     const data = groupHistories.map((history) =>
-      history.endDate === null
-        ? { ...history, group: null, groupRole: null }
-        : history,
+      history.endDate === null ? { ...history, group: null } : history,
     );
 
     return {
@@ -117,20 +111,14 @@ export class GroupHistoryService {
       qr,
     );
 
-    const groupSnapShot = parentGroups
+    return parentGroups
       .map((parentGroup) => parentGroup.name)
       .concat(groupHistory.group?.name)
       .join('__');
-
-    return {
-      groupSnapShot,
-      groupRoleSnapShot: groupHistory.groupRole?.role || null,
-    };
   }
 
   // 등록하려는 그룹이 교회에 존재하는지
   // 교인이 교회에 존재하는지
-  // 그룹 역할이 있을 경우 해당 역할이 그룹에 존재하는지
   async addMemberToGroup(
     churchId: number,
     memberId: number,
@@ -156,24 +144,15 @@ export class GroupHistoryService {
       qr,
     );
 
-    // 그룹 역할 검증
-    const groupRole = dto.groupRoleId
-      ? await this.groupRolesDomainService.findGroupRoleById(
-          //churchId,
-          //dto.groupId,
-          group,
-          dto.groupRoleId,
-          qr,
-        )
-      : undefined;
+    const startDate = fromZonedTime(startOfDay(dto.startDate), TIME_ZONE.SEOUL);
 
     const [newGroupHistory] = await Promise.all([
       // 이력 생성
       this.groupHistoryDomainService.createGroupHistory(
         member,
         group,
-        groupRole,
-        dto.startDate,
+        GroupRole.MEMBER,
+        startDate,
         qr,
       ),
 
@@ -181,20 +160,22 @@ export class GroupHistoryService {
       this.groupDomainService.incrementMembersCount(group, qr),
 
       // 교인의 그룹 정보 업데이트
-      this.membersDomainService.startMemberGroup(member, group, groupRole, qr),
+      this.membersDomainService.startMemberGroup(
+        member,
+        group,
+        GroupRole.MEMBER,
+        qr,
+      ),
     ]);
 
-    const snapShot = await this.createCurrentGroupSnapShot(
+    newGroupHistory.groupSnapShot = await this.createCurrentGroupSnapShot(
       church,
       newGroupHistory,
       qr,
     );
-    newGroupHistory.groupRoleSnapShot = snapShot.groupRoleSnapShot;
-    newGroupHistory.groupSnapShot = snapShot.groupSnapShot;
 
     return {
       ...newGroupHistory,
-      groupRole: null,
       group: null,
     };
   }
@@ -214,10 +195,6 @@ export class GroupHistoryService {
       church,
       memberId,
       qr,
-      {
-        group: true,
-        groupRole: true,
-      },
     );
 
     const groupHistory =
@@ -233,16 +210,28 @@ export class GroupHistoryService {
       qr,
     );
 
+    const endDate = fromZonedTime(startOfDay(dto.endDate), TIME_ZONE.SEOUL);
+
+    if (member.groupRole === GroupRole.LEADER) {
+      await this.groupDomainService.updateGroupLeader(
+        groupHistory.group,
+        null,
+        qr,
+      );
+    }
+
     await Promise.all([
       // 그룹 이력 종료 날짜 추가, 스냅샷 추가
       this.groupHistoryDomainService.endGroupHistory(
         groupHistory,
         snapShot,
-        dto.endDate,
+        endDate,
         qr,
       ),
-      // MemberModel, GroupModel, GroupRoleModel relation 해제
+
+      // MemberModel, GroupModel relation 해제
       this.membersDomainService.endMemberGroup(member, qr),
+
       // 그룹 인원수 감소
       this.groupDomainService.decrementMembersCount(groupHistory.group, qr),
     ]);
@@ -278,9 +267,17 @@ export class GroupHistoryService {
         qr,
       );
 
+    const startDate = dto.startDate
+      ? fromZonedTime(startOfDay(dto.startDate), TIME_ZONE.SEOUL)
+      : undefined;
+    const endDate = dto.endDate
+      ? fromZonedTime(startOfDay(dto.endDate), TIME_ZONE.SEOUL)
+      : undefined;
+
     await this.groupHistoryDomainService.updateGroupHistory(
       groupHistory,
-      dto,
+      startDate,
+      endDate,
       qr,
     );
 
@@ -289,11 +286,12 @@ export class GroupHistoryService {
         member,
         groupHistoryId,
         qr,
-        { group: true, groupRole: true },
+        { group: true },
       );
 
     if (updatedHistory.group) {
-      const snapShot = await this.createCurrentGroupSnapShot(
+      // 현재 진행중인 이력을 수정
+      const groupSnapShot = await this.createCurrentGroupSnapShot(
         church,
         updatedHistory,
         qr,
@@ -301,10 +299,8 @@ export class GroupHistoryService {
 
       return {
         ...updatedHistory,
-        groupSnapShot: snapShot.groupSnapShot,
-        groupRoleSnapShot: snapShot.groupRoleSnapShot,
-        group: undefined,
-        groupRole: undefined,
+        groupSnapShot: groupSnapShot,
+        group: null,
       };
     } else {
       return updatedHistory;

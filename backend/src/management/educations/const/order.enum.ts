@@ -14,6 +14,7 @@ export enum EducationSessionOrderEnum {
   session = 'session',
   createdAt = 'createdAt',
   updatedAt = 'updatedAt',
+  endDate = 'endDate',
 }
 
 export enum EducationEnrollmentOrderEnum {

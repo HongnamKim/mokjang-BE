@@ -84,6 +84,20 @@ export const ApiDeleteGroup = () =>
     }),
   );
 
+export const ApiGetGroupMembers = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({ summary: '그룹원 목록 조회' }),
+  );
+
+export const ApiPatchGroupLeader = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({
+      summary: '그룹장 지정',
+    }),
+  );
+
 export const ApiGetChildGroupIds = () =>
   applyDecorators(
     ApiOperation({
