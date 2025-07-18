@@ -29,6 +29,13 @@ export interface IMinistriesDomainService {
     qr?: QueryRunner,
   ): Promise<MinistryModel>;
 
+  findMinistriesByIds(
+    church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
+    ministryIds: number[],
+    qr?: QueryRunner,
+  ): Promise<MinistryModel[]>;
+
   createMinistry(
     church: ChurchModel,
     dto: CreateMinistryDto,

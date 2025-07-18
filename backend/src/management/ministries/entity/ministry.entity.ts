@@ -34,9 +34,9 @@ export class MinistryModel extends BaseModel {
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
-  @Column({ nullable: true })
+  @Column()
   @Index()
-  ministryGroupId: number | null;
+  ministryGroupId: number;
 
   @ManyToOne(
     () => MinistryGroupModel,

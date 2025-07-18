@@ -22,6 +22,8 @@ import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
+import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
+import { GetMinistryGroupMembersDto } from '../../../management/ministries/dto/ministry-group/request/get-ministry-group-members.dto';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -62,6 +64,12 @@ export interface IMembersDomainService {
     ids: number[],
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
+  ): Promise<MemberModel[]>;
+
+  findMinistryGroupMembersByIds(
+    ministryGroup: MinistryGroupModel,
+    memberIds: number[],
+    qr?: QueryRunner,
   ): Promise<MemberModel[]>;
 
   countAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<number>;
@@ -183,4 +191,22 @@ export interface IMembersDomainService {
     dto: GetGroupMembersDto,
     qr?: QueryRunner,
   ): Promise<MemberModel[]>;
+
+  findMinistryGroupMembers(
+    ministryGroup: MinistryGroupModel,
+    dto: GetMinistryGroupMembersDto,
+  ): Promise<MemberModel[]>;
+
+  updateMinistryGroupRole(
+    members: MemberModel[],
+    ministryGroupRole: GroupRole,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  findMinistryGroupMemberModel(
+    ministryGroup: MinistryGroupModel,
+    memberId: number,
+    qr?: QueryRunner,
+    relations?: FindOptionsRelations<MemberModel>,
+  ): Promise<MemberModel>;
 }

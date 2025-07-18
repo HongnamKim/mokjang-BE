@@ -31,6 +31,7 @@ import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GroupRole } from '../../management/groups/const/group-role.enum';
+import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -142,6 +143,16 @@ export class MemberModel extends BaseModel {
   })
   baptism: BaptismEnum;
 
+  @ManyToMany(
+    () => MinistryGroupModel,
+    (ministryGroup) => ministryGroup.members,
+  )
+  @JoinTable()
+  ministryGroups: MinistryGroupModel[];
+
+  @Column({ default: GroupRole.NONE })
+  ministryGroupRole: GroupRole;
+
   @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
   ministries: MinistryModel[];
@@ -196,15 +207,6 @@ export class MemberModel extends BaseModel {
 
   @Column({ default: GroupRole.NONE })
   groupRole: GroupRole;
-
-  /*@Index()
-  @Column({ comment: '그룹 역할 ID', nullable: true })
-  @Exclude({ toPlainOnly: true })
-  groupRoleId: number | null;
-
-  @ManyToOne(() => GroupRoleModel, (groupRole) => groupRole.members)
-  @JoinColumn({ name: 'groupRoleId' })
-  groupRole: GroupRoleModel;*/
 
   @OneToMany(() => GroupHistoryModel, (groupHistory) => groupHistory.member)
   groupHistory: GroupHistoryModel[];

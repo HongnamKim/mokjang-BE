@@ -1,13 +1,20 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { MinistryModel } from './ministry.entity';
 import {
   BaseModel,
   BaseModelColumns,
 } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Entity()
-//@Unique(['parentMinistryGroupId', 'churchId', 'name'])
 export class MinistryGroupModel extends BaseModel {
   @Column({ length: 50, comment: '사역 그룹 이름' })
   name: string;
@@ -40,6 +47,15 @@ export class MinistryGroupModel extends BaseModel {
 
   @ManyToOne(() => ChurchModel, (church) => church.ministryGroups)
   church: ChurchModel;
+
+  @ManyToMany(() => MemberModel, (member) => member.ministryGroups)
+  members: MemberModel[];
+
+  @Column({ default: 0 })
+  membersCount: number;
+
+  @Column({ type: 'int', nullable: true })
+  leaderMemberId: number | null;
 
   @OneToMany(() => MinistryModel, (ministry) => ministry.ministryGroup)
   ministries: MinistryModel[];

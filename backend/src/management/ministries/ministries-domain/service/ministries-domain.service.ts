@@ -14,6 +14,7 @@ import {
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  In,
   IsNull,
   QueryRunner,
   Repository,
@@ -164,6 +165,29 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     return ministry;
   }
 
+  async findMinistriesByIds(
+    church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
+    ministryIds: number[],
+    qr?: QueryRunner,
+  ): Promise<MinistryModel[]> {
+    const repository = this.getMinistriesRepository(qr);
+
+    const ministries = await repository.find({
+      where: {
+        churchId: church.id,
+        ministryGroupId: ministryGroup.id,
+        id: In(ministryIds),
+      },
+    });
+
+    if (ministries.length !== ministryIds.length) {
+      throw new NotFoundException(MinistryException.NOT_FOUND);
+    }
+
+    return ministries;
+  }
+
   async createMinistry(
     church: ChurchModel,
     dto: CreateMinistryDto,
@@ -195,7 +219,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     targetMinistry: MinistryModel,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
-    newMinistryGroup: MinistryGroupModel | null,
+    newMinistryGroup: MinistryGroupModel,
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
@@ -219,7 +243,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
       },
       {
         name: dto.name,
-        ministryGroupId: newMinistryGroup === null ? null : newMinistryGroup.id,
+        ministryGroupId: newMinistryGroup.id,
       },
     );
 
