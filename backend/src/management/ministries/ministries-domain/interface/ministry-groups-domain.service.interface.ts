@@ -1,11 +1,12 @@
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
-import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
-import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/update-ministry-group-name.dto';
-import { GetMinistryGroupDto } from '../../dto/ministry-group/get-ministry-group.dto';
+import { CreateMinistryGroupDto } from '../../dto/ministry-group/request/create-ministry-group.dto';
+import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/request/update-ministry-group-name.dto';
+import { GetMinistryGroupDto } from '../../dto/ministry-group/request/get-ministry-group.dto';
 import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
-import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/update-ministry-group-structure.dto';
+import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/request/update-ministry-group-structure.dto';
+import { MemberModel } from '../../../../members/entity/member.entity';
 
 export const IMINISTRY_GROUPS_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_GROUPS_DOMAIN_SERVICE',
@@ -41,7 +42,7 @@ export interface IMinistryGroupsDomainService {
     church: ChurchModel,
     ministryGroupId: number,
     qr?: QueryRunner,
-  ): Promise<MinistryGroupWithParentGroups>;
+  ): Promise<MinistryGroupModel>; //Promise<MinistryGroupWithParentGroups>;
 
   findParentMinistryGroups(
     church: ChurchModel,
@@ -84,4 +85,28 @@ export interface IMinistryGroupsDomainService {
   ): Promise<void>;
 
   countAllMinistryGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
+
+  addMembersToMinistryGroup(
+    ministryGroup: MinistryGroupModel,
+    members: MemberModel[],
+    qr: QueryRunner,
+  ): Promise<void>;
+
+  removeMembersFromMinistryGroup(
+    ministryGroup: MinistryGroupModel,
+    members: MemberModel[],
+    qr: QueryRunner,
+  ): Promise<void>;
+
+  updateMembersCount(
+    ministryGroup: MinistryGroupModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updateMinistryGroupLeader(
+    ministryGroup: MinistryGroupModel,
+    newLeaderMember: MemberModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

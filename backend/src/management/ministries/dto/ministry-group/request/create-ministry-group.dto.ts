@@ -1,8 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { MinistryGroupModel } from '../../entity/ministry-group.entity';
+import { MinistryGroupModel } from '../../../entity/ministry-group.entity';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
-import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
+import { RemoveSpaces } from '../../../../../common/decorator/transformer/remove-spaces';
+import { IsNoSpecialChar } from '../../../../../common/decorator/validator/is-no-special-char.validator';
 
 export class CreateMinistryGroupDto extends PickType(MinistryGroupModel, [
   'name',

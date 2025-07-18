@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { FindOptionsRelations, QueryRunner } from 'typeorm';
-import { CreateMinistryGroupDto } from '../dto/ministry-group/create-ministry-group.dto';
-import { UpdateMinistryGroupNameDto } from '../dto/ministry-group/update-ministry-group-name.dto';
+import { CreateMinistryGroupDto } from '../dto/ministry-group/request/create-ministry-group.dto';
+import { UpdateMinistryGroupNameDto } from '../dto/ministry-group/request/update-ministry-group-name.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -11,16 +11,28 @@ import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
 } from '../ministries-domain/interface/ministry-groups-domain.service.interface';
-import { GetMinistryGroupDto } from '../dto/ministry-group/get-ministry-group.dto';
+import { GetMinistryGroupDto } from '../dto/ministry-group/request/get-ministry-group.dto';
 import { MinistryGroupPaginationResultDto } from '../dto/ministry-group/response/ministry-group-pagination-result.dto';
 import { MinistryGroupPostResponseDto } from '../dto/ministry-group/response/ministry-group-post-response.dto';
 import { MinistryGroupPatchResponseDto } from '../dto/ministry-group/response/ministry-group-patch-response.dto';
 import { MinistryGroupDeleteResponseDto } from '../dto/ministry-group/response/ministry-group-delete-response.dto';
-import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/update-ministry-group-structure.dto';
+import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/request/update-ministry-group-structure.dto';
 import {
   ChurchModel,
   ManagementCountType,
 } from '../../../churches/entity/church.entity';
+import { AddMemberToMinistryGroupDto } from '../dto/ministry-group/request/add-member-to-ministry-group.dto';
+import {
+  IMINISTRIES_DOMAIN_SERVICE,
+  IMinistriesDomainService,
+} from '../ministries-domain/interface/ministries-domain.service.interface';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../../members/member-domain/interface/members-domain.service.interface';
+import { GetMinistryGroupMembersDto } from '../dto/ministry-group/request/get-ministry-group-members.dto';
+import { GroupRole } from '../../groups/const/group-role.enum';
+import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
 
 @Injectable()
 export class MinistryGroupService {
@@ -29,6 +41,11 @@ export class MinistryGroupService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMINISTRY_GROUPS_DOMAIN_SERVICE)
     private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
+    @Inject(IMINISTRIES_DOMAIN_SERVICE)
+    private readonly ministryDomainService: IMinistriesDomainService,
+
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
   ) {}
 
   async getMinistryGroups(churchId: number, dto: GetMinistryGroupDto) {
@@ -285,5 +302,244 @@ export class MinistryGroupService {
     );
 
     return { ministryGroupCount };
+  }
+
+  async addMemberToMinistryGroup(
+    churchId: number,
+    ministryGroupId: number,
+    dto: AddMemberToMinistryGroupDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+
+    const ministryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    const memberIds = dto.members.map((m) => m.memberId);
+    if (memberIds.length !== new Set(memberIds).size) {
+      throw new BadRequestException('중복된 교인 ID 가 존재합니다.');
+    }
+
+    const members = await this.membersDomainService.findMembersById(
+      church,
+      memberIds,
+      qr,
+    );
+
+    // 사역 그룹에 교인 추가
+    await this.ministryGroupsDomainService.addMembersToMinistryGroup(
+      ministryGroup,
+      members,
+      qr,
+    );
+
+    await this.ministryGroupsDomainService.updateMembersCount(
+      ministryGroup,
+      members.length,
+      qr,
+    );
+
+    // 사역그룹 역할 설정
+    await this.membersDomainService.updateMinistryGroupRole(
+      members,
+      GroupRole.MEMBER,
+      qr,
+    );
+
+    // 사역 그룹에 교인 추가 완료
+
+    /*// 교인에게 사역 할당
+    const ministryIds = Array.from(
+      new Set(
+        dto.members
+          .filter((m) => m.ministryId)
+          .map((m) => m.ministryId) as number[],
+      ),
+    );
+
+    const ministries = await this.ministryDomainService.findMinistriesByIds(
+      church,
+      ministryGroup,
+      ministryIds,
+      qr,
+    );
+
+    // Member - Ministry 객체 매핑한 배열
+    const memberMinistryMapped: {
+      member: MemberModel;
+      ministry: MinistryModel | null;
+    }[] = [];
+
+    // 매핑 과정
+    for (const requestInput of dto.members) {
+      const requestMember = members.find(
+        (member) => member.id === requestInput.memberId,
+      ) as MemberModel;
+
+      const requestMinistry = requestInput.ministryId
+        ? (ministries.find(
+            (ministry) => ministry.id === requestInput.ministryId,
+          ) as MinistryModel)
+        : null;
+
+      memberMinistryMapped.push({
+        member: requestMember,
+        ministry: requestMinistry,
+      });
+    }*/
+
+    const updatedMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    return {
+      data: updatedMinistryGroup,
+      timestamp: new Date(),
+    };
+  }
+
+  async getMinistryGroupMembers(
+    churchId: number,
+    ministryGroupId: number,
+    dto: GetMinistryGroupMembersDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const ministryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+      );
+
+    const members = await this.membersDomainService.findMinistryGroupMembers(
+      ministryGroup,
+      dto,
+    );
+
+    return { data: members, timestamp: new Date() };
+  }
+
+  async removeMembersFromMinistryGroup(
+    churchId: number,
+    ministryGroupId: number,
+    memberIds: number[],
+    qr: QueryRunner,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const ministryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    const members =
+      await this.membersDomainService.findMinistryGroupMembersByIds(
+        ministryGroup,
+        memberIds,
+        qr,
+      );
+
+    await this.ministryGroupsDomainService.removeMembersFromMinistryGroup(
+      ministryGroup,
+      members,
+      qr,
+    );
+
+    await this.membersDomainService.updateMinistryGroupRole(
+      members,
+      GroupRole.NONE,
+      qr,
+    );
+
+    await this.ministryGroupsDomainService.updateMembersCount(
+      ministryGroup,
+      -1 * members.length,
+      qr,
+    );
+
+    const updatedMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    return { data: updatedMinistryGroup, timestamp: new Date() };
+  }
+
+  async updateMinistryGroupLeader(
+    churchId: number,
+    ministryGroupId: number,
+    dto: UpdateMinistryGroupLeaderDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const ministryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    if (ministryGroup.leaderMemberId === dto.newMinistryGroupLeaderId) {
+      throw new BadRequestException('이미 사역그룹장으로 지정된 교인입니다.');
+    }
+
+    // 이전 사역그룹장
+    const oldLeaderMember = ministryGroup.leaderMemberId
+      ? await this.membersDomainService.findMemberModelById(
+          church,
+          ministryGroup.leaderMemberId,
+        )
+      : null;
+
+    const newLeaderMember =
+      await this.membersDomainService.findMinistryGroupMemberModel(
+        ministryGroup,
+        dto.newMinistryGroupLeaderId,
+        qr,
+      );
+
+    await this.membersDomainService.updateMinistryGroupRole(
+      [newLeaderMember],
+      GroupRole.LEADER,
+      qr,
+    );
+
+    await this.ministryGroupsDomainService.updateMinistryGroupLeader(
+      ministryGroup,
+      newLeaderMember,
+      qr,
+    );
+
+    newLeaderMember.ministryGroupRole = GroupRole.LEADER;
+
+    if (oldLeaderMember) {
+      console.log('old Leader');
+      await this.membersDomainService.updateMinistryGroupRole(
+        [oldLeaderMember],
+        GroupRole.MEMBER,
+        qr,
+      );
+    }
+
+    return { data: newLeaderMember, timestamp: new Date() };
   }
 }

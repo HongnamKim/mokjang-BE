@@ -28,10 +28,10 @@ export class CreateMinistryDto {
     description:
       '지정/변경할 사역 그룹 ID (0 또는 undefined 일 경우 사역 그룹에 속하지 않음)',
     minimum: 0,
-    required: false,
+    //required: false,
   })
   @Min(0)
   @IsNumber()
   @IsOptional()
-  ministryGroupId: number | null;
+  ministryGroupId: number;
 }

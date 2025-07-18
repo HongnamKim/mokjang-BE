@@ -11,6 +11,7 @@ import { MinistriesDomainModule } from './ministries-domain/ministries-domain.mo
 import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
 import { ManagementPermissionService } from '../management-permission.service';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
+import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain
     ChurchesDomainModule,
     ManagerDomainModule,
     MinistriesDomainModule,
+    MembersDomainModule,
   ],
   controllers: [MinistriesController, MinistryGroupsController],
   providers: [
