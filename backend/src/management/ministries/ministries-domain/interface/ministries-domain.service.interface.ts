@@ -1,23 +1,25 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MinistryModel } from '../../entity/ministry.entity';
 import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
-import { MinistryDomainPaginationResponseDto } from '../../dto/ministry/response/ministry-domain-pagination-response.dto';
+import { MemberModel } from '../../../../members/entity/member.entity';
 
 export const IMINISTRIES_DOMAIN_SERVICE = Symbol('IMINISTRIES_DOMAIN_SERVICE');
 
 export interface IMinistriesDomainService {
   findMinistries(
     church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
     dto: GetMinistryDto,
     qr?: QueryRunner,
-  ): Promise<MinistryDomainPaginationResponseDto>;
+  ): Promise<MinistryModel[]>;
 
   findMinistryModelById(
-    church: ChurchModel,
+    //church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
     ministryId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MinistryModel>,
@@ -44,12 +46,10 @@ export interface IMinistriesDomainService {
   ): Promise<MinistryModel>;
 
   updateMinistry(
-    church: ChurchModel,
     targetMinistry: MinistryModel,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
-    newMinistryGroup?: MinistryGroupModel | null,
-  ): Promise<MinistryModel>;
+  ): Promise<UpdateResult>;
 
   deleteMinistry(ministry: MinistryModel, qr?: QueryRunner): Promise<void>;
 
@@ -70,4 +70,17 @@ export interface IMinistriesDomainService {
   ): Promise<MinistryModel>;
 
   countAllMinistries(church: ChurchModel, qr: QueryRunner): Promise<number>;
+
+  assignMemberToMinistry(
+    member: MemberModel,
+    oldMinistry: MinistryModel[],
+    newMinistry: MinistryModel,
+    qr: QueryRunner,
+  ): Promise<void>;
+
+  removeMemberFromMinistry(
+    member: MemberModel,
+    ministry: MinistryModel,
+    qr: QueryRunner,
+  ): Promise<void>;
 }

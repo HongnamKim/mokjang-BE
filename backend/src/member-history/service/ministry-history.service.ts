@@ -158,13 +158,20 @@ export class MinistryHistoryService {
       churchId,
       qr,
     );
+    const ministryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        dto.ministryGroupId,
+        qr,
+      );
 
     const [member, ministry] = await Promise.all([
       this.membersDomainService.findMemberModelById(church, memberId, qr, {
         ministries: true,
       }),
       this.ministriesDomainService.findMinistryModelById(
-        church,
+        //church,
+        ministryGroup,
         dto.ministryId,
         qr,
         { ministryGroup: true },

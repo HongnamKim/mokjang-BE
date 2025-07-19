@@ -109,4 +109,9 @@ export interface IMinistryGroupsDomainService {
     newLeaderMember: MemberModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  incrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

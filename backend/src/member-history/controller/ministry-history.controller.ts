@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -65,12 +66,14 @@ export class MinistryHistoryController {
     @Body() dto: CreateMemberMinistryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryHistoryService.createMemberMinistry(
+    throw new GoneException('더 이상 사용되지 않는 엔드포인트');
+
+    /*return this.ministryHistoryService.createMemberMinistry(
       churchId,
       memberId,
       dto,
       qr,
-    );
+    );*/
   }
 
   // 교인의 사역 이력 수정
@@ -107,13 +110,15 @@ export class MinistryHistoryController {
     @Body() dto: EndMemberMinistryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryHistoryService.endMemberMinistry(
+    throw new GoneException('더 이상 사용되지 않는 엔드포인트');
+
+    /*return this.ministryHistoryService.endMemberMinistry(
       churchId,
       memberId,
       ministryHistoryId,
       dto,
       qr,
-    );
+    );*/
   }
 
   // 교인의 사역 이력 삭제

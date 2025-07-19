@@ -299,6 +299,13 @@ export class MembersDomainService implements IMembersDomainService {
       .createQueryBuilder('member')
       .select(['member.id', 'member.name'])
       .innerJoin('member.ministryGroups', 'ministryGroup')
+      .leftJoin(
+        'member.ministries',
+        'ministry',
+        'ministry.ministryGroupId = :ministryGroupId',
+        { ministryGroupId: ministryGroup.id },
+      )
+      .addSelect(['ministry.id', 'ministry.name'])
       .where('ministryGroup.id = :ministryGroupId', {
         ministryGroupId: ministryGroup.id,
       })

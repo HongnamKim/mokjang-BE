@@ -133,6 +133,7 @@ export class MinistryGroupsController {
     );
   }
 
+  @ApiOperation({ summary: '사역그룹장 지정' })
   @Patch(':ministryGroupId/leader')
   @UseInterceptors(TransactionInterceptor)
   patchMinistryGroupLeader(
