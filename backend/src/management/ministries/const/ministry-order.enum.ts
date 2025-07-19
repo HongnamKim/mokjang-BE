@@ -1,5 +1,6 @@
-export enum MinistryOrderEnum {
-  createdAt = 'createdAt',
-  updatedAt = 'updatedAt',
-  name = 'name',
+export enum MinistryOrder {
+  CREATED_AT = 'createdAt',
+  UPDATED_AT = 'updatedAt',
+  MEMBER_COUNT = 'membersCount',
+  NAME = 'name',
 }

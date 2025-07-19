@@ -27,7 +27,7 @@ import { MembersDomainModule } from '../../members/member-domain/members-domain.
     MinistriesDomainModule,
     MembersDomainModule,
   ],
-  controllers: [MinistriesController, MinistryGroupsController],
+  controllers: [MinistryGroupsController, MinistriesController],
   providers: [
     MinistryService,
     MinistryGroupService,

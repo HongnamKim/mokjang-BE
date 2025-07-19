@@ -57,6 +57,9 @@ export class MinistryGroupModel extends BaseModel {
   @Column({ type: 'int', nullable: true })
   leaderMemberId: number | null;
 
+  @Column({ default: 0 })
+  ministriesCount: number;
+
   @OneToMany(() => MinistryModel, (ministry) => ministry.ministryGroup)
   ministries: MinistryModel[];
 }

@@ -26,8 +26,7 @@ import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
 import { OfficersException } from '../../../officers/const/exception/officers.exception';
-import { MinistryDomainPaginationResponseDto } from '../../dto/ministry/response/ministry-domain-pagination-response.dto';
-import { MinistryOrderEnum } from '../../const/ministry-order.enum';
+import { MemberModel } from '../../../../members/entity/member.entity';
 
 @Injectable()
 export class MinistriesDomainService implements IMinistriesDomainService {
@@ -81,6 +80,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
 
   async findMinistries(
     church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
     dto: GetMinistryDto,
     qr?: QueryRunner,
   ) {
@@ -88,38 +88,23 @@ export class MinistriesDomainService implements IMinistriesDomainService {
 
     const order: FindOptionsOrder<MinistryModel> = {
       [dto.order]: dto.orderDirection,
+      id: dto.orderDirection,
     };
 
-    if (dto.order !== MinistryOrderEnum.createdAt) {
-      order.createdAt = 'asc';
-    }
-
-    const [data, totalCount] = await Promise.all([
-      ministriesRepository.find({
-        where: {
-          churchId: church.id,
-          ministryGroupId:
-            dto.ministryGroupId === 0 ? IsNull() : dto.ministryGroupId,
-        },
-        order,
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-
-      ministriesRepository.count({
-        where: {
-          churchId: church.id,
-          ministryGroupId:
-            dto.ministryGroupId === 0 ? IsNull() : dto.ministryGroupId,
-        },
-      }),
-    ]);
-
-    return new MinistryDomainPaginationResponseDto(data, totalCount);
+    return ministriesRepository.find({
+      where: {
+        churchId: church.id,
+        ministryGroupId: ministryGroup.id,
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   async findMinistryModelById(
-    church: ChurchModel,
+    //church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
     ministryId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MinistryModel>,
@@ -129,7 +114,8 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     const ministry = await ministriesRepository.findOne({
       where: {
         id: ministryId,
-        churchId: church.id,
+        //churchId: church.id,
+        ministryGroupId: ministryGroup.id,
       },
       relations: relationOptions ? relationOptions : { ministryGroup: true },
     });
@@ -215,22 +201,21 @@ export class MinistriesDomainService implements IMinistriesDomainService {
   }
 
   async updateMinistry(
-    church: ChurchModel,
     targetMinistry: MinistryModel,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
-    newMinistryGroup: MinistryGroupModel,
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
     const newName = dto.name ? dto.name : targetMinistry.name;
 
-    const isExist = await this.isExistMinistry(
-      church.id,
-      newMinistryGroup,
-      newName,
-      qr,
-    );
+    const isExist = await ministriesRepository.findOne({
+      where: {
+        id: targetMinistry.id,
+        ministryGroupId: targetMinistry.ministryGroupId,
+        name: newName,
+      },
+    });
 
     if (isExist) {
       throw new BadRequestException(MinistryException.ALREADY_EXIST);
@@ -242,8 +227,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
         deletedAt: IsNull(),
       },
       {
-        name: dto.name,
-        ministryGroupId: newMinistryGroup.id,
+        name: newName,
       },
     );
 
@@ -251,7 +235,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
       throw new NotFoundException(MinistryException.NOT_FOUND);
     }
 
-    return this.findMinistryById(church, targetMinistry.id, qr);
+    return result;
   }
 
   async deleteMinistry(ministry: MinistryModel, qr?: QueryRunner) {
@@ -326,5 +310,54 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     }
 
     return updatedMinistry;
+  }
+
+  async assignMemberToMinistry(
+    member: MemberModel,
+    oldMinistry: MinistryModel[],
+    newMinistry: MinistryModel,
+    qr: QueryRunner,
+  ): Promise<void> {
+    try {
+      const memberId = member.id;
+
+      // 기존 사역 제거
+      if (oldMinistry.length > 0) {
+        const oldMinistryIds = oldMinistry.map((ministry) => ministry.id);
+
+        await qr.manager
+          .createQueryBuilder()
+          .relation(MinistryModel, 'members')
+          .of(oldMinistryIds)
+          .remove(memberId);
+      }
+
+      // 새로운 사역 등록
+      await qr.manager
+        .createQueryBuilder()
+        .relation(MinistryModel, 'members')
+        .of(newMinistry.id)
+        .add(memberId);
+
+      return;
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(
+          MinistryException.ALREADY_ASSIGNED_MINISTRY,
+        );
+      }
+    }
+  }
+
+  async removeMemberFromMinistry(
+    member: MemberModel,
+    ministry: MinistryModel,
+    qr: QueryRunner,
+  ): Promise<void> {
+    await qr.manager
+      .createQueryBuilder()
+      .relation(MinistryModel, 'members')
+      .of(ministry)
+      .remove(member.id);
   }
 }

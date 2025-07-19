@@ -5,6 +5,13 @@ import { TransformStartDate } from '../../decorator/transform-start-date.decorat
 
 export class CreateMemberMinistryDto {
   @ApiProperty({
+    description: '사역 그룹 Id',
+  })
+  @IsNumber()
+  @Min(1)
+  ministryGroupId: number;
+
+  @ApiProperty({
     description: '교인에게 부여할 사역의 ID',
   })
   @IsNumber()

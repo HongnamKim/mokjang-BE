@@ -1,25 +1,33 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { BaseOffsetPaginationRequestDto } from '../../../../common/dto/request/base-offset-pagination-request.dto';
-import { MinistryOrderEnum } from '../../const/ministry-order.enum';
+import { MinistryOrder } from '../../const/ministry-order.enum';
 
-export class GetMinistryDto extends BaseOffsetPaginationRequestDto<MinistryOrderEnum> {
+export class GetMinistryDto extends BaseOffsetPaginationRequestDto<MinistryOrder> {
+  /*@ApiProperty({
+    description: '사역 그룹 ID ',
+    required: true,
+  })
+  @IsNumber()
+  @Min(1)
+  ministryGroupId: number;*/
+
   @ApiProperty({
-    description:
-      '사역 그룹 ID (값이 없을 경우 사역 그룹에 속하지 않은 사역 조회)',
+    description: '조회할 데이터 개수',
+    example: 20,
     required: false,
   })
   @IsOptional()
   @IsNumber()
-  ministryGroupId: number = 0;
+  override take: number = 20;
 
   @ApiProperty({
     description: '정렬 기준 (생성일, 수정일, 이름)',
-    enum: MinistryOrderEnum,
-    default: MinistryOrderEnum.createdAt,
+    enum: MinistryOrder,
+    default: MinistryOrder.CREATED_AT,
     required: false,
   })
-  @IsEnum(MinistryOrderEnum)
+  @IsEnum(MinistryOrder)
   @IsOptional()
-  order: MinistryOrderEnum = MinistryOrderEnum.createdAt;
+  order: MinistryOrder = MinistryOrder.CREATED_AT;
 }

@@ -33,6 +33,8 @@ import {
 import { GetMinistryGroupMembersDto } from '../dto/ministry-group/request/get-ministry-group-members.dto';
 import { GroupRole } from '../../groups/const/group-role.enum';
 import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { MinistryModel } from '../entity/ministry.entity';
 
 @Injectable()
 export class MinistryGroupService {
@@ -355,7 +357,7 @@ export class MinistryGroupService {
 
     // 사역 그룹에 교인 추가 완료
 
-    /*// 교인에게 사역 할당
+    // 교인에게 사역 할당
     const ministryIds = Array.from(
       new Set(
         dto.members
@@ -374,7 +376,7 @@ export class MinistryGroupService {
     // Member - Ministry 객체 매핑한 배열
     const memberMinistryMapped: {
       member: MemberModel;
-      ministry: MinistryModel | null;
+      ministry: MinistryModel;
     }[] = [];
 
     // 매핑 과정
@@ -383,17 +385,37 @@ export class MinistryGroupService {
         (member) => member.id === requestInput.memberId,
       ) as MemberModel;
 
-      const requestMinistry = requestInput.ministryId
-        ? (ministries.find(
-            (ministry) => ministry.id === requestInput.ministryId,
-          ) as MinistryModel)
-        : null;
+      if (requestInput.ministryId) {
+        const requestMinistry = ministries.find(
+          (ministry) => ministry.id === requestInput.ministryId,
+        ) as MinistryModel;
 
-      memberMinistryMapped.push({
-        member: requestMember,
-        ministry: requestMinistry,
-      });
-    }*/
+        memberMinistryMapped.push({
+          member: requestMember,
+          ministry: requestMinistry,
+        });
+      }
+    }
+
+    await Promise.all(
+      memberMinistryMapped.map((memberMinistry) =>
+        this.ministryDomainService.assignMemberToMinistry(
+          memberMinistry.member,
+          [],
+          memberMinistry.ministry,
+          qr,
+        ),
+      ),
+    );
+
+    await Promise.all(
+      memberMinistryMapped.map((memberMinistry) =>
+        this.ministryDomainService.incrementMembersCount(
+          memberMinistry.ministry,
+          qr,
+        ),
+      ),
+    );
 
     const updatedMinistryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupById(
@@ -453,11 +475,40 @@ export class MinistryGroupService {
         qr,
       );
 
+    console.log(members);
+
     await this.ministryGroupsDomainService.removeMembersFromMinistryGroup(
       ministryGroup,
       members,
       qr,
     );
+
+    // 사역이 있는 교인들의 사역 종료
+    const ministryMembers = members.filter(
+      (member) => member.ministries.length > 0,
+    );
+
+    if (ministryMembers.length > 0) {
+      await Promise.all(
+        ministryMembers.map((member) =>
+          this.ministryDomainService.removeMemberFromMinistry(
+            member,
+            member.ministries[0],
+            qr,
+          ),
+        ),
+      );
+
+      await Promise.all(
+        ministryMembers.map((member) =>
+          this.ministryDomainService.decrementMembersCount(
+            member.ministries[0],
+            qr,
+          ),
+        ),
+      );
+    }
+    // 사역이 있는 교인들의 사역 종료
 
     await this.membersDomainService.updateMinistryGroupRole(
       members,
@@ -532,7 +583,6 @@ export class MinistryGroupService {
     newLeaderMember.ministryGroupRole = GroupRole.LEADER;
 
     if (oldLeaderMember) {
-      console.log('old Leader');
       await this.membersDomainService.updateMinistryGroupRole(
         [oldLeaderMember],
         GroupRole.MEMBER,

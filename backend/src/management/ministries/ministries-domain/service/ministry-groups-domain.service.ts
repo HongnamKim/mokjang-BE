@@ -783,4 +783,25 @@ export class MinistryGroupsDomainService
 
     return result;
   }
+
+  async incrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.increment(
+      { id: ministryGroup.id },
+      'ministriesCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
 }

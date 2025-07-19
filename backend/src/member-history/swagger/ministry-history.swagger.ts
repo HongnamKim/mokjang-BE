@@ -15,6 +15,7 @@ export const ApiGetMemberMinistry = () =>
 export const ApiPostMemberMinistry = () =>
   applyDecorators(
     ApiOperation({
+      deprecated: true,
       summary: '교인에게 사역 부여',
       description:
         '<p>교인에게 새로운 사역을 부여합니다.</p>' +
@@ -27,6 +28,7 @@ export const ApiPostMemberMinistry = () =>
 export const ApiDeleteMemberMinistry = () =>
   applyDecorators(
     ApiOperation({
+      deprecated: true,
       summary: '교인의 사역 종료',
       description:
         '<p>교인에게 부여된 현재 사역을 종료합니다.</p>' +

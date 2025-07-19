@@ -1,12 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
 
@@ -24,14 +17,11 @@ export class CreateMinistryDto {
   @IsNoSpecialChar()
   name: string;
 
-  @ApiProperty({
-    description:
-      '지정/변경할 사역 그룹 ID (0 또는 undefined 일 경우 사역 그룹에 속하지 않음)',
-    minimum: 0,
-    //required: false,
+  /*@ApiProperty({
+    description: '지정할 사역 그룹 ID',
+    minimum: 1,
   })
-  @Min(0)
+  @Min(1)
   @IsNumber()
-  @IsOptional()
-  ministryGroupId: number;
+  ministryGroupId: number;*/
 }
