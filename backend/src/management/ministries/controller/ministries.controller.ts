@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { MinistryService } from '../service/ministry.service';
 import { CreateMinistryDto } from '../dto/ministry/create-ministry.dto';
 import { UpdateMinistryDto } from '../dto/ministry/update-ministry.dto';
@@ -25,15 +25,12 @@ import {
   ApiPatchMinistry,
   ApiPostMinistry,
   ApiRefreshMinistryCount,
-  ApiRefreshMinistryMembersCount,
 } from '../const/swagger/ministry.swagger';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { AssignMinistryToMemberDto } from '../dto/ministry/assign-ministry-to-member.dto';
-import { RemoveMinistryFromMember } from '../dto/ministry/remove-ministry-from-member.dto';
 
 @ApiTags('Management:MinistryGroups:Ministries')
 @Controller('ministry-groups/:ministryGroupId/ministries')
@@ -114,64 +111,6 @@ export class MinistriesController {
       churchId,
       ministryGroupId,
       ministryId,
-      qr,
-    );
-  }
-
-  @ApiRefreshMinistryMembersCount()
-  @MinistryWriteGuard()
-  @Patch(':ministryId/refresh-members-count')
-  refreshMembersCount(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-  ) {
-    return this.ministryService.refreshMinistryMemberCount(
-      churchId,
-      ministryGroupId,
-      ministryId,
-    );
-  }
-
-  @ApiOperation({
-    summary: '교인에게 사역 부여',
-    description:
-      '<h2>교인에게 사역을 부여</h2>' +
-      '<p>같은 사역 그룹에 속한 교인 + 사역만 가능</p>' +
-      '<p>기존 사역이 있을 경우, 기존 사역은 종료 처리</p>',
-  })
-  @Patch(':ministryId/members')
-  @UseInterceptors(TransactionInterceptor)
-  addMemberToMinistry(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-    @Body() dto: AssignMinistryToMemberDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.ministryService.assignMemberToMinistry(
-      churchId,
-      ministryGroupId,
-      ministryId,
-      dto,
-      qr,
-    );
-  }
-
-  @Delete(':ministryId/members')
-  @UseInterceptors(TransactionInterceptor)
-  removeMemberFromMinistry(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-    @Body() dto: RemoveMinistryFromMember,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.ministryService.removeMemberFromMinistry(
-      churchId,
-      ministryGroupId,
-      ministryId,
-      dto,
       qr,
     );
   }

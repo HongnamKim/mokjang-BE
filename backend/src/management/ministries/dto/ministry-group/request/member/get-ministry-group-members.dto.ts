@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BaseOffsetPaginationRequestDto } from '../../../../../common/dto/request/base-offset-pagination-request.dto';
-import { MinistryGroupMemberOrder } from '../../../const/ministry-group-member-order.enum';
+import { BaseOffsetPaginationRequestDto } from '../../../../../../common/dto/request/base-offset-pagination-request.dto';
+import { MinistryGroupMemberOrder } from '../../../../const/ministry-group-member-order.enum';
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 
 export class GetMinistryGroupMembersDto extends BaseOffsetPaginationRequestDto<MinistryGroupMemberOrder> {

@@ -31,7 +31,6 @@ import { MemberException } from '../../const/exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
@@ -48,9 +47,6 @@ import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
 import { GroupMemberOrder } from '../../../management/groups/const/group-member-order.enum';
-import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
-import { GetMinistryGroupMembersDto } from '../../../management/ministries/dto/ministry-group/request/get-ministry-group-members.dto';
-import { MinistryGroupMemberOrder } from '../../../management/ministries/const/ministry-group-member-order.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -286,37 +282,6 @@ export class MembersDomainService implements IMembersDomainService {
     }
 
     return members;
-  }
-
-  async findMinistryGroupMembersByIds(
-    ministryGroup: MinistryGroupModel,
-    memberIds: number[],
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getMembersRepository(qr);
-
-    const ministryGroupMembers = await repository
-      .createQueryBuilder('member')
-      .select(['member.id', 'member.name'])
-      .innerJoin('member.ministryGroups', 'ministryGroup')
-      .leftJoin(
-        'member.ministries',
-        'ministry',
-        'ministry.ministryGroupId = :ministryGroupId',
-        { ministryGroupId: ministryGroup.id },
-      )
-      .addSelect(['ministry.id', 'ministry.name'])
-      .where('ministryGroup.id = :ministryGroupId', {
-        ministryGroupId: ministryGroup.id,
-      })
-      .andWhere('member.id IN (:...memberIds)', { memberIds })
-      .getMany();
-
-    if (ministryGroupMembers.length !== memberIds.length) {
-      throw new NotFoundException(MemberException.NOT_EXIST_IN_MINISTRY_GROUP);
-    }
-
-    return ministryGroupMembers;
   }
 
   async findMemberById(
@@ -576,194 +541,6 @@ export class MembersDomainService implements IMembersDomainService {
       },
     );
   }
-
-  async findMinistryGroupMembers(
-    ministryGroup: MinistryGroupModel,
-    dto: GetMinistryGroupMembersDto,
-  ): Promise<MemberModel[]> {
-    const repository = this.getMembersRepository();
-
-    const qb = repository
-      .createQueryBuilder('member')
-      .select([
-        'member.id',
-        'member.name',
-        'member.profileImageUrl',
-        'member.mobilePhone',
-        'member.registeredAt',
-        'member.birth',
-        'member.isLunar',
-        'member.isLeafMonth',
-        'member.groupRole',
-        'member.ministryGroupRole',
-      ])
-      .innerJoin('member.ministryGroups', 'ministryGroup')
-      .leftJoin('member.officer', 'officer')
-      .addSelect(['officer.id', 'officer.name'])
-      .leftJoin('member.group', 'group')
-      .addSelect(['group.id', 'group.name'])
-      .leftJoin(
-        'member.ministries',
-        'ministry',
-        'ministry.ministryGroupId = :ministryGroupId',
-        { ministryGroupId: ministryGroup.id },
-      )
-      .addSelect(['ministry.id', 'ministry.name'])
-      .where('ministryGroup.id = :ministryGroupId', {
-        ministryGroupId: ministryGroup.id,
-      })
-      .orderBy('member.ministryGroupRole', 'ASC')
-      .addOrderBy(
-        dto.order === MinistryGroupMemberOrder.MINISTRY_NAME
-          ? 'ministry.name'
-          : `member."${dto.order}"`,
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
-      .addOrderBy(
-        'member.id',
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
-      .limit(dto.take)
-      .offset(dto.take * (dto.page - 1));
-
-    return qb.getMany();
-  }
-
-  async updateMinistryGroupRole(
-    members: MemberModel[],
-    ministryGroupRole: GroupRole,
-    qr: QueryRunner,
-  ): Promise<UpdateResult> {
-    const repository = this.getMembersRepository(qr);
-    const memberIds = members.map((member) => member.id);
-
-    const result = await repository.update(
-      {
-        id: In(memberIds),
-      },
-      {
-        ministryGroupRole: ministryGroupRole,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(MemberException.UPDATE_ERROR);
-    }
-
-    return result;
-  }
-
-  async findMinistryGroupMemberModel(
-    ministryGroup: MinistryGroupModel,
-    memberId: number,
-    qr?: QueryRunner,
-    relations?: FindOptionsRelations<MemberModel>,
-  ): Promise<MemberModel> {
-    const repository = this.getMembersRepository(qr);
-
-    const member = await repository
-      .createQueryBuilder('member')
-      .select([
-        'member.id',
-        'member.name',
-        'member.profileImageUrl',
-        'member.mobilePhone',
-        'member.registeredAt',
-        'member.birth',
-        'member.isLunar',
-        'member.isLeafMonth',
-        'member.groupRole',
-        'member.ministryGroupRole',
-      ])
-      .leftJoin('member.officer', 'officer')
-      .addSelect(['officer.id', 'officer.name'])
-      .leftJoin('member.group', 'group')
-      .addSelect(['group.id', 'group.name'])
-      .innerJoin(
-        'member.ministryGroups',
-        'ministryGroup',
-        'ministryGroup.id = :ministryGroupId',
-        { ministryGroupId: ministryGroup.id },
-      )
-      .leftJoin(
-        'member.ministries',
-        'ministry',
-        'ministry.ministryGroupId = :ministryGroupId',
-        { ministryGroupId: ministryGroup.id },
-      )
-      .addSelect(['ministry.id', 'ministry.name'])
-      .where('member.id = :memberId', { memberId })
-      .getOne();
-
-    if (!member) {
-      throw new NotFoundException(MemberException.NOT_EXIST_IN_MINISTRY_GROUP);
-    }
-
-    return member;
-  }
-
-  async startMemberMinistry(
-    member: MemberModel,
-    ministry: MinistryModel,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const oldMinistries = member.ministries;
-
-    member.ministries = [...oldMinistries, ministry];
-
-    return membersRepository.save(member);
-
-    /*const existingCount = await membersRepository
-      .createQueryBuilder('member', qr)
-      .innerJoin('member.ministries', 'ministry')
-      .where('member.id = :memberId', { memberId: member.id })
-      .andWhere('ministry.id = :ministryId', { ministryId: ministry.id })
-      .getCount();
-
-    if (existingCount > 0) {
-      throw new ConflictException('이미 해당 사역이 할당되어 있습니다.');
-    }
-
-    await membersRepository
-      .createQueryBuilder('member')
-      .relation(MemberModel, 'ministries')
-      .of(member.id)
-      .add(ministry.id);*/
-  }
-
-  endMemberMinistry(
-    member: MemberModel,
-    targetMinistry: MinistryModel,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    member.ministries = member.ministries.filter(
-      (ministry) => ministry.id !== targetMinistry.id,
-    );
-
-    return membersRepository.save(member);
-  }
-
-  /*async endMemberEducation(
-    member: MemberModel,
-    educationEnrollmentId: number,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    member.educations = member.educations.filter(
-      (educationEnrollment) => educationEnrollment.id !== educationEnrollmentId,
-    );
-
-    return membersRepository.save(member);
-  }*/
 
   async startMemberGroup(
     member: MemberModel,
