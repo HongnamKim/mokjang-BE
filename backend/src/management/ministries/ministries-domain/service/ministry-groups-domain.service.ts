@@ -152,31 +152,6 @@ export class MinistryGroupsDomainService
   ): Promise<MinistryGroupModel> /*Promise<MinistryGroupWithParentGroups>*/ {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
-    /*const qb = await ministryGroupsRepository
-      .createQueryBuilder('ministryGroup')
-      .leftJoin('ministryGroup.ministries', 'ministries')
-      .addSelect([
-        'ministries.id',
-        'ministries.name',
-        'ministries.membersCount',
-      ])
-      .leftJoinAndSelect('ministryGroup.members', 'members')
-      .leftJoinAndSelect('members.officer', 'officer')
-      .leftJoinAndSelect('members.group', 'group')
-      .leftJoinAndSelect(
-        'members.ministries',
-        'member_ministries',
-        'ministries.ministryGroupId = :ministryGroupId',
-        { ministryGroupId },
-      )
-      .where('ministryGroup.churchId = :churchId', { churchId: church.id })
-      .where('ministryGroup.id = :ministryGroupId', {
-        ministryGroupId: ministryGroupId,
-      })
-      .getOneOrFail();
-
-    return qb;*/
-
     const ministryGroup = await ministryGroupsRepository.findOne({
       where: {
         churchId: church.id,
@@ -189,15 +164,6 @@ export class MinistryGroupsDomainService
     }
 
     return ministryGroup;
-
-    /*return {
-      ...ministryGroup,
-      parentMinistryGroups: await this.findParentMinistryGroups(
-        church,
-        ministryGroup.id,
-        qr,
-      ),
-    };*/
   }
 
   async findParentMinistryGroups(
@@ -794,6 +760,52 @@ export class MinistryGroupsDomainService
       { id: ministryGroup.id },
       'ministriesCount',
       1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async decrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.decrement(
+      { id: ministryGroup.id },
+      'ministriesCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async refreshMinistryCount(
+    ministryGroup: MinistryGroupModel,
+    ministryCount: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: ministryGroup.id,
+      },
+      {
+        ministriesCount: ministryCount,
+      },
     );
 
     if (result.affected === 0) {

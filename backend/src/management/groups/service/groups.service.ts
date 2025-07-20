@@ -27,7 +27,7 @@ import {
 import {
   IGROUP_HISTORY_DOMAIN_SERVICE,
   IGroupHistoryDomainService,
-} from '../../../member-history/member-history-domain/interface/group-history-domain.service.interface';
+} from '../../../member-history/group-history/group-history-domain/interface/group-history-domain.service.interface';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { startOfDay } from 'date-fns';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';

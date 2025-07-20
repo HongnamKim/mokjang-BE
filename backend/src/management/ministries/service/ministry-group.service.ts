@@ -31,7 +31,7 @@ import {
   IMINISTRY_MEMBERS_DOMAIN_SERVICE,
   IMinistryMembersDomainService,
 } from '../../../members/member-domain/interface/ministry-members-domain.service.interface';
-import { GetUnassignedMembersDto } from '../dto/ministry-group/request/get-unassigned-members.dto';
+import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @Injectable()
 export class MinistryGroupService {

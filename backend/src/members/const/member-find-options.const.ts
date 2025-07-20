@@ -24,3 +24,26 @@ export const MemberSummarizedSelect: FindOptionsSelect<MemberModel> = {
   },
   groupRole: true,
 };
+
+export const MemberSummarizedSelectQB: string[] = [
+  'member.id',
+  'member.name',
+  'member.profileImageUrl',
+  'member.mobilePhone',
+  'member.registeredAt',
+  'member.birth',
+  'member.isLunar',
+  'member.isLeafMonth',
+  'member.groupRole',
+  'member.ministryGroupRole',
+];
+
+export const MemberSummarizedOfficerSelectQB: string[] = [
+  'officer.id',
+  'officer.name',
+];
+
+export const MemberSummarizedGroupSelectQB: string[] = [
+  'group.id',
+  'group.name',
+];

@@ -31,7 +31,7 @@ import {
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
-import { GetUnassignedMembersDto } from '../dto/ministry-group/request/get-unassigned-members.dto';
+import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')

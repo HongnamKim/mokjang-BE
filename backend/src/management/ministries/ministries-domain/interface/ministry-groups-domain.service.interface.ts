@@ -114,4 +114,15 @@ export interface IMinistryGroupsDomainService {
     ministryGroup: MinistryGroupModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  decrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  refreshMinistryCount(
+    ministryGroup: MinistryGroupModel,
+    ministryCount: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

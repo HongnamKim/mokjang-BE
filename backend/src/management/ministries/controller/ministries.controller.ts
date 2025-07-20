@@ -13,9 +13,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MinistryService } from '../service/ministry.service';
-import { CreateMinistryDto } from '../dto/ministry/create-ministry.dto';
-import { UpdateMinistryDto } from '../dto/ministry/update-ministry.dto';
-import { GetMinistryDto } from '../dto/ministry/get-ministry.dto';
+import { CreateMinistryDto } from '../dto/ministry/request/create-ministry.dto';
+import { UpdateMinistryDto } from '../dto/ministry/request/update-ministry.dto';
+import { GetMinistryDto } from '../dto/ministry/request/get-ministry.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -72,9 +72,14 @@ export class MinistriesController {
   @Patch('refresh-count')
   refreshMinistryCount(
     @PermissionChurch() church: ChurchModel,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.refreshMinistryCount(church, qr);
+    return this.ministryService.refreshMinistryCount(
+      church,
+      ministryGroupId,
+      qr,
+    );
   }
 
   @ApiPatchMinistry()

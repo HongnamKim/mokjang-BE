@@ -1,8 +1,8 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { CreateMinistryDto } from '../dto/ministry/create-ministry.dto';
-import { UpdateMinistryDto } from '../dto/ministry/update-ministry.dto';
-import { GetMinistryDto } from '../dto/ministry/get-ministry.dto';
+import { CreateMinistryDto } from '../dto/ministry/request/create-ministry.dto';
+import { UpdateMinistryDto } from '../dto/ministry/request/update-ministry.dto';
+import { GetMinistryDto } from '../dto/ministry/request/get-ministry.dto';
 import {
   IMINISTRIES_DOMAIN_SERVICE,
   IMinistriesDomainService,
@@ -185,24 +185,42 @@ export class MinistryService {
     );
 
     await this.ministriesDomainService.deleteMinistry(ministry, qr);
+
     await this.churchesDomainService.decrementManagementCount(
       church,
       ManagementCountType.MINISTRY,
       qr,
     );
 
-    return new MinistryDeleteResponseDto(new Date(), ministry.id, true);
-  }
-
-  async refreshMinistryCount(church: ChurchModel, qr: QueryRunner) {
-    const ministryCount = await this.ministriesDomainService.countAllMinistries(
-      church,
+    await this.ministryGroupsDomainService.decrementMinistriesCount(
+      ministryGroup,
       qr,
     );
 
-    await this.churchesDomainService.refreshManagementCount(
-      church,
-      ManagementCountType.MINISTRY,
+    return new MinistryDeleteResponseDto(new Date(), ministry.id, true);
+  }
+
+  async refreshMinistryCount(
+    church: ChurchModel,
+    ministryGroupId: number,
+    qr: QueryRunner,
+  ) {
+    const ministryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupModelById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    const ministryCount =
+      await this.ministriesDomainService.countMinistriesInMinistryGroup(
+        church,
+        ministryGroup,
+        qr,
+      );
+
+    await this.ministryGroupsDomainService.refreshMinistryCount(
+      ministryGroup,
       ministryCount,
       qr,
     );

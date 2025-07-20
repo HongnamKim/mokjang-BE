@@ -1,10 +1,10 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
+import { GetMinistryDto } from '../../dto/ministry/request/get-ministry.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MinistryModel } from '../../entity/ministry.entity';
-import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
+import { CreateMinistryDto } from '../../dto/ministry/request/create-ministry.dto';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
-import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
+import { UpdateMinistryDto } from '../../dto/ministry/request/update-ministry.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
 export const IMINISTRIES_DOMAIN_SERVICE = Symbol('IMINISTRIES_DOMAIN_SERVICE');
@@ -69,7 +69,11 @@ export interface IMinistriesDomainService {
     qr?: QueryRunner,
   ): Promise<MinistryModel>;
 
-  countAllMinistries(church: ChurchModel, qr: QueryRunner): Promise<number>;
+  countMinistriesInMinistryGroup(
+    church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<number>;
 
   assignMemberToMinistry(
     member: MemberModel,

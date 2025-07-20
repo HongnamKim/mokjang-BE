@@ -213,8 +213,6 @@ export class MinistryGroupMemberService {
         qr,
       );
 
-    console.log(members);
-
     await this.ministryGroupsDomainService.removeMembersFromMinistryGroup(
       ministryGroup,
       members,
@@ -277,6 +275,7 @@ export class MinistryGroupMemberService {
   ) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
+
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,

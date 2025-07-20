@@ -33,9 +33,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { ENV_VARIABLE_KEY } from './common/const/env.const';
 import { RequestInfoModel } from './request-info/entity/request-info.entity';
 import { RequestInfoModule } from './request-info/request-info.module';
-import { OfficerHistoryModel } from './member-history/entity/officer-history.entity';
-import { MinistryHistoryModel } from './member-history/entity/ministry-history.entity';
-import { GroupHistoryModel } from './member-history/entity/group-history.entity';
+import { OfficerHistoryModel } from './member-history/officer-history/entity/officer-history.entity';
+import { MinistryHistoryModel } from './member-history/ministry-history/entity/ministry-history.entity';
+import { GroupHistoryModel } from './member-history/group-history/entity/group-history.entity';
 import { MemberHistoryModule } from './member-history/member-history.module';
 import { VisitationModule } from './visitation/visitation.module';
 import { VisitationMetaModel } from './visitation/entity/visitation-meta.entity';
@@ -68,6 +68,8 @@ import { CalendarModule } from './calendar/calendar.module';
 import { ChurchEventModel } from './calendar/entity/church-event.entity';
 import { MyPageModule } from './my-page/my-page.module';
 import { HomeModule } from './home/home.module';
+import { MinistryGroupHistoryModel } from './member-history/ministry-history/entity/ministry-group-history.entity';
+import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history/entity/ministry-group-role-history.entity';
 
 @Module({
   imports: [
@@ -160,6 +162,8 @@ import { HomeModule } from './home/home.module';
           // 사역 관련 엔티티
           MinistryModel,
           MinistryGroupModel,
+          MinistryGroupHistoryModel,
+          MinistryGroupRoleHistoryModel,
           MinistryHistoryModel,
           // 그룹 관련 엔티티
           GroupModel,
