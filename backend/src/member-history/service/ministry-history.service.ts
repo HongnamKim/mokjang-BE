@@ -1,13 +1,10 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { MinistryHistoryModel } from '../entity/ministry-history.entity';
-import { CreateMemberMinistryDto } from '../dto/ministry/create-member-ministry.dto';
-import { EndMemberMinistryDto } from '../dto/ministry/end-member-ministry.dto';
 import { GetMinistryHistoryDto } from '../dto/ministry/get-ministry-history.dto';
 import { UpdateMinistryHistoryDto } from '../dto/ministry/update-ministry-history.dto';
 import {
@@ -102,16 +99,6 @@ export class MinistryHistoryService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
-
-    /*const output: MinistryHistoryPaginationResult = {
-      data,
-      totalCount,
-      count: data.length,
-      page: dto.page,
-      totalPage: Math.ceil(totalCount / dto.take),
-    };
-
-    return output;*/
   }
 
   private async createCurrentMinistryGroupSnapShot(
@@ -148,7 +135,7 @@ export class MinistryHistoryService {
     };
   }
 
-  async createMemberMinistry(
+  /*async createMemberMinistry(
     churchId: number,
     memberId: number,
     dto: CreateMemberMinistryDto,
@@ -207,9 +194,9 @@ export class MinistryHistoryService {
       member: undefined,
       ministry: null,
     };
-  }
+  }*/
 
-  async endMemberMinistry(
+  /*async endMemberMinistry(
     churchId: number,
     memberId: number,
     ministryHistoryId: number,
@@ -278,7 +265,7 @@ export class MinistryHistoryService {
       ministryHistoryId,
       qr,
     );
-  }
+  }*/
 
   async updateMinistryHistory(
     churchId: number,

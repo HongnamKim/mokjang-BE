@@ -12,6 +12,10 @@ import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-perm
 import { ManagementPermissionService } from '../management-permission.service';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
+import { MinistryMemberService } from './service/ministry-member.service';
+import { MinistryGroupMemberService } from './service/ministry-group-member.service';
+import { MinistriesMembersController } from './controller/ministries-members.controller';
+import { MinistryGroupsMembersController } from './controller/ministry-groups-members.controller';
 
 @Module({
   imports: [
@@ -27,10 +31,17 @@ import { MembersDomainModule } from '../../members/member-domain/members-domain.
     MinistriesDomainModule,
     MembersDomainModule,
   ],
-  controllers: [MinistryGroupsController, MinistriesController],
+  controllers: [
+    MinistryGroupsController,
+    MinistryGroupsMembersController,
+    MinistriesController,
+    MinistriesMembersController,
+  ],
   providers: [
     MinistryService,
+    MinistryMemberService,
     MinistryGroupService,
+    MinistryGroupMemberService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: ManagementPermissionService,

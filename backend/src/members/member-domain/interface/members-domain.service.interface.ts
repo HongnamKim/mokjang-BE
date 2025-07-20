@@ -12,7 +12,6 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
@@ -22,8 +21,6 @@ import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
-import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
-import { GetMinistryGroupMembersDto } from '../../../management/ministries/dto/ministry-group/request/get-ministry-group-members.dto';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -66,11 +63,11 @@ export interface IMembersDomainService {
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]>;
 
-  findMinistryGroupMembersByIds(
+  /*findMinistryGroupMembersByIds(
     ministryGroup: MinistryGroupModel,
     memberIds: number[],
     qr?: QueryRunner,
-  ): Promise<MemberModel[]>;
+  ): Promise<MemberModel[]>;*/
 
   countAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<number>;
 
@@ -144,18 +141,6 @@ export interface IMembersDomainService {
 
   endMemberOfficer(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
 
-  startMemberMinistry(
-    member: MemberModel,
-    ministry: MinistryModel,
-    qr: QueryRunner,
-  ): Promise<MemberModel>;
-
-  endMemberMinistry(
-    member: MemberModel,
-    targetMinistry: MinistryModel,
-    qr: QueryRunner,
-  ): Promise<MemberModel>;
-
   startMemberGroup(
     member: MemberModel,
     group: GroupModel,
@@ -191,22 +176,4 @@ export interface IMembersDomainService {
     dto: GetGroupMembersDto,
     qr?: QueryRunner,
   ): Promise<MemberModel[]>;
-
-  findMinistryGroupMembers(
-    ministryGroup: MinistryGroupModel,
-    dto: GetMinistryGroupMembersDto,
-  ): Promise<MemberModel[]>;
-
-  updateMinistryGroupRole(
-    members: MemberModel[],
-    ministryGroupRole: GroupRole,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;
-
-  findMinistryGroupMemberModel(
-    ministryGroup: MinistryGroupModel,
-    memberId: number,
-    qr?: QueryRunner,
-    relations?: FindOptionsRelations<MemberModel>,
-  ): Promise<MemberModel>;
 }

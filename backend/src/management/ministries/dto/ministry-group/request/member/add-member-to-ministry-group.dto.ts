@@ -7,7 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsOptionalNotNull } from '../../../../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class MemberMinistryAssignmentDto {
   @ApiProperty({

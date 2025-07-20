@@ -30,10 +30,8 @@ import {
 } from '../const/swagger/ministry-group.swagger';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { AddMemberToMinistryGroupDto } from '../dto/ministry-group/request/add-member-to-ministry-group.dto';
-import { GetMinistryGroupMembersDto } from '../dto/ministry-group/request/get-ministry-group-members.dto';
-import { RemoveMembersFromMinistryGroupDto } from '../dto/ministry-group/request/remove-member-from-ministry-group.dto';
 import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
+import { GetUnassignedMembersDto } from '../dto/ministry-group/request/get-unassigned-members.dto';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -69,6 +67,14 @@ export class MinistryGroupsController {
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupService.refreshMinistryGroupCount(church, qr);
+  }
+
+  @Get('unassigned-member')
+  getUnassignedMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetUnassignedMembersDto,
+  ) {
+    return this.ministryGroupService.getUnassignedMembers(churchId, dto);
   }
 
   @Get(':ministryGroupId')
@@ -149,74 +155,4 @@ export class MinistryGroupsController {
       qr,
     );
   }
-
-  @ApiOperation({ summary: '사역그룹 교인 조회' })
-  @Get(':ministryGroupId/members')
-  getMinistryGroupMembers(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-    @Query() dto: GetMinistryGroupMembersDto,
-  ) {
-    return this.ministryGroupService.getMinistryGroupMembers(
-      churchId,
-      ministryGroupId,
-      dto,
-    );
-  }
-
-  @Patch(':ministryGroupId/members')
-  @UseInterceptors(TransactionInterceptor)
-  addMemberToGroup(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-    @Body() dto: AddMemberToMinistryGroupDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.ministryGroupService.addMemberToMinistryGroup(
-      churchId,
-      ministryGroupId,
-      dto,
-      qr,
-    );
-  }
-
-  @Delete(':ministryGroupId/members')
-  @UseInterceptors(TransactionInterceptor)
-  removeMembersFromMinistryGroup(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-    @Body() dto: RemoveMembersFromMinistryGroupDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.ministryGroupService.removeMembersFromMinistryGroup(
-      churchId,
-      ministryGroupId,
-      dto.memberIds,
-      qr,
-    );
-  }
-
-  /*@Get(':ministryGroupId/childGroups')
-  @MinistryReadGuard()
-  getChildGroups(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-  ) {
-    return this.ministryGroupService.getMinistryGroupsCascade(
-      churchId,
-      ministryGroupId,
-    );
-  }*/
-
-  /*@Get(':ministryGroupId')
-  @MinistryReadGuard()
-  getMinistryGroupById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-  ) {
-    return this.ministryGroupService.getMinistryGroupById(
-      churchId,
-      ministryGroupId,
-    );
-  }*/
 }
