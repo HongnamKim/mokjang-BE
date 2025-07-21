@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -26,6 +31,19 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { MinistryModel } from '../entity/ministry.entity';
 import { GetMinistryGroupMembersDto } from '../dto/ministry-group/request/member/get-ministry-group-members.dto';
 import { SearchMembersForMinistryGroupDto } from '../dto/ministry-group/request/member/search-members-for-ministry-group.dto';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import { StartMinistryHistoryVo } from '../../../member-history/ministry-history/dto/start-ministry-history.vo';
+import {
+  IMINISTRY_HISTORY_DOMAIN_SERVICE,
+  IMinistryHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-history-domain.service.interface';
+import { EndMinistryHistoryVo } from '../../../member-history/ministry-history/dto/end-ministry-history.vo';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { MinistryGroupModel } from '../entity/ministry-group.entity';
+import { MinistryGroupHistoryModel } from '../../../member-history/ministry-history/entity/ministry-group-history.entity';
 
 @Injectable()
 export class MinistryGroupMemberService {
@@ -41,6 +59,11 @@ export class MinistryGroupMemberService {
     private readonly membersDomainService: IMembersDomainService,
     @Inject(IMINISTRY_MEMBERS_DOMAIN_SERVICE)
     private readonly ministryMembersDomainService: IMinistryMembersDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
+    @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
   ) {}
 
   async addMemberToMinistryGroup(
@@ -66,35 +89,72 @@ export class MinistryGroupMemberService {
       throw new BadRequestException('중복된 교인 ID 가 존재합니다.');
     }
 
+    // 추가 대상 교인
     const members = await this.membersDomainService.findMembersById(
       church,
       memberIds,
       qr,
     );
 
-    // 사역 그룹에 교인 추가
+    // 사역그룹에 교인 추가 + 교인 수 증가 (중복될 경우 Exception)
     await this.ministryGroupsDomainService.addMembersToMinistryGroup(
       ministryGroup,
       members,
       qr,
     );
 
-    await this.ministryGroupsDomainService.updateMembersCount(
-      ministryGroup,
-      members.length,
-      qr,
-    );
-
-    // 사역그룹 역할 설정
+    // 사역그룹 역할 설정 (ministryGroupRole)
     await this.ministryMembersDomainService.updateMinistryGroupRole(
       members,
       GroupRole.MEMBER,
       qr,
     );
 
+    // 사역그룹 이력 생성
+    const ministryGroupHistories =
+      await this.ministryGroupHistoryDomainService.startMinistryGroupHistories(
+        ministryGroup,
+        members,
+        qr,
+      );
     // 사역 그룹에 교인 추가 완료
 
-    // 교인에게 사역 할당
+    const needToAssignMinistry = dto.members.some(
+      (member) => member.ministryId,
+    );
+
+    if (needToAssignMinistry) {
+      await this.assignMinistry(
+        church,
+        ministryGroup,
+        ministryGroupHistories,
+        dto,
+        members,
+        qr,
+      );
+    }
+
+    const updatedMinistryGroup =
+      await this.ministryGroupsDomainService.findMinistryGroupById(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    return {
+      data: updatedMinistryGroup,
+      timestamp: new Date(),
+    };
+  }
+
+  private async assignMinistry(
+    church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
+    ministryGroupHistories: MinistryGroupHistoryModel[],
+    dto: AddMemberToMinistryGroupDto,
+    members: MemberModel[],
+    qr: QueryRunner,
+  ) {
     const ministryIds = Array.from(
       new Set(
         dto.members
@@ -134,6 +194,9 @@ export class MinistryGroupMemberService {
       }
     }
 
+    // 사역이 부여된 교인이 있는 경우
+
+    // 교인에게 사역 부여
     await Promise.all(
       memberMinistryMapped.map((memberMinistry) =>
         this.ministryDomainService.assignMemberToMinistry(
@@ -145,6 +208,30 @@ export class MinistryGroupMemberService {
       ),
     );
 
+    // 사역 이력 생성
+    const ministryHistoryVo = memberMinistryMapped.map((memberMinistry) => {
+      const ministryGroupHistory = ministryGroupHistories.find(
+        (ministryGroupHistory) =>
+          ministryGroupHistory.memberId === memberMinistry.member.id,
+      );
+
+      if (!ministryGroupHistory) {
+        throw new InternalServerErrorException('사역그룹 이력 생성 에러');
+      }
+
+      return new StartMinistryHistoryVo(
+        memberMinistry.member,
+        memberMinistry.ministry,
+        ministryGroupHistory,
+      );
+    });
+
+    await this.ministryHistoryDomainService.startMinistryHistories(
+      ministryHistoryVo,
+      qr,
+    );
+
+    // 사역 별 교인 수 증가
     await Promise.all(
       memberMinistryMapped.map((memberMinistry) =>
         this.ministryDomainService.incrementMembersCount(
@@ -153,18 +240,6 @@ export class MinistryGroupMemberService {
         ),
       ),
     );
-
-    const updatedMinistryGroup =
-      await this.ministryGroupsDomainService.findMinistryGroupById(
-        church,
-        ministryGroupId,
-        qr,
-      );
-
-    return {
-      data: updatedMinistryGroup,
-      timestamp: new Date(),
-    };
   }
 
   async getMinistryGroupMembers(
@@ -206,25 +281,54 @@ export class MinistryGroupMemberService {
         qr,
       );
 
-    const members =
+    // 제거 대상 교인 + 담당사역
+    const removeMembers =
       await this.ministryMembersDomainService.findMinistryGroupMembersByIds(
         ministryGroup,
         memberIds,
         qr,
       );
 
+    // 사역그룹에서 교인 제거 + 교인 수 감소
     await this.ministryGroupsDomainService.removeMembersFromMinistryGroup(
       ministryGroup,
-      members,
+      removeMembers,
       qr,
     );
 
-    // 사역이 있는 교인들의 사역 종료
-    const ministryMembers = members.filter(
-      (member) => member.ministries.length > 0,
+    // 사역그룹 스냅샷
+    const ministryGroupSnapShot =
+      await this.ministryGroupsDomainService.getMinistryGroupNameWithHierarchy(
+        church,
+        ministryGroupId,
+        qr,
+      );
+
+    // 사역그룹 이력 종료
+    await this.ministryGroupHistoryDomainService.endMinistryGroupHistories(
+      ministryGroup,
+      ministryGroupSnapShot,
+      removeMembers,
+      qr,
     );
 
+    // 삭제 교인 중 리더가 있는 경우
+    if (
+      removeMembers.some((member) => member.id === ministryGroup.leaderMemberId)
+    ) {
+      await this.ministryGroupsDomainService.updateMinistryGroupLeader(
+        ministryGroup,
+        null,
+        qr,
+      );
+    }
+
+    // 사역이 있는 교인들의 사역 종료
+    const ministryMembers = removeMembers.filter(
+      (member) => member.ministries.length > 0,
+    );
     if (ministryMembers.length > 0) {
+      // 사역 관계 해제
       await Promise.all(
         ministryMembers.map((member) =>
           this.ministryDomainService.removeMemberFromMinistry(
@@ -235,6 +339,7 @@ export class MinistryGroupMemberService {
         ),
       );
 
+      // 사역의 교인 수 감소
       await Promise.all(
         ministryMembers.map((member) =>
           this.ministryDomainService.decrementMembersCount(
@@ -243,21 +348,30 @@ export class MinistryGroupMemberService {
           ),
         ),
       );
-    }
-    // 사역이 있는 교인들의 사역 종료
 
+      const endMinistryHistoryVo = ministryMembers.map(
+        (ministryMember) =>
+          new EndMinistryHistoryVo(
+            ministryMember,
+            ministryMember.ministries[0],
+          ),
+      );
+
+      // 사역이 있는 교인들의 사역 종료
+      await this.ministryHistoryDomainService.endMinistryHistories(
+        endMinistryHistoryVo,
+        qr,
+      );
+    }
+
+    // 사역그룹 역할 제거 (ministryGroupRole)
     await this.ministryMembersDomainService.updateMinistryGroupRole(
-      members,
+      removeMembers,
       GroupRole.NONE,
       qr,
     );
 
-    await this.ministryGroupsDomainService.updateMembersCount(
-      ministryGroup,
-      -1 * members.length,
-      qr,
-    );
-
+    // 응답부분
     const updatedMinistryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupById(
         church,

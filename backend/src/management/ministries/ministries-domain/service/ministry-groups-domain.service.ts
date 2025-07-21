@@ -678,6 +678,10 @@ export class MinistryGroupsDomainService
         .relation(MinistryGroupModel, 'members')
         .of(ministryGroup.id)
         .add(memberIds);
+
+      await qr.manager
+        .getRepository(MinistryGroupModel)
+        .increment({ id: ministryGroup.id }, 'membersCount', members.length);
     } catch (error) {
       if (error.code === '23505') {
         throw new ConflictException(
@@ -703,6 +707,10 @@ export class MinistryGroupsDomainService
       .relation(MinistryGroupModel, 'members')
       .of(ministryGroup.id)
       .remove(memberIds);
+
+    await qr.manager
+      .getRepository(MinistryGroupModel)
+      .decrement({ id: ministryGroup.id }, 'membersCount', members.length);
 
     return;
   }
@@ -731,14 +739,14 @@ export class MinistryGroupsDomainService
 
   async updateMinistryGroupLeader(
     ministryGroup: MinistryGroupModel,
-    newLeaderMember: MemberModel,
+    newLeaderMember: MemberModel | null,
     qr: QueryRunner,
   ): Promise<UpdateResult> {
     const repository = this.getMinistryGroupsRepository(qr);
 
     const result = await repository.update(
       { id: ministryGroup.id },
-      { leaderMemberId: newLeaderMember.id },
+      { leaderMemberId: newLeaderMember ? newLeaderMember.id : null },
     );
 
     if (result.affected === 0) {
@@ -815,5 +823,32 @@ export class MinistryGroupsDomainService
     }
 
     return result;
+  }
+
+  async getMinistryGroupNameWithHierarchy(
+    church: ChurchModel,
+    ministryGroupId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const parentMinistryGroups = await this.findParentMinistryGroups(
+      church,
+      ministryGroupId,
+      qr,
+    );
+
+    const ministryGroup = await repository.findOneOrFail({
+      where: {
+        church: { id: church.id },
+        id: ministryGroupId,
+      },
+    });
+
+    const ministryGroupsHierarchy = [...parentMinistryGroups, ministryGroup];
+
+    return ministryGroupsHierarchy
+      .map((ministryGroup) => ministryGroup.name)
+      .join('__');
   }
 }

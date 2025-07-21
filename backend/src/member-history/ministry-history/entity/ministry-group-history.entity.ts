@@ -1,5 +1,5 @@
 import { BaseModel } from '../../../common/entity/base.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
 import { MinistryHistoryModel } from './ministry-history.entity';
@@ -7,13 +7,18 @@ import { MinistryGroupRoleHistoryModel } from './ministry-group-role-history.ent
 
 @Entity()
 export class MinistryGroupHistoryModel extends BaseModel {
+  @Column()
+  memberId: number;
+
   @ManyToOne(() => MemberModel)
+  @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
   @Column({ nullable: true })
   ministryGroupId: number | null;
 
   @ManyToOne(() => MinistryGroupModel)
+  @JoinColumn({ name: 'ministryGroupId' })
   ministryGroup: MinistryGroupModel | null;
 
   @Column({ type: 'timestamptz' })

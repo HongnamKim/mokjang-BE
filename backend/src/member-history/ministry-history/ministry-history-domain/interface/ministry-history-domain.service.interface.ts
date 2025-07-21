@@ -1,9 +1,10 @@
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetMinistryHistoryDto } from '../../dto/get-ministry-history.dto';
+import { GetMinistryHistoryDto } from '../../dto/request/get-ministry-history.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MinistryHistoryModel } from '../../entity/ministry-history.entity';
-import { MinistryModel } from '../../../../management/ministries/entity/ministry.entity';
-import { UpdateMinistryHistoryDto } from '../../dto/update-ministry-history.dto';
+import { UpdateMinistryHistoryDto } from '../../dto/request/update-ministry-history.dto';
+import { StartMinistryHistoryVo } from '../../dto/start-ministry-history.vo';
+import { EndMinistryHistoryVo } from '../../dto/end-ministry-history.vo';
 
 export const IMINISTRY_HISTORY_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_HISTORY_DOMAIN_SERVICE',
@@ -23,14 +24,24 @@ export interface IMinistryHistoryDomainService {
     relationOptions?: FindOptionsRelations<MinistryHistoryModel>,
   ): Promise<MinistryHistoryModel>;
 
-  createMinistryHistory(
+  startMinistryHistories(
+    ministryHistoryVo: StartMinistryHistoryVo[],
+    qr: QueryRunner,
+  ): Promise<MinistryHistoryModel[]>;
+
+  endMinistryHistories(
+    endMinistryHistoryVo: EndMinistryHistoryVo[],
+    qr: QueryRunner,
+  ): Promise<MinistryHistoryModel[]>;
+
+  /*createMinistryHistory(
     member: MemberModel,
     ministry: MinistryModel,
     startDate: Date,
     qr: QueryRunner,
-  ): Promise<MinistryHistoryModel>;
+  ): Promise<MinistryHistoryModel>;*/
 
-  endMinistryHistory(
+  /*endMinistryHistory(
     ministryHistory: MinistryHistoryModel,
     snapShot: {
       ministrySnapShot: string;
@@ -38,7 +49,7 @@ export interface IMinistryHistoryDomainService {
     },
     endDate: Date,
     qr: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<UpdateResult>;*/
 
   updateMinistryHistory(
     ministryHistory: MinistryHistoryModel,

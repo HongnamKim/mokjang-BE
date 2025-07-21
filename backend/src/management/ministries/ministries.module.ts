@@ -16,6 +16,7 @@ import { MinistryMemberService } from './service/ministry-member.service';
 import { MinistryGroupMemberService } from './service/ministry-group-member.service';
 import { MinistriesMembersController } from './controller/ministries-members.controller';
 import { MinistryGroupsMembersController } from './controller/ministry-groups-members.controller';
+import { MinistryHistoryDomainModule } from '../../member-history/ministry-history/ministry-history-domain/ministry-history-domain.module';
 
 @Module({
   imports: [
@@ -30,6 +31,8 @@ import { MinistryGroupsMembersController } from './controller/ministry-groups-me
     ManagerDomainModule,
     MinistriesDomainModule,
     MembersDomainModule,
+
+    MinistryHistoryDomainModule,
   ],
   controllers: [
     MinistryGroupsController,

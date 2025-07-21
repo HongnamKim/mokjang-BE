@@ -1,5 +1,5 @@
-import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
-import { MinistryHistoryModel } from '../entity/ministry-history.entity';
+import { BaseOffsetPaginationResponseDto } from '../../../../common/dto/reponse/base-offset-pagination-response.dto';
+import { MinistryHistoryModel } from '../../entity/ministry-history.entity';
 
 export class MinistryHistoryPaginationResultDto extends BaseOffsetPaginationResponseDto<MinistryHistoryModel> {
   constructor(

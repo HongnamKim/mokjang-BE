@@ -112,7 +112,7 @@ export class MinistryMembersDomainService
     ministryGroup: MinistryGroupModel,
     memberIds: number[],
     qr?: QueryRunner,
-  ) {
+  ): Promise<MemberModel[]> {
     const repository = this.getRepository(qr);
 
     const ministryGroupMembers = await repository

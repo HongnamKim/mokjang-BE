@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MinistryHistoryService } from '../service/ministry-history.service';
-import { GetMinistryHistoryDto } from '../dto/get-ministry-history.dto';
-import { UpdateMinistryHistoryDto } from '../dto/update-ministry-history.dto';
+import { GetMinistryHistoryDto } from '../dto/request/get-ministry-history.dto';
+import { UpdateMinistryHistoryDto } from '../dto/request/update-ministry-history.dto';
 import {
   ApiDeleteMinistryHistory,
   ApiGetMemberMinistry,

@@ -23,6 +23,16 @@ import {
 import { QueryRunner } from 'typeorm';
 import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
 import { RemoveMinistryFromMember } from '../dto/ministry/request/member/remove-ministry-from-member.dto';
+import {
+  IMINISTRY_HISTORY_DOMAIN_SERVICE,
+  IMinistryHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-history-domain.service.interface';
+import { StartMinistryHistoryVo } from '../../../member-history/ministry-history/dto/start-ministry-history.vo';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import { EndMinistryHistoryVo } from '../../../member-history/ministry-history/dto/end-ministry-history.vo';
 
 @Injectable()
 export class MinistryMemberService {
@@ -36,6 +46,11 @@ export class MinistryMemberService {
 
     @Inject(IMINISTRY_MEMBERS_DOMAIN_SERVICE)
     private readonly ministryMembersDomainService: IMinistryMembersDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
+    @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
   ) {}
 
   async refreshMinistryMemberCount(
@@ -142,6 +157,28 @@ export class MinistryMemberService {
     }
 
     // 교인 사역 이력 생성 및 종료
+    const ministryGroupHistory =
+      await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
+        member,
+        ministryGroup,
+        qr,
+      );
+    const startMinistryVo = new StartMinistryHistoryVo(
+      member,
+      newMinistry,
+      ministryGroupHistory,
+    );
+    await this.ministryHistoryDomainService.startMinistryHistories(
+      [startMinistryVo],
+      qr,
+    );
+    const endMinistryVo = oldMinistry.map(
+      (old) => new EndMinistryHistoryVo(member, old),
+    );
+    await this.ministryHistoryDomainService.endMinistryHistories(
+      endMinistryVo,
+      qr,
+    );
 
     return this.ministryMembersDomainService.findMinistryGroupMemberById(
       ministryGroup,
@@ -188,7 +225,7 @@ export class MinistryMemberService {
 
     if (!isAssignedMinistry) {
       throw new BadRequestException(
-        `교인 ${dto.memberId}는 해당 사역을 담당하고 있지 않습니다.`,
+        `해당 교인은 해당 사역을 담당하고 있지 않습니다.`,
       );
     }
 
@@ -196,6 +233,13 @@ export class MinistryMemberService {
     await this.ministriesDomainService.removeMemberFromMinistry(
       member,
       ministry,
+      qr,
+    );
+
+    // 사역 이력 종료
+    const endMinistryVo = new EndMinistryHistoryVo(member, ministry);
+    await this.ministryHistoryDomainService.endMinistryHistories(
+      [endMinistryVo],
       qr,
     );
 

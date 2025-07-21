@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
@@ -27,18 +27,15 @@ export class MinistryHistoryModel extends BaseModel {
   @Column({ comment: '사역 종료일 시점의 사역 이름', nullable: true })
   ministrySnapShot: string;
 
+  @Column()
+  ministryGroupHistoryId: number;
+
   @ManyToOne(
     () => MinistryGroupHistoryModel,
     (ministryGroupHistory) => ministryGroupHistory.ministryHistories,
   )
+  @JoinColumn({ name: 'ministryGroupHistoryId' })
   ministryGroupHistory: MinistryGroupHistoryModel;
-
-  @Column({
-    type: 'varchar',
-    comment: '사역 종료일 시점의 사역 그룹, 그룹 위계는 __ 로 구분',
-    nullable: true,
-  })
-  ministryGroupSnapShot: string | null;
 
   @Index()
   @Column({ type: 'timestamptz', comment: '사역 시작일' })

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -10,10 +9,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../../entity/ministry-history.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetMinistryHistoryDto } from '../../dto/get-ministry-history.dto';
-import { MinistryModel } from '../../../../management/ministries/entity/ministry.entity';
+import { GetMinistryHistoryDto } from '../../dto/request/get-ministry-history.dto';
 import { MinistryHistoryException } from '../../exception/ministry-history.exception';
-import { UpdateMinistryHistoryDto } from '../../dto/update-ministry-history.dto';
+import { UpdateMinistryHistoryDto } from '../../dto/request/update-ministry-history.dto';
+import { StartMinistryHistoryVo } from '../../dto/start-ministry-history.vo';
+import { EndMinistryHistoryVo } from '../../dto/end-ministry-history.vo';
 
 @Injectable()
 export class MinistryHistoryDomainService
@@ -88,79 +88,64 @@ export class MinistryHistoryDomainService
     return ministryHistory;
   }
 
-  private async isExistMinistryHistory(
-    member: MemberModel,
-    ministry: MinistryModel,
-    qr?: QueryRunner,
-  ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
+  async startMinistryHistories(
+    ministryHistoryVo: StartMinistryHistoryVo[],
+    qr: QueryRunner,
+  ): Promise<MinistryHistoryModel[]> {
+    const repository = this.getMinistryHistoryRepository(qr);
 
-    const ministryHistory = await ministryHistoryRepository.findOne({
-      where: {
-        memberId: member.id,
-        ministryId: ministry.id,
+    const histories = repository.create(
+      ministryHistoryVo.map((vo) => ({
+        member: {
+          id: vo.member.id,
+        },
+        ministry: {
+          id: vo.ministry.id,
+        },
+        ministryGroupHistory: {
+          id: vo.ministryGroupHistory.id,
+        },
+        startDate: new Date(),
+      })),
+    );
+
+    return repository.save(histories);
+  }
+
+  async endMinistryHistories(
+    endMinistryHistoryVo: EndMinistryHistoryVo[],
+    qr: QueryRunner,
+  ): Promise<MinistryHistoryModel[]> {
+    const repository = this.getMinistryHistoryRepository(qr);
+
+    const histories = await repository.find({
+      where: endMinistryHistoryVo.map((vo) => ({
+        member: { id: vo.member.id },
+        ministry: { id: vo.ministry.id },
         endDate: IsNull(),
-      },
+      })),
     });
 
-    return !!ministryHistory;
-  }
-
-  async createMinistryHistory(
-    member: MemberModel,
-    ministry: MinistryModel,
-    startDate: Date,
-    qr: QueryRunner,
-  ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
-
-    const isExistMinistryHistory = await this.isExistMinistryHistory(
-      member,
-      ministry,
-      qr,
-    );
-
-    if (isExistMinistryHistory) {
-      throw new ConflictException(MinistryHistoryException.ALREADY_EXIST);
-    }
-
-    return ministryHistoryRepository.save({
-      //memberId: member.id,
-      //ministryId: ministry.id,
-      member,
-      ministry,
-      startDate,
-    });
-  }
-
-  async endMinistryHistory(
-    ministryHistory: MinistryHistoryModel,
-    snapShot: {
-      ministrySnapShot: string;
-      ministryGroupSnapShot: string | null;
-    },
-    endDate: Date,
-    qr: QueryRunner,
-  ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
-
-    const result = await ministryHistoryRepository.update(
-      { id: ministryHistory.id },
-      {
-        ministryId: null,
-        ministrySnapShot: snapShot.ministrySnapShot,
-        ministryGroupSnapShot: snapShot.ministryGroupSnapShot,
-        endDate,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        MinistryHistoryException.UPDATE_ERROR,
+    histories.forEach((history, index) => {
+      // 종료 시점 사역명 저장
+      const assignment = endMinistryHistoryVo.find(
+        (a) =>
+          a.member.id === history.memberId &&
+          a.ministry.id === history.ministryId,
       );
-    }
+      if (assignment) {
+        history.ministrySnapShot = assignment.ministry.name;
+      }
 
-    return result;
+      // 종료 시점
+      history.endDate = new Date();
+
+      // 이력 - 사역 관계 해제
+      history.ministryId = null;
+      history.ministry = null;
+    });
+
+    return repository.save(histories);
   }
 
   private isValidUpdateDate(

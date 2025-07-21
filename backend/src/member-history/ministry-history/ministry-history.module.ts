@@ -13,6 +13,7 @@ import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { RouterModule } from '@nestjs/core';
 import { MinistryHistoryDomainModule } from './ministry-history-domain/ministry-history-domain.module';
+import { MinistryGroupHistoryService } from './service/ministry-group-history.service';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { MinistryHistoryDomainModule } from './ministry-history-domain/ministry-
   controllers: [MinistryGroupHistoryController, MinistryHistoryController],
   providers: [
     MinistryHistoryService,
+    MinistryGroupHistoryService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: HistoryPermissionService,
