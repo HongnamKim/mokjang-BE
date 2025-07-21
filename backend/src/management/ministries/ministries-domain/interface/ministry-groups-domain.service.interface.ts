@@ -106,7 +106,7 @@ export interface IMinistryGroupsDomainService {
 
   updateMinistryGroupLeader(
     ministryGroup: MinistryGroupModel,
-    newLeaderMember: MemberModel,
+    newLeaderMember: MemberModel | null,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
@@ -114,4 +114,21 @@ export interface IMinistryGroupsDomainService {
     ministryGroup: MinistryGroupModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  decrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  refreshMinistryCount(
+    ministryGroup: MinistryGroupModel,
+    ministryCount: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  getMinistryGroupNameWithHierarchy(
+    church: ChurchModel,
+    ministryGroupId: number,
+    qr?: QueryRunner,
+  ): Promise<string>;
 }

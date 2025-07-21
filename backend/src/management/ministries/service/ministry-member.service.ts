@@ -22,7 +22,17 @@ import {
 } from '../../../members/member-domain/interface/ministry-members-domain.service.interface';
 import { QueryRunner } from 'typeorm';
 import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
-import { RemoveMinistryFromMember } from '../dto/ministry/remove-ministry-from-member.dto';
+import { RemoveMinistryFromMember } from '../dto/ministry/request/member/remove-ministry-from-member.dto';
+import {
+  IMINISTRY_HISTORY_DOMAIN_SERVICE,
+  IMinistryHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-history-domain.service.interface';
+import { StartMinistryHistoryVo } from '../../../member-history/ministry-history/dto/start-ministry-history.vo';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import { EndMinistryHistoryVo } from '../../../member-history/ministry-history/dto/end-ministry-history.vo';
 
 @Injectable()
 export class MinistryMemberService {
@@ -36,6 +46,11 @@ export class MinistryMemberService {
 
     @Inject(IMINISTRY_MEMBERS_DOMAIN_SERVICE)
     private readonly ministryMembersDomainService: IMinistryMembersDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
+    @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
   ) {}
 
   async refreshMinistryMemberCount(
@@ -105,18 +120,17 @@ export class MinistryMemberService {
 
     const oldMinistry = member.ministries;
 
-    const alreadyAssigned = oldMinistry.some(
+    const isAlreadyAssigned = oldMinistry.some(
       (ministry) => ministry.id === ministryId,
     );
 
-    if (alreadyAssigned) {
+    if (isAlreadyAssigned) {
       throw new ConflictException('이미 부여된 사역입니다.');
     }
 
     // 해당 사역 그룹에 존재하는 사역인지 확인 필요
     const newMinistry =
       await this.ministriesDomainService.findMinistryModelById(
-        //church,
         ministryGroup,
         ministryId,
         qr,
@@ -130,7 +144,10 @@ export class MinistryMemberService {
       qr,
     );
 
+    // 새로운 사역의 교인 수 증가
     await this.ministriesDomainService.incrementMembersCount(newMinistry, qr);
+
+    // 기존 사역의 교인 수 감소
     if (oldMinistry.length > 0) {
       await Promise.all(
         oldMinistry.map((oldMinistry) =>
@@ -140,8 +157,30 @@ export class MinistryMemberService {
     }
 
     // 교인 사역 이력 생성 및 종료
+    const ministryGroupHistory =
+      await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
+        member,
+        ministryGroup,
+        qr,
+      );
+    const startMinistryVo = new StartMinistryHistoryVo(
+      member,
+      newMinistry,
+      ministryGroupHistory,
+    );
+    await this.ministryHistoryDomainService.startMinistryHistories(
+      [startMinistryVo],
+      qr,
+    );
+    const endMinistryVo = oldMinistry.map(
+      (old) => new EndMinistryHistoryVo(member, old),
+    );
+    await this.ministryHistoryDomainService.endMinistryHistories(
+      endMinistryVo,
+      qr,
+    );
 
-    return this.ministryMembersDomainService.findMinistryGroupMemberModelById(
+    return this.ministryMembersDomainService.findMinistryGroupMemberById(
       ministryGroup,
       dto.memberId,
       qr,
@@ -166,6 +205,7 @@ export class MinistryMemberService {
         qr,
       );
 
+    // 해당 사역에 속한 교인 + 맡은 사역
     const member =
       await this.ministryMembersDomainService.findMinistryGroupMemberModelById(
         ministryGroup,
@@ -185,19 +225,28 @@ export class MinistryMemberService {
 
     if (!isAssignedMinistry) {
       throw new BadRequestException(
-        `교인 ${dto.memberId}는 해당 사역을 담당하고 있지 않습니다.`,
+        `해당 교인은 해당 사역을 담당하고 있지 않습니다.`,
       );
     }
 
+    // 교인 - 사역 relation 끊기
     await this.ministriesDomainService.removeMemberFromMinistry(
       member,
       ministry,
       qr,
     );
 
+    // 사역 이력 종료
+    const endMinistryVo = new EndMinistryHistoryVo(member, ministry);
+    await this.ministryHistoryDomainService.endMinistryHistories(
+      [endMinistryVo],
+      qr,
+    );
+
+    // 종료된 사역의 교인 수 감소
     await this.ministriesDomainService.decrementMembersCount(ministry, qr);
 
-    return this.ministryMembersDomainService.findMinistryGroupMemberModelById(
+    return this.ministryMembersDomainService.findMinistryGroupMemberById(
       ministryGroup,
       dto.memberId,
       qr,

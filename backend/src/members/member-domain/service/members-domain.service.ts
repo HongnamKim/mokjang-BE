@@ -35,8 +35,11 @@ import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
+  MemberSummarizedGroupSelectQB,
+  MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
+  MemberSummarizedSelectQB,
 } from '../../const/member-find-options.const';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
@@ -140,17 +143,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     const query = repository
       .createQueryBuilder('member')
-      .select([
-        'member.id',
-        'member.churchId',
-        'member.name',
-        'member.profileImageUrl',
-        'member.birth',
-        'member.birthdayMMDD',
-        'member.isLunar',
-        'member.isLeafMonth',
-        'member.groupRole',
-      ])
+      .select([...MemberSummarizedSelectQB, 'member.birthdayMMDD'])
       .where(`member.churchId = :churchId`, { churchId: church.id })
       .andWhere(
         `(
@@ -173,7 +166,10 @@ export class MembersDomainService implements IMembersDomainService {
       )
       .leftJoin('member.officer', 'officer')
       .leftJoin('member.group', 'group')
-      .addSelect(['officer.id', 'officer.name', 'group.id', 'group.name'])
+      .addSelect([
+        ...MemberSummarizedOfficerSelectQB,
+        ...MemberSummarizedGroupSelectQB,
+      ])
       .orderBy('"birthdayMMDD"', 'ASC')
       .addOrderBy('birth', 'ASC')
       .addOrderBy('member.id', 'ASC');

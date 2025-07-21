@@ -20,11 +20,11 @@ import {
   Repository,
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { GetMinistryDto } from '../../dto/ministry/get-ministry.dto';
+import { GetMinistryDto } from '../../dto/ministry/request/get-ministry.dto';
 import { MinistryException } from '../../const/exception/ministry.exception';
-import { CreateMinistryDto } from '../../dto/ministry/create-ministry.dto';
+import { CreateMinistryDto } from '../../dto/ministry/request/create-ministry.dto';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
-import { UpdateMinistryDto } from '../../dto/ministry/update-ministry.dto';
+import { UpdateMinistryDto } from '../../dto/ministry/request/update-ministry.dto';
 import { OfficersException } from '../../../officers/const/exception/officers.exception';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
@@ -68,12 +68,17 @@ export class MinistriesDomainService implements IMinistriesDomainService {
     return !!ministry;
   }
 
-  countAllMinistries(church: ChurchModel, qr: QueryRunner): Promise<number> {
+  countMinistriesInMinistryGroup(
+    church: ChurchModel,
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<number> {
     const repository = this.getMinistriesRepository(qr);
 
     return repository.count({
       where: {
         churchId: church.id,
+        ministryGroupId: ministryGroup.id,
       },
     });
   }
@@ -207,7 +212,7 @@ export class MinistriesDomainService implements IMinistriesDomainService {
   ) {
     const ministriesRepository = this.getMinistriesRepository(qr);
 
-    const newName = dto.name ? dto.name : targetMinistry.name;
+    const newName = dto.name;
 
     const isExist = await ministriesRepository.findOne({
       where: {

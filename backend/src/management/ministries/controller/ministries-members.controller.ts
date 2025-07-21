@@ -11,10 +11,10 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiRefreshMinistryMembersCount } from '../const/swagger/ministry.swagger';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { AssignMinistryToMemberDto } from '../dto/ministry/assign-ministry-to-member.dto';
+import { AssignMinistryToMemberDto } from '../dto/ministry/request/member/assign-ministry-to-member.dto';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
-import { RemoveMinistryFromMember } from '../dto/ministry/remove-ministry-from-member.dto';
+import { RemoveMinistryFromMember } from '../dto/ministry/request/member/remove-ministry-from-member.dto';
 import { MinistryMemberService } from '../service/ministry-member.service';
 
 @ApiTags('Management:MinistryGroups:Ministries:Members')
