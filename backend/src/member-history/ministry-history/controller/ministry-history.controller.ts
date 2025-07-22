@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MinistryHistoryService } from '../service/ministry-history.service';
-import { GetMinistryHistoryDto } from '../dto/request/get-ministry-history.dto';
-import { UpdateMinistryHistoryDto } from '../dto/request/update-ministry-history.dto';
+import { GetMinistryHistoriesDto } from '../dto/request/ministry/get-ministry-histories.dto';
+import { UpdateMinistryHistoryDto } from '../dto/request/ministry/update-ministry-history.dto';
 import {
   ApiDeleteMinistryHistory,
   ApiGetMemberMinistry,
@@ -21,7 +21,7 @@ import { HistoryReadGuard } from '../../guard/history-read.guard';
 import { HistoryWriteGuard } from '../../guard/history-write.guard';
 
 @ApiTags('Churches:Members:Histories:Ministries')
-@Controller('ministries')
+@Controller(':ministryGroupHistoryId/ministries')
 export class MinistryHistoryController {
   constructor(
     private readonly ministryHistoryService: MinistryHistoryService,
@@ -34,11 +34,14 @@ export class MinistryHistoryController {
   getMemberMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @Query() dto: GetMinistryHistoryDto,
+    @Param('ministryGroupHistoryId', ParseIntPipe)
+    ministryGroupHistoryId: number,
+    @Query() dto: GetMinistryHistoriesDto,
   ) {
     return this.ministryHistoryService.getMinistryHistories(
       churchId,
       memberId,
+      ministryGroupHistoryId,
       dto,
     );
   }
@@ -51,6 +54,8 @@ export class MinistryHistoryController {
   patchMinistryHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @Param('ministryGroupHistoryId', ParseIntPipe)
+    ministryGroupHistoryId: number,
     @Param('ministryHistoryId', ParseIntPipe)
     ministryHistoryId: number,
     @Body() dto: UpdateMinistryHistoryDto,
@@ -58,6 +63,7 @@ export class MinistryHistoryController {
     return this.ministryHistoryService.updateMinistryHistory(
       churchId,
       memberId,
+      ministryGroupHistoryId,
       ministryHistoryId,
       dto,
     );
@@ -70,61 +76,16 @@ export class MinistryHistoryController {
   deleteMinistryHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @Param('ministryGroupHistoryId', ParseIntPipe)
+    ministryGroupHistoryId: number,
     @Param('ministryHistoryId', ParseIntPipe)
     ministryHistoryId: number,
   ) {
     return this.ministryHistoryService.deleteMinistryHistory(
       churchId,
       memberId,
+      ministryGroupHistoryId,
       ministryHistoryId,
     );
   }
-
-  /*// 교인에게 현재 사역 부여
-  // member 와 N:N relation 추가
-  // ministryHistory 추가 (시작일)
-  @ApiPostMemberMinistry()
-  @Post()
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  postMemberMinistry(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: CreateMemberMinistryDto,
-    @QueryRunner() qr: QR,
-  ) {
-    throw new GoneException('더 이상 사용되지 않는 엔드포인트');
-
-    /!*return this.ministryHistoryService.createMemberMinistry(
-      churchId,
-      memberId,
-      dto,
-      qr,
-    );*!/
-  }*/
-
-  /*// 교인의 현재 사역  종료
-  // N:N relation 삭제
-  // 해당 MinistryHistoryModel 에 endDate 추가
-  @ApiDeleteMemberMinistry()
-  @Patch(':ministryHistoryId/end')
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  deleteMemberMinistry(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('ministryHistoryId', ParseIntPipe) ministryHistoryId: number,
-    @Body() dto: EndMemberMinistryDto,
-    @QueryRunner() qr: QR,
-  ) {
-    throw new GoneException('더 이상 사용되지 않는 엔드포인트');
-
-    /!*return this.ministryHistoryService.endMemberMinistry(
-      churchId,
-      memberId,
-      ministryHistoryId,
-      dto,
-      qr,
-    );*!/
-  }*/
 }

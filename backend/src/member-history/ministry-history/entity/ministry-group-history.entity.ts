@@ -1,5 +1,12 @@
 import { BaseModel } from '../../../common/entity/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
 import { MinistryHistoryModel } from './ministry-history.entity';
@@ -7,6 +14,7 @@ import { MinistryGroupRoleHistoryModel } from './ministry-group-role-history.ent
 
 @Entity()
 export class MinistryGroupHistoryModel extends BaseModel {
+  @Index()
   @Column()
   memberId: number;
 
@@ -14,6 +22,7 @@ export class MinistryGroupHistoryModel extends BaseModel {
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
+  @Index()
   @Column({ nullable: true })
   ministryGroupId: number | null;
 
@@ -21,9 +30,11 @@ export class MinistryGroupHistoryModel extends BaseModel {
   @JoinColumn({ name: 'ministryGroupId' })
   ministryGroup: MinistryGroupModel | null;
 
+  @Index()
   @Column({ type: 'timestamptz' })
   startDate: Date;
 
+  @Index()
   @Column({ type: 'timestamptz', nullable: true })
   endDate: Date;
 

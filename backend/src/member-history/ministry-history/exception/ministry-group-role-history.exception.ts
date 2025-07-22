@@ -1,10 +1,10 @@
-export const MinistryGroupHistoryException = {
-  NOT_FOUND: '사역그룹 이력을 찾을 수 없습니다.',
+export const MinistryGroupRoleHistoryException = {
+  NOT_FOUND: '사역그룹 역할 이력을 찾을 수 없습니다.',
 
   CANNOT_DELETE: '종료되지 않은 이력은 삭제할 수 없습니다.',
 
-  UPDATE_ERROR: '사역그룹 이력 업데이트 도중 에러 발생',
-  DELETE_ERROR: '사역그룹 이력 삭제 도중 에러 발생',
+  UPDATE_ERROR: '사역그룹 역할 이력 업데이트 도중 에러 발생',
+  DELETE_ERROR: '사역그룹 역할 이력 삭제 도중 에러 발생',
 
   CANNOT_UPDATE_END_DATE:
     '종료되지 않은 이력의 종료 날짜를 수정할 수 없습니다.',

@@ -27,6 +27,7 @@ export class MinistryHistoryModel extends BaseModel {
   @Column({ comment: '사역 종료일 시점의 사역 이름', nullable: true })
   ministrySnapShot: string;
 
+  @Index()
   @Column()
   ministryGroupHistoryId: number;
 
