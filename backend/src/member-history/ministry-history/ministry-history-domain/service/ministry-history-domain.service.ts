@@ -9,11 +9,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MinistryHistoryModel } from '../../entity/ministry-history.entity';
 import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetMinistryHistoryDto } from '../../dto/request/get-ministry-history.dto';
+import { GetMinistryHistoriesDto } from '../../dto/request/ministry/get-ministry-histories.dto';
 import { MinistryHistoryException } from '../../exception/ministry-history.exception';
-import { UpdateMinistryHistoryDto } from '../../dto/request/update-ministry-history.dto';
 import { StartMinistryHistoryVo } from '../../dto/start-ministry-history.vo';
 import { EndMinistryHistoryVo } from '../../dto/end-ministry-history.vo';
+import { MinistryGroupHistoryModel } from '../../entity/ministry-group-history.entity';
+import {
+  getHistoryEndDate,
+  getHistoryStartDate,
+  HistoryUpdateDate,
+} from '../../../history-date.utils';
+import { MinistryGroupHistoryException } from '../../exception/ministry-group-history.exception';
+import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 
 @Injectable()
 export class MinistryHistoryDomainService
@@ -32,41 +39,35 @@ export class MinistryHistoryDomainService
 
   async paginateMinistryHistory(
     member: MemberModel,
-    dto: GetMinistryHistoryDto,
+    ministryGroupHistory: MinistryGroupHistoryModel,
+    dto: GetMinistryHistoriesDto,
     qr?: QueryRunner,
   ) {
     const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
 
-    const [ministryHistories, totalCount] = await Promise.all([
-      ministryHistoryRepository.find({
-        where: {
-          memberId: member.id,
+    return ministryHistoryRepository.find({
+      where: {
+        memberId: member.id,
+        ministryGroupHistoryId: ministryGroupHistory.id,
+      },
+      relations: {
+        ministry: {
+          ministryGroup: true,
         },
-        relations: {
-          ministry: {
-            ministryGroup: true,
-          },
-        },
-        order: {
-          endDate: dto.orderDirection,
-          startDate: dto.orderDirection,
-          id: dto.orderDirection,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      ministryHistoryRepository.count({
-        where: {
-          memberId: member.id,
-        },
-      }),
-    ]);
-
-    return { ministryHistories, totalCount };
+      },
+      order: {
+        endDate: dto.orderDirection,
+        startDate: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   async findMinistryHistoryModelById(
     member: MemberModel,
+    ministryGroupHistory: MinistryGroupHistoryModel,
     ministryHistoryId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MinistryHistoryModel>,
@@ -76,9 +77,10 @@ export class MinistryHistoryDomainService
     const ministryHistory = await ministryHistoryRepository.findOne({
       where: {
         id: ministryHistoryId,
+        ministryGroupHistoryId: ministryGroupHistory.id,
         memberId: member.id,
       },
-      relations: relationOptions,
+      relations: { ministry: true, ...relationOptions },
     });
 
     if (!ministryHistory) {
@@ -105,7 +107,7 @@ export class MinistryHistoryDomainService
         ministryGroupHistory: {
           id: vo.ministryGroupHistory.id,
         },
-        startDate: new Date(),
+        startDate: getHistoryStartDate(TIME_ZONE.SEOUL),
       })),
     );
 
@@ -126,7 +128,7 @@ export class MinistryHistoryDomainService
       })),
     });
 
-    histories.forEach((history, index) => {
+    histories.forEach((history) => {
       // 종료 시점 사역명 저장
       const assignment = endMinistryHistoryVo.find(
         (a) =>
@@ -138,7 +140,7 @@ export class MinistryHistoryDomainService
       }
 
       // 종료 시점
-      history.endDate = new Date();
+      history.endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
 
       // 이력 - 사역 관계 해제
       history.ministryId = null;
@@ -148,62 +150,26 @@ export class MinistryHistoryDomainService
     return repository.save(histories);
   }
 
-  private isValidUpdateDate(
-    targetHistory: MinistryHistoryModel,
-    dto: UpdateMinistryHistoryDto,
-  ) {
-    if (targetHistory.endDate === null && dto.endDate) {
-      throw new BadRequestException(
-        MinistryHistoryException.CANNOT_UPDATE_END_DATE,
-        //'종료되지 않은 사역의 종료 날짜를 수정할 수 없습니다.',
-      );
-    }
-
-    // 시작일 변경하는 경우 --> 새로운 시작일이 종료일보다 앞에 있어야함
-    // 종료일 변경하는 경우 --> 새로운 종료일이 시작일보다 뒤에 있어야함
-    // 시작일,종료일 변경하는 경우 --> DTO 에서 검증
-
-    if (dto.startDate && !dto.endDate) {
-      if (targetHistory.endDate && dto.startDate > targetHistory.endDate) {
-        throw new BadRequestException(
-          MinistryHistoryException.INVALID_START_DATE,
-          //'이력 시작일은 종료일보다 늦을 수 없습니다.',
-        );
-      }
-    }
-
-    if (dto.endDate && !dto.startDate) {
-      if (dto.endDate < targetHistory.startDate) {
-        throw new BadRequestException(
-          MinistryHistoryException.INVALID_END_DATE,
-          //'이력 종료일은 시작일보다 빠를 수 없습니다.',
-        );
-      }
-    }
-  }
-
   async updateMinistryHistory(
-    ministryHistory: MinistryHistoryModel,
-    dto: UpdateMinistryHistoryDto,
+    targetHistory: MinistryHistoryModel,
+    historyDate: HistoryUpdateDate,
     qr?: QueryRunner,
   ) {
-    const ministryHistoryRepository = this.getMinistryHistoryRepository(qr);
+    const repository = this.getMinistryHistoryRepository(qr);
 
-    this.isValidUpdateDate(ministryHistory, dto);
+    this.isValidUpdateDate(targetHistory, historyDate);
 
-    const result = await ministryHistoryRepository.update(
+    const result = await repository.update(
+      { id: targetHistory.id },
       {
-        id: ministryHistory.id,
-      },
-      {
-        startDate: dto.startDate,
-        endDate: dto.endDate,
+        startDate: historyDate.startDate,
+        endDate: historyDate.endDate,
       },
     );
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(
-        MinistryHistoryException.UPDATE_ERROR,
+        MinistryGroupHistoryException.UPDATE_ERROR,
       );
     }
 
@@ -231,5 +197,34 @@ export class MinistryHistoryDomainService
     }
 
     return result;
+  }
+
+  private isValidUpdateDate(
+    targetHistory: MinistryHistoryModel,
+    historyDate: HistoryUpdateDate,
+  ) {
+    if (!targetHistory.endDate && historyDate.endDate) {
+      throw new BadRequestException(
+        MinistryHistoryException.CANNOT_UPDATE_END_DATE,
+      );
+    }
+
+    // 시작 날짜만 변경
+    if (historyDate.startDate && !historyDate.endDate) {
+      if (
+        targetHistory.endDate &&
+        historyDate.startDate > targetHistory.endDate
+      ) {
+        throw new BadRequestException(
+          MinistryHistoryException.INVALID_START_DATE,
+        );
+      }
+    } else if (!historyDate.startDate && historyDate.endDate) {
+      if (historyDate.endDate < targetHistory.startDate) {
+        throw new BadRequestException(
+          MinistryHistoryException.INVALID_END_DATE,
+        );
+      }
+    }
   }
 }

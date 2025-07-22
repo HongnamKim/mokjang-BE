@@ -7,6 +7,8 @@ import { IMINISTRY_HISTORY_DOMAIN_SERVICE } from './interface/ministry-history-d
 import { MinistryHistoryDomainService } from './service/ministry-history-domain.service';
 import { IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE } from './interface/ministry-group-history-domain.service.interface';
 import { MinistryGroupHistoryDomainService } from './service/ministry-group-history-domain.service';
+import { IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE } from './interface/ministry-group-role-history-domain.service.interface';
+import { MinistryGroupRoleHistoryDomainService } from './service/ministry-group-role-history-domain.service';
 
 @Module({
   imports: [
@@ -25,10 +27,15 @@ import { MinistryGroupHistoryDomainService } from './service/ministry-group-hist
       provide: IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
       useClass: MinistryGroupHistoryDomainService,
     },
+    {
+      provide: IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE,
+      useClass: MinistryGroupRoleHistoryDomainService,
+    },
   ],
   exports: [
     IMINISTRY_HISTORY_DOMAIN_SERVICE,
     IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+    IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE,
   ],
 })
 export class MinistryHistoryDomainModule {}

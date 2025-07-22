@@ -1,7 +1,9 @@
 import { MinistryGroupModel } from '../../../../management/ministries/entity/ministry-group.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { QueryRunner, UpdateResult } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MinistryGroupHistoryModel } from '../../entity/ministry-group-history.entity';
+import { GetMinistryGroupHistoriesDto } from '../../dto/request/group/get-ministry-group-histories.dto';
+import { HistoryUpdateDate } from '../../../history-date.utils';
 
 export const IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_GROUP_DOMAIN_SERVICE',
@@ -10,8 +12,22 @@ export const IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE = Symbol(
 export interface IMinistryGroupHistoryDomainService {
   paginateMinistryGroupHistories(
     member: MemberModel,
+    dto: GetMinistryGroupHistoriesDto,
     qr?: QueryRunner,
   ): Promise<MinistryGroupHistoryModel[]>;
+
+  findCurrentMinistryGroupHistory(
+    member: MemberModel,
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<MinistryGroupHistoryModel>;
+
+  findMinistryGroupHistoryModelById(
+    member: MemberModel,
+    ministryGroupHistoryId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<MinistryGroupHistoryModel>,
+  ): Promise<MinistryGroupHistoryModel>;
 
   startMinistryGroupHistories(
     ministryGroup: MinistryGroupModel,
@@ -26,9 +42,14 @@ export interface IMinistryGroupHistoryDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  findCurrentMinistryGroupHistory(
-    member: MemberModel,
-    ministryGroup: MinistryGroupModel,
-    qr: QueryRunner,
-  ): Promise<MinistryGroupHistoryModel>;
+  updateMinistryGroupHistory(
+    targetHistory: MinistryGroupHistoryModel,
+    historyDate: HistoryUpdateDate,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteMinistryGroupHistory(
+    targetHistory: MinistryGroupHistoryModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
 }

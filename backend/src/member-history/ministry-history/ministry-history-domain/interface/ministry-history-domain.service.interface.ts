@@ -1,10 +1,11 @@
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetMinistryHistoryDto } from '../../dto/request/get-ministry-history.dto';
+import { GetMinistryHistoriesDto } from '../../dto/request/ministry/get-ministry-histories.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MinistryHistoryModel } from '../../entity/ministry-history.entity';
-import { UpdateMinistryHistoryDto } from '../../dto/request/update-ministry-history.dto';
 import { StartMinistryHistoryVo } from '../../dto/start-ministry-history.vo';
 import { EndMinistryHistoryVo } from '../../dto/end-ministry-history.vo';
+import { MinistryGroupHistoryModel } from '../../entity/ministry-group-history.entity';
+import { HistoryUpdateDate } from '../../../history-date.utils';
 
 export const IMINISTRY_HISTORY_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_HISTORY_DOMAIN_SERVICE',
@@ -13,12 +14,14 @@ export const IMINISTRY_HISTORY_DOMAIN_SERVICE = Symbol(
 export interface IMinistryHistoryDomainService {
   paginateMinistryHistory(
     member: MemberModel,
-    dto: GetMinistryHistoryDto,
+    ministryGroupHistory: MinistryGroupHistoryModel,
+    dto: GetMinistryHistoriesDto,
     qr?: QueryRunner,
-  ): Promise<{ ministryHistories: MinistryHistoryModel[]; totalCount: number }>;
+  ): Promise<MinistryHistoryModel[]>;
 
   findMinistryHistoryModelById(
     member: MemberModel,
+    ministryGroupHistory: MinistryGroupHistoryModel,
     ministryHistoryId: number,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MinistryHistoryModel>,
@@ -34,26 +37,10 @@ export interface IMinistryHistoryDomainService {
     qr: QueryRunner,
   ): Promise<MinistryHistoryModel[]>;
 
-  /*createMinistryHistory(
-    member: MemberModel,
-    ministry: MinistryModel,
-    startDate: Date,
-    qr: QueryRunner,
-  ): Promise<MinistryHistoryModel>;*/
-
-  /*endMinistryHistory(
-    ministryHistory: MinistryHistoryModel,
-    snapShot: {
-      ministrySnapShot: string;
-      ministryGroupSnapShot: string | null;
-    },
-    endDate: Date,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;*/
-
   updateMinistryHistory(
     ministryHistory: MinistryHistoryModel,
-    dto: UpdateMinistryHistoryDto,
+    //dto: UpdateMinistryHistoryDto,
+    historyDate: HistoryUpdateDate,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 

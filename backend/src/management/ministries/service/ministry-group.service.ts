@@ -32,6 +32,14 @@ import {
   IMinistryMembersDomainService,
 } from '../../../members/member-domain/interface/ministry-members-domain.service.interface';
 import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
+import {
+  IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupRoleHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-role-history-domain.service.interface';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
 
 @Injectable()
 export class MinistryGroupService {
@@ -47,6 +55,11 @@ export class MinistryGroupService {
     private readonly ministryMemberDomainService: IMinistryMembersDomainService,
     @Inject(IMINISTRY_MEMBERS_DOMAIN_SERVICE)
     private readonly ministryMembersDomainService: IMinistryMembersDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
+    @Inject(IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupRoleHistoryDomainService: IMinistryGroupRoleHistoryDomainService,
   ) {}
 
   async getMinistryGroups(churchId: number, dto: GetMinistryGroupDto) {
@@ -311,6 +324,16 @@ export class MinistryGroupService {
       qr,
     );
 
+    const newLeaderHistory =
+      await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
+        newLeaderMember,
+        ministryGroup,
+        qr,
+      );
+    await this.ministryGroupRoleHistoryDomainService.startMinistryGroupRoleHistory(
+      newLeaderHistory,
+    );
+
     await this.ministryGroupsDomainService.updateMinistryGroupLeader(
       ministryGroup,
       newLeaderMember,
@@ -323,6 +346,17 @@ export class MinistryGroupService {
       await this.ministryMembersDomainService.updateMinistryGroupRole(
         [oldLeaderMember],
         GroupRole.MEMBER,
+        qr,
+      );
+
+      const oldLeaderHistory =
+        await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
+          oldLeaderMember,
+          ministryGroup,
+          qr,
+        );
+      await this.ministryGroupRoleHistoryDomainService.endMinistryGroupRoleHistory(
+        oldLeaderHistory,
         qr,
       );
     }

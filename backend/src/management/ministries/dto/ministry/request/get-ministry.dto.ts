@@ -4,14 +4,6 @@ import { BaseOffsetPaginationRequestDto } from '../../../../../common/dto/reques
 import { MinistryOrder } from '../../../const/ministry-order.enum';
 
 export class GetMinistryDto extends BaseOffsetPaginationRequestDto<MinistryOrder> {
-  /*@ApiProperty({
-    description: '사역 그룹 ID ',
-    required: true,
-  })
-  @IsNumber()
-  @Min(1)
-  ministryGroupId: number;*/
-
   @ApiProperty({
     description: '조회할 데이터 개수',
     example: 20,

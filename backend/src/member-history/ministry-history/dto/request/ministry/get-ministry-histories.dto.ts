@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsNumber, IsOptional, Min } from 'class-validator';
 
-export class GetMinistryHistoryDto {
+export class GetMinistryHistoriesDto {
   @ApiProperty({
     description: '조회할 데이터 개수',
     default: 20,
@@ -26,6 +26,6 @@ export class GetMinistryHistoryDto {
     description: '정렬 오름차순 / 내림차순',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'desc';
+  @IsIn(['ASC', 'DESC'])
+  orderDirection: 'ASC' | 'DESC' = 'DESC';
 }

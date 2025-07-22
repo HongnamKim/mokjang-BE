@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { GetMinistryHistoryDto } from '../dto/request/get-ministry-history.dto';
-import { UpdateMinistryHistoryDto } from '../dto/request/update-ministry-history.dto';
+import { GetMinistryHistoriesDto } from '../dto/request/ministry/get-ministry-histories.dto';
+import { UpdateMinistryHistoryDto } from '../dto/request/ministry/update-ministry-history.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -14,7 +14,15 @@ import {
   IMINISTRY_HISTORY_DOMAIN_SERVICE,
   IMinistryHistoryDomainService,
 } from '../ministry-history-domain/interface/ministry-history-domain.service.interface';
-import { MinistryHistoryPaginationResultDto } from '../dto/request/ministry-history-pagination-result.dto';
+import { MinistryHistoryPaginationResponseDto } from '../dto/response/ministry/ministry-history-pagination-response.dto';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import { convertHistoryDate } from '../../history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { PatchMinistryHistoryResponseDto } from '../dto/response/ministry/patch-ministry-history-response.dto';
+import { DeleteMinistryHistoryResponseDto } from '../dto/response/ministry/delete-ministry-history-response.dto';
 
 @Injectable()
 export class MinistryHistoryService {
@@ -23,6 +31,9 @@ export class MinistryHistoryService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
     @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
     private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
   ) {}
@@ -30,7 +41,8 @@ export class MinistryHistoryService {
   async getMinistryHistories(
     churchId: number,
     memberId: number,
-    dto: GetMinistryHistoryDto,
+    ministryGroupHistoryId: number,
+    dto: GetMinistryHistoriesDto,
     qr?: QueryRunner,
   ) {
     const church = await this.churchesDomainService.findChurchModelById(
@@ -42,42 +54,39 @@ export class MinistryHistoryService {
       memberId,
       qr,
     );
+    const ministryGroupHistory =
+      await this.ministryGroupHistoryDomainService.findMinistryGroupHistoryModelById(
+        member,
+        ministryGroupHistoryId,
+        qr,
+      );
 
-    const { ministryHistories, totalCount } =
+    const ministryHistories =
       await this.ministryHistoryDomainService.paginateMinistryHistory(
         member,
+        ministryGroupHistory,
         dto,
         qr,
       );
 
-    const currentMinistries = ministryHistories.filter(
-      (history) => !history.endDate,
-    );
-
-    currentMinistries.forEach((history) => {
-      if (history.ministry) {
-        history.ministrySnapShot = history.ministry.name;
+    const data = ministryHistories.map((history) => {
+      if (history.endDate) {
+        return history;
+      } else {
+        if (history.ministry) {
+          history.ministrySnapShot = history.ministry.name;
+        }
+        return history;
       }
     });
 
-    const data = ministryHistories.map((history) =>
-      history.endDate === null
-        ? { ...history, ministry: null }
-        : { ...history },
-    );
-
-    return new MinistryHistoryPaginationResultDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new MinistryHistoryPaginationResponseDto(data);
   }
 
   async updateMinistryHistory(
     churchId: number,
     memberId: number,
+    ministryGroupHistoryId: number,
     ministryHistoryId: number,
     dto: UpdateMinistryHistoryDto,
     qr?: QueryRunner,
@@ -92,23 +101,38 @@ export class MinistryHistoryService {
       qr,
     );
 
+    const ministryGroupHistory =
+      await this.ministryGroupHistoryDomainService.findMinistryGroupHistoryModelById(
+        member,
+        ministryGroupHistoryId,
+        qr,
+      );
+
     const targetHistory =
       await this.ministryHistoryDomainService.findMinistryHistoryModelById(
         member,
+        ministryGroupHistory,
         ministryHistoryId,
         qr,
       );
 
+    const historyDateUpdateValue = convertHistoryDate(
+      dto.startDate,
+      dto.endDate,
+      TIME_ZONE.SEOUL,
+    );
+
     // 업데이트
     await this.ministryHistoryDomainService.updateMinistryHistory(
       targetHistory,
-      dto,
+      historyDateUpdateValue,
       qr,
     );
 
     const updatedHistory =
       await this.ministryHistoryDomainService.findMinistryHistoryModelById(
         member,
+        ministryGroupHistory,
         ministryHistoryId,
         qr,
         {
@@ -121,26 +145,19 @@ export class MinistryHistoryService {
     if (updatedHistory.endDate) {
       return updatedHistory;
     } else {
-      /*const snapShot = await this.createCurrentMinistryGroupSnapShot(
-        church,
-        updatedHistory,
-        qr,
-      );*/
-
-      //updatedHistory.ministrySnapShot = snapShot.ministrySnapShot;
-      //updatedHistory.ministryGroupSnapShot = snapShot.ministryGroupSnapShot;
-
       if (updatedHistory.ministry) {
         updatedHistory.ministrySnapShot = updatedHistory.ministry.name;
+        updatedHistory.ministry = null;
       }
 
-      return { ...updatedHistory, ministry: null };
+      return new PatchMinistryHistoryResponseDto(updatedHistory);
     }
   }
 
   async deleteMinistryHistory(
     churchId: number,
     memberId: number,
+    ministryGroupHistoryId: number,
     ministryHistoryId: number,
     qr?: QueryRunner,
   ) {
@@ -154,9 +171,17 @@ export class MinistryHistoryService {
       qr,
     );
 
+    const ministryGroupHistory =
+      await this.ministryGroupHistoryDomainService.findMinistryGroupHistoryModelById(
+        member,
+        ministryGroupHistoryId,
+        qr,
+      );
+
     const targetHistory =
       await this.ministryHistoryDomainService.findMinistryHistoryModelById(
         member,
+        ministryGroupHistory,
         ministryHistoryId,
         qr,
       );
@@ -166,172 +191,10 @@ export class MinistryHistoryService {
       qr,
     );
 
-    return `ministryHistoryId ${ministryHistoryId} deleted`;
+    return new DeleteMinistryHistoryResponseDto(
+      new Date(),
+      targetHistory.id,
+      true,
+    );
   }
-
-  /*private async createCurrentMinistryGroupSnapShot(
-    church: ChurchModel,
-    ministryHistory: MinistryHistoryModel,
-    qr?: QueryRunner,
-  ) {
-    if (!ministryHistory.ministry) {
-      throw new InternalServerErrorException(
-        MinistryHistoryException.RELATION_OPTIONS_ERROR,
-      );
-    }
-
-    const ministryGroupId = ministryHistory.ministry.ministryGroupId;
-
-    const ministryParentGroups = ministryGroupId
-      ? await this.ministryGroupsDomainService.findParentMinistryGroups(
-          church,
-          ministryGroupId,
-          qr,
-        )
-      : [];
-
-    const ministryGroupSnapShot = ministryParentGroups
-      .map((ministryParentGroup) => ministryParentGroup.name)
-      .concat(ministryHistory.ministry.ministryGroup?.name)
-      .join('__');
-
-    return {
-      ministryGroupSnapShot: ministryGroupSnapShot
-        ? ministryGroupSnapShot
-        : null,
-      ministrySnapShot: ministryHistory.ministry.name,
-    };
-  }*/
-
-  /*async createMemberMinistry(
-    churchId: number,
-    memberId: number,
-    dto: CreateMemberMinistryDto,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const ministryGroup =
-      await this.ministryGroupsDomainService.findMinistryGroupModelById(
-        church,
-        dto.ministryGroupId,
-        qr,
-      );
-
-    const [member, ministry] = await Promise.all([
-      this.membersDomainService.findMemberModelById(church, memberId, qr, {
-        ministries: true,
-      }),
-      this.ministriesDomainService.findMinistryModelById(
-        //church,
-        ministryGroup,
-        dto.ministryId,
-        qr,
-        { ministryGroup: true },
-      ),
-    ]);
-
-    const [newMinistryHistory] = await Promise.all([
-      // 사역 이력 생성
-      this.ministryHistoryDomainService.createMinistryHistory(
-        member,
-        ministry,
-        dto.startDate,
-        qr,
-      ),
-
-      // 인원 수 증가
-      this.ministriesDomainService.incrementMembersCount(ministry, qr),
-      // 사역 relation 추가
-      this.membersDomainService.startMemberMinistry(member, ministry, qr),
-    ]);
-
-    const snapShot = await this.createCurrentMinistryGroupSnapShot(
-      church,
-      newMinistryHistory,
-      qr,
-    );
-
-    newMinistryHistory.ministrySnapShot = snapShot.ministrySnapShot;
-    newMinistryHistory.ministryGroupSnapShot = snapShot.ministryGroupSnapShot;
-
-    return {
-      ...newMinistryHistory,
-      member: undefined,
-      ministry: null,
-    };
-  }*/
-
-  /*async endMemberMinistry(
-    churchId: number,
-    memberId: number,
-    ministryHistoryId: number,
-    dto: EndMemberMinistryDto,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const member = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-      { ministries: true },
-    );
-
-    const ministryHistory =
-      await this.ministryHistoryDomainService.findMinistryHistoryModelById(
-        member,
-        ministryHistoryId,
-        qr,
-        { ministry: { ministryGroup: true } },
-      );
-
-    if (!ministryHistory.ministry) {
-      throw new InternalServerErrorException(
-        MinistryHistoryException.RELATION_OPTIONS_ERROR,
-      );
-    }
-
-    if (ministryHistory.startDate > dto.endDate) {
-      throw new BadRequestException(MinistryHistoryException.INVALID_END_DATE);
-    }
-
-    const snapShot = await this.createCurrentMinistryGroupSnapShot(
-      church,
-      ministryHistory,
-      qr,
-    );
-
-    await Promise.all([
-      // 사역 이력 종료 날짜 추가
-      this.ministryHistoryDomainService.endMinistryHistory(
-        ministryHistory,
-        snapShot,
-        dto.endDate,
-        qr,
-      ),
-      // 교인 - 사역 관계 해제
-      this.membersDomainService.endMemberMinistry(
-        member,
-        ministryHistory.ministry,
-        qr,
-      ),
-      // 사역 인원수 감소
-      this.ministriesDomainService.decrementMembersCount(
-        ministryHistory.ministry,
-        qr,
-      ),
-    ]);
-
-    return this.ministryHistoryDomainService.findMinistryHistoryModelById(
-      member,
-      ministryHistoryId,
-      qr,
-    );
-  }*/
 }

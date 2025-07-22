@@ -14,12 +14,14 @@ import { GroupsDomainModule } from '../../management/groups/groups-domain/groups
 import { RouterModule } from '@nestjs/core';
 import { MinistryHistoryDomainModule } from './ministry-history-domain/ministry-history-domain.module';
 import { MinistryGroupHistoryService } from './service/ministry-group-history.service';
+import { MinistryGroupRoleHistoryController } from './controller/ministry-group-role-history.controller';
+import { MinistryGroupRoleHistoryService } from './service/ministry-group-role-history.service';
 
 @Module({
   imports: [
     RouterModule.register([
       {
-        path: 'churches/:churchId/members/:memberId/histories', // 공통 prefix
+        path: 'churches/:churchId/members/:memberId/histories/ministry-groups', // 공통 prefix
         module: MinistryHistoryModule,
       },
     ]),
@@ -31,9 +33,14 @@ import { MinistryGroupHistoryService } from './service/ministry-group-history.se
 
     MinistryHistoryDomainModule,
   ],
-  controllers: [MinistryGroupHistoryController, MinistryHistoryController],
+  controllers: [
+    MinistryGroupHistoryController,
+    MinistryGroupRoleHistoryController,
+    MinistryHistoryController,
+  ],
   providers: [
     MinistryHistoryService,
+    MinistryGroupRoleHistoryService,
     MinistryGroupHistoryService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
