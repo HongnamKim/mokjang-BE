@@ -19,7 +19,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { OfficersException } from '../../const/exception/officers.exception';
+import { OfficersException } from '../../exception/officers.exception';
 import { CreateOfficerDto } from '../../dto/request/create-officer.dto';
 import { UpdateOfficerNameDto } from '../../dto/request/update-officer-name.dto';
 import { GetOfficersDto } from '../../dto/request/get-officers.dto';
@@ -171,7 +171,7 @@ export class OfficersDomainService implements IOfficersDomainService {
       throw new ConflictException(OfficersException.ALREADY_EXIST);
     }
 
-    const lastOrderOfficer = await this.officersRepository.find({
+    const [lastOrderOfficer] = await this.officersRepository.find({
       where: {
         churchId: church.id,
       },
@@ -181,7 +181,7 @@ export class OfficersDomainService implements IOfficersDomainService {
       take: 1,
     });
 
-    const order = lastOrderOfficer ? lastOrderOfficer[0].order + 1 : 1;
+    const order = lastOrderOfficer ? lastOrderOfficer.order + 1 : 1;
 
     return officersRepository.save({
       churchId: church.id,
@@ -277,22 +277,27 @@ export class OfficersDomainService implements IOfficersDomainService {
       {
         churchId: officer.churchId,
         order: MoreThan(officer.order),
+        deletedAt: IsNull(),
       },
       {
-        order: () => 'order + 1',
+        order: () => 'order - 1',
       },
     );
 
     return;
   }
 
-  async incrementMembersCount(officer: OfficerModel, qr: QueryRunner) {
+  async incrementMembersCount(
+    officer: OfficerModel,
+    count: number,
+    qr: QueryRunner,
+  ) {
     const officersRepository = this.getOfficersRepository(qr);
 
     const result = await officersRepository.increment(
       { id: officer.id, deletedAt: IsNull() },
       'membersCount',
-      1,
+      count,
     );
 
     if (result.affected === 0) {
@@ -302,13 +307,17 @@ export class OfficersDomainService implements IOfficersDomainService {
     return true;
   }
 
-  async decrementMembersCount(officer: OfficerModel, qr: QueryRunner) {
+  async decrementMembersCount(
+    officer: OfficerModel,
+    count: number,
+    qr: QueryRunner,
+  ) {
     const officersRepository = this.getOfficersRepository(qr);
 
     const result = await officersRepository.decrement(
       { id: officer.id, deletedAt: IsNull() },
       'membersCount',
-      1,
+      count,
     );
 
     if (result.affected === 0) {

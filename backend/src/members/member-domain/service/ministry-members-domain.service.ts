@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import { In, QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
-import { MemberException } from '../../const/exception/member.exception';
+import { MemberException } from '../../exception/member.exception';
 import { IMinistryMembersDomainService } from '../interface/ministry-members-domain.service.interface';
 import { GetMinistryGroupMembersDto } from '../../../management/ministries/dto/ministry-group/request/member/get-ministry-group-members.dto';
 import { MinistryGroupMemberOrder } from '../../../management/ministries/const/ministry-group-member-order.enum';
@@ -57,18 +57,8 @@ export class MinistryMembersDomainService
       .addSelect(['ministryGroup.id', 'ministryGroup.name'])
       .where('member.churchId = :churchId', { churchId: church.id })
       .andWhere('member.name ILIKE :name', { name: `%${dto.name ?? ''}%` })
-      .orderBy(
-        `member."${dto.order}"`,
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
-      .addOrderBy(
-        'member.id',
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
+      .orderBy(`member."${dto.order}"`, dto.orderDirection)
+      .addOrderBy('member.id', dto.orderDirection)
       .limit(dto.take)
       .offset(dto.take * (dto.page - 1))
       .getMany();
@@ -91,18 +81,8 @@ export class MinistryMembersDomainService
       .andWhere('member."ministryGroupRole" = :ministryGroupRole', {
         ministryGroupRole: GroupRole.NONE,
       })
-      .orderBy(
-        `member."${dto.order}"`,
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
-      .addOrderBy(
-        'member.id',
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
+      .orderBy(`member."${dto.order}"`, dto.orderDirection)
+      .addOrderBy('member.id', dto.orderDirection)
       .limit(dto.take)
       .offset(dto.take * (dto.page - 1))
       .getMany();
@@ -168,16 +148,9 @@ export class MinistryMembersDomainService
         dto.order === MinistryGroupMemberOrder.MINISTRY_NAME
           ? 'ministry.name'
           : `member."${dto.order}"`,
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
+        dto.orderDirection,
       )
-      .addOrderBy(
-        'member.id',
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
+      .addOrderBy('member.id', dto.orderDirection)
       .limit(dto.take)
       .offset(dto.take * (dto.page - 1));
 

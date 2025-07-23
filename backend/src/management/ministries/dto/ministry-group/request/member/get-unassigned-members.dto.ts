@@ -29,10 +29,10 @@ export class GetUnassignedMembersDto extends BaseOffsetPaginationRequestDto<Mini
   @ApiProperty({
     name: 'orderDirection',
     description: '정렬 오름차순 / 내림차순',
-    default: 'desc',
+    default: 'DESC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'ASC' | 'DESC' | 'asc' | 'desc' = 'desc';
+  orderDirection: 'ASC' | 'DESC' = 'DESC';
 }

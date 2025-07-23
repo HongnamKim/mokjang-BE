@@ -31,7 +31,7 @@ import {
   VisitationSelectOptions,
 } from '../../const/visitation-find-options.const';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
-import { MemberException } from '../../../members/const/exception/member.exception';
+import { MemberException } from '../../../members/exception/member.exception';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
 

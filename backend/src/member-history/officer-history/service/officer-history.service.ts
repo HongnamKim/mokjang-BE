@@ -121,7 +121,7 @@ export class OfficerHistoryService {
       ),
 
       // 직분 인원수 증가
-      this.officersDomainService.incrementMembersCount(officer, qr),
+      this.officersDomainService.incrementMembersCount(officer, 1, qr),
 
       // 교인 - 직분 관계 설정
       this.membersDomainService.startMemberOfficer(
@@ -176,7 +176,7 @@ export class OfficerHistoryService {
       this.membersDomainService.endMemberOfficer(member, qr),
 
       // 직분의 membersCount 감소
-      this.officersDomainService.decrementMembersCount(member.officer, qr),
+      this.officersDomainService.decrementMembersCount(member.officer, 1, qr),
     ]);
 
     return this.officerHistoryDomainService.findOfficerHistoryModelById(

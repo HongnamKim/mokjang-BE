@@ -588,6 +588,7 @@ export class GroupsDomainService implements IGroupsDomainService {
         parentGroupId: deleteTarget.parentGroupId
           ? deleteTarget.parentGroupId
           : IsNull(),
+        deletedAt: IsNull(),
         order: MoreThan(deleteTarget.order),
       },
       {
