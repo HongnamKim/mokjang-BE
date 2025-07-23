@@ -4,7 +4,6 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateGroupDto } from '../../dto/request/create-group.dto';
 import { UpdateGroupNameDto } from '../../dto/request/update-group-name.dto';
 import { GetGroupDto } from '../../dto/request/get-group.dto';
-import { GetGroupByNameDto } from '../../dto/request/get-group-by-name.dto';
 import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
@@ -33,12 +32,6 @@ export interface IGroupsDomainService {
   findGroups(
     church: ChurchModel,
     dto: GetGroupDto,
-  ): Promise<GroupDomainPaginationResultDto>;
-
-  findGroupsByName(
-    church: ChurchModel,
-    dto: GetGroupByNameDto,
-    qr?: QueryRunner,
   ): Promise<GroupDomainPaginationResultDto>;
 
   findGroupById(
@@ -104,15 +97,28 @@ export interface IGroupsDomainService {
     qr?: QueryRunner,
   ): Promise<GroupModel[]>;
 
-  incrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
+  incrementMembersCount(
+    group: GroupModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 
-  decrementMembersCount(group: GroupModel, qr: QueryRunner): Promise<boolean>;
+  decrementMembersCount(
+    group: GroupModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 
   countAllGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
 
   updateGroupLeader(
     group: GroupModel,
     newLeaderMember: MemberModel | null,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  removeGroupLeader(
+    groups: GroupModel[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 }

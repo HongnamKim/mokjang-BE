@@ -7,6 +7,7 @@ export class GetMinistryGroupMembersDto extends BaseOffsetPaginationRequestDto<M
   @ApiProperty({
     description: '조회할 데이터 수',
     default: 20,
+    example: 20,
     required: false,
   })
   @IsOptional()

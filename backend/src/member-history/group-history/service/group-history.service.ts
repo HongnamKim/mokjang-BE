@@ -6,9 +6,7 @@ import {
 import { GroupHistoryModel } from '../entity/group-history.entity';
 import { QueryRunner } from 'typeorm';
 import { GetGroupHistoryDto } from '../dto/get-group-history.dto';
-import { AddMemberToGroupDto } from '../dto/add-member-to-group.dto';
 import { UpdateGroupHistoryDto } from '../dto/update-group-history.dto';
-import { EndMemberGroupDto } from '../dto/end-member-group.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -30,7 +28,6 @@ import { GroupHistoryException } from '../exception/group-history.exception';
 import { startOfDay } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
-import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 @Injectable()
 export class GroupHistoryService {
@@ -115,132 +112,6 @@ export class GroupHistoryService {
       .map((parentGroup) => parentGroup.name)
       .concat(groupHistory.group?.name)
       .join('__');
-  }
-
-  // 등록하려는 그룹이 교회에 존재하는지
-  // 교인이 교회에 존재하는지
-  async addMemberToGroup(
-    churchId: number,
-    memberId: number,
-    dto: AddMemberToGroupDto,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    // 교인 검증
-    const member = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );
-
-    // 그룹 검증
-    const group = await this.groupDomainService.findGroupModelById(
-      church,
-      dto.groupId,
-      qr,
-    );
-
-    const startDate = fromZonedTime(startOfDay(dto.startDate), TIME_ZONE.SEOUL);
-
-    const [newGroupHistory] = await Promise.all([
-      // 이력 생성
-      this.groupHistoryDomainService.createGroupHistory(
-        member,
-        group,
-        GroupRole.MEMBER,
-        startDate,
-        qr,
-      ),
-
-      // 그룹의 인원 수 증가
-      this.groupDomainService.incrementMembersCount(group, qr),
-
-      // 교인의 그룹 정보 업데이트
-      this.membersDomainService.startMemberGroup(
-        member,
-        group,
-        GroupRole.MEMBER,
-        qr,
-      ),
-    ]);
-
-    newGroupHistory.groupSnapShot = await this.createCurrentGroupSnapShot(
-      church,
-      newGroupHistory,
-      qr,
-    );
-
-    return {
-      ...newGroupHistory,
-      group: null,
-    };
-  }
-
-  async endMemberGroup(
-    churchId: number,
-    memberId: number,
-    dto: EndMemberGroupDto,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const member = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );
-
-    const groupHistory =
-      await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
-        member,
-        qr,
-        { group: true },
-      );
-
-    const snapShot = await this.createCurrentGroupSnapShot(
-      church,
-      groupHistory,
-      qr,
-    );
-
-    const endDate = fromZonedTime(startOfDay(dto.endDate), TIME_ZONE.SEOUL);
-
-    if (member.groupRole === GroupRole.LEADER) {
-      await this.groupDomainService.updateGroupLeader(
-        groupHistory.group,
-        null,
-        qr,
-      );
-    }
-
-    await Promise.all([
-      // 그룹 이력 종료 날짜 추가, 스냅샷 추가
-      this.groupHistoryDomainService.endGroupHistory(
-        groupHistory,
-        snapShot,
-        endDate,
-        qr,
-      ),
-
-      // MemberModel, GroupModel relation 해제
-      this.membersDomainService.endMemberGroup(member, qr),
-
-      // 그룹 인원수 감소
-      this.groupDomainService.decrementMembersCount(groupHistory.group, qr),
-    ]);
-
-    return this.groupHistoryDomainService.findGroupHistoryModelById(
-      member,
-      groupHistory.id,
-      qr,
-    );
   }
 
   async updateGroupHistory(
@@ -334,4 +205,130 @@ export class GroupHistoryService {
 
     return `groupHistoryId ${groupHistoryId} deleted`;
   }
+
+  /*// 등록하려는 그룹이 교회에 존재하는지
+  // 교인이 교회에 존재하는지
+  async addMemberToGroup(
+      churchId: number,
+      memberId: number,
+      dto: AddMemberToGroupDto,
+      qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+        churchId,
+        qr,
+    );
+
+    // 교인 검증
+    const member = await this.membersDomainService.findMemberModelById(
+        church,
+        memberId,
+        qr,
+    );
+
+    // 그룹 검증
+    const group = await this.groupDomainService.findGroupModelById(
+        church,
+        dto.groupId,
+        qr,
+    );
+
+    const startDate = fromZonedTime(startOfDay(dto.startDate), TIME_ZONE.SEOUL);
+
+    const [newGroupHistory] = await Promise.all([
+      // 이력 생성
+      this.groupHistoryDomainService.createGroupHistory(
+          member,
+          group,
+          GroupRole.MEMBER,
+          startDate,
+          qr,
+      ),
+
+      // 그룹의 인원 수 증가
+      this.groupDomainService.incrementMembersCount(group, qr),
+
+      // 교인의 그룹 정보 업데이트
+      this.membersDomainService.startMemberGroup(
+          member,
+          group,
+          GroupRole.MEMBER,
+          qr,
+      ),
+    ]);
+
+    newGroupHistory.groupSnapShot = await this.createCurrentGroupSnapShot(
+        church,
+        newGroupHistory,
+        qr,
+    );
+
+    return {
+      ...newGroupHistory,
+      group: null,
+    };
+  }
+
+  async endMemberGroup(
+      churchId: number,
+      memberId: number,
+      dto: EndMemberGroupDto,
+      qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+        churchId,
+        qr,
+    );
+
+    const member = await this.membersDomainService.findMemberModelById(
+        church,
+        memberId,
+        qr,
+    );
+
+    const groupHistory =
+        await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+            member,
+            qr,
+            { group: true },
+        );
+
+    const snapShot = await this.createCurrentGroupSnapShot(
+        church,
+        groupHistory,
+        qr,
+    );
+
+    const endDate = fromZonedTime(startOfDay(dto.endDate), TIME_ZONE.SEOUL);
+
+    if (member.groupRole === GroupRole.LEADER) {
+      await this.groupDomainService.updateGroupLeader(
+          groupHistory.group,
+          null,
+          qr,
+      );
+    }
+
+    await Promise.all([
+      // 그룹 이력 종료 날짜 추가, 스냅샷 추가
+      this.groupHistoryDomainService.endGroupHistory(
+          groupHistory,
+          snapShot,
+          endDate,
+          qr,
+      ),
+
+      // MemberModel, GroupModel relation 해제
+      this.membersDomainService.endMemberGroup(member, qr),
+
+      // 그룹 인원수 감소
+      this.groupDomainService.decrementMembersCount(groupHistory.group, qr),
+    ]);
+
+    return this.groupHistoryDomainService.findGroupHistoryModelById(
+        member,
+        groupHistory.id,
+        qr,
+    );
+  }*/
 }

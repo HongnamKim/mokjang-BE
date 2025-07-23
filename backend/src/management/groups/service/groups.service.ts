@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
-import { FindOptionsRelations, QueryRunner } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { CreateGroupDto } from '../dto/request/create-group.dto';
 import { UpdateGroupNameDto } from '../dto/request/update-group-name.dto';
 import {
@@ -31,9 +31,6 @@ import {
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { startOfDay } from 'date-fns';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
-import { GroupRole } from '../const/group-role.enum';
-import { GetGroupMembersDto } from '../dto/request/get-group-members.dto';
-import { GetGroupMembersResponseDto } from '../dto/response/get-group-members-response.dto';
 
 @Injectable()
 export class GroupsService {
@@ -64,25 +61,6 @@ export class GroupsService {
       data.length,
       dto.page,
       Math.ceil(totalCount / dto.take),
-    );
-  }
-
-  async getGroupModelById(
-    churchId: number,
-    groupId: number,
-    qr?: QueryRunner,
-    relationOptions?: FindOptionsRelations<GroupModel>,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    return this.groupsDomainService.findGroupModelById(
-      church,
-      groupId,
-      qr,
-      relationOptions,
     );
   }
 
@@ -181,20 +159,20 @@ export class GroupsService {
         );
 
       // 리더 이력 종료
-      await this.groupHistoryDomainService.endGroupHistory(
+      /*await this.groupHistoryDomainService.endGroupHistory(
         oldLeaderMemberGroupHistory,
         groupSnapShot,
         today,
         qr,
-      );
+      );*/
       // 그룹원 이력 시작
-      await this.groupHistoryDomainService.createGroupHistory(
+      /*await this.groupHistoryDomainService.createGroupHistory(
         oldLeaderMember,
         group,
         GroupRole.MEMBER,
         today,
         qr,
-      );
+      );*/
     }
     const newLeaderGroupHistory =
       await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
@@ -203,20 +181,20 @@ export class GroupsService {
       );
 
     // 그룹원 이력 종료
-    await this.groupHistoryDomainService.endGroupHistory(
+    /*await this.groupHistoryDomainService.endGroupHistory(
       newLeaderGroupHistory,
       groupSnapShot,
       today,
       qr,
-    );
+    );*/
     // 리더 이력 시작
-    await this.groupHistoryDomainService.createGroupHistory(
+    /*await this.groupHistoryDomainService.createGroupHistory(
       newLeaderMember,
       group,
       GroupRole.LEADER,
       today,
       qr,
-    );
+    );*/
   }
 
   async updateGroupStructure(
@@ -328,74 +306,5 @@ export class GroupsService {
     );
 
     return { groupCount };
-  }
-
-  /*async getParentGroups(churchId: number, groupId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const group = await this.groupsDomainService.findGroupById(
-      church,
-      groupId,
-      qr,
-    );
-
-    return this.groupsDomainService.findParentGroups(church, group, qr);
-  }*/
-
-  /*async getChildGroupIds(churchId: number, groupId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const group = await this.groupsDomainService.findGroupById(
-      church,
-      groupId,
-      qr,
-    );
-
-    return this.groupsDomainService.findChildGroups(group, qr);
-  }*/
-
-  /*async getGroupsByName(
-    churchId: number,
-    dto: GetGroupByNameDto,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const { data, totalCount } =
-      await this.groupsDomainService.findGroupsByName(church, dto, qr);
-
-    return new GroupPaginationResultDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
-  }*/
-  async getGroupMembers(
-    church: ChurchModel,
-    groupId: number,
-    dto: GetGroupMembersDto,
-  ) {
-    const group = await this.groupsDomainService.findGroupModelById(
-      church,
-      groupId,
-    );
-
-    const groupMembers = await this.membersDomainService.findGroupMembers(
-      church,
-      group,
-      dto,
-    );
-
-    return new GetGroupMembersResponseDto(groupMembers);
   }
 }

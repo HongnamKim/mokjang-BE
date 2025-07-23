@@ -1,7 +1,6 @@
 import { IGroupHistoryDomainService } from '../interface/group-history-domain.service.interface';
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -18,8 +17,6 @@ import {
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GetGroupHistoryDto } from '../../dto/get-group-history.dto';
 import { GroupHistoryException } from '../../exception/group-history.exception';
-import { GroupModel } from '../../../../management/groups/entity/group.entity';
-import { GroupRole } from '../../../../management/groups/const/group-role.enum';
 
 @Injectable()
 export class GroupHistoryDomainService implements IGroupHistoryDomainService {
@@ -125,61 +122,6 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
     return !!isInGroup;
   }
 
-  async createGroupHistory(
-    member: MemberModel,
-    group: GroupModel,
-    groupRole: GroupRole,
-    startDate: Date,
-    qr: QueryRunner,
-  ) {
-    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
-
-    const isInGroup = await this.isInGroup(member, qr);
-
-    if (isInGroup) {
-      throw new ConflictException(GroupHistoryException.ALREADY_EXIST);
-    }
-
-    return groupHistoryRepository.save({
-      memberId: member.id,
-      group,
-      groupRole,
-      startDate,
-    });
-  }
-
-  async endGroupHistory(
-    groupHistory: GroupHistoryModel,
-    groupSnapShot: string,
-    endDate: Date,
-    qr: QueryRunner,
-  ) {
-    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
-
-    if (groupHistory.startDate > endDate) {
-      throw new BadRequestException(GroupHistoryException.INVALID_END_DATE);
-    }
-
-    const result = await groupHistoryRepository.update(
-      {
-        id: groupHistory.id,
-      },
-      {
-        groupId: null,
-        groupSnapShot: groupSnapShot,
-        endDate: endDate,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        GroupHistoryException.UPDATE_ERROR,
-      );
-    }
-
-    return result;
-  }
-
   private isValidUpdateDate(
     targetHistory: GroupHistoryModel,
     startDate: Date | undefined,
@@ -253,4 +195,59 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
 
     return result;
   }
+
+  /*async createGroupHistory(
+    member: MemberModel,
+    group: GroupModel,
+    groupRole: GroupRole,
+    startDate: Date,
+    qr: QueryRunner,
+  ) {
+    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
+
+    const isInGroup = await this.isInGroup(member, qr);
+
+    if (isInGroup) {
+      throw new ConflictException(GroupHistoryException.ALREADY_EXIST);
+    }
+
+    return groupHistoryRepository.save({
+      memberId: member.id,
+      group,
+      groupRole,
+      startDate,
+    });
+  }*/
+
+  /*async endGroupHistory(
+    groupHistory: GroupHistoryModel,
+    groupSnapShot: string,
+    endDate: Date,
+    qr: QueryRunner,
+  ) {
+    const groupHistoryRepository = this.getGroupHistoryRepository(qr);
+
+    if (groupHistory.startDate > endDate) {
+      throw new BadRequestException(GroupHistoryException.INVALID_END_DATE);
+    }
+
+    const result = await groupHistoryRepository.update(
+      {
+        id: groupHistory.id,
+      },
+      {
+        groupId: null,
+        groupSnapShot: groupSnapShot,
+        endDate: endDate,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        GroupHistoryException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }*/
 }

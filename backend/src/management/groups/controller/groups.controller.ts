@@ -21,7 +21,6 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import {
   ApiDeleteGroup,
   ApiGetGroupById,
-  ApiGetGroupMembers,
   ApiGetGroups,
   ApiPatchGroupLeader,
   ApiPatchGroupName,
@@ -38,7 +37,6 @@ import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.d
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
-import { GetGroupMembersDto } from '../dto/request/get-group-members.dto';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -100,7 +98,7 @@ export class GroupsController {
     return this.groupsService.deleteGroup(churchId, groupId, qr);
   }
 
-  @ApiGetGroupMembers()
+  /*@ApiGetGroupMembers()
   @Get(':groupId/members')
   @GroupReadGuard()
   getGroupMembers(
@@ -109,7 +107,7 @@ export class GroupsController {
     @Query() dto: GetGroupMembersDto,
   ) {
     return this.groupsService.getGroupMembers(church, groupId, dto);
-  }
+  }*/
 
   @ApiPatchGroupLeader()
   @Patch(':groupId/leader')

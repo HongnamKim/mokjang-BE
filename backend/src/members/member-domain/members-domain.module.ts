@@ -9,6 +9,8 @@ import { IMINISTRY_MEMBERS_DOMAIN_SERVICE } from './interface/ministry-members-d
 import { MinistryMembersDomainService } from './service/ministry-members-domain.service';
 import { IOFFICER_MEMBERS_DOMAIN_SERVICE } from './interface/officer-members-domain.service.interface';
 import { OfficerMembersDomainService } from './service/officer-members-domain.service';
+import { IGROUP_MEMBERS_DOMAIN_SERVICE } from './interface/group-members.domain.service.interface';
+import { GroupMembersDomainService } from './service/group-members-domain.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([MemberModel])],
@@ -29,12 +31,17 @@ import { OfficerMembersDomainService } from './service/officer-members-domain.se
       provide: IOFFICER_MEMBERS_DOMAIN_SERVICE,
       useClass: OfficerMembersDomainService,
     },
+    {
+      provide: IGROUP_MEMBERS_DOMAIN_SERVICE,
+      useClass: GroupMembersDomainService,
+    },
   ],
   exports: [
     IMEMBERS_DOMAIN_SERVICE,
     IDUMMY_MEMBERS_DOMAIN_SERVICE,
     IMINISTRY_MEMBERS_DOMAIN_SERVICE,
     IOFFICER_MEMBERS_DOMAIN_SERVICE,
+    IGROUP_MEMBERS_DOMAIN_SERVICE,
   ],
 })
 export class MembersDomainModule {}
