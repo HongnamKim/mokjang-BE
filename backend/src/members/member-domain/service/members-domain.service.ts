@@ -48,8 +48,6 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
-import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
-import { GroupMemberOrder } from '../../../management/groups/const/group-member-order.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -595,42 +593,6 @@ export class MembersDomainService implements IMembersDomainService {
     }
 
     return result;
-  }
-
-  async findGroupMembers(
-    church: ChurchModel,
-    group: GroupModel,
-    dto: GetGroupMembersDto,
-    qr?: QueryRunner,
-  ): Promise<MemberModel[]> {
-    const repository = this.getMembersRepository(qr);
-
-    // 그룹장 최상위 고정
-    const order: FindOptionsOrder<MemberModel> = {
-      groupRole: 'ASC',
-    };
-
-    if (dto.order === GroupMemberOrder.OFFICER) {
-      order.officer = {
-        name: dto.orderDirection,
-      };
-      order.id = dto.orderDirection;
-    } else {
-      order[dto.order] = dto.orderDirection;
-      order.id = dto.orderDirection;
-    }
-
-    return repository.find({
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
-      where: {
-        churchId: church.id,
-        groupId: group.id,
-      },
-      order,
-      relations: MemberSummarizedRelation,
-      select: MemberSummarizedSelect,
-    });
   }
 
   async getNewMemberSummary(

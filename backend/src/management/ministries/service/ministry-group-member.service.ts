@@ -265,6 +265,7 @@ export class MinistryGroupMemberService {
     return { data: members, timestamp: new Date() };
   }
 
+  // TODO 교인 ministryGroupRole 처리 필요
   async removeMembersFromMinistryGroup(
     churchId: number,
     ministryGroupId: number,

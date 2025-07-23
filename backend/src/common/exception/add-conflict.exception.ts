@@ -25,3 +25,17 @@ export class AddConflictExceptionV2 extends ConflictException {
     });
   }
 }
+
+export class AddMemberConflictException extends ConflictException {
+  constructor(
+    message: string,
+    conflictMembers: { id: number; name: string }[],
+  ) {
+    super({
+      message,
+      conflictMembers,
+      error: HttpStatusText[HttpStatus.CONFLICT],
+      statusCode: HttpStatus.CONFLICT,
+    });
+  }
+}

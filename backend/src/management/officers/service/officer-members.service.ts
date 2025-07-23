@@ -100,12 +100,18 @@ export class OfficerMembersService {
       throw new ConflictException(MemberException.ALREADY_SAME_OFFICER);
     }
 
-    // 기존 직분 이력 종료 처리
     const changeOfficerMembers = members.filter((member) => member.officerId);
-    await this.officerHistoryDomainService.endOfficerHistories(
-      changeOfficerMembers,
-      qr,
-    );
+
+    if (changeOfficerMembers.length > 0) {
+      // 기존 직분 이력 종료 처리
+      await this.officerHistoryDomainService.endOfficerHistories(
+        changeOfficerMembers,
+        qr,
+      );
+
+      // 기존 직분 교인 수 감소
+      await this.decrementOldOfficers(changeOfficerMembers, qr);
+    }
 
     // 교인에게 직분 부여
     await this.officerMembersDomainService.assignOfficer(members, officer, qr);
@@ -123,9 +129,6 @@ export class OfficerMembersService {
       officer,
       qr,
     );
-
-    // 기존 직분 교인 수 감소
-    await this.decrementOldOfficers(changeOfficerMembers, qr);
 
     officer.membersCount += members.length;
 
