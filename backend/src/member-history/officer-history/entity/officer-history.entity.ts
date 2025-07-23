@@ -26,9 +26,6 @@ export class OfficerHistoryModel extends BaseModel {
   @Column({ comment: '직분 종료일 시점의 직분명', nullable: true })
   officerSnapShot: string;
 
-  @Column({ length: 30, nullable: true })
-  officerStartChurch: string;
-
   @Index()
   @Column({ type: 'timestamptz' })
   startDate: Date;

@@ -1,6 +1,12 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { OfficerHistoryModel } from '../../entity/officer-history.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  In,
+  IsNull,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import {
   BadRequestException,
   Injectable,
@@ -9,11 +15,16 @@ import {
 } from '@nestjs/common';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetOfficerHistoryDto } from '../../dto/get-officer-history.dto';
+import { GetOfficerHistoryDto } from '../../dto/request/get-officer-history.dto';
 import { IOfficerHistoryDomainService } from '../interface/officer-history-domain.service.interface';
 import { OfficerModel } from '../../../../management/officers/entity/officer.entity';
 import { OfficerHistoryException } from '../../exception/officer-history.exception';
-import { UpdateOfficerHistoryDto } from '../../dto/update-officer-history.dto';
+import {
+  getHistoryEndDate,
+  getHistoryStartDate,
+  HistoryUpdateDate,
+} from '../../../history-date.utils';
+import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 
 @Injectable()
 export class OfficerHistoryDomainService
@@ -38,33 +49,92 @@ export class OfficerHistoryDomainService
   ) {
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
 
-    const [officerHistories, totalCount] = await Promise.all([
-      officerHistoryRepository.find({
-        where: {
-          member: {
-            churchId: church.id,
-          },
-          memberId: member.id,
+    return officerHistoryRepository.find({
+      where: {
+        member: {
+          churchId: church.id,
         },
-        relations: { officer: true },
-        order: {
-          startDate: dto.orderDirection,
-          id: dto.orderDirection,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      officerHistoryRepository.count({
-        where: {
-          member: {
-            churchId: church.id,
-          },
-          memberId: member.id,
-        },
-      }),
-    ]);
+        memberId: member.id,
+      },
+      relations: { officer: true },
+      order: {
+        startDate: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+  }
 
-    return { officerHistories, totalCount };
+  startOfficerHistory(
+    members: MemberModel[],
+    officer: OfficerModel,
+    qr: QueryRunner,
+  ): Promise<OfficerHistoryModel[]> {
+    const repository = this.getOfficerHistoryRepository(qr);
+
+    const histories = repository.create(
+      members.map((member) => ({
+        member: { id: member.id },
+        officer: { id: officer.id },
+        startDate: getHistoryStartDate(TIME_ZONE.SEOUL),
+      })),
+    );
+
+    return repository.save(histories);
+  }
+
+  async endOfficerHistories(
+    members: MemberModel[],
+    qr: QueryRunner,
+    officer?: OfficerModel,
+  ) {
+    const repository = this.getOfficerHistoryRepository(qr);
+
+    const memberIds = members.map((m) => m.id);
+
+    if (!officer) {
+      const oldHistories = await repository.find({
+        where: {
+          memberId: In(memberIds),
+          endDate: IsNull(),
+        },
+        relations: {
+          officer: true,
+        },
+      });
+
+      oldHistories.forEach((oldHistory) => {
+        oldHistory.officerSnapShot = oldHistory.officer?.name as string;
+        oldHistory.endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
+        oldHistory.officerId = null;
+        oldHistory.officer = null;
+      });
+
+      return repository.save(oldHistories);
+    }
+
+    const result = await repository.update(
+      {
+        memberId: In(memberIds),
+        officerId: officer.id,
+        endDate: IsNull(),
+      },
+      {
+        officerSnapShot: officer.name,
+        endDate: getHistoryEndDate(TIME_ZONE.SEOUL),
+        officerId: null,
+        officer: null,
+      },
+    );
+
+    if (result.affected !== members.length) {
+      throw new InternalServerErrorException(
+        OfficerHistoryException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
   }
 
   async findCurrentOfficerHistoryModel(
@@ -119,113 +189,49 @@ export class OfficerHistoryDomainService
     return history;
   }
 
-  async createOfficerHistory(
-    member: MemberModel,
-    officer: OfficerModel,
-    startDate: Date,
-    officerStartChurch: string,
-    qr: QueryRunner,
-  ) {
-    const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
-
-    return officerHistoryRepository.save({
-      memberId: member.id,
-      officerId: officer.id,
-      startDate,
-      officerStartChurch,
-    });
-  }
-
-  async endOfficerHistory(
-    officerHistory: OfficerHistoryModel,
-    endDate: Date,
-    qr: QueryRunner,
-  ) {
-    if (!officerHistory.officer) {
-      throw new InternalServerErrorException(
-        OfficerHistoryException.RELATION_OPTIONS_ERROR,
-        //'직분 이력의 직분 정보를 가져올 수 없음',
-      );
-    }
-
-    if (officerHistory.startDate > endDate) {
-      throw new BadRequestException(
-        OfficerHistoryException.INVALID_END_DATE,
-        //'직분 종료일이 시작일을 앞설 수 없습니다.'
-      );
-    }
-
-    const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
-
-    const officerSnapShot = officerHistory.officer.name;
-
-    const result = await officerHistoryRepository.update(
-      { id: officerHistory.id },
-      {
-        officerId: null,
-        officerSnapShot,
-        endDate,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        OfficerHistoryException.UPDATE_ERROR,
-      );
-    }
-
-    return result;
-  }
-
   private isValidUpdateDate(
-    officerHistory: OfficerHistoryModel,
-    dto: UpdateOfficerHistoryDto,
+    targetHistory: OfficerHistoryModel,
+    historyDate: HistoryUpdateDate,
   ) {
-    // 종료되지 않은 이력의 종료 날짜 수정
-    if (officerHistory.endDate === null && dto.endDate) {
+    if (!targetHistory.endDate && historyDate.endDate) {
       throw new BadRequestException(
         OfficerHistoryException.CANNOT_UPDATE_END_DATE,
       );
     }
 
-    // 시작 날짜만 수정
-    if (dto.startDate && !dto.endDate) {
-      // 종료된 이력의 시작일 수정 시 시작일이 기존 종료일보다 늦을 경우
-      if (officerHistory.endDate && dto.startDate > officerHistory.endDate) {
+    // 시작 날짜만 변경
+    if (historyDate.startDate && !historyDate.endDate) {
+      if (
+        targetHistory.endDate &&
+        historyDate.startDate > targetHistory.endDate
+      ) {
         throw new BadRequestException(
           OfficerHistoryException.INVALID_START_DATE,
-          //'이력 시작일은 종료일보다 늦을 수 없습니다.',
         );
       }
-    }
-
-    // 종료 날짜만 수정
-    if (dto.endDate && !dto.startDate) {
-      if (dto.endDate < officerHistory.startDate) {
-        throw new BadRequestException(
-          OfficerHistoryException.INVALID_END_DATE,
-          //'이력 종료일은 시작일보다 빠를 수 없습니다.',
-        );
+    } else if (!historyDate.startDate && historyDate.endDate) {
+      if (historyDate.endDate < targetHistory.startDate) {
+        throw new BadRequestException(OfficerHistoryException.INVALID_END_DATE);
       }
     }
   }
 
   async updateOfficerHistory(
     officerHistory: OfficerHistoryModel,
-    dto: UpdateOfficerHistoryDto,
+    historyDate: HistoryUpdateDate,
     qr: QueryRunner,
   ) {
     const officerHistoryRepository = this.getOfficerHistoryRepository(qr);
 
-    this.isValidUpdateDate(officerHistory, dto);
+    this.isValidUpdateDate(officerHistory, historyDate);
 
     const result = await officerHistoryRepository.update(
       {
         id: officerHistory.id,
       },
       {
-        startDate: dto.startDate,
-        endDate: dto.endDate,
+        startDate: historyDate.startDate,
+        endDate: historyDate.endDate,
       },
     );
 

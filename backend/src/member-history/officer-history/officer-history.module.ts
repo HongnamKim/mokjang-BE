@@ -4,7 +4,6 @@ import { ChurchesDomainModule } from '../../churches/churches-domain/churches-do
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
-import { OfficersDomainModule } from '../../management/officers/officer-domain/officers-domain.module';
 import { OfficerHistoryService } from './service/officer-history.service';
 import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
 import { HistoryPermissionService } from '../guard/history-permission.service';
@@ -24,7 +23,6 @@ import { OfficerHistoryDomainModule } from './officer-history-domain/officer-his
     ChurchesDomainModule,
     ManagerDomainModule,
     MembersDomainModule,
-    OfficersDomainModule,
     GroupsDomainModule,
 
     OfficerHistoryDomainModule,

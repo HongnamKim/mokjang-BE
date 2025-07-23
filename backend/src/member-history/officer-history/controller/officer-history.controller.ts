@@ -6,23 +6,18 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { OfficerHistoryService } from '../service/officer-history.service';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
-import { GetOfficerHistoryDto } from '../dto/get-officer-history.dto';
-import { SetMemberOfficerDto } from '../dto/set-member-officer.dto';
-import { EndMemberOfficeDto } from '../dto/end-member-officer.dto';
-import { UpdateOfficerHistoryDto } from '../dto/update-officer-history.dto';
+import { GetOfficerHistoryDto } from '../dto/request/get-officer-history.dto';
+import { UpdateOfficerHistoryDto } from '../dto/request/update-officer-history.dto';
 import {
   ApiDeleteOfficerHistory,
-  ApiEndMemberOfficer,
   ApiGetMemberOfficerHistory,
   ApiPatchOfficerHistory,
-  ApiPostMemberOfficer,
 } from '../swagger/officer-history.swagger';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -46,43 +41,6 @@ export class OfficerHistoryController {
       churchId,
       memberId,
       dto,
-    );
-  }
-
-  @ApiPostMemberOfficer()
-  @Post()
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  postMemberOfficer(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: SetMemberOfficerDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.officerHistoryService.setMemberOfficer(
-      churchId,
-      memberId,
-      dto,
-      qr,
-    );
-  }
-
-  @ApiEndMemberOfficer()
-  //@Delete()
-  @Patch('end')
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  endMemberOfficer(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: EndMemberOfficeDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.officerHistoryService.endMemberOfficer(
-      churchId,
-      memberId,
-      dto,
-      qr,
     );
   }
 
@@ -120,4 +78,41 @@ export class OfficerHistoryController {
       officerHistoryId,
     );
   }
+
+  /*@ApiPostMemberOfficer()
+  @Post()
+  @HistoryWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  postMemberOfficer(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Body() dto: SetMemberOfficerDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.officerHistoryService.setMemberOfficer(
+      churchId,
+      memberId,
+      dto,
+      qr,
+    );
+  }
+
+  @ApiEndMemberOfficer()
+  //@Delete()
+  @Patch('end')
+  @HistoryWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
+  endMemberOfficer(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Body() dto: EndMemberOfficeDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.officerHistoryService.endMemberOfficer(
+      churchId,
+      memberId,
+      dto,
+      qr,
+    );
+  }*/
 }

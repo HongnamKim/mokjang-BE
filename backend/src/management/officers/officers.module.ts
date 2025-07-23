@@ -10,6 +10,7 @@ import { ManagementPermissionService } from '../management-permission.service';
 import { OfficersMembersController } from './controller/officers-members.controller';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { OfficerMembersService } from './service/officer-members.service';
+import { OfficerHistoryDomainModule } from '../../member-history/officer-history/officer-history-domain/officer-history-domain.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { OfficerMembersService } from './service/officer-members.service';
     OfficersDomainModule,
     ManagerDomainModule,
     MembersDomainModule,
+
+    OfficerHistoryDomainModule,
   ],
   controllers: [OfficersController, OfficersMembersController],
   providers: [

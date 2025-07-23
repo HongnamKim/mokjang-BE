@@ -1,13 +1,7 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { GetOfficerHistoryDto } from '../dto/get-officer-history.dto';
-import { SetMemberOfficerDto } from '../dto/set-member-officer.dto';
-import { EndMemberOfficeDto } from '../dto/end-member-officer.dto';
-import { UpdateOfficerHistoryDto } from '../dto/update-officer-history.dto';
-import {
-  IOFFICERS_DOMAIN_SERVICE,
-  IOfficersDomainService,
-} from '../../../management/officers/officer-domain/interface/officers-domain.service.interface';
+import { GetOfficerHistoryDto } from '../dto/request/get-officer-history.dto';
+import { UpdateOfficerHistoryDto } from '../dto/request/update-officer-history.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -21,13 +15,14 @@ import {
   IOfficerHistoryDomainService,
 } from '../officer-history-domain/interface/officer-history-domain.service.interface';
 import { OfficerHistoryPaginationResultDto } from '../dto/officer-history-pagination-result.dto';
-import { OfficerHistoryException } from '../exception/officer-history.exception';
+import { convertHistoryDate } from '../../history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { PatchOfficerHistoryResponseDto } from '../dto/reponse/patch-officer-history-response.dto';
+import { DeleteOfficerHistoryResponseDto } from '../dto/reponse/delete-officer-history-response.dto';
 
 @Injectable()
 export class OfficerHistoryService {
   constructor(
-    @Inject(IOFFICERS_DOMAIN_SERVICE)
-    private readonly officersDomainService: IOfficersDomainService,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
@@ -52,7 +47,7 @@ export class OfficerHistoryService {
       qr,
     );
 
-    const { officerHistories, totalCount } =
+    const officerHistories =
       await this.officerHistoryDomainService.paginateOfficerHistory(
         church,
         member,
@@ -67,18 +62,101 @@ export class OfficerHistoryService {
         : history,
     );
 
-    const totalPage = Math.ceil(totalCount / dto.take);
+    return new OfficerHistoryPaginationResultDto(filteredData);
+  }
 
-    return new OfficerHistoryPaginationResultDto(
-      filteredData,
-      totalCount,
-      filteredData.length,
-      dto.page,
-      totalPage,
+  async updateOfficerHistory(
+    churchId: number,
+    memberId: number,
+    officerHistoryId: number,
+    dto: UpdateOfficerHistoryDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      qr,
+    );
+
+    const targetHistory =
+      await this.officerHistoryDomainService.findOfficerHistoryModelById(
+        member,
+        officerHistoryId,
+        qr,
+        { officer: true },
+      );
+
+    const historyDateUpdateValue = convertHistoryDate(
+      dto.startDate,
+      dto.endDate,
+      TIME_ZONE.SEOUL,
+    );
+
+    await this.officerHistoryDomainService.updateOfficerHistory(
+      targetHistory,
+      historyDateUpdateValue,
+      qr,
+    );
+
+    // 응답
+    if (historyDateUpdateValue.startDate) {
+      targetHistory.startDate = historyDateUpdateValue.startDate;
+    }
+    if (historyDateUpdateValue.endDate) {
+      targetHistory.endDate = historyDateUpdateValue.endDate;
+    }
+
+    if (!targetHistory.endDate) {
+      targetHistory.officerSnapShot = targetHistory.officer
+        ? targetHistory.officer.name
+        : '알 수 없는 직분';
+
+      targetHistory.officer = null;
+    }
+
+    return new PatchOfficerHistoryResponseDto(targetHistory);
+  }
+
+  async deleteOfficerHistory(
+    churchId: number,
+    memberId: number,
+    officerHistoryId: number,
+    qr?: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+      qr,
+    );
+
+    const targetHistory =
+      await this.officerHistoryDomainService.findOfficerHistoryModelById(
+        member,
+        officerHistoryId,
+        qr,
+      );
+
+    await this.officerHistoryDomainService.deleteOfficerHistory(
+      targetHistory,
+      qr,
+    );
+
+    return new DeleteOfficerHistoryResponseDto(
+      new Date(),
+      targetHistory.id,
+      true,
     );
   }
 
-  async setMemberOfficer(
+  /*async setMemberOfficer(
     churchId: number,
     memberId: number,
     dto: SetMemberOfficerDto,
@@ -185,73 +263,5 @@ export class OfficerHistoryService {
       qr,
       { officer: true },
     );
-  }
-
-  async updateOfficerHistory(
-    churchId: number,
-    memberId: number,
-    officerHistoryId: number,
-    dto: UpdateOfficerHistoryDto,
-    qr: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const member = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );
-
-    const targetHistory =
-      await this.officerHistoryDomainService.findOfficerHistoryModelById(
-        member,
-        officerHistoryId,
-        qr,
-      );
-
-    await this.officerHistoryDomainService.updateOfficerHistory(
-      targetHistory,
-      dto,
-      qr,
-    );
-
-    return this.officerHistoryDomainService.findOfficerHistoryModelById(
-      member,
-      officerHistoryId,
-      qr,
-      { officer: true },
-    );
-  }
-
-  async deleteOfficerHistory(
-    churchId: number,
-    memberId: number,
-    officerHistoryId: number,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const member = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );
-    const targetHistory =
-      await this.officerHistoryDomainService.findOfficerHistoryModelById(
-        member,
-        officerHistoryId,
-        qr,
-      );
-
-    await this.officerHistoryDomainService.deleteOfficerHistory(
-      targetHistory,
-      qr,
-    );
-
-    return `officerHistoryId ${officerHistoryId} deleted`;
-  }
+  }*/
 }
