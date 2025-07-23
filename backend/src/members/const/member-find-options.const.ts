@@ -10,6 +10,7 @@ export const MemberSummarizedSelect: FindOptionsSelect<MemberModel> = {
   id: true,
   name: true,
   profileImageUrl: true,
+  registeredAt: true,
   mobilePhone: true,
   birth: true,
   isLunar: true,
@@ -23,6 +24,7 @@ export const MemberSummarizedSelect: FindOptionsSelect<MemberModel> = {
     name: true,
   },
   groupRole: true,
+  ministryGroupRole: true,
 };
 
 export const MemberSummarizedSelectQB: string[] = [

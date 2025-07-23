@@ -21,11 +21,11 @@ import {
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { GetMinistryDto } from '../../dto/ministry/request/get-ministry.dto';
-import { MinistryException } from '../../const/exception/ministry.exception';
+import { MinistryException } from '../../exception/ministry.exception';
 import { CreateMinistryDto } from '../../dto/ministry/request/create-ministry.dto';
 import { MinistryGroupModel } from '../../entity/ministry-group.entity';
 import { UpdateMinistryDto } from '../../dto/ministry/request/update-ministry.dto';
-import { OfficersException } from '../../../officers/const/exception/officers.exception';
+import { OfficersException } from '../../../officers/exception/officers.exception';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
 @Injectable()

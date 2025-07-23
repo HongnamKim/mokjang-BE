@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateOfficerDto } from '../dto/request/create-officer.dto';
 import { UpdateOfficerNameDto } from '../dto/request/update-officer-name.dto';
 import { OfficersService } from '../service/officers.service';
@@ -33,6 +33,7 @@ import { ChurchManagerGuard } from '../../../permission/guard/church-manager.gua
 import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -66,11 +67,19 @@ export class OfficersController {
   @OfficerWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshOfficerCount(
-    //@Param('churchId', ParseIntPipe) churchId: number,
     @PermissionChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.officersService.refreshOfficerCount(church, qr);
+  }
+
+  @ApiOperation({ summary: '직분을 가지지 않은 교인 조회' })
+  @Get('unassigned-member')
+  getUnassignedMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetUnassignedMembersDto,
+  ) {
+    return this.officersService.getUnassignedMembers(churchId, dto);
   }
 
   @ApiDeleteOfficer()

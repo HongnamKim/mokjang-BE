@@ -397,28 +397,13 @@ export class WorshipEnrollmentDomainService
     }
 
     if (dto.order === LowAttendanceOrder.NAME) {
-      query.orderBy(
-        'member_name',
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      );
+      query.orderBy('member_name', dto.orderDirection);
     } else {
-      query.orderBy(
-        `"${dto.order}"`,
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      );
+      query.orderBy(`"${dto.order}"`, dto.orderDirection);
     }
 
     query
-      .addOrderBy(
-        'enrollment_id',
-        dto.orderDirection === 'ASC' || dto.orderDirection === 'asc'
-          ? 'ASC'
-          : 'DESC',
-      )
+      .addOrderBy('enrollment_id', dto.orderDirection)
       .limit(dto.take)
       .offset(dto.take * (dto.page - 1));
 

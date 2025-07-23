@@ -40,7 +40,7 @@ import { GetRecommendLinkMemberDto } from '../../members/dto/request/get-recomme
 import { GetRecommendLinkMemberResponseDto } from '../dto/response/get-recommend-link-member-response.dto';
 import { ChurchJoinException } from '../exception/church-join.exception';
 import { PostJoinRequestResponseDto } from '../dto/response/post-join-request-response.dto';
-import { MemberException } from '../../members/const/exception/member.exception';
+import { MemberException } from '../../members/exception/member.exception';
 
 @Injectable()
 export class ChurchJoinService {

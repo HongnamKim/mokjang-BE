@@ -23,7 +23,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { MinistryGroupException } from '../../const/exception/ministry-group.exception';
+import { MinistryGroupException } from '../../exception/ministry-group.exception';
 import { CreateMinistryGroupDto } from '../../dto/ministry-group/request/create-ministry-group.dto';
 import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/request/update-ministry-group-name.dto';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
@@ -600,6 +600,7 @@ export class MinistryGroupsDomainService
     await ministryGroupsRepository.update(
       {
         churchId: church.id,
+        deletedAt: IsNull(),
         parentMinistryGroupId: targetMinistryGroup.parentMinistryGroupId
           ? targetMinistryGroup.parentMinistryGroupId
           : IsNull(),

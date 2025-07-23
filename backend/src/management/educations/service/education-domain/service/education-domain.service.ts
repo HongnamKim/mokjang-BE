@@ -25,7 +25,7 @@ import {
   MemberSummarizedSelect,
 } from '../../../../../members/const/member-find-options.const';
 import { ChurchUserModel } from '../../../../../church-user/entity/church-user.entity';
-import { MemberException } from '../../../../../members/const/exception/member.exception';
+import { MemberException } from '../../../../../members/exception/member.exception';
 
 @Injectable()
 export class EducationDomainService implements IEducationDomainService {

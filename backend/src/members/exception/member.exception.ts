@@ -15,4 +15,6 @@ export const MemberException = {
   USER_ERROR: '교인의 계정 정보 불러오기 실패',
 
   NOT_EXIST_IN_MINISTRY_GROUP: '사역그룹에 존재하지 않는 교인이 존재합니다.',
+  NOT_EXIST_IN_OFFICER: '해당 직분을 부여 받지 않은 교인이 있습니다.',
+  ALREADY_SAME_OFFICER: '해당 직분을 부여 받은 교인이 있습니다.',
 };

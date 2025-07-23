@@ -27,7 +27,7 @@ import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
 } from '../../const/default-find-options.const';
-import { MemberException } from '../../const/exception/member.exception';
+import { MemberException } from '../../exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
