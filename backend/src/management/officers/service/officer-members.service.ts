@@ -25,6 +25,10 @@ import { RemoveMembersFromOfficerResponseDto } from '../dto/response/members/rem
 import { OfficerModel } from '../entity/officer.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MemberException } from '../../../members/exception/member.exception';
+import {
+  IOFFICER_HISTORY_DOMAIN_SERVICE,
+  IOfficerHistoryDomainService,
+} from '../../../member-history/officer-history/officer-history-domain/interface/officer-history-domain.service.interface';
 
 @Injectable()
 export class OfficerMembersService {
@@ -38,6 +42,9 @@ export class OfficerMembersService {
     private readonly officerMembersDomainService: IOfficerMembersDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+
+    @Inject(IOFFICER_HISTORY_DOMAIN_SERVICE)
+    private readonly officerHistoryDomainService: IOfficerHistoryDomainService,
   ) {}
 
   async getOfficerMembers(
@@ -93,11 +100,11 @@ export class OfficerMembersService {
       throw new ConflictException(MemberException.ALREADY_SAME_OFFICER);
     }
 
-    // TODO 직분 이력 업데이트
+    // 기존 직분 이력 종료 처리
     const changeOfficerMembers = members.filter((member) => member.officerId);
-    // TODO 직분 이력 업데이트
-    const newOfficerMembers = members.filter(
-      (member) => member.officerId === null,
+    await this.officerHistoryDomainService.endOfficerHistories(
+      changeOfficerMembers,
+      qr,
     );
 
     // 교인에게 직분 부여
@@ -107,6 +114,13 @@ export class OfficerMembersService {
     await this.officersDomainService.incrementMembersCount(
       officer,
       members.length,
+      qr,
+    );
+
+    // 새 직분 이력 시작
+    await this.officerHistoryDomainService.startOfficerHistory(
+      members,
+      officer,
       qr,
     );
 
@@ -149,6 +163,12 @@ export class OfficerMembersService {
       officer,
       removeMembers.length,
       qr,
+    );
+
+    await this.officerHistoryDomainService.endOfficerHistories(
+      removeMembers,
+      qr,
+      officer,
     );
 
     officer.membersCount -= removeMembers.length;
