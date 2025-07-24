@@ -2,6 +2,8 @@ import { MemberModel } from '../../../../members/entity/member.entity';
 import { GetGroupHistoryDto } from '../../dto/get-group-history.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { GroupHistoryModel } from '../../entity/group-history.entity';
+import { GroupModel } from '../../../../management/groups/entity/group.entity';
+import { HistoryUpdateDate } from '../../../history-date.utils';
 
 export const IGROUP_HISTORY_DOMAIN_SERVICE = Symbol(
   'IGROUP_HISTORY_DOMAIN_SERVICE',
@@ -13,6 +15,21 @@ export interface IGroupHistoryDomainService {
     dto: GetGroupHistoryDto,
     qr?: QueryRunner,
   ): Promise<{ groupHistories: GroupHistoryModel[]; totalCount: number }>;
+
+  startGroupHistories(
+    members: MemberModel[],
+    group: GroupModel,
+    startDate: Date,
+    qr: QueryRunner,
+  ): Promise<GroupHistoryModel[]>;
+
+  endGroupHistories(
+    members: MemberModel[],
+    endDate: Date,
+    qr: QueryRunner,
+    group?: GroupModel,
+    groupSnapShot?: string,
+  ): Promise<GroupHistoryModel[] | UpdateResult>;
 
   findCurrentGroupHistoryModel(
     member: MemberModel,
@@ -27,25 +44,9 @@ export interface IGroupHistoryDomainService {
     relationOptions?: FindOptionsRelations<GroupHistoryModel>,
   ): Promise<GroupHistoryModel>;
 
-  /*createGroupHistory(
-    member: MemberModel,
-    group: GroupModel,
-    groupRole: GroupRole,
-    startDate: Date,
-    qr: QueryRunner,
-  ): Promise<GroupHistoryModel>;
-
-  endGroupHistory(
-    groupHistory: GroupHistoryModel,
-    groupSnapShot: string,
-    endDate: Date,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;*/
-
   updateGroupHistory(
     groupHistory: GroupHistoryModel,
-    startDate: Date | undefined,
-    endDate: Date | undefined,
+    historyDate: HistoryUpdateDate,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

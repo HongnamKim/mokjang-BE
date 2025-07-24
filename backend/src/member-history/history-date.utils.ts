@@ -10,6 +10,17 @@ export class HistoryUpdateDate {
   ) {}
 }
 
+export function convertHistoryStartDate(
+  startDateStr: string,
+  timeZone: TIME_ZONE,
+) {
+  return fromZonedTime(startOfDay(startDateStr), timeZone);
+}
+
+export function convertHistoryEndDate(endDateStr: string, timeZone: TIME_ZONE) {
+  return fromZonedTime(endOfDay(endDateStr), timeZone);
+}
+
 export function convertHistoryDate(
   startDateStr: string | undefined,
   endDateStr: string | undefined,

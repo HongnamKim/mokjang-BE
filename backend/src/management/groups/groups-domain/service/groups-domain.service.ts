@@ -310,6 +310,18 @@ export class GroupsDomainService implements IGroupsDomainService {
     return result;
   }
 
+  async getGroupNameWithHierarchy(
+    church: ChurchModel,
+    group: GroupModel,
+    qr: QueryRunner,
+  ): Promise<string> {
+    const parentGroups = await this.findParentGroups(church, group, qr);
+
+    const groupHierarchy = [...parentGroups, group];
+
+    return groupHierarchy.map((group) => group.name).join('__');
+  }
+
   async createGroup(
     church: ChurchModel,
     dto: CreateGroupDto,
@@ -626,6 +638,21 @@ export class GroupsDomainService implements IGroupsDomainService {
 
     if (result.affected === 0) {
       throw new NotFoundException(GroupException.NOT_FOUND);
+    }
+
+    return result;
+  }
+
+  async refreshMembersCount(
+    group: GroupModel,
+    membersCount: number,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getGroupsRepository(qr);
+
+    const result = await repository.update({ id: group.id }, { membersCount });
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
     }
 
     return result;

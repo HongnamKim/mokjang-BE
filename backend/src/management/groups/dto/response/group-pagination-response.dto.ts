@@ -1,7 +1,7 @@
 import { BaseOffsetPaginationResponseDto } from '../../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { GroupModel } from '../../entity/group.entity';
 
-export class GroupPaginationResultDto extends BaseOffsetPaginationResponseDto<GroupModel> {
+export class GroupPaginationResponseDto extends BaseOffsetPaginationResponseDto<GroupModel> {
   constructor(
     public readonly data: GroupModel[],
     public readonly totalCount: number,

@@ -66,4 +66,13 @@ export class GroupMembersController {
       qr,
     );
   }
+
+  @ApiOperation({ summary: '그룹 내 교인 수 새로고침' })
+  @Patch('refresh-count')
+  refreshMembersCount(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.groupMembersService.refreshMembersCount(churchId, groupId);
+  }
 }

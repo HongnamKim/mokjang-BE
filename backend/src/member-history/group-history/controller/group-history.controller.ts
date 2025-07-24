@@ -78,35 +78,4 @@ export class GroupHistoryController {
       groupHistoryId,
     );
   }
-
-  /*@ApiPostMemberGroup()
-  @Post()
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  postMemberGroup(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: AddMemberToGroupDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.groupHistoryService.addMemberToGroup(
-      churchId,
-      memberId,
-      dto,
-      qr,
-    );
-  }
-
-  @ApiEndMemberGroup()
-  @Patch('end')
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  endMemberGroup(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: EndMemberGroupDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.groupHistoryService.endMemberGroup(churchId, memberId, dto, qr);
-  }*/
 }

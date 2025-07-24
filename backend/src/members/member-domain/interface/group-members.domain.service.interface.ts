@@ -31,4 +31,10 @@ export interface IGroupMembersDomainService {
   ): Promise<UpdateResult>;
 
   removeGroup(members: MemberModel[], qr: QueryRunner): Promise<UpdateResult>;
+
+  countAllMembers(
+    church: ChurchModel,
+    group: GroupModel,
+    qr?: QueryRunner,
+  ): Promise<number>;
 }

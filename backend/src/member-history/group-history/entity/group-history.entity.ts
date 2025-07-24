@@ -2,7 +2,6 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 @Entity()
 export class GroupHistoryModel extends BaseModel {
@@ -23,10 +22,7 @@ export class GroupHistoryModel extends BaseModel {
 
   @ManyToOne(() => GroupModel, (group) => group.history)
   @JoinColumn({ name: 'groupId' })
-  group: GroupModel;
-
-  @Column({ default: GroupRole.MEMBER })
-  groupRole: GroupRole;
+  group: GroupModel | null;
 
   @Column({
     comment: '그룹 종료일 시점의 그룹, 그룹 위계는 __ 로 구분',
