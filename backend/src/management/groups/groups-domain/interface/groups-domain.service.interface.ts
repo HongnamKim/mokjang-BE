@@ -109,6 +109,12 @@ export interface IGroupsDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
+  refreshMembersCount(
+    group: GroupModel,
+    membersCount: number,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
   countAllGroups(church: ChurchModel, qr: QueryRunner): Promise<number>;
 
   updateGroupLeader(
@@ -121,4 +127,10 @@ export interface IGroupsDomainService {
     groups: GroupModel[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  getGroupNameWithHierarchy(
+    church: ChurchModel,
+    group: GroupModel,
+    qr: QueryRunner,
+  ): Promise<string>;
 }

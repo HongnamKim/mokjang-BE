@@ -12,7 +12,7 @@ import {
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
 import { GetGroupMembersDto } from '../dto/request/members/get-group-members.dto';
-import { GetGroupMembersResponseDto } from '../dto/response/get-group-members-response.dto';
+import { GetGroupMembersResponseDto } from '../dto/response/members/get-group-members-response.dto';
 import {
   IGROUP_MEMBERS_DOMAIN_SERVICE,
   IGroupMembersDomainService,
@@ -27,6 +27,16 @@ import { GroupModel } from '../entity/group.entity';
 import { RemoveMembersFromGroupDto } from '../dto/request/members/remove-members-from-group.dto';
 import { RemoveMembersFromGroupResponseDto } from '../dto/response/members/remove-members-from-group-response.dto';
 import { GroupRole } from '../const/group-role.enum';
+import {
+  IGROUP_HISTORY_DOMAIN_SERVICE,
+  IGroupHistoryDomainService,
+} from '../../../member-history/group-history/group-history-domain/interface/group-history-domain.service.interface';
+import {
+  convertHistoryEndDate,
+  convertHistoryStartDate,
+} from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class GroupMembersService {
@@ -40,6 +50,8 @@ export class GroupMembersService {
 
     @Inject(IGROUP_MEMBERS_DOMAIN_SERVICE)
     private readonly groupMembersDomainService: IGroupMembersDomainService,
+    @Inject(IGROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly groupHistoryDomainService: IGroupHistoryDomainService,
   ) {}
 
   async getGroupMembers(
@@ -102,19 +114,40 @@ export class GroupMembersService {
       );
     }
 
+    // 그룹을 옮기는 교인 처리
     const changeGroupMembers = members.filter((member) => member.groupId);
     if (changeGroupMembers.length > 0) {
       // 교인 수 감소
-      await this.decrementOldGroups(changeGroupMembers, qr);
+      await this.decrementOldGroups(church, changeGroupMembers, qr);
 
       // 리더였던 교인 처리
       const oldGroupLeaderMembers = changeGroupMembers.filter(
         (member) => member.groupRole === GroupRole.LEADER,
       );
-      const targetGroup = oldGroupLeaderMembers.map((member) => member.group);
-      await this.groupsDomainService.removeGroupLeader(targetGroup, qr);
+      const leaderLostGroups = oldGroupLeaderMembers.map(
+        (member) => member.group,
+      );
+      await this.groupsDomainService.removeGroupLeader(leaderLostGroups, qr);
 
-      // TODO 기존 그룹 이력 종료 처리
+      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
+
+      // 기존 그룹 이력 종료 처리
+      for (const member of changeGroupMembers) {
+        const groupSnapShot =
+          await this.groupsDomainService.getGroupNameWithHierarchy(
+            church,
+            member.group,
+            qr,
+          );
+
+        await this.groupHistoryDomainService.endGroupHistories(
+          [member],
+          endDate,
+          qr,
+          member.group,
+          groupSnapShot,
+        );
+      }
     }
 
     // 교인에게 그룹 부여
@@ -126,7 +159,13 @@ export class GroupMembersService {
       qr,
     );
 
-    // TODO 새로운 그룹 이력 시작
+    // 새로운 그룹 이력 시작
+    await this.groupHistoryDomainService.startGroupHistories(
+      members,
+      group,
+      convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL),
+      qr,
+    );
 
     group.membersCount += members.length;
 
@@ -134,28 +173,41 @@ export class GroupMembersService {
   }
 
   private async decrementOldGroups(
+    church: ChurchModel,
     changeGroupMembers: MemberModel[],
     qr: QueryRunner,
   ) {
     const groupDecrementMap = new Map<
       number,
-      { group: GroupModel; count: number }
+      { group: GroupModel; count: number; groupSnapShot: string }
     >();
 
-    changeGroupMembers.forEach((member) => {
+    for (const member of changeGroupMembers) {
       const groupId = member.groupId as number;
       const existing = groupDecrementMap.get(groupId);
 
       if (existing) {
         existing.count++;
       } else {
-        groupDecrementMap.set(groupId, { group: member.group, count: 1 });
+        const groupSnapShot =
+          await this.groupsDomainService.getGroupNameWithHierarchy(
+            church,
+            member.group,
+            qr,
+          );
+        groupDecrementMap.set(groupId, {
+          group: member.group,
+          count: 1,
+          groupSnapShot,
+        });
       }
-    });
+    }
 
     for (const { group, count } of groupDecrementMap.values()) {
       await this.groupsDomainService.decrementMembersCount(group, count, qr);
     }
+
+    return groupDecrementMap;
   }
 
   async removeMembersFromGroup(
@@ -198,10 +250,45 @@ export class GroupMembersService {
       group.leaderMemberId = null;
     }
 
+    const endDate = convertHistoryEndDate(dto.endDate, TIME_ZONE.SEOUL);
     // TODO 그룹 이력 종료 처리
+    const groupSnapShot =
+      await this.groupsDomainService.getGroupNameWithHierarchy(
+        church,
+        group,
+        qr,
+      );
+
+    await this.groupHistoryDomainService.endGroupHistories(
+      removeMembers,
+      endDate,
+      qr,
+      group,
+      groupSnapShot,
+    );
 
     group.membersCount -= removeMembers.length;
 
     return new RemoveMembersFromGroupResponseDto(group);
+  }
+
+  async refreshMembersCount(churchId: number, groupId: number) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+    const group = await this.groupsDomainService.findGroupModelById(
+      church,
+      groupId,
+    );
+
+    const membersCount = await this.groupMembersDomainService.countAllMembers(
+      church,
+      group,
+    );
+
+    await this.groupsDomainService.refreshMembersCount(group, membersCount);
+
+    group.membersCount = membersCount;
+
+    return { data: group, timestamp: new Date() };
   }
 }

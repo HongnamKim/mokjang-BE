@@ -139,4 +139,19 @@ export class GroupMembersDomainService implements IGroupMembersDomainService {
 
     return result;
   }
+
+  countAllMembers(
+    church: ChurchModel,
+    group: GroupModel,
+    qr?: QueryRunner,
+  ): Promise<number> {
+    const repository = this.getRepository(qr);
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+        groupId: group.id,
+      },
+    });
+  }
 }

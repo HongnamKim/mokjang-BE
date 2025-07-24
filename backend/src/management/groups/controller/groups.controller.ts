@@ -98,17 +98,6 @@ export class GroupsController {
     return this.groupsService.deleteGroup(churchId, groupId, qr);
   }
 
-  /*@ApiGetGroupMembers()
-  @Get(':groupId/members')
-  @GroupReadGuard()
-  getGroupMembers(
-    @PermissionChurch() church: ChurchModel,
-    @Param('groupId', ParseIntPipe) groupId: number,
-    @Query() dto: GetGroupMembersDto,
-  ) {
-    return this.groupsService.getGroupMembers(church, groupId, dto);
-  }*/
-
   @ApiPatchGroupLeader()
   @Patch(':groupId/leader')
   @GroupWriteGuard()
@@ -147,23 +136,4 @@ export class GroupsController {
   ) {
     return this.groupsService.updateGroupStructure(churchId, groupId, dto, qr);
   }
-
-  /*@ApiGetGroupsByName()
-  @Get('search')
-  getGroupsByName(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Query() dto: GetGroupByNameDto,
-  ) {
-    return this.groupsService.getGroupsByName(churchId, dto);
-  }*/
-
-  /*@ApiGetChildGroupIds()
-  @GroupReadGuard()
-  @Get(':groupId/childGroups')
-  getChildGroupIds(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('groupId', ParseIntPipe) groupId: number,
-  ) {
-    return this.groupsService.getChildGroupIds(churchId, groupId);
-  }*/
 }

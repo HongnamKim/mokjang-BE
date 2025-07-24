@@ -1,4 +1,4 @@
-import { MemberModel } from '../../../../members/entity/member.entity';
+import { MemberModel } from '../../../../../members/entity/member.entity';
 
 export class GetGroupMembersResponseDto {
   constructor(
