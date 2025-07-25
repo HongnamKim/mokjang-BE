@@ -3,6 +3,7 @@ import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/members/get-group-members.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../entity/member.entity';
+import { GetUnassignedMembersDto } from '../../../management/ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 
 export const IGROUP_MEMBERS_DOMAIN_SERVICE = Symbol(
   'IGROUP_MEMBERS_DOMAIN_SERVICE',
@@ -37,4 +38,10 @@ export interface IGroupMembersDomainService {
     group: GroupModel,
     qr?: QueryRunner,
   ): Promise<number>;
+
+  findUnassignedMembers(
+    church: ChurchModel,
+    dto: GetUnassignedMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
 }

@@ -5,6 +5,8 @@ export const GroupHistoryException = {
   DELETE_ERROR: '그룹 이력 삭제 도중 에러 발생',
   NOT_FOUND: '그룹 이력을 찾을 수 없습니다.',
 
+  NOT_FOUND_CURRENT_DETAIL: '진행중인 그룹 상세 이력을 찾을 수 없습니다.',
+
   CANNOT_UPDATE_END_DATE:
     '종료되지 않은 그룹 이력의 종료 날짜를 수정할 수 없습니다.',
   INVALID_START_DATE: '이력 시작일은 종료일보다 늦을 수 없습니다.',

@@ -570,23 +570,14 @@ export class MembersDomainService implements IMembersDomainService {
   }
 
   async updateGroupRole(
-    group: GroupModel,
-    newLeaderMember: MemberModel,
+    member: MemberModel,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ): Promise<UpdateResult> {
     const repository = this.getMembersRepository(qr);
 
-    // 기존 리더를 다시 그룹원으로 수정
-    await repository.update(
-      { groupId: group.id, groupRole: GroupRole.LEADER },
-      { groupRole: GroupRole.MEMBER },
-    );
-
     // 새로운 리더 지정
-    const result = await repository.update(
-      { id: newLeaderMember.id },
-      { groupRole: GroupRole.LEADER },
-    );
+    const result = await repository.update({ id: member.id }, { groupRole });
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(MemberException.UPDATE_ERROR);

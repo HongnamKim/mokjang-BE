@@ -10,6 +10,7 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   In,
+  IsNull,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -24,6 +25,7 @@ import {
 } from '../../const/member-find-options.const';
 import { MemberException } from '../../exception/member.exception';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
+import { GetUnassignedMembersDto } from '../../../management/ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @Injectable()
 export class GroupMembersDomainService implements IGroupMembersDomainService {
@@ -34,6 +36,29 @@ export class GroupMembersDomainService implements IGroupMembersDomainService {
 
   private getRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.repository;
+  }
+
+  findUnassignedMembers(
+    church: ChurchModel,
+    dto: GetUnassignedMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        groupId: IsNull(),
+      },
+      relations: MemberSummarizedRelation,
+      select: MemberSummarizedSelect,
+      order: {
+        [dto.order]: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   async findGroupMembers(

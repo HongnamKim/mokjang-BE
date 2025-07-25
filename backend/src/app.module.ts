@@ -70,6 +70,7 @@ import { MyPageModule } from './my-page/my-page.module';
 import { HomeModule } from './home/home.module';
 import { MinistryGroupHistoryModel } from './member-history/ministry-history/entity/ministry-group-history.entity';
 import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history/entity/ministry-group-role-history.entity';
+import { GroupDetailHistoryModel } from './member-history/group-history/entity/group-detail-history.entity';
 
 @Module({
   imports: [
@@ -155,7 +156,6 @@ import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history
           EducationSessionModel,
           SessionAttendanceModel,
           EducationEnrollmentModel,
-          //EducationHistoryModel,
           // 직분 관련 엔티티
           OfficerModel,
           OfficerHistoryModel,
@@ -167,8 +167,8 @@ import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history
           MinistryHistoryModel,
           // 그룹 관련 엔티티
           GroupModel,
-          //GroupRoleModel,
           GroupHistoryModel,
+          GroupDetailHistoryModel,
           // 심방 관련 엔티티
           VisitationMetaModel,
           VisitationDetailModel,

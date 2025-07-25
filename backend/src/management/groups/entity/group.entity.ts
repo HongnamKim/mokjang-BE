@@ -6,7 +6,6 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { GroupHistoryModel } from '../../../member-history/group-history/entity/group-history.entity';
 
 @Entity()
-//@Unique(['name', 'parentGroupId', 'churchId'])
 export class GroupModel extends BaseModel {
   @Column()
   name: string;

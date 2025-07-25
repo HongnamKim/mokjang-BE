@@ -1,7 +1,15 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
+import { GroupDetailHistoryModel } from './group-detail-history.entity';
 
 @Entity()
 export class GroupHistoryModel extends BaseModel {
@@ -37,4 +45,13 @@ export class GroupHistoryModel extends BaseModel {
   @Index()
   @Column({ type: 'timestamptz', nullable: true })
   endDate: Date | null;
+
+  @Column({ default: false })
+  hasDetailHistory: boolean;
+
+  @OneToMany(
+    () => GroupDetailHistoryModel,
+    (detailHistory) => detailHistory.groupHistory,
+  )
+  groupDetailHistory: GroupDetailHistoryModel[];
 }
