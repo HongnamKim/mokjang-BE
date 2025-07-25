@@ -52,6 +52,7 @@ export class OfficerMembersDomainService
       select: MemberSummarizedSelect,
       order: {
         [dto.order]: dto.orderDirection,
+        id: dto.orderDirection,
       },
       take: dto.take,
       skip: dto.take * (dto.page - 1),

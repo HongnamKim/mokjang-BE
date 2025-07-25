@@ -69,3 +69,24 @@ export const ApiDeleteGroupHistory = () =>
         '<p>종료되지 않은 이력 삭제 시 --> BadRequestException</p>',
     }),
   );
+
+export const ApiGetGroupDetailHistory = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교인 그룹 상세 이력 조회 (groupRole 이력)',
+    }),
+  );
+
+export const ApiPatchGroupDetailHistory = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교인 그룹 상세 이력 수정 (groupRole 이력)',
+    }),
+  );
+
+export const ApiDeleteGroupDetailHistory = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '교인 그룹 상세 이력 삭제 (groupRole 이력)',
+    }),
+  );

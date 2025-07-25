@@ -150,8 +150,8 @@ export interface IMembersDomainService {
   endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
 
   updateGroupRole(
-    group: GroupModel,
-    newLeaderMember: MemberModel,
+    member: MemberModel,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

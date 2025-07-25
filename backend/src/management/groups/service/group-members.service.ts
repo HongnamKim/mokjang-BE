@@ -37,6 +37,10 @@ import {
 } from '../../../member-history/history-date.utils';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import {
+  IGROUP_DETAIL_HISTORY_DOMAIN_SERVICE,
+  IGroupDetailHistoryDomainService,
+} from '../../../member-history/group-history/group-history-domain/interface/group-detail-history-domain.service.interface';
 
 @Injectable()
 export class GroupMembersService {
@@ -52,6 +56,8 @@ export class GroupMembersService {
     private readonly groupMembersDomainService: IGroupMembersDomainService,
     @Inject(IGROUP_HISTORY_DOMAIN_SERVICE)
     private readonly groupHistoryDomainService: IGroupHistoryDomainService,
+    @Inject(IGROUP_DETAIL_HISTORY_DOMAIN_SERVICE)
+    private readonly groupDetailHistoryDomainService: IGroupDetailHistoryDomainService,
   ) {}
 
   async getGroupMembers(
@@ -117,6 +123,8 @@ export class GroupMembersService {
     // 그룹을 옮기는 교인 처리
     const changeGroupMembers = members.filter((member) => member.groupId);
     if (changeGroupMembers.length > 0) {
+      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
+
       // 교인 수 감소
       await this.decrementOldGroups(church, changeGroupMembers, qr);
 
@@ -129,7 +137,12 @@ export class GroupMembersService {
       );
       await this.groupsDomainService.removeGroupLeader(leaderLostGroups, qr);
 
-      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
+      // 리더 이력 종료 처리
+      await this.groupDetailHistoryDomainService.endGroupDetailHistory(
+        oldGroupLeaderMembers,
+        endDate,
+        qr,
+      );
 
       // 기존 그룹 이력 종료 처리
       for (const member of changeGroupMembers) {
@@ -243,14 +256,23 @@ export class GroupMembersService {
       qr,
     );
 
+    const endDate = convertHistoryEndDate(dto.endDate, TIME_ZONE.SEOUL);
+
     // 리더가 나가는 경우 리더 없애기
     if (removeMembers.some((member) => member.groupRole === GroupRole.LEADER)) {
       await this.groupsDomainService.removeGroupLeader([group], qr);
+      const leaderMember = removeMembers.filter(
+        (member) => member.groupRole === GroupRole.LEADER,
+      );
+      await this.groupDetailHistoryDomainService.endGroupDetailHistory(
+        leaderMember,
+        endDate,
+        qr,
+      );
 
       group.leaderMemberId = null;
     }
 
-    const endDate = convertHistoryEndDate(dto.endDate, TIME_ZONE.SEOUL);
     // TODO 그룹 이력 종료 처리
     const groupSnapShot =
       await this.groupsDomainService.getGroupNameWithHierarchy(

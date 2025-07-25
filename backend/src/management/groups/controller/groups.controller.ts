@@ -22,6 +22,7 @@ import {
   ApiDeleteGroup,
   ApiGetGroupById,
   ApiGetGroups,
+  ApiGetUnassignedMembers,
   ApiPatchGroupLeader,
   ApiPatchGroupName,
   ApiPatchGroupStructure,
@@ -37,6 +38,7 @@ import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.d
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
+import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -74,6 +76,15 @@ export class GroupsController {
     @QueryRunner() qr: QR,
   ) {
     return this.groupsService.refreshGroupCount(church, qr);
+  }
+
+  @ApiGetUnassignedMembers()
+  @Get('unassigned-member')
+  getUnassignedMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetUnassignedMembersDto,
+  ) {
+    return this.groupsService.getUnassignedMembers(churchId, dto);
   }
 
   @ApiGetGroupById()

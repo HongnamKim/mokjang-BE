@@ -28,6 +28,22 @@ import {
   IGROUP_HISTORY_DOMAIN_SERVICE,
   IGroupHistoryDomainService,
 } from '../../../member-history/group-history/group-history-domain/interface/group-history-domain.service.interface';
+import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
+import { UnassignedMembersResponseDto } from '../../officers/dto/response/members/unassigned-members-response.dto';
+import {
+  IGROUP_MEMBERS_DOMAIN_SERVICE,
+  IGroupMembersDomainService,
+} from '../../../members/member-domain/interface/group-members.domain.service.interface';
+import {
+  IGROUP_DETAIL_HISTORY_DOMAIN_SERVICE,
+  IGroupDetailHistoryDomainService,
+} from '../../../member-history/group-history/group-history-domain/interface/group-detail-history-domain.service.interface';
+import { GroupRole } from '../const/group-role.enum';
+import {
+  convertHistoryEndDate,
+  convertHistoryStartDate,
+} from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
 
 @Injectable()
 export class GroupsService {
@@ -39,8 +55,12 @@ export class GroupsService {
     private readonly groupsDomainService: IGroupsDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IGROUP_MEMBERS_DOMAIN_SERVICE)
+    private readonly groupMembersDomainService: IGroupMembersDomainService,
     @Inject(IGROUP_HISTORY_DOMAIN_SERVICE)
     private readonly groupHistoryDomainService: IGroupHistoryDomainService,
+    @Inject(IGROUP_DETAIL_HISTORY_DOMAIN_SERVICE)
+    private readonly groupDetailHistoryDomainService: IGroupDetailHistoryDomainService,
   ) {}
 
   async getGroups(churchId: number, dto: GetGroupDto) {
@@ -127,14 +147,41 @@ export class GroupsService {
     );
 
     // 교인의 groupRole 설정 (member.groupRole), 기존 리더가 있을 경우 GroupRole.MEMBER 로 변경
-    await this.membersDomainService.updateGroupRole(group, newLeaderMember, qr);
+    await this.membersDomainService.updateGroupRole(
+      newLeaderMember,
+      GroupRole.LEADER,
+      qr,
+    );
+    const newLeaderGroupHistory =
+      await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+        newLeaderMember,
+        qr,
+      );
+    await this.groupDetailHistoryDomainService.startGroupDetailHistory(
+      newLeaderMember,
+      newLeaderGroupHistory,
+      GroupRole.LEADER,
+      convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL),
+      qr,
+    );
+
     if (oldLeaderMember) {
       await this.membersDomainService.updateGroupRole(
-        group,
         oldLeaderMember,
+        GroupRole.MEMBER,
+        qr,
+      );
+
+      await this.groupDetailHistoryDomainService.endGroupDetailHistory(
+        [oldLeaderMember],
+        convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL),
         qr,
       );
     }
+
+    group.leaderMemberId = newLeaderMember.id;
+
+    return group;
   }
 
   async updateGroupStructure(
@@ -246,5 +293,17 @@ export class GroupsService {
     );
 
     return { groupCount };
+  }
+
+  async getUnassignedMembers(churchId: number, dto: GetUnassignedMembersDto) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const members = await this.groupMembersDomainService.findUnassignedMembers(
+      church,
+      dto,
+    );
+
+    return new UnassignedMembersResponseDto(members);
   }
 }
