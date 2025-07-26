@@ -9,6 +9,12 @@ export const IGROUP_DETAIL_HISTORY_DOMAIN_SERVICE = Symbol(
 );
 
 export interface IGroupDetailHistoryDomainService {
+  findCurrentGroupDetailHistory(
+    member: MemberModel,
+    groupHistory: GroupHistoryModel,
+    qr?: QueryRunner,
+  ): Promise<GroupDetailHistoryModel>;
+
   startGroupDetailHistory(
     member: MemberModel,
     groupHistory: GroupHistoryModel,

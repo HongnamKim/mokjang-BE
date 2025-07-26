@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -58,6 +59,12 @@ export class GroupDetailHistoryDomainService
     startDate: Date,
     qr?: QueryRunner,
   ) {
+    if (startDate < groupHistory.startDate) {
+      throw new BadRequestException(
+        GroupHistoryException.INVALID_DETAIL_START_DATE,
+      );
+    }
+
     const repository = this.getRepository(qr);
 
     return repository.save({
