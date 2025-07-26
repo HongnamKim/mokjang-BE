@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { QueryRunner } from 'typeorm';
 import { CreateGroupDto } from '../dto/request/create-group.dto';
@@ -44,6 +44,8 @@ import {
   convertHistoryStartDate,
 } from '../../../member-history/history-date.utils';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { toZonedTime } from 'date-fns-tz';
+import { format } from 'date-fns';
 
 @Injectable()
 export class GroupsService {
@@ -125,14 +127,6 @@ export class GroupsService {
       qr,
     );
 
-    const oldLeaderMember = group.leaderMemberId
-      ? await this.membersDomainService.findMemberModelById(
-          church,
-          group.leaderMemberId,
-          qr,
-        )
-      : null;
-
     const newLeaderMember = await this.membersDomainService.findMemberModelById(
       church,
       dto.newLeaderMemberId,
@@ -165,6 +159,14 @@ export class GroupsService {
       qr,
     );
 
+    const oldLeaderMember = group.leaderMemberId
+      ? await this.membersDomainService.findMemberModelById(
+          church,
+          group.leaderMemberId,
+          qr,
+        )
+      : null;
+
     if (oldLeaderMember) {
       await this.membersDomainService.updateGroupRole(
         oldLeaderMember,
@@ -172,9 +174,34 @@ export class GroupsService {
         qr,
       );
 
+      const oldLeaderHistory =
+        await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+          oldLeaderMember,
+          qr,
+        );
+      const oldLeaderDetailHistory =
+        await this.groupDetailHistoryDomainService.findCurrentGroupDetailHistory(
+          oldLeaderMember,
+          oldLeaderHistory,
+          qr,
+        );
+
+      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
+
+      if (oldLeaderDetailHistory.startDate > endDate) {
+        const prevStartDate = format(
+          toZonedTime(oldLeaderDetailHistory.startDate, TIME_ZONE.SEOUL),
+          'yyyy-MM-dd',
+        );
+
+        throw new BadRequestException(
+          `이전 리더의 이력의 시작일과 새로운 리더의 시작일이 맞지 않습니다. (이전 리더 시작일: ${prevStartDate})`,
+        );
+      }
+
       await this.groupDetailHistoryDomainService.endGroupDetailHistory(
         [oldLeaderMember],
-        convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL),
+        endDate,
         qr,
       );
     }

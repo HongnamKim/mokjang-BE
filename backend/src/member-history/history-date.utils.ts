@@ -14,10 +14,36 @@ export function convertHistoryStartDate(
   startDateStr: string,
   timeZone: TIME_ZONE,
 ) {
+  const today = fromZonedTime(
+    endOfDay(toZonedTime(new Date(), timeZone)),
+    timeZone,
+  );
+
+  const startDate = fromZonedTime(startOfDay(startDateStr), timeZone);
+
+  if (startDate > today) {
+    throw new BadRequestException(
+      '시작 날짜는 현재 날짜를 넘어설 수 없습니다.',
+    );
+  }
+
   return fromZonedTime(startOfDay(startDateStr), timeZone);
 }
 
 export function convertHistoryEndDate(endDateStr: string, timeZone: TIME_ZONE) {
+  const today = fromZonedTime(
+    endOfDay(toZonedTime(new Date(), timeZone)),
+    timeZone,
+  );
+
+  const endDate = fromZonedTime(endOfDay(endDateStr), timeZone);
+
+  if (endDate > today) {
+    throw new BadRequestException(
+      '종료 날짜는 현재 날짜를 넘어설 수 없습니다.',
+    );
+  }
+
   return fromZonedTime(endOfDay(endDateStr), timeZone);
 }
 
