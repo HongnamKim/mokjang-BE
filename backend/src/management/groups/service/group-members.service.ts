@@ -160,6 +160,12 @@ export class GroupMembersService {
   ) {
     const endDate = convertHistoryEndDate(startDate, TIME_ZONE.SEOUL);
 
+    await this.groupHistoryDomainService.validateGroupStartDates(
+      changeGroupMembers,
+      endDate,
+      qr,
+    );
+
     // 교인 수 감소
     await this.decrementOldGroups(church, changeGroupMembers, qr);
 

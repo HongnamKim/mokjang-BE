@@ -20,6 +20,9 @@ import { GetGroupHistoryDto } from '../../dto/get-group-history.dto';
 import { GroupHistoryException } from '../../exception/group-history.exception';
 import { GroupModel } from '../../../../management/groups/entity/group.entity';
 import { HistoryUpdateDate } from '../../../history-date.utils';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 
 @Injectable()
 export class GroupHistoryDomainService implements IGroupHistoryDomainService {
@@ -84,6 +87,37 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
     );
 
     return repository.save(histories);
+  }
+
+  async validateGroupStartDates(
+    members: MemberModel[],
+    newStartDate: Date,
+    qr: QueryRunner,
+  ) {
+    const memberIds = members.map((m) => m.id);
+
+    const invalidMembers = await qr.manager
+      .createQueryBuilder(GroupHistoryModel, 'gh')
+      .select(['gh.memberId', 'gh.startDate', 'm.name'])
+      .innerJoin('gh.member', 'm')
+      .where('gh.memberId IN (:...memberIds)', { memberIds })
+      .andWhere('gh.endDate IS NULL')
+      .andWhere('gh.startDate > :newStartDate', { newStartDate })
+      .andWhere('gh.deletedAt IS NULL')
+      .getMany();
+
+    if (invalidMembers.length > 0) {
+      const invalidInfo = invalidMembers
+        .map(
+          (h) =>
+            `${h.member.name}(${format(toZonedTime(h.startDate, TIME_ZONE.SEOUL), 'yyyy-MM-dd')})`,
+        )
+        .join(', ');
+
+      throw new BadRequestException(
+        `다음 교인들의 기존 그룹 시작일이 새 그룹 시작일(${format(toZonedTime(newStartDate, TIME_ZONE.SEOUL), 'yyyy-MM-dd')})보다 늦습니다: ${invalidInfo}`,
+      );
+    }
   }
 
   async endCurrentGroupHistory(
