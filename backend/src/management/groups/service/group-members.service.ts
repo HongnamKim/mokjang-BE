@@ -82,6 +82,22 @@ export class GroupMembersService {
     return new GetGroupMembersResponseDto(groupMembers);
   }
 
+  private assertNotSameGroup(members: MemberModel[], newGroup: GroupModel) {
+    const sameGroupMembers = members.filter(
+      (member) => member.groupId === newGroup.id,
+    );
+
+    if (sameGroupMembers.length > 0) {
+      throw new AddMemberConflictException(
+        MemberException.ALREADY_SAME_GROUP,
+        sameGroupMembers.map((member) => ({
+          id: member.id,
+          name: member.name,
+        })),
+      );
+    }
+  }
+
   async addMembersToGroup(
     churchId: number,
     groupId: number,
@@ -106,61 +122,12 @@ export class GroupMembersService {
       { group: true },
     );
 
-    const sameGroupMembers = members.filter(
-      (member) => member.groupId === groupId,
-    );
-
-    if (sameGroupMembers.length > 0) {
-      throw new AddMemberConflictException(
-        MemberException.ALREADY_SAME_GROUP,
-        sameGroupMembers.map((member) => ({
-          id: member.id,
-          name: member.name,
-        })),
-      );
-    }
+    this.assertNotSameGroup(members, group);
 
     // 그룹을 옮기는 교인 처리
     const changeGroupMembers = members.filter((member) => member.groupId);
     if (changeGroupMembers.length > 0) {
-      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
-
-      // 교인 수 감소
-      await this.decrementOldGroups(church, changeGroupMembers, qr);
-
-      // 리더였던 교인 처리
-      const oldGroupLeaderMembers = changeGroupMembers.filter(
-        (member) => member.groupRole === GroupRole.LEADER,
-      );
-      const leaderLostGroups = oldGroupLeaderMembers.map(
-        (member) => member.group,
-      );
-      await this.groupsDomainService.removeGroupLeader(leaderLostGroups, qr);
-
-      // 리더 이력 종료 처리
-      await this.groupDetailHistoryDomainService.endGroupDetailHistory(
-        oldGroupLeaderMembers,
-        endDate,
-        qr,
-      );
-
-      // 기존 그룹 이력 종료 처리
-      for (const member of changeGroupMembers) {
-        const groupSnapShot =
-          await this.groupsDomainService.getGroupNameWithHierarchy(
-            church,
-            member.group,
-            qr,
-          );
-
-        await this.groupHistoryDomainService.endGroupHistories(
-          [member],
-          endDate,
-          qr,
-          member.group,
-          groupSnapShot,
-        );
-      }
+      await this.changeGroup(church, changeGroupMembers, dto.startDate, qr);
     }
 
     // 교인에게 그룹 부여
@@ -183,6 +150,51 @@ export class GroupMembersService {
     group.membersCount += members.length;
 
     return new AddMembersToGroupResponseDto(group);
+  }
+
+  private async changeGroup(
+    church: ChurchModel,
+    changeGroupMembers: MemberModel[],
+    startDate: string,
+    qr: QueryRunner,
+  ) {
+    const endDate = convertHistoryEndDate(startDate, TIME_ZONE.SEOUL);
+
+    // 교인 수 감소
+    await this.decrementOldGroups(church, changeGroupMembers, qr);
+
+    // 리더였던 교인 처리
+    const oldGroupLeaderMembers = changeGroupMembers.filter(
+      (member) => member.groupRole === GroupRole.LEADER,
+    );
+    const leaderLostGroups = oldGroupLeaderMembers.map(
+      (member) => member.group,
+    );
+    await this.groupsDomainService.removeGroupLeader(leaderLostGroups, qr);
+
+    // 리더 이력 종료 처리
+    await this.groupDetailHistoryDomainService.endGroupDetailHistory(
+      oldGroupLeaderMembers,
+      endDate,
+      qr,
+    );
+
+    // 기존 그룹 이력 종료 처리
+    for (const member of changeGroupMembers) {
+      const groupSnapShot =
+        await this.groupsDomainService.getGroupNameWithHierarchy(
+          church,
+          member.group,
+          qr,
+        );
+
+      await this.groupHistoryDomainService.endCurrentGroupHistory(
+        member,
+        groupSnapShot,
+        endDate,
+        qr,
+      );
+    }
   }
 
   private async decrementOldGroups(
@@ -273,7 +285,6 @@ export class GroupMembersService {
       group.leaderMemberId = null;
     }
 
-    // TODO 그룹 이력 종료 처리
     const groupSnapShot =
       await this.groupsDomainService.getGroupNameWithHierarchy(
         church,
