@@ -23,6 +23,12 @@ export interface IGroupHistoryDomainService {
     qr: QueryRunner,
   ): Promise<GroupHistoryModel[]>;
 
+  validateGroupStartDates(
+    members: MemberModel[],
+    newStartDate: Date,
+    qr: QueryRunner,
+  ): Promise<void>;
+
   endCurrentGroupHistory(
     member: MemberModel,
     groupSnapShot: string,
