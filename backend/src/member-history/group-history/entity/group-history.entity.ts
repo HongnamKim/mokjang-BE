@@ -46,9 +46,6 @@ export class GroupHistoryModel extends BaseModel {
   @Column({ type: 'timestamptz', nullable: true })
   endDate: Date | null;
 
-  @Column({ default: false })
-  hasDetailHistory: boolean;
-
   @OneToMany(
     () => GroupDetailHistoryModel,
     (detailHistory) => detailHistory.groupHistory,

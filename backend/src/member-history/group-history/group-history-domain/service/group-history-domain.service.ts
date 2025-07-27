@@ -86,6 +86,52 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
     return repository.save(histories);
   }
 
+  async endCurrentGroupHistory(
+    member: MemberModel,
+    groupSnapShot: string,
+    endDate: Date,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getGroupHistoryRepository(qr);
+
+    const currentGroupHistory = await repository.findOne({
+      where: {
+        memberId: member.id,
+        endDate: IsNull(),
+      },
+    });
+
+    if (!currentGroupHistory) {
+      return;
+    }
+
+    if (currentGroupHistory.startDate > endDate) {
+      throw new BadRequestException(
+        `${member.name} 교인의 이전 그룹 시작일과 새로운 그룹 시작일에 오류가 있습니다.`,
+      );
+    }
+
+    const result = await repository.update(
+      {
+        id: currentGroupHistory.id,
+      },
+      {
+        groupSnapShot,
+        endDate,
+        groupId: null,
+        group: null,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        GroupHistoryException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
   async endGroupHistories(
     members: MemberModel[],
     endDate: Date,
