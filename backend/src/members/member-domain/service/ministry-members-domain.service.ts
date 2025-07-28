@@ -88,6 +88,20 @@ export class MinistryMembersDomainService
       .getMany();
   }
 
+  async filterMembersWithoutMinistryGroup(
+    members: MemberModel[],
+    qr: QueryRunner,
+  ) {
+    const memberIds = members.map((m) => m.id);
+
+    return qr.manager
+      .createQueryBuilder(MemberModel, 'member')
+      .leftJoin('member.ministryGroups', 'mg')
+      .where('member.id IN (:...memberIds)', { memberIds })
+      .andWhere('mg.id IS NULL')
+      .getMany();
+  }
+
   async findMinistryGroupMembersByIds(
     ministryGroup: MinistryGroupModel,
     memberIds: number[],

@@ -19,11 +19,9 @@ import { MemberModel } from '../../../../members/entity/member.entity';
 import { MinistryGroupHistoryException } from '../../exception/ministry-group-history.exception';
 import { GetMinistryGroupHistoriesDto } from '../../dto/request/group/get-ministry-group-histories.dto';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
-import {
-  getHistoryEndDate,
-  getHistoryStartDate,
-  HistoryUpdateDate,
-} from '../../../history-date.utils';
+import { HistoryUpdateDate } from '../../../history-date.utils';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class MinistryGroupHistoryDomainService
@@ -112,6 +110,7 @@ export class MinistryGroupHistoryDomainService
   startMinistryGroupHistories(
     ministryGroup: MinistryGroupModel,
     members: MemberModel[],
+    startDate: Date,
     qr: QueryRunner,
   ): Promise<MinistryGroupHistoryModel[]> {
     const repository = this.getRepository(qr);
@@ -124,17 +123,53 @@ export class MinistryGroupHistoryDomainService
         ministryGroup: {
           id: ministryGroup.id,
         },
-        startDate: getHistoryStartDate(TIME_ZONE.SEOUL),
+        startDate,
       }),
     );
 
     return repository.save(histories);
   }
 
+  async validateEndDates(
+    members: MemberModel[],
+    ministryGroup: MinistryGroupModel,
+    endDate: Date,
+    qr: QueryRunner,
+  ) {
+    const memberIds = members.map((m) => m.id);
+
+    const invalidMembers = await qr.manager
+      .createQueryBuilder(MinistryGroupHistoryModel, 'mgh')
+      .select(['mgh.memberId', 'mgh.startDate', 'm.name'])
+      .innerJoin('mgh.member', 'm')
+      .where('mgh.memberId IN (:...memberIds)', { memberIds })
+      .andWhere('mgh.ministryGroupId = :ministryGroupId', {
+        ministryGroupId: ministryGroup.id,
+      })
+      .andWhere('mgh.endDate IS NULL')
+      .andWhere('mgh.startDate > :endDate', { endDate })
+      .andWhere('mgh.deletedAt IS NULL')
+      .getMany();
+
+    if (invalidMembers.length > 0) {
+      const invalidInfo = invalidMembers
+        .map(
+          (h) =>
+            `${h.member.name}(${format(toZonedTime(h.startDate, TIME_ZONE.SEOUL), 'yyyy-MM-dd')})`,
+        )
+        .join(', ');
+
+      throw new BadRequestException(
+        `다음 교인들의 기존 사역 그룹 시작일이 종료일(${format(toZonedTime(endDate, TIME_ZONE.SEOUL), 'yyyy-MM-dd')})보다 늦습니다: ${invalidInfo}`,
+      );
+    }
+  }
+
   async endMinistryGroupHistories(
     ministryGroup: MinistryGroupModel,
     ministryGroupSnapShot: string,
     members: MemberModel[],
+    endDate: Date,
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -146,7 +181,7 @@ export class MinistryGroupHistoryDomainService
       },
       {
         ministryGroupId: null,
-        endDate: getHistoryEndDate(TIME_ZONE.SEOUL),
+        endDate,
         ministryGroupSnapShot,
       },
     );

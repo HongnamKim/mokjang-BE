@@ -1,4 +1,4 @@
-import { MinistryGroupRoleHistoryModel } from '../../../entity/ministry-group-role-history.entity';
+import { MinistryGroupRoleHistoryModel } from '../../../entity/child/ministry-group-role-history.entity';
 
 export class MinistryGroupRoleHistoryPaginationResponseDto {
   constructor(

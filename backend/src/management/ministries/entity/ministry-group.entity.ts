@@ -2,6 +2,7 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -54,8 +55,13 @@ export class MinistryGroupModel extends BaseModel {
   @Column({ default: 0 })
   membersCount: number;
 
+  @Index()
   @Column({ type: 'int', nullable: true })
   leaderMemberId: number | null;
+
+  @ManyToOne(() => MemberModel)
+  @JoinColumn({ name: 'leaderMemberId' })
+  leaderMember: MemberModel;
 
   @Column({ default: 0 })
   ministriesCount: number;

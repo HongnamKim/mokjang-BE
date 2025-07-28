@@ -89,7 +89,7 @@ export class MinistryGroupsMembersController {
     return this.ministryGroupMemberService.removeMembersFromMinistryGroup(
       churchId,
       ministryGroupId,
-      dto.memberIds,
+      dto,
       qr,
     );
   }

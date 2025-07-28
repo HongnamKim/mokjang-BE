@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, Min } from 'class-validator';
+import { IsDateString, IsNumber, Min } from 'class-validator';
+import { IsYYYYMMDD } from '../../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
 export class UpdateMinistryGroupLeaderDto {
   @ApiProperty({
@@ -8,4 +9,11 @@ export class UpdateMinistryGroupLeaderDto {
   @IsNumber()
   @Min(1)
   newMinistryGroupLeaderId: number;
+
+  @ApiProperty({
+    description: '사역 이력 시작 날짜',
+  })
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('startDate')
+  startDate: string;
 }

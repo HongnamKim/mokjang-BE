@@ -131,4 +131,9 @@ export interface IMinistryGroupsDomainService {
     ministryGroupId: number,
     qr?: QueryRunner,
   ): Promise<string>;
+
+  findMinistryGroupsByLeaderMember(
+    member: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<MinistryGroupModel[]>;
 }

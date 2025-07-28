@@ -33,13 +33,18 @@ import {
 } from '../../../members/member-domain/interface/ministry-members-domain.service.interface';
 import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
 import {
-  IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE,
-  IMinistryGroupRoleHistoryDomainService,
-} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-role-history-domain.service.interface';
-import {
   IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
   IMinistryGroupHistoryDomainService,
 } from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import {
+  IMINISTRY_GROUP_DETAIL_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupDetailHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-detail-history-domain.service.interface';
+import {
+  convertHistoryEndDate,
+  convertHistoryStartDate,
+} from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
 
 @Injectable()
 export class MinistryGroupService {
@@ -58,8 +63,10 @@ export class MinistryGroupService {
 
     @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
     private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
-    @Inject(IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE)
-    private readonly ministryGroupRoleHistoryDomainService: IMinistryGroupRoleHistoryDomainService,
+    @Inject(IMINISTRY_GROUP_DETAIL_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupDetailHistoryDomainService: IMinistryGroupDetailHistoryDomainService,
+    /*@Inject(IMINISTRY_GROUP_ROLE_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupRoleHistoryDomainService: IMinistryGroupRoleHistoryDomainService,*/
   ) {}
 
   async getMinistryGroups(churchId: number, dto: GetMinistryGroupDto) {
@@ -297,6 +304,7 @@ export class MinistryGroupService {
         church,
         ministryGroupId,
         qr,
+        { leaderMember: true },
       );
 
     if (ministryGroup.leaderMemberId === dto.newMinistryGroupLeaderId) {
@@ -330,9 +338,19 @@ export class MinistryGroupService {
         ministryGroup,
         qr,
       );
-    await this.ministryGroupRoleHistoryDomainService.startMinistryGroupRoleHistory(
+
+    const startDate = convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL);
+
+    await this.ministryGroupDetailHistoryDomainService.startMinistryGroupRoleHistory(
+      newLeaderMember,
       newLeaderHistory,
+      startDate,
+      qr,
     );
+
+    /*await this.ministryGroupRoleHistoryDomainService.startMinistryGroupRoleHistory(
+      newLeaderHistory,
+    );*/
 
     await this.ministryGroupsDomainService.updateMinistryGroupLeader(
       ministryGroup,
@@ -343,11 +361,23 @@ export class MinistryGroupService {
     newLeaderMember.ministryGroupRole = GroupRole.LEADER;
 
     if (oldLeaderMember) {
-      await this.ministryMembersDomainService.updateMinistryGroupRole(
-        [oldLeaderMember],
-        GroupRole.MEMBER,
-        qr,
-      );
+      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
+
+      // 다른 사역 그룹에서도 리더인지 확인
+      const leaderGroups =
+        await this.ministryGroupsDomainService.findMinistryGroupsByLeaderMember(
+          oldLeaderMember,
+          qr,
+        );
+
+      if (leaderGroups.length === 0) {
+        // 리더인 사역그룹이 없을 경우 ministryGroupRole 을 Member 로 변경
+        await this.ministryMembersDomainService.updateMinistryGroupRole(
+          [oldLeaderMember],
+          GroupRole.MEMBER,
+          qr,
+        );
+      }
 
       const oldLeaderHistory =
         await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
@@ -355,8 +385,17 @@ export class MinistryGroupService {
           ministryGroup,
           qr,
         );
-      await this.ministryGroupRoleHistoryDomainService.endMinistryGroupRoleHistory(
-        oldLeaderHistory,
+
+      const currentRoleHistory =
+        await this.ministryGroupDetailHistoryDomainService.findCurrentRoleHistory(
+          oldLeaderHistory,
+          qr,
+        );
+
+      // TODO 기존 사역리더 이력 종료
+      await this.ministryGroupDetailHistoryDomainService.endMinistryGroupRoleHistory(
+        currentRoleHistory,
+        endDate,
         qr,
       );
     }

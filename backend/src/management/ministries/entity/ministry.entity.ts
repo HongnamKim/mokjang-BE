@@ -14,7 +14,7 @@ import {
 } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { MinistryHistoryModel } from '../../../member-history/ministry-history/entity/ministry-history.entity';
+import { MinistryHistoryModel } from '../../../member-history/ministry-history/entity/child/ministry-history.entity';
 
 @Entity()
 export class MinistryModel extends BaseModel {

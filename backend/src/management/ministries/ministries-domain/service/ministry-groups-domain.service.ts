@@ -852,4 +852,17 @@ export class MinistryGroupsDomainService
       .map((ministryGroup) => ministryGroup.name)
       .join('__');
   }
+
+  async findMinistryGroupsByLeaderMember(
+    member: MemberModel,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    return repository.find({
+      where: {
+        leaderMemberId: member.id,
+      },
+    });
+  }
 }
