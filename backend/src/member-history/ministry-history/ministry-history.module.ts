@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { MinistriesDomainModule } from '../../management/ministries/ministries-domain/ministries-domain.module';
 import { MinistryGroupHistoryController } from './controller/ministry-group-history.controller';
-import { MinistryHistoryController } from './controller/ministry-history.controller';
-import { MinistryHistoryService } from './service/ministry-history.service';
 import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
 import { HistoryPermissionService } from '../guard/history-permission.service';
 import { IMEMBER_FILTER_SERVICE } from '../../members/service/interface/member-filter.service.interface';
@@ -14,8 +12,8 @@ import { GroupsDomainModule } from '../../management/groups/groups-domain/groups
 import { RouterModule } from '@nestjs/core';
 import { MinistryHistoryDomainModule } from './ministry-history-domain/ministry-history-domain.module';
 import { MinistryGroupHistoryService } from './service/ministry-group-history.service';
-import { MinistryGroupRoleHistoryController } from './controller/ministry-group-role-history.controller';
-import { MinistryGroupRoleHistoryService } from './service/ministry-group-role-history.service';
+import { MinistryGroupDetailHistoryService } from './service/ministry-group-detail-history.service';
+import { MinistryGroupDetailHistoryController } from './controller/ministry-group-detail-history.controller';
 
 @Module({
   imports: [
@@ -35,12 +33,12 @@ import { MinistryGroupRoleHistoryService } from './service/ministry-group-role-h
   ],
   controllers: [
     MinistryGroupHistoryController,
-    MinistryGroupRoleHistoryController,
-    MinistryHistoryController,
+    MinistryGroupDetailHistoryController,
+    //MinistryHistoryController,
   ],
   providers: [
-    MinistryHistoryService,
-    MinistryGroupRoleHistoryService,
+    //MinistryHistoryService,
+    MinistryGroupDetailHistoryService,
     MinistryGroupHistoryService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,

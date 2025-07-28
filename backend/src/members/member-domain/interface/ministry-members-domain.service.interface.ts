@@ -17,6 +17,11 @@ export interface IMinistryMembersDomainService {
     dto: GetUnassignedMembersDto,
   ): Promise<MemberModel[]>;
 
+  filterMembersWithoutMinistryGroup(
+    members: MemberModel[],
+    qr: QueryRunner,
+  ): Promise<MemberModel[]>;
+
   searchMembersForMinistryGroup(
     church: ChurchModel,
     ministryGroup: MinistryGroupModel,

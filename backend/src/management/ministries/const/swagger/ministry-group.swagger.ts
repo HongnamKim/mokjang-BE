@@ -25,3 +25,10 @@ export const ApiPatchMinistryGroupStructure = () =>
         '최상위 그룹으로 설정하려는 경우 parentMinistryGroupId 를 null 로 설정',
     }),
   );
+
+export const ApiPatchMinistryGroupLeader = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '사역리더 지정',
+    }),
+  );

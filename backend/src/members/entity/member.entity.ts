@@ -22,7 +22,7 @@ import { EducationEnrollmentModel } from '../../management/educations/entity/edu
 import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
-import { MinistryHistoryModel } from '../../member-history/ministry-history/entity/ministry-history.entity';
+import { MinistryHistoryModel } from '../../member-history/ministry-history/entity/child/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/officer-history/entity/officer-history.entity';
 import { GroupHistoryModel } from '../../member-history/group-history/entity/group-history.entity';
 import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';

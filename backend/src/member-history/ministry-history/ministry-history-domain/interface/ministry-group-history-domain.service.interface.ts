@@ -32,13 +32,22 @@ export interface IMinistryGroupHistoryDomainService {
   startMinistryGroupHistories(
     ministryGroup: MinistryGroupModel,
     members: MemberModel[],
+    startDate: Date,
     qr: QueryRunner,
   ): Promise<MinistryGroupHistoryModel[]>;
+
+  validateEndDates(
+    members: MemberModel[],
+    ministryGroup: MinistryGroupModel,
+    endDate: Date,
+    qr: QueryRunner,
+  ): Promise<void>;
 
   endMinistryGroupHistories(
     ministryGroup: MinistryGroupModel,
     ministryGroupSnapShot: string,
     members: MemberModel[],
+    endDate: Date,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateMinistryGroupDto } from '../dto/ministry-group/request/create-ministry-group.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { UpdateMinistryGroupNameDto } from '../dto/ministry-group/request/update-ministry-group-name.dto';
@@ -24,6 +24,7 @@ import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/request/update-ministry-group-structure.dto';
 import {
+  ApiPatchMinistryGroupLeader,
   ApiPatchMinistryGroupName,
   ApiPatchMinistryGroupStructure,
   ApiRefreshMinistryGroupCount,
@@ -139,7 +140,7 @@ export class MinistryGroupsController {
     );
   }
 
-  @ApiOperation({ summary: '사역그룹장 지정' })
+  @ApiPatchMinistryGroupLeader()
   @Patch(':ministryGroupId/leader')
   @UseInterceptors(TransactionInterceptor)
   patchMinistryGroupLeader(

@@ -23,16 +23,21 @@ import {
 import { QueryRunner } from 'typeorm';
 import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
 import { RemoveMinistryFromMember } from '../dto/ministry/request/member/remove-ministry-from-member.dto';
-import {
-  IMINISTRY_HISTORY_DOMAIN_SERVICE,
-  IMinistryHistoryDomainService,
-} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-history-domain.service.interface';
 import { StartMinistryHistoryVo } from '../../../member-history/ministry-history/dto/start-ministry-history.vo';
 import {
   IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
   IMinistryGroupHistoryDomainService,
 } from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
 import { EndMinistryHistoryVo } from '../../../member-history/ministry-history/dto/end-ministry-history.vo';
+import {
+  IMINISTRY_GROUP_DETAIL_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupDetailHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-detail-history-domain.service.interface';
+import {
+  getHistoryEndDate,
+  getHistoryStartDate,
+} from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
 
 @Injectable()
 export class MinistryMemberService {
@@ -49,8 +54,8 @@ export class MinistryMemberService {
 
     @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
     private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
-    @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
-    private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
+    @Inject(IMINISTRY_GROUP_DETAIL_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupDetailHistoryDomainService: IMinistryGroupDetailHistoryDomainService,
   ) {}
 
   async refreshMinistryMemberCount(
@@ -147,16 +152,32 @@ export class MinistryMemberService {
     // 새로운 사역의 교인 수 증가
     await this.ministriesDomainService.incrementMembersCount(newMinistry, qr);
 
-    // 기존 사역의 교인 수 감소
+    // 기존 사역의 교인 수 감소 및 이력 종료
     if (oldMinistry.length > 0) {
       await Promise.all(
         oldMinistry.map((oldMinistry) =>
           this.ministriesDomainService.decrementMembersCount(oldMinistry, qr),
         ),
       );
+
+      const endMinistryVo = oldMinistry.map(
+        (old) => new EndMinistryHistoryVo(member, old),
+      );
+      const endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
+      await this.ministryGroupDetailHistoryDomainService.validateMinistryEndDates(
+        endMinistryVo,
+        endDate,
+        qr,
+      );
+
+      await this.ministryGroupDetailHistoryDomainService.endMinistryHistories(
+        endMinistryVo,
+        endDate,
+        qr,
+      );
     }
 
-    // 교인 사역 이력 생성 및 종료
+    // 교인 사역 이력 생성
     const ministryGroupHistory =
       await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
         member,
@@ -168,15 +189,9 @@ export class MinistryMemberService {
       newMinistry,
       ministryGroupHistory,
     );
-    await this.ministryHistoryDomainService.startMinistryHistories(
+    await this.ministryGroupDetailHistoryDomainService.startMinistryHistories(
       [startMinistryVo],
-      qr,
-    );
-    const endMinistryVo = oldMinistry.map(
-      (old) => new EndMinistryHistoryVo(member, old),
-    );
-    await this.ministryHistoryDomainService.endMinistryHistories(
-      endMinistryVo,
+      getHistoryStartDate(TIME_ZONE.SEOUL),
       qr,
     );
 
@@ -238,8 +253,15 @@ export class MinistryMemberService {
 
     // 사역 이력 종료
     const endMinistryVo = new EndMinistryHistoryVo(member, ministry);
-    await this.ministryHistoryDomainService.endMinistryHistories(
+    const endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
+    await this.ministryGroupDetailHistoryDomainService.validateMinistryEndDates(
       [endMinistryVo],
+      endDate,
+      qr,
+    );
+    await this.ministryGroupDetailHistoryDomainService.endMinistryHistories(
+      [endMinistryVo],
+      endDate,
       qr,
     );
 

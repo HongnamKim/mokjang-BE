@@ -1,4 +1,4 @@
-import { MinistryHistoryModel } from '../../../entity/ministry-history.entity';
+import { MinistryHistoryModel } from '../../../entity/child/ministry-history.entity';
 
 export class MinistryHistoryPaginationResponseDto {
   constructor(

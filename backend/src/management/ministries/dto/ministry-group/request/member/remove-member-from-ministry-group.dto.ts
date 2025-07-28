@@ -3,9 +3,11 @@ import {
   ArrayMinSize,
   ArrayUnique,
   IsArray,
+  IsDateString,
   IsNumber,
   Min,
 } from 'class-validator';
+import { IsYYYYMMDD } from '../../../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
 export class RemoveMembersFromMinistryGroupDto {
   @ApiProperty({
@@ -18,4 +20,11 @@ export class RemoveMembersFromMinistryGroupDto {
   @Min(1, { each: true })
   @IsNumber({}, { each: true })
   memberIds: number[];
+
+  @ApiProperty({
+    description: '사역그룹 이력 종료 날짜',
+  })
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('endDate')
+  endDate: string;
 }

@@ -1,16 +1,7 @@
 import { BaseModel } from '../../../common/entity/base.entity';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MinistryGroupModel } from '../../../management/ministries/entity/ministry-group.entity';
-import { MinistryHistoryModel } from './ministry-history.entity';
-import { MinistryGroupRoleHistoryModel } from './ministry-group-role-history.entity';
 
 @Entity()
 export class MinistryGroupHistoryModel extends BaseModel {
@@ -44,16 +35,4 @@ export class MinistryGroupHistoryModel extends BaseModel {
     nullable: true,
   })
   ministryGroupSnapShot: string | null;
-
-  @OneToMany(
-    () => MinistryHistoryModel,
-    (ministryHistory) => ministryHistory.ministryGroupHistory,
-  )
-  ministryHistories: MinistryHistoryModel[];
-
-  @OneToMany(
-    () => MinistryGroupRoleHistoryModel,
-    (ministryGroupRoleHistory) => ministryGroupRoleHistory.ministryGroupHistory,
-  )
-  ministryGroupRoleHistories: MinistryGroupRoleHistoryModel[];
 }

@@ -36,14 +36,20 @@ import {
   IMinistryGroupHistoryDomainService,
 } from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
 import { StartMinistryHistoryVo } from '../../../member-history/ministry-history/dto/start-ministry-history.vo';
-import {
-  IMINISTRY_HISTORY_DOMAIN_SERVICE,
-  IMinistryHistoryDomainService,
-} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-history-domain.service.interface';
 import { EndMinistryHistoryVo } from '../../../member-history/ministry-history/dto/end-ministry-history.vo';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { MinistryGroupHistoryModel } from '../../../member-history/ministry-history/entity/ministry-group-history.entity';
+import {
+  IMINISTRY_GROUP_DETAIL_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupDetailHistoryDomainService,
+} from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-detail-history-domain.service.interface';
+import {
+  convertHistoryEndDate,
+  convertHistoryStartDate,
+} from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { RemoveMembersFromMinistryGroupDto } from '../dto/ministry-group/request/member/remove-member-from-ministry-group.dto';
 
 @Injectable()
 export class MinistryGroupMemberService {
@@ -62,8 +68,8 @@ export class MinistryGroupMemberService {
 
     @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
     private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
-    @Inject(IMINISTRY_HISTORY_DOMAIN_SERVICE)
-    private readonly ministryHistoryDomainService: IMinistryHistoryDomainService,
+    @Inject(IMINISTRY_GROUP_DETAIL_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupDetailHistoryDomainService: IMinistryGroupDetailHistoryDomainService,
   ) {}
 
   async addMemberToMinistryGroup(
@@ -110,11 +116,14 @@ export class MinistryGroupMemberService {
       qr,
     );
 
+    const startDate = convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL);
+
     // 사역그룹 이력 생성
     const ministryGroupHistories =
       await this.ministryGroupHistoryDomainService.startMinistryGroupHistories(
         ministryGroup,
         members,
+        startDate,
         qr,
       );
     // 사역 그룹에 교인 추가 완료
@@ -155,6 +164,7 @@ export class MinistryGroupMemberService {
     members: MemberModel[],
     qr: QueryRunner,
   ) {
+    // 필요한 사역 id
     const ministryIds = Array.from(
       new Set(
         dto.members
@@ -226,8 +236,10 @@ export class MinistryGroupMemberService {
       );
     });
 
-    await this.ministryHistoryDomainService.startMinistryHistories(
+    const startDate = convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL);
+    await this.ministryGroupDetailHistoryDomainService.startMinistryHistories(
       ministryHistoryVo,
+      startDate,
       qr,
     );
 
@@ -265,11 +277,10 @@ export class MinistryGroupMemberService {
     return { data: members, timestamp: new Date() };
   }
 
-  // TODO 교인 ministryGroupRole 처리 필요
   async removeMembersFromMinistryGroup(
     churchId: number,
     ministryGroupId: number,
-    memberIds: number[],
+    dto: RemoveMembersFromMinistryGroupDto,
     qr: QueryRunner,
   ) {
     const church =
@@ -281,6 +292,9 @@ export class MinistryGroupMemberService {
         ministryGroupId,
         qr,
       );
+
+    const memberIds = dto.memberIds;
+    const endDate = convertHistoryEndDate(dto.endDate, TIME_ZONE.SEOUL);
 
     // 제거 대상 교인 + 담당사역
     const removeMembers =
@@ -297,6 +311,47 @@ export class MinistryGroupMemberService {
       qr,
     );
 
+    // 삭제 교인 중 리더가 있는 경우
+    if (
+      removeMembers.some((member) => member.id === ministryGroup.leaderMemberId)
+    ) {
+      // 리더 교인의 상세 이력 종료 처리
+      const [leaderMember] = removeMembers.filter(
+        (member) => member.id === ministryGroup.leaderMemberId,
+      );
+
+      const ministryGroupHistory =
+        await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistory(
+          leaderMember,
+          ministryGroup,
+          qr,
+        );
+
+      const leaderHistory =
+        await this.ministryGroupDetailHistoryDomainService.findCurrentRoleHistory(
+          ministryGroupHistory,
+          qr,
+        );
+
+      await this.ministryGroupDetailHistoryDomainService.endMinistryGroupRoleHistory(
+        leaderHistory,
+        endDate,
+        qr,
+      );
+
+      await this.ministryMembersDomainService.updateMinistryGroupRole(
+        [leaderMember],
+        GroupRole.MEMBER,
+        qr,
+      );
+
+      await this.ministryGroupsDomainService.updateMinistryGroupLeader(
+        ministryGroup,
+        null,
+        qr,
+      );
+    }
+
     // 사역그룹 스냅샷
     const ministryGroupSnapShot =
       await this.ministryGroupsDomainService.getMinistryGroupNameWithHierarchy(
@@ -305,29 +360,28 @@ export class MinistryGroupMemberService {
         qr,
       );
 
+    // 그룹 종료일이 시작일을 앞서지 않는지 체크
+    await this.ministryGroupHistoryDomainService.validateEndDates(
+      removeMembers,
+      ministryGroup,
+      endDate,
+      qr,
+    );
+
     // 사역그룹 이력 종료
     await this.ministryGroupHistoryDomainService.endMinistryGroupHistories(
       ministryGroup,
       ministryGroupSnapShot,
       removeMembers,
+      endDate,
       qr,
     );
-
-    // 삭제 교인 중 리더가 있는 경우
-    if (
-      removeMembers.some((member) => member.id === ministryGroup.leaderMemberId)
-    ) {
-      await this.ministryGroupsDomainService.updateMinistryGroupLeader(
-        ministryGroup,
-        null,
-        qr,
-      );
-    }
 
     // 사역이 있는 교인들의 사역 종료
     const ministryMembers = removeMembers.filter(
       (member) => member.ministries.length > 0,
     );
+
     if (ministryMembers.length > 0) {
       // 사역 관계 해제
       await Promise.all(
@@ -358,19 +412,37 @@ export class MinistryGroupMemberService {
           ),
       );
 
-      // 사역이 있는 교인들의 사역 종료
-      await this.ministryHistoryDomainService.endMinistryHistories(
+      // 사역그룹 종료일이 사역 시작일을 앞서는지 체크
+      await this.ministryGroupDetailHistoryDomainService.validateMinistryEndDates(
         endMinistryHistoryVo,
+        endDate,
+        qr,
+      );
+
+      // 사역이 있는 교인들의 사역 종료
+      await this.ministryGroupDetailHistoryDomainService.endMinistryHistories(
+        endMinistryHistoryVo,
+        endDate,
         qr,
       );
     }
 
-    // 사역그룹 역할 제거 (ministryGroupRole)
-    await this.ministryMembersDomainService.updateMinistryGroupRole(
-      removeMembers,
-      GroupRole.NONE,
-      qr,
-    );
+    const noMinistryGroupMembers =
+      await this.ministryMembersDomainService.filterMembersWithoutMinistryGroup(
+        removeMembers,
+        qr,
+      );
+
+    //console.log(noMinistryGroupMembers)
+
+    // 사역그룹에 속하지 않은 교인들 사역그룹 역할 제거 (ministryGroupRole)
+    if (noMinistryGroupMembers.length > 0) {
+      await this.ministryMembersDomainService.updateMinistryGroupRole(
+        noMinistryGroupMembers,
+        GroupRole.NONE,
+        qr,
+      );
+    }
 
     // 응답부분
     const updatedMinistryGroup =
