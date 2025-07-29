@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString } from 'class-validator';
-import { IsYYYYMMDD } from '../../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 import { IsOptionalNotNull } from '../../../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsYYYYMMDD } from '../../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
-export class UpdateMinistryGroupRoleHistoryDto {
+export class UpdateMinistryGroupDetailHistoryDto {
   @ApiProperty({
-    description: '이력 시작 날짜',
+    description: '사역 이력 시작 날짜',
     required: false,
   })
   @IsOptionalNotNull()
@@ -14,7 +14,7 @@ export class UpdateMinistryGroupRoleHistoryDto {
   startDate?: string;
 
   @ApiProperty({
-    description: '이력 종료 날짜',
+    description: '사역 이력 종료 날짜',
     required: false,
   })
   @IsOptionalNotNull()

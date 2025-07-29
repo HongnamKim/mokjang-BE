@@ -13,6 +13,7 @@ import {
   MoreThan,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { MinistryGroupHistoryModel } from '../../entity/ministry-group-history.entity';
 import { GroupRole } from '../../../../management/groups/const/group-role.enum';
@@ -25,6 +26,10 @@ import { EndMinistryHistoryVo } from '../../dto/end-ministry-history.vo';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
+import { GetMinistryGroupDetailHistoriesDto } from '../../dto/request/detail/get-ministry-group-detail-histories.dto';
+import { MinistryGroupDetailHistoryDto } from '../../dto/response/ministry-group-detail-history.dto';
+import { HistoryUpdateDate } from '../../../history-date.utils';
+import { MinistryGroupDetailHistoryException } from '../../exception/ministry-group-detail-history.exception';
 
 @Injectable()
 export class MinistryGroupDetailHistoryDomainService
@@ -59,6 +64,7 @@ export class MinistryGroupDetailHistoryDomainService
 
   async paginateDetailHistories(
     ministryGroupHistory: MinistryGroupHistoryModel,
+    dto: GetMinistryGroupDetailHistoriesDto,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -67,9 +73,17 @@ export class MinistryGroupDetailHistoryDomainService
       where: {
         ministryGroupHistoryId: ministryGroupHistory.id,
       },
+      order: {
+        endDate: dto.orderDirection,
+        startDate: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      relations: ['ministry'],
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
     });
 
-    return histories;
+    return histories.map((h) => new MinistryGroupDetailHistoryDto(h));
   }
 
   async findMinistryDetailHistoryModelById(
@@ -258,6 +272,86 @@ export class MinistryGroupDetailHistoryDomainService
     if (result.affected === 0) {
       throw new InternalServerErrorException(
         MinistryGroupRoleHistoryException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  private validateUpdateDate(
+    targetHistory: MinistryGroupDetailHistoryModel,
+    historyDate: HistoryUpdateDate,
+  ) {
+    if (!targetHistory.endDate && historyDate.endDate) {
+      throw new BadRequestException(
+        MinistryGroupDetailHistoryException.CANNOT_UPDATE_END_DATE,
+      );
+    }
+
+    // 시작 날짜만 변경
+    if (historyDate.startDate && !historyDate.endDate) {
+      if (
+        targetHistory.endDate &&
+        historyDate.startDate > targetHistory.endDate
+      ) {
+        throw new BadRequestException(
+          MinistryGroupDetailHistoryException.INVALID_UPDATE_START_DATE,
+        );
+      }
+    } else if (!historyDate.startDate && historyDate.endDate) {
+      if (historyDate.endDate < targetHistory.startDate) {
+        throw new BadRequestException(
+          MinistryGroupDetailHistoryException.INVALID_UPDATE_END_DATE,
+        );
+      }
+    }
+  }
+
+  async updateDetailHistory(
+    targetHistory: MinistryGroupDetailHistoryModel,
+    historyDate: HistoryUpdateDate,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    this.validateUpdateDate(targetHistory, historyDate);
+
+    const result = await repository.update(
+      {
+        id: targetHistory.id,
+      },
+      {
+        startDate: historyDate.startDate,
+        endDate: historyDate.endDate,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupDetailHistoryException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async deleteDetailHistory(
+    targetHistory: MinistryGroupDetailHistoryModel,
+    qr?: QueryRunner,
+  ) {
+    if (targetHistory.endDate === null) {
+      throw new BadRequestException(
+        MinistryGroupDetailHistoryException.CANNOT_DELETE,
+      );
+    }
+
+    const repository = this.getRepository(qr);
+
+    const result = await repository.softDelete(targetHistory.id);
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupDetailHistoryException.DELETE_ERROR,
       );
     }
 
