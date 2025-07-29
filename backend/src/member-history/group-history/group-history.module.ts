@@ -11,6 +11,8 @@ import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { GroupsDomainModule } from '../../management/groups/groups-domain/groups-domain.module';
 import { GroupHistoryDomainModule } from './group-history-domain/group-history-domain.module';
+import { GroupDetailHistoryController } from './controller/group-detail-history.controller';
+import { GroupDetailHistoryService } from './service/group-detail-history.service';
 
 @Module({
   imports: [
@@ -27,9 +29,10 @@ import { GroupHistoryDomainModule } from './group-history-domain/group-history-d
 
     GroupHistoryDomainModule,
   ],
-  controllers: [GroupHistoryController],
+  controllers: [GroupHistoryController, GroupDetailHistoryController],
   providers: [
     GroupHistoryService,
+    GroupDetailHistoryService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: HistoryPermissionService,

@@ -1,12 +1,7 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { GroupHistoryModel } from '../entity/group-history.entity';
+import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { GetGroupHistoryDto } from '../dto/get-group-history.dto';
-import { UpdateGroupHistoryDto } from '../dto/update-group-history.dto';
+import { GetGroupHistoryDto } from '../dto/request/get-group-history.dto';
+import { UpdateGroupHistoryDto } from '../dto/request/update-group-history.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -23,12 +18,13 @@ import {
   IGROUP_HISTORY_DOMAIN_SERVICE,
   IGroupHistoryDomainService,
 } from '../group-history-domain/interface/group-history-domain.service.interface';
-import { ChurchModel } from '../../../churches/entity/church.entity';
-import { GroupHistoryException } from '../exception/group-history.exception';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { convertHistoryDate } from '../../history-date.utils';
 import { PatchGroupHistoryResponseDto } from '../dto/response/patch-group-history-response.dto';
 import { DeleteGroupHistoryResponseDto } from '../dto/response/delete-group-history-response.dto';
+import { GetGroupHistoriesResponseDto } from '../dto/response/get-group-histories-response.dto';
+import { GroupHistoryDto } from '../dto/group-history.dto';
+import { GroupModel } from '../../../management/groups/entity/group.entity';
 
 @Injectable()
 export class GroupHistoryService {
@@ -59,7 +55,7 @@ export class GroupHistoryService {
       qr,
     );
 
-    const { groupHistories, totalCount } =
+    const groupHistories =
       await this.groupHistoryDomainService.paginateGroupHistory(
         member,
         dto,
@@ -67,52 +63,21 @@ export class GroupHistoryService {
       );
 
     // 현재 속한 그룹 이력
-    const currentGroup = groupHistories.find((history) => !history.endDate);
+    const currentHistory = groupHistories.find((history) => !history.endDate);
 
     // 현재 그룹 snapShot 처리
-    if (currentGroup) {
-      currentGroup.groupSnapShot = await this.createCurrentGroupSnapShot(
-        church,
-        currentGroup,
-        qr,
-      );
+    if (currentHistory) {
+      currentHistory.groupSnapShot = currentHistory.group
+        ? await this.groupDomainService.getGroupNameWithHierarchy(
+            church,
+            currentHistory.group as GroupModel,
+          )
+        : '알 수 없는 그룹';
     }
 
-    const data = groupHistories.map((history) =>
-      history.endDate === null ? { ...history, group: null } : history,
-    );
+    const data = groupHistories.map((history) => new GroupHistoryDto(history));
 
-    return {
-      data,
-      totalCount,
-      count: data.length,
-      page: dto.page,
-      totalPage: Math.ceil(totalCount / dto.take),
-    };
-  }
-
-  // 현재 그룹의 스냅샷 생성
-  private async createCurrentGroupSnapShot(
-    church: ChurchModel,
-    groupHistory: GroupHistoryModel,
-    qr?: QueryRunner,
-  ) {
-    if (!groupHistory.group) {
-      throw new InternalServerErrorException(
-        GroupHistoryException.RELATION_OPTIONS_ERROR,
-      );
-    }
-
-    const parentGroups = await this.groupDomainService.findParentGroups(
-      church,
-      groupHistory.group,
-      qr,
-    );
-
-    return parentGroups
-      .map((parentGroup) => parentGroup.name)
-      .concat(groupHistory.group?.name)
-      .join('__');
+    return new GetGroupHistoriesResponseDto(data);
   }
 
   async updateGroupHistory(
@@ -152,6 +117,7 @@ export class GroupHistoryService {
       qr,
     );
 
+    // 업데이트 날짜 적용
     if (historyDateUpdateValue.startDate) {
       targetHistory.startDate = historyDateUpdateValue.startDate;
     }
@@ -159,6 +125,7 @@ export class GroupHistoryService {
       targetHistory.endDate = historyDateUpdateValue.endDate;
     }
 
+    // 그룹명 변환
     if (!targetHistory.endDate) {
       targetHistory.groupSnapShot = targetHistory.group
         ? await this.groupDomainService.getGroupNameWithHierarchy(

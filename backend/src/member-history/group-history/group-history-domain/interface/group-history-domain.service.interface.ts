@@ -1,5 +1,5 @@
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetGroupHistoryDto } from '../../dto/get-group-history.dto';
+import { GetGroupHistoryDto } from '../../dto/request/get-group-history.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { GroupHistoryModel } from '../../entity/group-history.entity';
 import { GroupModel } from '../../../../management/groups/entity/group.entity';
@@ -14,7 +14,7 @@ export interface IGroupHistoryDomainService {
     member: MemberModel,
     dto: GetGroupHistoryDto,
     qr?: QueryRunner,
-  ): Promise<{ groupHistories: GroupHistoryModel[]; totalCount: number }>;
+  ): Promise<GroupHistoryModel[]>;
 
   startGroupHistories(
     members: MemberModel[],

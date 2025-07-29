@@ -16,7 +16,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { GetGroupHistoryDto } from '../../dto/get-group-history.dto';
+import { GetGroupHistoryDto } from '../../dto/request/get-group-history.dto';
 import { GroupHistoryException } from '../../exception/group-history.exception';
 import { GroupModel } from '../../../../management/groups/entity/group.entity';
 import { HistoryUpdateDate } from '../../../history-date.utils';
@@ -44,30 +44,21 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
   ) {
     const groupHistoryRepository = this.getGroupHistoryRepository(qr);
 
-    const [groupHistories, totalCount] = await Promise.all([
-      groupHistoryRepository.find({
-        where: {
-          memberId: member.id,
-        },
-        relations: {
-          group: true,
-        },
-        order: {
-          endDate: dto.orderDirection,
-          startDate: dto.orderDirection,
-          id: dto.orderDirection,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      groupHistoryRepository.count({
-        where: {
-          memberId: member.id,
-        },
-      }),
-    ]);
-
-    return { groupHistories, totalCount };
+    return groupHistoryRepository.find({
+      where: {
+        memberId: member.id,
+      },
+      relations: {
+        group: true,
+      },
+      order: {
+        endDate: dto.orderDirection,
+        startDate: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   startGroupHistories(
