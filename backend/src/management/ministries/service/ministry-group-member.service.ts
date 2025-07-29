@@ -50,6 +50,7 @@ import {
 } from '../../../member-history/history-date.utils';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { RemoveMembersFromMinistryGroupDto } from '../dto/ministry-group/request/member/remove-member-from-ministry-group.dto';
+import { MinistryGroupDetailHistoryException } from '../../../member-history/ministry-history/exception/ministry-group-detail-history.exception';
 
 @Injectable()
 export class MinistryGroupMemberService {
@@ -333,6 +334,12 @@ export class MinistryGroupMemberService {
           qr,
         );
 
+      if (leaderHistory.startDate > endDate) {
+        throw new BadRequestException(
+          MinistryGroupDetailHistoryException.INVALID_ROLE_END_DATE,
+        );
+      }
+
       await this.ministryGroupDetailHistoryDomainService.endMinistryGroupRoleHistory(
         leaderHistory,
         endDate,
@@ -432,8 +439,6 @@ export class MinistryGroupMemberService {
         removeMembers,
         qr,
       );
-
-    //console.log(noMinistryGroupMembers)
 
     // 사역그룹에 속하지 않은 교인들 사역그룹 역할 제거 (ministryGroupRole)
     if (noMinistryGroupMembers.length > 0) {

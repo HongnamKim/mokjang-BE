@@ -24,6 +24,7 @@ export class GetMinistryGroupHistoriesDto {
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',
+    default: 'DESC',
     required: false,
   })
   @IsIn(['ASC', 'DESC'])
