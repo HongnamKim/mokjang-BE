@@ -131,6 +131,6 @@ export interface IGroupsDomainService {
   getGroupNameWithHierarchy(
     church: ChurchModel,
     group: GroupModel,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ): Promise<string>;
 }

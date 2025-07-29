@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString } from 'class-validator';
-import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
-import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsYYYYMMDD } from '../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
 export class UpdateGroupHistoryDto {
   @ApiProperty({

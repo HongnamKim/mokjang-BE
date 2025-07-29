@@ -173,17 +173,27 @@ export class GroupMembersService {
     const oldGroupLeaderMembers = changeGroupMembers.filter(
       (member) => member.groupRole === GroupRole.LEADER,
     );
-    const leaderLostGroups = oldGroupLeaderMembers.map(
-      (member) => member.group,
-    );
-    await this.groupsDomainService.removeGroupLeader(leaderLostGroups, qr);
 
-    // 리더 이력 종료 처리
-    await this.groupDetailHistoryDomainService.endGroupDetailHistory(
-      oldGroupLeaderMembers,
-      endDate,
-      qr,
-    );
+    if (oldGroupLeaderMembers.length > 0) {
+      const leaderLostGroups = oldGroupLeaderMembers.map(
+        (member) => member.group,
+      );
+      await this.groupsDomainService.removeGroupLeader(leaderLostGroups, qr);
+
+      // 리더 이력 종료 날짜 검증
+      await this.groupDetailHistoryDomainService.validateGroupRoleEndDates(
+        oldGroupLeaderMembers,
+        endDate,
+        qr,
+      );
+
+      // 리더 이력 종료 처리
+      await this.groupDetailHistoryDomainService.endGroupDetailHistory(
+        oldGroupLeaderMembers,
+        endDate,
+        qr,
+      );
+    }
 
     // 기존 그룹 이력 종료 처리
     for (const member of changeGroupMembers) {
@@ -279,11 +289,18 @@ export class GroupMembersService {
     // 리더가 나가는 경우 리더 없애기
     if (removeMembers.some((member) => member.groupRole === GroupRole.LEADER)) {
       await this.groupsDomainService.removeGroupLeader([group], qr);
-      const leaderMember = removeMembers.filter(
+      const [leaderMember] = removeMembers.filter(
         (member) => member.groupRole === GroupRole.LEADER,
       );
+
+      await this.groupDetailHistoryDomainService.validateGroupRoleEndDates(
+        [leaderMember],
+        endDate,
+        qr,
+      );
+
       await this.groupDetailHistoryDomainService.endGroupDetailHistory(
-        leaderMember,
+        [leaderMember],
         endDate,
         qr,
       );

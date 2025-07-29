@@ -11,15 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
-import { GetGroupHistoryDto } from '../dto/get-group-history.dto';
+import { GetGroupHistoryDto } from '../dto/request/get-group-history.dto';
 import { GroupHistoryService } from '../service/group-history.service';
-import { UpdateGroupHistoryDto } from '../dto/update-group-history.dto';
+import { UpdateGroupHistoryDto } from '../dto/request/update-group-history.dto';
 import {
-  ApiDeleteGroupDetailHistory,
   ApiDeleteGroupHistory,
-  ApiGetGroupDetailHistory,
   ApiGetMemberGroupHistory,
-  ApiPatchGroupDetailHistory,
   ApiPatchGroupHistory,
 } from '../swagger/group-history.swagger';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
@@ -81,30 +78,4 @@ export class GroupHistoryController {
       groupHistoryId,
     );
   }
-
-  @ApiGetGroupDetailHistory()
-  @Get(':groupHistoryId/details')
-  getGroupDetailHistories(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('groupHistoryId', ParseIntPipe) groupHistoryId: number,
-    @Query() dto: GetGroupHistoryDto,
-  ) {}
-
-  @ApiPatchGroupDetailHistory()
-  @Patch(':groupHistoryId/details/:detailHistoryId')
-  patchGroupDetailHistory(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('groupHistoryId', ParseIntPipe) groupHistoryId: number,
-    @Body() dto: UpdateGroupHistoryDto,
-  ) {}
-
-  @ApiDeleteGroupDetailHistory()
-  @Delete(':groupHistoryId/details/:detailHistoryId')
-  deleteGroupDetailHistory(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Param('groupHistoryId', ParseIntPipe) groupHistoryId: number,
-  ) {}
 }

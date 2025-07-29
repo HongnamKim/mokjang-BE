@@ -313,7 +313,7 @@ export class GroupsDomainService implements IGroupsDomainService {
   async getGroupNameWithHierarchy(
     church: ChurchModel,
     group: GroupModel,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ): Promise<string> {
     const parentGroups = await this.findParentGroups(church, group, qr);
 
