@@ -4,6 +4,7 @@ import { GetGroupMembersDto } from '../../../management/groups/dto/request/membe
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import { GetUnassignedMembersDto } from '../../../management/ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
+import { GroupMemberDto } from '../../dto/group-member.dto';
 
 export const IGROUP_MEMBERS_DOMAIN_SERVICE = Symbol(
   'IGROUP_MEMBERS_DOMAIN_SERVICE',
@@ -15,7 +16,7 @@ export interface IGroupMembersDomainService {
     group: GroupModel,
     dto: GetGroupMembersDto,
     qr?: QueryRunner,
-  ): Promise<MemberModel[]>;
+  ): Promise<GroupMemberDto[]>;
 
   findGroupMembersByIds(
     church: ChurchModel,

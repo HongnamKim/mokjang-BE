@@ -34,11 +34,13 @@ export interface IOfficerHistoryDomainService {
   startOfficerHistory(
     members: MemberModel[],
     officer: OfficerModel,
+    startDate: Date,
     qr: QueryRunner,
   ): Promise<OfficerHistoryModel[]>;
 
   endOfficerHistories(
     members: MemberModel[],
+    endDate: Date,
     qr: QueryRunner,
     officer?: OfficerModel,
   ): Promise<OfficerHistoryModel[] | UpdateResult>;

@@ -6,6 +6,7 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetUnassignedMembersDto } from '../../../management/ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 import { SearchMembersForMinistryGroupDto } from '../../../management/ministries/dto/ministry-group/request/member/search-members-for-ministry-group.dto';
+import { MinistryMemberDto } from '../../dto/ministry-member.dto';
 
 export const IMINISTRY_MEMBERS_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_MEMBERS_DOMAIN_SERVICE',
@@ -31,7 +32,7 @@ export interface IMinistryMembersDomainService {
   findMinistryGroupMembers(
     ministryGroup: MinistryGroupModel,
     dto: GetMinistryGroupMembersDto,
-  ): Promise<MemberModel[]>;
+  ): Promise<MinistryMemberDto[]>;
 
   findMinistryGroupMembersByIds(
     ministryGroup: MinistryGroupModel,

@@ -7,7 +7,6 @@ import { IGroupMembersDomainService } from '../interface/group-members.domain.se
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import {
-  FindOptionsOrder,
   FindOptionsRelations,
   In,
   IsNull,
@@ -20,12 +19,16 @@ import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { GetGroupMembersDto } from '../../../management/groups/dto/request/members/get-group-members.dto';
 import { GroupMemberOrder } from '../../../management/groups/const/group-member-order.enum';
 import {
+  MemberSummarizedGroupSelectQB,
+  MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
+  MemberSummarizedSelectQB,
 } from '../../const/member-find-options.const';
 import { MemberException } from '../../exception/member.exception';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { GetUnassignedMembersDto } from '../../../management/ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
+import { GroupMemberDto } from '../../dto/group-member.dto';
 
 @Injectable()
 export class GroupMembersDomainService implements IGroupMembersDomainService {
@@ -66,11 +69,46 @@ export class GroupMembersDomainService implements IGroupMembersDomainService {
     group: GroupModel,
     dto: GetGroupMembersDto,
     qr?: QueryRunner,
-  ): Promise<MemberModel[]> {
+  ): Promise<GroupMemberDto[]> {
     const repository = this.getRepository(qr);
 
+    const members = await repository
+      .createQueryBuilder('member')
+      .where('member.churchId = :churchId', { churchId: church.id })
+      .andWhere('member.groupId = :groupId', { groupId: group.id })
+      .innerJoin('member.group', 'group')
+      .leftJoin('member.officer', 'officer')
+      .select(MemberSummarizedSelectQB)
+      .addSelect(MemberSummarizedGroupSelectQB)
+      .addSelect(MemberSummarizedOfficerSelectQB)
+      .leftJoin(
+        'member.groupHistory',
+        'groupHistory',
+        'groupHistory.endDate IS NULL',
+      )
+      .addSelect(['groupHistory.startDate'])
+      .leftJoin(
+        'groupHistory.groupDetailHistory',
+        'groupDetailHistory',
+        'groupDetailHistory.endDate IS NULL',
+      )
+      .addSelect(['groupDetailHistory.startDate'])
+      .orderBy('member.groupRole', 'ASC')
+      .addOrderBy(
+        dto.order === GroupMemberOrder.OFFICER_NAME
+          ? 'officer.name'
+          : `member.${dto.order}`,
+        dto.orderDirection,
+      )
+      .addOrderBy('member.id', dto.orderDirection)
+      .limit(dto.take)
+      .offset(dto.take * (dto.page - 1))
+      .getMany();
+
+    return members.map((member) => new GroupMemberDto(member));
+
     // 그룹장 최상위 고정
-    const order: FindOptionsOrder<MemberModel> = {
+    /*const order: FindOptionsOrder<MemberModel> = {
       groupRole: 'ASC',
     };
 
@@ -94,7 +132,7 @@ export class GroupMembersDomainService implements IGroupMembersDomainService {
       order,
       relations: MemberSummarizedRelation,
       select: MemberSummarizedSelect,
-    });
+    });*/
   }
 
   async findGroupMembersByIds(
