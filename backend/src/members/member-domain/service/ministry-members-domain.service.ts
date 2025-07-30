@@ -20,6 +20,7 @@ import {
   MemberSummarizedOfficerSelectQB,
   MemberSummarizedSelectQB,
 } from '../../const/member-find-options.const';
+import { MinistryMemberDto } from '../../dto/ministry-member.dto';
 
 @Injectable()
 export class MinistryMembersDomainService
@@ -136,10 +137,10 @@ export class MinistryMembersDomainService
   async findMinistryGroupMembers(
     ministryGroup: MinistryGroupModel,
     dto: GetMinistryGroupMembersDto,
-  ): Promise<MemberModel[]> {
+  ): Promise<MinistryMemberDto[]> {
     const repository = this.getRepository();
 
-    const qb = repository
+    const members = await repository
       .createQueryBuilder('member')
       .select(MemberSummarizedSelectQB)
       .innerJoin('member.ministryGroups', 'ministryGroup')
@@ -154,6 +155,18 @@ export class MinistryMembersDomainService
         { ministryGroupId: ministryGroup.id },
       )
       .addSelect(['ministry.id', 'ministry.name'])
+      .leftJoin(
+        'member.ministryGroupHistory',
+        'ministryGroupHistory',
+        'ministryGroupHistory.ministryGroupId = :ministryGroupId AND ministryGroupHistory.endDate IS NULL',
+        { ministryGroupId: ministryGroup.id },
+      )
+      .addSelect('ministryGroupHistory.startDate')
+      .leftJoinAndSelect(
+        'ministryGroupHistory.ministryGroupDetailHistory',
+        'detailHistory',
+        'detailHistory.endDate IS NULL',
+      )
       .where('ministryGroup.id = :ministryGroupId', {
         ministryGroupId: ministryGroup.id,
       })
@@ -166,9 +179,10 @@ export class MinistryMembersDomainService
       )
       .addOrderBy('member.id', dto.orderDirection)
       .limit(dto.take)
-      .offset(dto.take * (dto.page - 1));
+      .offset(dto.take * (dto.page - 1))
+      .getMany();
 
-    return qb.getMany();
+    return members.map((member) => new MinistryMemberDto(member));
   }
 
   async updateMinistryGroupRole(

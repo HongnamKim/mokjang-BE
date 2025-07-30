@@ -4,6 +4,7 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
 import { GetOfficerMembersDto } from '../../../management/officers/dto/request/members/get-officer-members.dto';
+import { OfficerMemberDto } from '../../dto/officer-member.dto';
 
 export const IOFFICER_MEMBERS_DOMAIN_SERVICE = Symbol(
   'IOFFICER_MEMBERS_DOMAIN_SERVICE',
@@ -21,7 +22,7 @@ export interface IOfficerMembersDomainService {
     officer: OfficerModel,
     dto: GetOfficerMembersDto,
     qr?: QueryRunner,
-  ): Promise<MemberModel[]>;
+  ): Promise<OfficerMemberDto[]>;
 
   findOfficerMembersByIds(
     church: ChurchModel,

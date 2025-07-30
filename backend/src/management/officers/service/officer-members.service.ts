@@ -29,6 +29,11 @@ import {
   IOFFICER_HISTORY_DOMAIN_SERVICE,
   IOfficerHistoryDomainService,
 } from '../../../member-history/officer-history/officer-history-domain/interface/officer-history-domain.service.interface';
+import {
+  convertHistoryEndDate,
+  convertHistoryStartDate,
+} from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
 
 @Injectable()
 export class OfficerMembersService {
@@ -102,10 +107,17 @@ export class OfficerMembersService {
 
     const changeOfficerMembers = members.filter((member) => member.officerId);
 
+    const startDate = convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL);
+
     if (changeOfficerMembers.length > 0) {
+      const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
+
+      // TODO endDate 검증 필요
+
       // 기존 직분 이력 종료 처리
       await this.officerHistoryDomainService.endOfficerHistories(
         changeOfficerMembers,
+        endDate,
         qr,
       );
 
@@ -127,6 +139,7 @@ export class OfficerMembersService {
     await this.officerHistoryDomainService.startOfficerHistory(
       members,
       officer,
+      startDate,
       qr,
     );
 
@@ -168,8 +181,13 @@ export class OfficerMembersService {
       qr,
     );
 
+    const endDate = convertHistoryEndDate(dto.endDate, TIME_ZONE.SEOUL);
+
+    // TODO endDate 검증 필요
+
     await this.officerHistoryDomainService.endOfficerHistories(
       removeMembers,
+      endDate,
       qr,
       officer,
     );

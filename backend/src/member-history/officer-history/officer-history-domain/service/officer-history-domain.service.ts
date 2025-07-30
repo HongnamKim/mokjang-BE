@@ -21,7 +21,6 @@ import { OfficerModel } from '../../../../management/officers/entity/officer.ent
 import { OfficerHistoryException } from '../../exception/officer-history.exception';
 import {
   getHistoryEndDate,
-  getHistoryStartDate,
   HistoryUpdateDate,
 } from '../../../history-date.utils';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
@@ -69,6 +68,7 @@ export class OfficerHistoryDomainService
   startOfficerHistory(
     members: MemberModel[],
     officer: OfficerModel,
+    startDate: Date,
     qr: QueryRunner,
   ): Promise<OfficerHistoryModel[]> {
     const repository = this.getOfficerHistoryRepository(qr);
@@ -77,7 +77,7 @@ export class OfficerHistoryDomainService
       members.map((member) => ({
         member: { id: member.id },
         officer: { id: officer.id },
-        startDate: getHistoryStartDate(TIME_ZONE.SEOUL),
+        startDate: startDate, //getHistoryStartDate(TIME_ZONE.SEOUL),
       })),
     );
 
@@ -86,6 +86,7 @@ export class OfficerHistoryDomainService
 
   async endOfficerHistories(
     members: MemberModel[],
+    endDate: Date,
     qr: QueryRunner,
     officer?: OfficerModel,
   ) {
@@ -109,6 +110,7 @@ export class OfficerHistoryDomainService
         oldHistory.endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
         oldHistory.officerId = null;
         oldHistory.officer = null;
+        oldHistory.endDate = endDate;
       });
 
       return repository.save(oldHistories);
@@ -122,7 +124,8 @@ export class OfficerHistoryDomainService
       },
       {
         officerSnapShot: officer.name,
-        endDate: getHistoryEndDate(TIME_ZONE.SEOUL),
+        endDate,
+        //endDate: getHistoryEndDate(TIME_ZONE.SEOUL),
         officerId: null,
         officer: null,
       },

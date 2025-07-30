@@ -32,6 +32,7 @@ import { EducationSessionModel } from '../../management/educations/entity/educat
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GroupRole } from '../../management/groups/const/group-role.enum';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
+import { MinistryGroupHistoryModel } from '../../member-history/ministry-history/entity/ministry-group-history.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -156,6 +157,12 @@ export class MemberModel extends BaseModel {
   @ManyToMany(() => MinistryModel, (ministry) => ministry.members)
   @JoinTable()
   ministries: MinistryModel[];
+
+  @OneToMany(
+    () => MinistryGroupHistoryModel,
+    (ministryGroupHistoryModel) => ministryGroupHistoryModel.member,
+  )
+  ministryGroupHistory: MinistryGroupHistoryModel[];
 
   @OneToMany(
     () => MinistryHistoryModel,
