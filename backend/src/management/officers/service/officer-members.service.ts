@@ -112,7 +112,11 @@ export class OfficerMembersService {
     if (changeOfficerMembers.length > 0) {
       const endDate = convertHistoryEndDate(dto.startDate, TIME_ZONE.SEOUL);
 
-      // TODO endDate 검증 필요
+      await this.officerHistoryDomainService.validateOfficerEndDates(
+        changeOfficerMembers,
+        endDate,
+        qr,
+      );
 
       // 기존 직분 이력 종료 처리
       await this.officerHistoryDomainService.endOfficerHistories(
@@ -183,7 +187,11 @@ export class OfficerMembersService {
 
     const endDate = convertHistoryEndDate(dto.endDate, TIME_ZONE.SEOUL);
 
-    // TODO endDate 검증 필요
+    await this.officerHistoryDomainService.validateOfficerEndDates(
+      removeMembers,
+      endDate,
+      qr,
+    );
 
     await this.officerHistoryDomainService.endOfficerHistories(
       removeMembers,

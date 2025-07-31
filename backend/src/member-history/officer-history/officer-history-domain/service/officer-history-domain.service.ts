@@ -4,6 +4,7 @@ import {
   FindOptionsRelations,
   In,
   IsNull,
+  MoreThan,
   QueryRunner,
   Repository,
 } from 'typeorm';
@@ -24,6 +25,8 @@ import {
   HistoryUpdateDate,
 } from '../../../history-date.utils';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class OfficerHistoryDomainService
@@ -82,6 +85,42 @@ export class OfficerHistoryDomainService
     );
 
     return repository.save(histories);
+  }
+
+  async validateOfficerEndDates(
+    members: MemberModel[],
+    endDate: Date,
+    qr: QueryRunner,
+  ): Promise<void> {
+    const repository = this.getOfficerHistoryRepository(qr);
+
+    const memberIds = members.map((m) => m.id);
+
+    const invalidHistories = await repository.find({
+      where: {
+        memberId: In(memberIds),
+        endDate: IsNull(),
+        startDate: MoreThan(endDate),
+      },
+      relations: {
+        member: true,
+      },
+    });
+
+    if (invalidHistories.length > 0) {
+      const invalidInfos = invalidHistories
+        .map(
+          (h) =>
+            `${h.member.name}(${format(toZonedTime(h.startDate, TIME_ZONE.SEOUL), 'yyyy-MM-dd')})`,
+        )
+        .join(', ');
+
+      throw new BadRequestException(
+        `다음 교인들의 기존 직분 시작일이 새 직분의 시작일(${format(toZonedTime(endDate, TIME_ZONE.SEOUL), 'yyyy-MM-dd')})보다 늦습니다: ${invalidInfos}`,
+      );
+    }
+
+    return Promise.resolve(undefined);
   }
 
   async endOfficerHistories(
