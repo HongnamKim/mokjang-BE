@@ -20,6 +20,12 @@ import {
   ChurchModel,
   ManagementCountType,
 } from '../../../churches/entity/church.entity';
+import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
+import {
+  IOFFICER_MEMBERS_DOMAIN_SERVICE,
+  IOfficerMembersDomainService,
+} from '../../../members/member-domain/interface/officer-members-domain.service.interface';
+import { UnassignedMembersResponseDto } from '../dto/response/members/unassigned-members-response.dto';
 
 @Injectable()
 export class OfficersService {
@@ -28,6 +34,8 @@ export class OfficersService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IOFFICERS_DOMAIN_SERVICE)
     private readonly officersDomainService: IOfficersDomainService,
+    @Inject(IOFFICER_MEMBERS_DOMAIN_SERVICE)
+    private readonly officerMembersDomainService: IOfficerMembersDomainService,
   ) {}
 
   async getOfficers(churchId: number, dto: GetOfficersDto, qr?: QueryRunner) {
@@ -175,5 +183,15 @@ export class OfficersService {
     );
 
     return { officerCount };
+  }
+
+  async getUnassignedMembers(churchId: number, dto: GetUnassignedMembersDto) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+
+    const members =
+      await this.officerMembersDomainService.findUnassignedMembers(church, dto);
+
+    return new UnassignedMembersResponseDto(members);
   }
 }

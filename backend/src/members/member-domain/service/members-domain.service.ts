@@ -27,17 +27,19 @@ import {
   DefaultMemberRelationOption,
   DefaultMemberSelectOption,
 } from '../../const/default-find-options.const';
-import { MemberException } from '../../const/exception/member.exception';
+import { MemberException } from '../../exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
+  MemberSummarizedGroupSelectQB,
+  MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
+  MemberSummarizedSelectQB,
 } from '../../const/member-find-options.const';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
@@ -46,8 +48,6 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
-import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
-import { GroupMemberOrder } from '../../../management/groups/const/group-member-order.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -141,17 +141,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     const query = repository
       .createQueryBuilder('member')
-      .select([
-        'member.id',
-        'member.churchId',
-        'member.name',
-        'member.profileImageUrl',
-        'member.birth',
-        'member.birthdayMMDD',
-        'member.isLunar',
-        'member.isLeafMonth',
-        'member.groupRole',
-      ])
+      .select([...MemberSummarizedSelectQB, 'member.birthdayMMDD'])
       .where(`member.churchId = :churchId`, { churchId: church.id })
       .andWhere(
         `(
@@ -174,7 +164,10 @@ export class MembersDomainService implements IMembersDomainService {
       )
       .leftJoin('member.officer', 'officer')
       .leftJoin('member.group', 'group')
-      .addSelect(['officer.id', 'officer.name', 'group.id', 'group.name'])
+      .addSelect([
+        ...MemberSummarizedOfficerSelectQB,
+        ...MemberSummarizedGroupSelectQB,
+      ])
       .orderBy('"birthdayMMDD"', 'ASC')
       .addOrderBy('birth', 'ASC')
       .addOrderBy('member.id', 'ASC');
@@ -543,48 +536,6 @@ export class MembersDomainService implements IMembersDomainService {
     );
   }
 
-  async startMemberMinistry(
-    member: MemberModel,
-    ministry: MinistryModel,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const oldMinistries = member.ministries;
-
-    member.ministries = [...oldMinistries, ministry];
-
-    return membersRepository.save(member);
-  }
-
-  endMemberMinistry(
-    member: MemberModel,
-    targetMinistry: MinistryModel,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    member.ministries = member.ministries.filter(
-      (ministry) => ministry.id !== targetMinistry.id,
-    );
-
-    return membersRepository.save(member);
-  }
-
-  /*async endMemberEducation(
-    member: MemberModel,
-    educationEnrollmentId: number,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    member.educations = member.educations.filter(
-      (educationEnrollment) => educationEnrollment.id !== educationEnrollmentId,
-    );
-
-    return membersRepository.save(member);
-  }*/
-
   async startMemberGroup(
     member: MemberModel,
     group: GroupModel,
@@ -619,65 +570,20 @@ export class MembersDomainService implements IMembersDomainService {
   }
 
   async updateGroupRole(
-    group: GroupModel,
-    newLeaderMember: MemberModel,
+    member: MemberModel,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ): Promise<UpdateResult> {
     const repository = this.getMembersRepository(qr);
 
-    // 기존 리더를 다시 그룹원으로 수정
-    await repository.update(
-      { groupId: group.id, groupRole: GroupRole.LEADER },
-      { groupRole: GroupRole.MEMBER },
-    );
-
     // 새로운 리더 지정
-    const result = await repository.update(
-      { id: newLeaderMember.id },
-      { groupRole: GroupRole.LEADER },
-    );
+    const result = await repository.update({ id: member.id }, { groupRole });
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(MemberException.UPDATE_ERROR);
     }
 
     return result;
-  }
-
-  async findGroupMembers(
-    church: ChurchModel,
-    group: GroupModel,
-    dto: GetGroupMembersDto,
-    qr?: QueryRunner,
-  ): Promise<MemberModel[]> {
-    const repository = this.getMembersRepository(qr);
-
-    // 그룹장 최상위 고정
-    const order: FindOptionsOrder<MemberModel> = {
-      groupRole: 'ASC',
-    };
-
-    if (dto.order === GroupMemberOrder.OFFICER) {
-      order.officer = {
-        name: dto.orderDirection,
-      };
-      order.id = dto.orderDirection;
-    } else {
-      order[dto.order] = dto.orderDirection;
-      order.id = dto.orderDirection;
-    }
-
-    return repository.find({
-      take: dto.take,
-      skip: dto.take * (dto.page - 1),
-      where: {
-        churchId: church.id,
-        groupId: group.id,
-      },
-      order,
-      relations: MemberSummarizedRelation,
-      select: MemberSummarizedSelect,
-    });
   }
 
   async getNewMemberSummary(

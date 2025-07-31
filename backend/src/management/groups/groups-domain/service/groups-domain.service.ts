@@ -17,8 +17,6 @@ import {
   Between,
   FindOptionsOrder,
   FindOptionsRelations,
-  FindOptionsWhere,
-  ILike,
   In,
   IsNull,
   MoreThan,
@@ -34,7 +32,6 @@ import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetGroupDto } from '../../dto/request/get-group.dto';
 import { GroupOrderEnum } from '../../const/group-order.enum';
-import { GetGroupByNameDto } from '../../dto/request/get-group-by-name.dto';
 import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
@@ -68,38 +65,6 @@ export class GroupsDomainService implements IGroupsDomainService {
     });
 
     return !!existingGroup;
-  }
-
-  async findGroupsByName(
-    church: ChurchModel,
-    dto: GetGroupByNameDto,
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getGroupsRepository(qr);
-
-    const whereOptions: FindOptionsWhere<GroupModel> = {
-      churchId: church.id,
-      name: dto.name && ILike(`%${dto.name}%`),
-    };
-
-    const orderOptions: FindOptionsOrder<GroupModel> = {
-      [dto.order]: dto.orderDirection,
-    };
-
-    if (dto.order !== GroupOrderEnum.createdAt) {
-      orderOptions.createdAt = 'asc';
-    }
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: whereOptions,
-        order: orderOptions,
-      }),
-      repository.count({
-        where: whereOptions,
-      }),
-    ]);
-
-    return new GroupDomainPaginationResultDto(data, totalCount);
   }
 
   async countAllGroups(church: ChurchModel, qr: QueryRunner): Promise<number> {
@@ -345,6 +310,18 @@ export class GroupsDomainService implements IGroupsDomainService {
     return result;
   }
 
+  async getGroupNameWithHierarchy(
+    church: ChurchModel,
+    group: GroupModel,
+    qr?: QueryRunner,
+  ): Promise<string> {
+    const parentGroups = await this.findParentGroups(church, group, qr);
+
+    const groupHierarchy = [...parentGroups, group];
+
+    return groupHierarchy.map((group) => group.name).join('__');
+  }
+
   async createGroup(
     church: ChurchModel,
     dto: CreateGroupDto,
@@ -406,6 +383,30 @@ export class GroupsDomainService implements IGroupsDomainService {
     );
 
     if (result.affected === 0) {
+      throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async removeGroupLeader(
+    groups: GroupModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getGroupsRepository(qr);
+
+    const groupIds = groups.map((group) => group.id);
+
+    const result = await repository.update(
+      {
+        id: In(groupIds),
+      },
+      {
+        leaderMemberId: null,
+      },
+    );
+
+    if (result.affected !== groups.length) {
       throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
     }
 
@@ -588,6 +589,7 @@ export class GroupsDomainService implements IGroupsDomainService {
         parentGroupId: deleteTarget.parentGroupId
           ? deleteTarget.parentGroupId
           : IsNull(),
+        deletedAt: IsNull(),
         order: MoreThan(deleteTarget.order),
       },
       {
@@ -603,40 +605,57 @@ export class GroupsDomainService implements IGroupsDomainService {
 
   async incrementMembersCount(
     group: GroupModel,
+    count: number,
     qr: QueryRunner,
-  ): Promise<boolean> {
+  ): Promise<UpdateResult> {
     const groupsRepository = this.getGroupsRepository(qr);
 
     const result = await groupsRepository.increment(
       { id: group.id },
       'membersCount',
-      1,
+      count,
     );
 
     if (result.affected === 0) {
       throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
-    return true;
+    return result;
   }
 
   async decrementMembersCount(
     group: GroupModel,
+    count: number,
     qr: QueryRunner,
-  ): Promise<boolean> {
+  ): Promise<UpdateResult> {
     const groupsRepository = this.getGroupsRepository(qr);
 
     const result = await groupsRepository.decrement(
       { id: group.id, deletedAt: IsNull() },
       'membersCount',
-      1,
+      count,
     );
 
     if (result.affected === 0) {
       throw new NotFoundException(GroupException.NOT_FOUND);
     }
 
-    return true;
+    return result;
+  }
+
+  async refreshMembersCount(
+    group: GroupModel,
+    membersCount: number,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getGroupsRepository(qr);
+
+    const result = await repository.update({ id: group.id }, { membersCount });
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(GroupException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   private async handleNodeGroup(

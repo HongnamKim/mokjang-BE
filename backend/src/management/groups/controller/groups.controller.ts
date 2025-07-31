@@ -21,8 +21,8 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import {
   ApiDeleteGroup,
   ApiGetGroupById,
-  ApiGetGroupMembers,
   ApiGetGroups,
+  ApiGetUnassignedMembers,
   ApiPatchGroupLeader,
   ApiPatchGroupName,
   ApiPatchGroupStructure,
@@ -38,7 +38,7 @@ import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.d
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
-import { GetGroupMembersDto } from '../dto/request/get-group-members.dto';
+import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -78,6 +78,15 @@ export class GroupsController {
     return this.groupsService.refreshGroupCount(church, qr);
   }
 
+  @ApiGetUnassignedMembers()
+  @Get('unassigned-member')
+  getUnassignedMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetUnassignedMembersDto,
+  ) {
+    return this.groupsService.getUnassignedMembers(churchId, dto);
+  }
+
   @ApiGetGroupById()
   @GroupReadGuard()
   @Get(':groupId')
@@ -98,17 +107,6 @@ export class GroupsController {
     @QueryRunner() qr: QR,
   ) {
     return this.groupsService.deleteGroup(churchId, groupId, qr);
-  }
-
-  @ApiGetGroupMembers()
-  @Get(':groupId/members')
-  @GroupReadGuard()
-  getGroupMembers(
-    @PermissionChurch() church: ChurchModel,
-    @Param('groupId', ParseIntPipe) groupId: number,
-    @Query() dto: GetGroupMembersDto,
-  ) {
-    return this.groupsService.getGroupMembers(church, groupId, dto);
   }
 
   @ApiPatchGroupLeader()
@@ -149,23 +147,4 @@ export class GroupsController {
   ) {
     return this.groupsService.updateGroupStructure(churchId, groupId, dto, qr);
   }
-
-  /*@ApiGetGroupsByName()
-  @Get('search')
-  getGroupsByName(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Query() dto: GetGroupByNameDto,
-  ) {
-    return this.groupsService.getGroupsByName(churchId, dto);
-  }*/
-
-  /*@ApiGetChildGroupIds()
-  @GroupReadGuard()
-  @Get(':groupId/childGroups')
-  getChildGroupIds(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('groupId', ParseIntPipe) groupId: number,
-  ) {
-    return this.groupsService.getChildGroupIds(churchId, groupId);
-  }*/
 }

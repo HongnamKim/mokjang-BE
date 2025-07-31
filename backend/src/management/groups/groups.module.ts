@@ -8,7 +8,9 @@ import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-perm
 import { ManagementPermissionService } from '../management-permission.service';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
-import { MemberHistoryDomainModule } from '../../member-history/member-history-domain/member-history-domain.module';
+import { GroupHistoryDomainModule } from '../../member-history/group-history/group-history-domain/group-history-domain.module';
+import { GroupMembersController } from './controller/group-members.controller';
+import { GroupMembersService } from './service/group-members.service';
 
 @Module({
   imports: [
@@ -19,14 +21,15 @@ import { MemberHistoryDomainModule } from '../../member-history/member-history-d
       },
     ]),
     GroupsDomainModule,
-    MemberHistoryDomainModule,
+    GroupHistoryDomainModule,
     MembersDomainModule,
     ChurchesDomainModule,
     ManagerDomainModule,
   ],
-  controllers: [GroupsController],
+  controllers: [GroupsController, GroupMembersController],
   providers: [
     GroupsService,
+    GroupMembersService,
     {
       provide: IDOMAIN_PERMISSION_SERVICE,
       useClass: ManagementPermissionService,
