@@ -36,6 +36,13 @@ export const ApiRefreshGroupCount = () =>
     }),
   );
 
+export const ApiGetUnassignedMembers = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '그룹에 속하지 않은 교인 조회',
+    }),
+  );
+
 export const ApiGetGroupById = () =>
   applyDecorators(
     ApiOperation({

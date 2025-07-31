@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import {
   IMinistryGroupsDomainService,
-  MinistryGroupWithParentGroups,
   ParentMinistryGroup,
 } from '../interface/ministry-groups-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,14 +23,15 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { MinistryGroupException } from '../../const/exception/ministry-group.exception';
-import { CreateMinistryGroupDto } from '../../dto/ministry-group/create-ministry-group.dto';
-import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/update-ministry-group-name.dto';
+import { MinistryGroupException } from '../../exception/ministry-group.exception';
+import { CreateMinistryGroupDto } from '../../dto/ministry-group/request/create-ministry-group.dto';
+import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/request/update-ministry-group-name.dto';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
-import { GetMinistryGroupDto } from '../../dto/ministry-group/get-ministry-group.dto';
+import { GetMinistryGroupDto } from '../../dto/ministry-group/request/get-ministry-group.dto';
 import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
 import { MinistryGroupOrderEnum } from '../../const/ministry-group-order.enum';
-import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/update-ministry-group-structure.dto';
+import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/request/update-ministry-group-structure.dto';
+import { MemberModel } from '../../../../members/entity/member.entity';
 
 @Injectable()
 export class MinistryGroupsDomainService
@@ -149,7 +149,7 @@ export class MinistryGroupsDomainService
     church: ChurchModel,
     ministryGroupId: number,
     qr?: QueryRunner,
-  ): Promise<MinistryGroupWithParentGroups> {
+  ): Promise<MinistryGroupModel> /*Promise<MinistryGroupWithParentGroups>*/ {
     const ministryGroupsRepository = this.getMinistryGroupsRepository(qr);
 
     const ministryGroup = await ministryGroupsRepository.findOne({
@@ -157,23 +157,13 @@ export class MinistryGroupsDomainService
         churchId: church.id,
         id: ministryGroupId,
       },
-      relations: {
-        ministries: true,
-      },
     });
 
     if (!ministryGroup) {
       throw new NotFoundException(MinistryGroupException.NOT_FOUND);
     }
 
-    return {
-      ...ministryGroup,
-      parentMinistryGroups: await this.findParentMinistryGroups(
-        church,
-        ministryGroup.id,
-        qr,
-      ),
-    };
+    return ministryGroup;
   }
 
   async findParentMinistryGroups(
@@ -610,6 +600,7 @@ export class MinistryGroupsDomainService
     await ministryGroupsRepository.update(
       {
         churchId: church.id,
+        deletedAt: IsNull(),
         parentMinistryGroupId: targetMinistryGroup.parentMinistryGroupId
           ? targetMinistryGroup.parentMinistryGroupId
           : IsNull(),
@@ -673,5 +664,205 @@ export class MinistryGroupsDomainService
       .where('id= :id', { id: parentMinistryGroup.id })
       .setParameters({ childMinistryGroupId: childMinistryGroup.id })
       .execute();
+  }
+
+  async addMembersToMinistryGroup(
+    ministryGroup: MinistryGroupModel,
+    members: MemberModel[],
+    qr: QueryRunner,
+  ): Promise<void> {
+    try {
+      const memberIds = members.map((member) => member.id);
+
+      await qr.manager
+        .createQueryBuilder()
+        .relation(MinistryGroupModel, 'members')
+        .of(ministryGroup.id)
+        .add(memberIds);
+
+      await qr.manager
+        .getRepository(MinistryGroupModel)
+        .increment({ id: ministryGroup.id }, 'membersCount', members.length);
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(
+          '사역그룹에 이미 존재하는 교인이 있습니다.',
+        );
+      }
+
+      throw error;
+    }
+
+    return;
+  }
+
+  async removeMembersFromMinistryGroup(
+    ministryGroup: MinistryGroupModel,
+    members: MemberModel[],
+    qr: QueryRunner,
+  ): Promise<void> {
+    const memberIds = members.map((member) => member.id);
+
+    await qr.manager
+      .createQueryBuilder()
+      .relation(MinistryGroupModel, 'members')
+      .of(ministryGroup.id)
+      .remove(memberIds);
+
+    await qr.manager
+      .getRepository(MinistryGroupModel)
+      .decrement({ id: ministryGroup.id }, 'membersCount', members.length);
+
+    return;
+  }
+
+  async updateMembersCount(
+    ministryGroup: MinistryGroupModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.increment(
+      { id: ministryGroup.id },
+      'membersCount',
+      count,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async updateMinistryGroupLeader(
+    ministryGroup: MinistryGroupModel,
+    newLeaderMember: MemberModel | null,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.update(
+      { id: ministryGroup.id },
+      { leaderMemberId: newLeaderMember ? newLeaderMember.id : null },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async incrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.increment(
+      { id: ministryGroup.id },
+      'ministriesCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async decrementMinistriesCount(
+    ministryGroup: MinistryGroupModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.decrement(
+      { id: ministryGroup.id },
+      'ministriesCount',
+      1,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async refreshMinistryCount(
+    ministryGroup: MinistryGroupModel,
+    ministryCount: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: ministryGroup.id,
+      },
+      {
+        ministriesCount: ministryCount,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        MinistryGroupException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async getMinistryGroupNameWithHierarchy(
+    church: ChurchModel,
+    ministryGroupId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    const parentMinistryGroups = await this.findParentMinistryGroups(
+      church,
+      ministryGroupId,
+      qr,
+    );
+
+    const ministryGroup = await repository.findOneOrFail({
+      where: {
+        church: { id: church.id },
+        id: ministryGroupId,
+      },
+    });
+
+    const ministryGroupsHierarchy = [...parentMinistryGroups, ministryGroup];
+
+    return ministryGroupsHierarchy
+      .map((ministryGroup) => ministryGroup.name)
+      .join('__');
+  }
+
+  async findMinistryGroupsByLeaderMember(
+    member: MemberModel,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getMinistryGroupsRepository(qr);
+
+    return repository.find({
+      where: {
+        leaderMemberId: member.id,
+      },
+    });
   }
 }

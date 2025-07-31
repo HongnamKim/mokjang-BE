@@ -24,7 +24,7 @@ import { WorshipSessionDomainPaginationResultDto } from '../dto/worship-session-
 import { UpdateWorshipSessionDto } from '../../dto/request/worship-session/update-worship-session.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
-import { MemberException } from '../../../members/const/exception/member.exception';
+import { MemberException } from '../../../members/exception/member.exception';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { TaskException } from '../../../task/const/exception-message/task.exception';
 import {

@@ -1,7 +1,7 @@
 export enum GroupMemberOrder {
-  ID = 'id',
+  OFFICER_NAME = 'officerName',
+  REGISTERED_AT = 'registeredAt',
   NAME = 'name',
   BIRTH = 'birth',
   MOBILE_PHONE = 'mobilePhone',
-  OFFICER = 'officer',
 }
