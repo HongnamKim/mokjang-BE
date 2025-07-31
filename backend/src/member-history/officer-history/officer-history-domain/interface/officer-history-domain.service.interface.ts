@@ -38,6 +38,12 @@ export interface IOfficerHistoryDomainService {
     qr: QueryRunner,
   ): Promise<OfficerHistoryModel[]>;
 
+  validateOfficerEndDates(
+    members: MemberModel[],
+    endDate: Date,
+    qr: QueryRunner,
+  ): Promise<void>;
+
   endOfficerHistories(
     members: MemberModel[],
     endDate: Date,
