@@ -8,7 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { VisitationDetailModel } from '../../entity/visitation-detail.entity';
 import {
   FindOptionsRelations,
-  In,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -65,7 +64,7 @@ export class VisitationDetailDomainService
 
     await repository.softDelete({
       visitationMetaId: metaData.id,
-      memberId: In(memberIds),
+      //memberId: In(memberIds),
     });
   }
 
@@ -78,6 +77,16 @@ export class VisitationDetailDomainService
     const repository = this.getRepository(qr);
 
     const details = repository.create(
+      dto.map((detail) => ({
+        visitationMetaId: metaData.id,
+        visitationContent: detail.visitationContent,
+        visitationPray: detail.visitationPray,
+      })),
+    );
+
+    return repository.save(details);
+
+    /*const details = repository.create(
       members.map((member) => {
         const detail = dto.find((detail) => detail.memberId === member.id);
 
@@ -95,6 +104,7 @@ export class VisitationDetailDomainService
     );
 
     return repository.save(details);
+     */
   }
 
   async findVisitationDetailByMetaAndMemberId(
@@ -106,7 +116,7 @@ export class VisitationDetailDomainService
 
     const detailData = await repository.findOne({
       where: {
-        memberId: member.id,
+        //memberId: member.id,
         visitationMetaId: metaData.id,
       },
       relations: VisitationDetailRelationOptions,
@@ -120,23 +130,29 @@ export class VisitationDetailDomainService
     return detailData;
   }
 
-  async findVisitationDetailsByMetaId(
+  async findVisitationDetailsByMeta(
     metaData: VisitationMetaModel,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<VisitationDetailModel>,
   ) {
     const repository = this.getRepository(qr);
 
-    return repository.find({
+    const detailData = await repository.findOne({
       where: {
         visitationMetaId: metaData.id,
       },
       relations: relationOptions,
     });
+
+    if (!detailData) {
+      throw new NotFoundException(VisitationDetailException.NOT_FOUND);
+    }
+
+    return detailData;
   }
 
   async updateVisitationDetail(
-    visitationMeta: VisitationMetaModel,
+    //visitationMeta: VisitationMetaModel,
     visitationDetail: VisitationDetailModel,
     dto: UpdateVisitationDetailDto,
     qr?: QueryRunner,
@@ -145,7 +161,7 @@ export class VisitationDetailDomainService
 
     const result = await repository.update(
       {
-        visitationMetaId: visitationMeta.id,
+        //visitationMetaId: visitationMeta.id,
         id: visitationDetail.id,
       },
       {

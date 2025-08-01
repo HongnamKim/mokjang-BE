@@ -1,15 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator';
 
 @SanitizeDto()
 export class VisitationDetailDto {
-  @ApiProperty({
+  /*@ApiProperty({
     description: '심방 대상자 ID',
   })
   @IsNumber()
   @Min(1)
-  memberId: number;
+  memberId: number;*/
 
   @ApiProperty({
     description: '심방 내용 (예약 시 생략)',

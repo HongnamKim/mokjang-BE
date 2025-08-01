@@ -16,19 +16,14 @@ import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
-  IMEMBERS_DOMAIN_SERVICE,
-  IMembersDomainService,
-} from '../../members/member-domain/interface/members-domain.service.interface';
-import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class VisitationDetailService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,
+    /*@Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,*/
     @Inject(IVISITATION_META_DOMAIN_SERVICE)
     private readonly visitationMetaDomainService: IVisitationMetaDomainService,
     @Inject(IVISITATION_DETAIL_DOMAIN_SERVICE)
@@ -52,52 +47,52 @@ export class VisitationDetailService {
   async updateVisitationDetail(
     churchId: number,
     visitationId: number,
-    memberId: number,
     dto: UpdateVisitationDetailDto,
   ) {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const [metaData, member] = await Promise.all([
-      this.visitationMetaDomainService.findVisitationMetaModelById(
+    const metaData =
+      await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,
         visitationId,
-      ),
-      this.membersDomainService.findMemberModelById(church, memberId),
-    ]);
+      );
 
     const detailData =
-      await this.visitationDetailDomainService.findVisitationDetailByMetaAndMemberId(
+      await this.visitationDetailDomainService.findVisitationDetailsByMeta(
         metaData,
-        member,
       );
 
     await this.visitationDetailDomainService.updateVisitationDetail(
-      metaData,
       detailData,
       dto,
     );
 
-    return this.visitationDetailDomainService.findVisitationDetailByMetaAndMemberId(
-      metaData,
-      member,
-    );
+    if (dto.visitationPray) {
+      detailData.visitationPray = dto.visitationPray;
+    }
+
+    if (dto.visitationContent) {
+      detailData.visitationContent = dto.visitationContent;
+    }
+
+    return detailData;
   }
 
-  async handleUpdateVisitationMembers(
+  /*async handleUpdateVisitationMembers(
     church: ChurchModel,
     visitationMeta: VisitationMetaModel,
     newMemberIds: number[],
     qr: QueryRunner,
   ) {
     const oldVisitationDetails =
-      await this.visitationDetailDomainService.findVisitationDetailsByMetaId(
+      await this.visitationDetailDomainService.findVisitationDetailsByMeta(
         visitationMeta,
         qr,
       );
 
     // 기존 대상자 memberId
-    const oldMemberIds = oldVisitationDetails.map((detail) => detail.memberId);
+    const oldMemberIds = visitationMeta.members.map((m) => m.id); //oldVisitationDetails.map((detail) => detail.memberId);
 
     // 삭제될 detail 의 memberId
     const newMemberIdsSet = new Set(newMemberIds);
@@ -128,5 +123,5 @@ export class VisitationDetailService {
       addedMembers,
       qr,
     );
-  }
+  }*/
 }
