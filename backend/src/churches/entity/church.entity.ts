@@ -53,7 +53,7 @@ export class ChurchModel extends BaseModel {
   @Column({ default: 0 })
   memberCount: number;
 
-  @Column()
+  @Column({ nullable: true })
   ownerUserId: number;
 
   @OneToOne(() => UserModel, (user) => user.ownedChurch)

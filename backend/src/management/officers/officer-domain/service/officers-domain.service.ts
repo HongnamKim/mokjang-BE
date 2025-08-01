@@ -171,6 +171,7 @@ export class OfficersDomainService implements IOfficersDomainService {
       throw new ConflictException(OfficersException.ALREADY_EXIST);
     }
 
+
     const [lastOrderOfficer] = await this.officersRepository.find({
       where: {
         churchId: church.id,
@@ -178,7 +179,6 @@ export class OfficersDomainService implements IOfficersDomainService {
       order: {
         order: 'DESC',
       },
-      take: 1,
     });
 
     const order = lastOrderOfficer ? lastOrderOfficer.order + 1 : 1;
