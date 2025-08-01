@@ -12,6 +12,11 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateUserDto } from '../../dto/update-user.dto';
 import { UserRole } from '../../const/user-role.enum';
 import { UserException } from '../../const/exception/user.exception';
+import {
+  MemberSummarizedGroupSelectQB,
+  MemberSummarizedOfficerSelectQB,
+  MemberSummarizedSelectQB,
+} from '../../../members/const/member-find-options.const';
 
 @Injectable()
 export class UserDomainService implements IUserDomainService {
@@ -58,6 +63,7 @@ export class UserDomainService implements IUserDomainService {
         'churchUser.memberId',
         'churchUser.role',
         'churchUser.joinedAt',
+        'churchUser.leftAt',
       ])
       .leftJoin('churchUser.church', 'church') // 교회
       .addSelect([
@@ -71,13 +77,17 @@ export class UserDomainService implements IUserDomainService {
         'church.detailAddress',
       ])
       .leftJoin('churchUser.member', 'member') // 교인
-      .addSelect(['member.id', 'member.name', 'member.profileImageUrl'])
+      .addSelect(
+        MemberSummarizedSelectQB /*['member.id', 'member.name', 'member.profileImageUrl']*/,
+      )
       .leftJoin('member.group', 'group') // 교인 - 그룹
-      .addSelect(['group.id', 'group.name'])
+      .addSelect(MemberSummarizedGroupSelectQB /*['group.id', 'group.name']*/)
       .leftJoin('member.officer', 'officer') // 교인 - 직분
-      .addSelect(['officer.id', 'officer.name'])
-      .leftJoin('member.groupRole', 'groupRole') // 교인 - 그룹 역할
-      .addSelect(['groupRole.id', 'groupRole.role'])
+      .addSelect(
+        MemberSummarizedOfficerSelectQB /*['officer.id', 'officer.name']*/,
+      )
+      //.leftJoin('member.groupRole', 'groupRole') // 교인 - 그룹 역할
+      //.addSelect(['groupRole.id', 'groupRole.role'])
       .leftJoin('churchUser.permissionTemplate', 'permissionTemplate') // 관리자 - 권한 유형
       .addSelect(['permissionTemplate.id', 'permissionTemplate.title'])
       .leftJoinAndSelect(
