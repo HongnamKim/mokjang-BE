@@ -40,21 +40,6 @@ async function bootstrap() {
     .setTitle('프로젝트 제목')
     .setDescription('프로젝트 설명')
     .setVersion('0.1')
-    /*.addSecurity('Temporal Token', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'MJTT',
-    })
-    .addSecurity('Access Token', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'MJAT',
-    })
-    .addSecurity('Refresh Token', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'MJRT',
-    })*/
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

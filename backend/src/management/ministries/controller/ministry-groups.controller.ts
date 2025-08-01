@@ -13,22 +13,26 @@ import {
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateMinistryGroupDto } from '../dto/ministry-group/create-ministry-group.dto';
+import { CreateMinistryGroupDto } from '../dto/ministry-group/request/create-ministry-group.dto';
 import { QueryRunner as QR } from 'typeorm';
-import { UpdateMinistryGroupNameDto } from '../dto/ministry-group/update-ministry-group-name.dto';
+import { UpdateMinistryGroupNameDto } from '../dto/ministry-group/request/update-ministry-group-name.dto';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { GetMinistryGroupDto } from '../dto/ministry-group/get-ministry-group.dto';
+import { GetMinistryGroupDto } from '../dto/ministry-group/request/get-ministry-group.dto';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
-import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/update-ministry-group-structure.dto';
+import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/request/update-ministry-group-structure.dto';
 import {
+  ApiPatchMinistryGroupLeader,
   ApiPatchMinistryGroupName,
+  ApiPatchMinistryGroupStructure,
   ApiRefreshMinistryGroupCount,
 } from '../const/swagger/ministry-group.swagger';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
+import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -66,6 +70,25 @@ export class MinistryGroupsController {
     return this.ministryGroupService.refreshMinistryGroupCount(church, qr);
   }
 
+  @Get('unassigned-member')
+  getUnassignedMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Query() dto: GetUnassignedMembersDto,
+  ) {
+    return this.ministryGroupService.getUnassignedMembers(churchId, dto);
+  }
+
+  @Get(':ministryGroupId')
+  getMinistryGroupById(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+  ) {
+    return this.ministryGroupService.getMinistryGroupById(
+      churchId,
+      ministryGroupId,
+    );
+  }
+
   @Delete(':ministryGroupId')
   @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
@@ -99,6 +122,7 @@ export class MinistryGroupsController {
     );
   }
 
+  @ApiPatchMinistryGroupStructure()
   @Patch(':ministryGroupId/structure')
   @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
@@ -116,27 +140,20 @@ export class MinistryGroupsController {
     );
   }
 
-  /*@Get(':ministryGroupId/childGroups')
-  @MinistryReadGuard()
-  getChildGroups(
+  @ApiPatchMinistryGroupLeader()
+  @Patch(':ministryGroupId/leader')
+  @UseInterceptors(TransactionInterceptor)
+  patchMinistryGroupLeader(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @Body() dto: UpdateMinistryGroupLeaderDto,
+    @QueryRunner() qr: QR,
   ) {
-    return this.ministryGroupService.getMinistryGroupsCascade(
+    return this.ministryGroupService.updateMinistryGroupLeader(
       churchId,
       ministryGroupId,
+      dto,
+      qr,
     );
-  }*/
-
-  /*@Get(':ministryGroupId')
-  @MinistryReadGuard()
-  getMinistryGroupById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
-  ) {
-    return this.ministryGroupService.getMinistryGroupById(
-      churchId,
-      ministryGroupId,
-    );
-  }*/
+  }
 }

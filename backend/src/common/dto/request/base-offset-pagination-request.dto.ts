@@ -36,10 +36,10 @@ export abstract class BaseOffsetPaginationRequestDto<TOrder> {
   @ApiProperty({
     name: 'orderDirection',
     description: '정렬 오름차순 / 내림차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'ASC' | 'DESC' | 'asc' | 'desc';
+  orderDirection: 'ASC' | 'DESC';
 }

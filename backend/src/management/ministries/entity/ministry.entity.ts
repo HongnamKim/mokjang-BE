@@ -6,7 +6,6 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  Unique,
 } from 'typeorm';
 import { MinistryGroupModel } from './ministry-group.entity';
 import {
@@ -15,10 +14,9 @@ import {
 } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { MinistryHistoryModel } from '../../../member-history/entity/ministry-history.entity';
+import { MinistryHistoryModel } from '../../../member-history/ministry-history/entity/child/ministry-history.entity';
 
 @Entity()
-@Unique(['name', 'ministryGroupId', 'churchId'])
 export class MinistryModel extends BaseModel {
   @Column({ length: 50, comment: '사역명' })
   name: string;
@@ -34,9 +32,9 @@ export class MinistryModel extends BaseModel {
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
-  @Column({ nullable: true })
+  @Column()
   @Index()
-  ministryGroupId: number | null;
+  ministryGroupId: number;
 
   @ManyToOne(
     () => MinistryGroupModel,

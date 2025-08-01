@@ -31,7 +31,7 @@ import {
 } from '../../const/task-find-options.const';
 import { TaskType } from '../../const/task-type.enum';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
-import { MemberException } from '../../../members/const/exception/member.exception';
+import { MemberException } from '../../../members/exception/member.exception';
 import { GetTasksDto } from '../../dto/request/get-tasks.dto';
 import { EducationSessionOrderEnum } from '../../const/task-order.enum';
 import { MAX_SUB_TASK_COUNT } from '../../const/task.constraints';

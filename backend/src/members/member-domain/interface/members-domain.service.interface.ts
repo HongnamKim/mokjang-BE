@@ -12,7 +12,6 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
 import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { MinistryModel } from '../../../management/ministries/entity/ministry.entity';
 import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
@@ -20,7 +19,6 @@ import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
-import { GetGroupMembersDto } from '../../../management/groups/dto/request/get-group-members.dto';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
@@ -63,6 +61,12 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]>;
+
+  /*findMinistryGroupMembersByIds(
+    ministryGroup: MinistryGroupModel,
+    memberIds: number[],
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;*/
 
   countAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<number>;
 
@@ -136,18 +140,6 @@ export interface IMembersDomainService {
 
   endMemberOfficer(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
 
-  startMemberMinistry(
-    member: MemberModel,
-    ministry: MinistryModel,
-    qr: QueryRunner,
-  ): Promise<MemberModel>;
-
-  endMemberMinistry(
-    member: MemberModel,
-    targetMinistry: MinistryModel,
-    qr: QueryRunner,
-  ): Promise<MemberModel>;
-
   startMemberGroup(
     member: MemberModel,
     group: GroupModel,
@@ -158,8 +150,8 @@ export interface IMembersDomainService {
   endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
 
   updateGroupRole(
-    group: GroupModel,
-    newLeaderMember: MemberModel,
+    member: MemberModel,
+    groupRole: GroupRole,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
@@ -175,12 +167,5 @@ export interface IMembersDomainService {
     dto: GetNewMemberDetailDto,
     from: Date,
     to: Date,
-  ): Promise<MemberModel[]>;
-
-  findGroupMembers(
-    church: ChurchModel,
-    group: GroupModel,
-    dto: GetGroupMembersDto,
-    qr?: QueryRunner,
   ): Promise<MemberModel[]>;
 }

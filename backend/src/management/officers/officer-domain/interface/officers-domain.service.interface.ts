@@ -52,11 +52,13 @@ export interface IOfficersDomainService {
 
   incrementMembersCount(
     officer: OfficerModel,
+    count: number,
     qr: QueryRunner,
   ): Promise<boolean>;
 
   decrementMembersCount(
     officer: OfficerModel,
+    count: number,
     qr: QueryRunner,
   ): Promise<boolean>;
 

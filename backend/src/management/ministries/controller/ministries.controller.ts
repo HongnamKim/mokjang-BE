@@ -13,9 +13,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MinistryService } from '../service/ministry.service';
-import { CreateMinistryDto } from '../dto/ministry/create-ministry.dto';
-import { UpdateMinistryDto } from '../dto/ministry/update-ministry.dto';
-import { GetMinistryDto } from '../dto/ministry/get-ministry.dto';
+import { CreateMinistryDto } from '../dto/ministry/request/create-ministry.dto';
+import { UpdateMinistryDto } from '../dto/ministry/request/update-ministry.dto';
+import { GetMinistryDto } from '../dto/ministry/request/get-ministry.dto';
 import { QueryRunner as QR } from 'typeorm';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
@@ -25,7 +25,6 @@ import {
   ApiPatchMinistry,
   ApiPostMinistry,
   ApiRefreshMinistryCount,
-  ApiRefreshMinistryMembersCount,
 } from '../const/swagger/ministry.swagger';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
@@ -33,8 +32,8 @@ import { ChurchManagerGuard } from '../../../permission/guard/church-manager.gua
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
-@ApiTags('Management:Ministries')
-@Controller('ministries')
+@ApiTags('Management:MinistryGroups:Ministries')
+@Controller('ministry-groups/:ministryGroupId/ministries')
 export class MinistriesController {
   constructor(private readonly ministryService: MinistryService) {}
 
@@ -43,9 +42,10 @@ export class MinistriesController {
   @Get()
   getMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Query() dto: GetMinistryDto,
   ) {
-    return this.ministryService.getMinistries(churchId, dto);
+    return this.ministryService.getMinistries(churchId, ministryGroupId, dto);
   }
 
   @ApiPostMinistry()
@@ -54,10 +54,16 @@ export class MinistriesController {
   @UseInterceptors(TransactionInterceptor)
   postMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Body() dto: CreateMinistryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.createMinistry(churchId, dto, qr);
+    return this.ministryService.createMinistry(
+      churchId,
+      ministryGroupId,
+      dto,
+      qr,
+    );
   }
 
   @ApiRefreshMinistryCount()
@@ -66,9 +72,14 @@ export class MinistriesController {
   @Patch('refresh-count')
   refreshMinistryCount(
     @PermissionChurch() church: ChurchModel,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.refreshMinistryCount(church, qr);
+    return this.ministryService.refreshMinistryCount(
+      church,
+      ministryGroupId,
+      qr,
+    );
   }
 
   @ApiPatchMinistry()
@@ -77,11 +88,18 @@ export class MinistriesController {
   @UseInterceptors(TransactionInterceptor)
   patchMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
     @Body() dto: UpdateMinistryDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.updateMinistry(churchId, ministryId, dto, qr);
+    return this.ministryService.updateMinistry(
+      churchId,
+      ministryGroupId,
+      ministryId,
+      dto,
+      qr,
+    );
   }
 
   @ApiDeleteMinistry()
@@ -90,34 +108,15 @@ export class MinistriesController {
   @UseInterceptors(TransactionInterceptor)
   deleteMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryService.deleteMinistry(churchId, ministryId, qr);
-  }
-
-  @ApiRefreshMinistryMembersCount()
-  @MinistryWriteGuard()
-  @Patch(':ministryId/refresh-members-count')
-  refreshMembersCount(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-  ) {
-    return this.ministryService.refreshMinistryMemberCount(
+    return this.ministryService.deleteMinistry(
       churchId,
+      ministryGroupId,
       ministryId,
+      qr,
     );
   }
-
-  /*@ApiGetMinistryById()
-  @MinistryReadGuard()
-  @Get(':ministryId')
-  getMinistryById(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('ministryId', ParseIntPipe) ministryId: number,
-  ) {
-    throw new GoneException('더 이상 사용되지 않는 요청');
-
-    //return this.ministryService.getMinistryById(churchId, ministryId);
-  }*/
 }

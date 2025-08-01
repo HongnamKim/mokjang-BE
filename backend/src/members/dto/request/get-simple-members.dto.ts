@@ -32,8 +32,8 @@ export class GetSimpleMembersDto extends BaseOffsetPaginationRequestDto<GetSimpl
     required: false,
   })
   @IsOptional()
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
-  override orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'asc';
+  @IsIn(['ASC', 'DESC'])
+  override orderDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiProperty({
     description: '정렬 기준',
