@@ -37,11 +37,11 @@ export interface IVisitationDetailDomainService {
     qr?: QueryRunner,
   ): Promise<VisitationDetailModel>;
 
-  findVisitationDetailsByMetaId(
+  findVisitationDetailsByMeta(
     metaData: VisitationMetaModel,
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<VisitationDetailModel>,
-  ): Promise<VisitationDetailModel[]>;
+  ): Promise<VisitationDetailModel>;
 
   /*findVisitationDetailById(
     visitationMeta: VisitationMetaModel,
@@ -50,7 +50,7 @@ export interface IVisitationDetailDomainService {
   ): Promise<VisitationDetailModel>;*/
 
   updateVisitationDetail(
-    visitationMeta: VisitationMetaModel,
+    //visitationMeta: VisitationMetaModel,
     visitationDetail: VisitationDetailModel,
     dto: UpdateVisitationDetailDto,
     qr?: QueryRunner,

@@ -1,80 +1,35 @@
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
 import { VisitationDetailModel } from '../entity/visitation-detail.entity';
+import { MemberSummarizedSelect } from '../../members/const/member-find-options.const';
 
 export const VisitationRelationOptions: FindOptionsRelations<VisitationMetaModel> =
   {
     members: {
       officer: true,
       group: true,
-      //groupRole: true,
     },
     inCharge: {
       officer: true,
       group: true,
-      //groupRole: true,
     },
     creator: {
       officer: true,
       group: true,
-      //groupRole: true,
     },
     reports: {
       receiver: {
         officer: true,
         group: true,
-        //groupRole: true,
       },
     },
-    visitationDetails: {
-      member: {
-        group: true,
-        //groupRole: true,
-        officer: true,
-      },
-    },
+    visitationDetails: true,
   };
 
 export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
-  creator: {
-    id: true,
-    name: true,
-    officer: {
-      id: true,
-      name: true,
-    },
-    group: {
-      id: true,
-      name: true,
-    },
-    groupRole: true,
-  },
-  inCharge: {
-    id: true,
-    name: true,
-    officer: {
-      id: true,
-      name: true,
-    },
-    group: {
-      id: true,
-      name: true,
-    },
-    groupRole: true,
-  },
-  members: {
-    id: true,
-    name: true,
-    officer: {
-      id: true,
-      name: true,
-    },
-    group: {
-      id: true,
-      name: true,
-    },
-    groupRole: true,
-  },
+  creator: MemberSummarizedSelect,
+  inCharge: MemberSummarizedSelect,
+  members: MemberSummarizedSelect,
   reports: {
     id: true,
     isRead: true,
@@ -99,34 +54,21 @@ export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
     updatedAt: true,
     visitationPray: true,
     visitationContent: true,
-    member: {
-      id: true,
-      name: true,
-      officer: {
-        id: true,
-        name: true,
-      },
-      group: {
-        id: true,
-        name: true,
-      },
-      groupRole: true,
-    },
   },
 };
 
 export const VisitationDetailRelationOptions: FindOptionsRelations<VisitationDetailModel> =
   {
-    member: {
+    /*member: {
       officer: true,
       group: true,
       //groupRole: true,
-    },
+    },*/
   };
 
 export const VisitationDetailSelectOptions: FindOptionsSelect<VisitationDetailModel> =
   {
-    member: {
+    /*member: {
       id: true,
       name: true,
       officer: {
@@ -138,5 +80,5 @@ export const VisitationDetailSelectOptions: FindOptionsSelect<VisitationDetailMo
         name: true,
       },
       groupRole: true,
-    },
+    },*/
   };

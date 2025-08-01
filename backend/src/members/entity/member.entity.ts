@@ -25,7 +25,6 @@ import { RequestInfoModel } from '../../request-info/entity/request-info.entity'
 import { MinistryHistoryModel } from '../../member-history/ministry-history/entity/child/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/officer-history/entity/officer-history.entity';
 import { GroupHistoryModel } from '../../member-history/group-history/entity/group-history.entity';
-import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { TaskModel } from '../../task/entity/task.entity';
 import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
@@ -242,11 +241,11 @@ export class MemberModel extends BaseModel {
   visitationMetas: VisitationMetaModel[];
 
   // 나의 심방 세부 내용
-  @OneToMany(
+  /*@OneToMany(
     () => VisitationDetailModel,
     (visitingDetail) => visitingDetail.member,
   )
-  visitationDetails: VisitationDetailModel[];
+  visitationDetails: VisitationDetailModel[];*/
 
   // --------------- 심방 -------------------
 
