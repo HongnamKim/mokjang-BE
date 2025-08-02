@@ -29,9 +29,9 @@ import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GroupRole } from '../../management/groups/const/group-role.enum';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
 import { MinistryGroupHistoryModel } from '../../member-history/ministry-history/entity/ministry-group-history.entity';
-import { EducationEnrollmentModel } from '../../educations/entity/education-enrollment.entity';
-import { EducationTermModel } from '../../educations/entity/education-term.entity';
-import { EducationSessionModel } from '../../educations/entity/education-session.entity';
+import { EducationEnrollmentModel } from '../../educations/education-enrollment/entity/education-enrollment.entity';
+import { EducationTermModel } from '../../educations/education-term/entity/education-term.entity';
+import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {

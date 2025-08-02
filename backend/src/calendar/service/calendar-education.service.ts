@@ -8,7 +8,7 @@ import {
 import {
   IEDUCATION_SESSION_DOMAIN_SERVICE,
   IEducationSessionDomainService,
-} from '../../educations/service/education-domain/interface/education-session-domain.service.interface';
+} from '../../educations/education-domain/interface/education-session-domain.service.interface';
 
 @Injectable()
 export class CalendarEducationService {

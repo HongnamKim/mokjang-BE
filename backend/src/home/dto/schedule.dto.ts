@@ -1,7 +1,7 @@
 import { ScheduleType } from '../const/schedule-type.enum';
 import { TaskStatus } from '../../task/const/task-status.enum';
 import { VisitationStatus } from '../../visitation/const/visitation-status.enum';
-import { EducationSessionStatus } from '../../educations/const/education-status.enum';
+import { EducationSessionStatus } from '../../educations/education-session/const/education-session-status.enum';
 
 export class ScheduleDto {
   id: number;

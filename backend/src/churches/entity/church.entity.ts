@@ -22,7 +22,7 @@ import { Exclude } from 'class-transformer';
 import { TaskModel } from '../../task/entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { WorshipModel } from '../../worship/entity/worship.entity';
-import { EducationModel } from '../../educations/entity/education.entity';
+import { EducationModel } from '../../educations/education/entity/education.entity';
 
 @Entity()
 @Unique(['joinCode'])

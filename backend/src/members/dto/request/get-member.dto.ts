@@ -21,7 +21,8 @@ import {
 import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
 import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
-import { EducationEnrollmentStatus } from '../../../educations/const/education-status.enum';
+
+import { EducationEnrollmentStatus } from '../../../educations/education-enrollment/const/education-enrollment-status.enum';
 
 export class GetMemberDto {
   @ApiProperty({
