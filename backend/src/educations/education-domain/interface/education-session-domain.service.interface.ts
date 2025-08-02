@@ -26,6 +26,11 @@ export interface IEducationSessionDomainService {
     sessionId: number,
   ): Promise<EducationSessionModel>;
 
+  findEducationSessionIds(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<EducationSessionModel[]>;
+
   findEducationSessions(
     educationTerm: EducationTermModel,
     dto: GetEducationSessionDto,

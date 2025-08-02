@@ -68,23 +68,27 @@ export interface IEducationTermDomainService {
 
   incrementEnrollmentCount(
     educationTerm: EducationTermModel,
+    count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
   decrementEnrollmentCount(
     educationTerm: EducationTermModel,
+    count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
   incrementEducationStatusCount(
     educationTerm: EducationTermModel,
     status: EducationEnrollmentStatus,
+    count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
   decrementEducationStatusCount(
     educationTerm: EducationTermModel,
     status: EducationEnrollmentStatus,
+    count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

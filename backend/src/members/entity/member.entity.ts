@@ -194,7 +194,7 @@ export class MemberModel extends BaseModel {
     () => EducationEnrollmentModel,
     (educationEnrollment) => educationEnrollment.member,
   )
-  educations: EducationEnrollmentModel[];
+  educationEnrollments: EducationEnrollmentModel[];
 
   @OneToMany(() => EducationTermModel, (term) => term.inCharge)
   inChargeEducationTerm: EducationTermModel[];

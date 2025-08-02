@@ -159,6 +159,23 @@ export class EducationSessionDomainService
     return educationSession;
   }
 
+  findEducationSessionIds(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<EducationSessionModel[]> {
+    const repository = this.getEducationSessionsRepository(qr);
+
+    return repository.find({
+      where: {
+        educationTermId: educationTerm.id,
+      },
+      select: { id: true },
+      order: {
+        session: 'ASC',
+      },
+    });
+  }
+
   async findEducationSessions(
     educationTerm: EducationTermModel,
     dto: GetEducationSessionDto,

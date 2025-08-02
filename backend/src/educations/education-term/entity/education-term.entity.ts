@@ -67,9 +67,6 @@ export class EducationTermModel extends BaseModel {
   @Column({ default: 0, comment: '수강 대상 교인 수' })
   enrollmentCount: number;
 
-  /*@Column({ default: 0, comment: '수료중인 교인 수' })
-  inProgressCount: number;*/
-
   @Column({ default: 0, comment: '수료한 교인 수' })
   completedCount: number;
 

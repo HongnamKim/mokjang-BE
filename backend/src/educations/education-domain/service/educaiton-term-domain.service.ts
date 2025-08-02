@@ -36,7 +36,6 @@ import {
 } from '../../../members/const/member-find-options.const';
 import { EducationTermException } from '../../education-term/exception/education-term.exception';
 import { EducationTermStatus } from '../../education-term/const/education-term-status.enum';
-import { EducationTermOrder } from '../../education-term/const/education-term-order.enum';
 import { EducationEnrollmentStatus } from '../../education-enrollment/const/education-enrollment-status.enum';
 import {
   EducationTermRelationOptions,
@@ -385,14 +384,21 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
   async incrementEnrollmentCount(
     educationTerm: EducationTermModel,
+    count: number,
     qr: QueryRunner,
   ) {
+    if (count < 1) {
+      throw new InternalServerErrorException(
+        EducationTermException.INVALID_INCREMENT_COUNT,
+      );
+    }
+
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const result = await educationTermsRepository.increment(
       { id: educationTerm.id },
       EducationTermColumns.enrollmentCount, //'enrollmentCount',
-      1,
+      count,
     );
 
     if (result.affected === 0) {
@@ -406,14 +412,21 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
   async decrementEnrollmentCount(
     educationTerm: EducationTermModel,
+    count: number,
     qr: QueryRunner,
   ) {
+    if (count < 1) {
+      throw new InternalServerErrorException(
+        EducationTermException.INVALID_DECREMENT_COUNT,
+      );
+    }
+
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const result = await educationTermsRepository.decrement(
       { id: educationTerm.id },
       EducationTermColumns.enrollmentCount, //'enrollmentCount',
-      1,
+      count,
     );
 
     if (result.affected === 0) {
@@ -428,8 +441,15 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   async incrementEducationStatusCount(
     educationTerm: EducationTermModel,
     status: EducationEnrollmentStatus,
+    count: number,
     qr: QueryRunner,
   ) {
+    if (count < 1) {
+      throw new InternalServerErrorException(
+        EducationTermException.INVALID_INCREMENT_COUNT,
+      );
+    }
+
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const result = await educationTermsRepository.increment(
@@ -437,7 +457,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         id: educationTerm.id,
       },
       this.CountColumnMap[status],
-      1,
+      count,
     );
 
     if (result.affected === 0) {
@@ -452,8 +472,15 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   async decrementEducationStatusCount(
     educationTerm: EducationTermModel,
     status: EducationEnrollmentStatus,
+    count: number,
     qr: QueryRunner,
   ) {
+    if (count < 1) {
+      throw new InternalServerErrorException(
+        EducationTermException.INVALID_DECREMENT_COUNT,
+      );
+    }
+
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const result = await educationTermsRepository.decrement(
@@ -461,7 +488,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         id: educationTerm.id,
       },
       this.CountColumnMap[status],
-      1,
+      count,
     );
 
     if (result.affected === 0) {

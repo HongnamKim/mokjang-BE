@@ -13,4 +13,7 @@ export const EducationTermException = {
   UPDATE_ERROR: '교육 기수 업데이트 도중 에러 발생',
   DELETE_ERROR: '교육 기수 삭제 도중 에러 발생',
   MAX_TERMS_COUNT_REACHED: `더 이상 교육 기수를 만들 수 없습니다. (교육 당 최대 ${EducationTermConstraints.MAX_COUNT}개)`,
+
+  INVALID_INCREMENT_COUNT: '옳지 않은 증가값',
+  INVALID_DECREMENT_COUNT: '올지 않은 감소값',
 };

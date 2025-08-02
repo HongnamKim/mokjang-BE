@@ -55,20 +55,24 @@ export class SessionAttendanceDomainService
   }
 
   createSessionAttendanceForNewEnrollment(
-    enrollment: EducationEnrollmentModel,
+    enrollments: EducationEnrollmentModel[],
     educationSessionIds: number[],
     qr: QueryRunner,
   ): Promise<SessionAttendanceModel[]> {
-    const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
+    const repository = this.getSessionAttendanceRepository(qr);
 
-    return sessionAttendanceRepository.save(
-      educationSessionIds.map((sessionSessionId) => {
-        return {
-          educationSessionId: sessionSessionId,
-          educationEnrollmentId: enrollment.id,
-        };
-      }),
+    const attendances = repository.create(
+      enrollments
+        .map((enrollment) =>
+          educationSessionIds.map((sessionId) => ({
+            educationSessionId: sessionId,
+            educationEnrollmentId: enrollment.id,
+          })),
+        )
+        .flat(),
     );
+
+    return repository.save(attendances);
   }
 
   async createAdditionalSessionAttendance(
@@ -136,7 +140,7 @@ export class SessionAttendanceDomainService
             educationTermId: true,
             status: true,
             attendanceCount: true,
-            note: true,
+            //note: true,
             member: MemberSummarizedSelect,
           },
         },

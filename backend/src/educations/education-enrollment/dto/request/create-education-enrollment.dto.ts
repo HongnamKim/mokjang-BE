@@ -1,40 +1,37 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
-import { EducationEnrollmentModel } from '../../entity/education-enrollment.entity';
+import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEnum,
-  IsNotEmpty,
+  ArrayMinSize,
+  ArrayUnique,
+  IsArray,
   IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
   Min,
 } from 'class-validator';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
-import { EducationEnrollmentStatus } from '../../const/education-enrollment-status.enum';
 
 @SanitizeDto()
-export class CreateEducationEnrollmentDto extends PickType(
-  EducationEnrollmentModel,
-  ['memberId', 'status', 'note'],
-) {
+export class CreateEducationEnrollmentDto {
   @ApiProperty({
-    description: '수강 대상자 ID',
+    description: '수강 대상자 ID 배열',
+    isArray: true,
   })
-  @IsNumber()
-  @Min(1)
-  override memberId: number;
+  @IsNumber({}, { each: true })
+  @IsArray()
+  @ArrayUnique()
+  @ArrayMinSize(1)
+  @Min(1, { each: true })
+  memberIds: number[];
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '교육 상태 (수료중/수료/미수료)',
     enum: EducationEnrollmentStatus,
-    default: EducationEnrollmentStatus.INCOMPLETE, //IN_PROGRESS,
+    default: EducationEnrollmentStatus.INCOMPLETE,
     required: false,
   })
   @IsOptional()
   @IsEnum(EducationEnrollmentStatus)
-  status: EducationEnrollmentStatus = EducationEnrollmentStatus.INCOMPLETE; //IN_PROGRESS;
+  status: EducationEnrollmentStatus = EducationEnrollmentStatus.INCOMPLETE;*/
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '비고',
     required: false,
     maxLength: 120,
@@ -43,5 +40,5 @@ export class CreateEducationEnrollmentDto extends PickType(
   @IsOptional()
   @IsNotEmpty()
   @MaxLength(120)
-  note: string;
+  note: string;*/
 }
