@@ -14,7 +14,7 @@ export interface IEducationEnrollmentsDomainService {
     educationTerm: EducationTermModel,
     dto: GetEducationEnrollmentDto,
     qr?: QueryRunner,
-  ): Promise<{ data: EducationEnrollmentModel[]; totalCount: number }>;
+  ): Promise<EducationEnrollmentModel[]>;
 
   findEducationEnrollmentModels(
     educationTerm: EducationTermModel,

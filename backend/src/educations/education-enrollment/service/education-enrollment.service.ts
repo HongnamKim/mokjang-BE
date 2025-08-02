@@ -123,20 +123,14 @@ export class EducationEnrollmentService {
         qr,
       );
 
-    const { data, totalCount } =
+    const data =
       await this.educationEnrollmentsDomainService.findEducationEnrollments(
         educationTerm,
         dto,
         qr,
       );
 
-    return new EducationEnrollmentPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new EducationEnrollmentPaginationResponseDto(data);
   }
 
   async createEducationEnrollment(

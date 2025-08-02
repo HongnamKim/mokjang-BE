@@ -75,38 +75,23 @@ export class EducationEnrollmentsDomainService
       id: dto.orderDirection,
     };
 
-    const [result, totalCount] = await Promise.all([
-      educationEnrollmentsRepository.find({
-        where: {
-          educationTermId: educationTerm.id,
-          member: {
-            name: dto.memberName && ILike(`%${dto.memberName}%`),
-          },
+    return educationEnrollmentsRepository.find({
+      where: {
+        educationTermId: educationTerm.id,
+        member: {
+          name: dto.memberName && ILike(`%${dto.memberName}%`),
         },
-        relations: {
-          member: MemberSummarizedRelation,
-        },
-        select: {
-          member: MemberSummarizedSelect,
-        },
-        order,
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      educationEnrollmentsRepository.count({
-        where: {
-          educationTermId: educationTerm.id,
-          member: {
-            name: dto.memberName && ILike(`%${dto.memberName}%`),
-          },
-        },
-      }),
-    ]);
-
-    return {
-      data: result,
-      totalCount,
-    };
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSummarizedSelect,
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   findEducationEnrollmentModels(
