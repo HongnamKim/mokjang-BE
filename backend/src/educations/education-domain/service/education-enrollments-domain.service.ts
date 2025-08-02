@@ -18,8 +18,6 @@ import {
 } from 'typeorm';
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../education-enrollment/dto/request/get-education-enrollment.dto';
-import { CreateEducationEnrollmentDto } from '../../education-enrollment/dto/request/create-education-enrollment.dto';
-import { UpdateEducationEnrollmentDto } from '../../education-enrollment/dto/request/update-education-enrollment.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationException } from '../../education/exception/education.exception';
 import {
@@ -27,7 +25,7 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { EducationEnrollmentException } from '../../education-enrollment/exception/education-enrollment.exception';
-import { EducationEnrollmentOrder } from '../../education-enrollment/const/education-enrollment-order.enum';
+import { EducationEnrollmentStatus } from '../../education-enrollment/const/education-enrollment-status.enum';
 
 @Injectable()
 export class EducationEnrollmentsDomainService
@@ -46,20 +44,22 @@ export class EducationEnrollmentsDomainService
 
   private async isExistEnrollment(
     educationTerm: EducationTermModel,
-    member: MemberModel,
+    members: MemberModel[],
     qr?: QueryRunner,
   ) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
-    const enrollment = await educationEnrollmentsRepository.findOne({
+    const memberIds = members.map((member) => member.id);
+
+    const enrollment = await educationEnrollmentsRepository.find({
       where: {
         educationTermId: educationTerm.id,
-        memberId: member.id,
+        memberId: In(memberIds),
       },
     });
 
-    return !!enrollment;
+    return enrollment.length > 0;
   }
 
   async findEducationEnrollments(
@@ -89,13 +89,7 @@ export class EducationEnrollmentsDomainService
         select: {
           member: MemberSummarizedSelect,
         },
-        order: {
-          [dto.order]: dto.orderDirection,
-          createdAt:
-            dto.order === EducationEnrollmentOrder.CREATED_AT
-              ? undefined
-              : 'desc',
-        },
+        order,
         take: dto.take,
         skip: dto.take * (dto.page - 1),
       }),
@@ -170,6 +164,28 @@ export class EducationEnrollmentsDomainService
     return enrollment;
   }
 
+  async findEducationEnrollmentsByIds(
+    educationTerm: EducationTermModel,
+    ids: number[],
+    qr?: QueryRunner,
+  ) {
+    const educationEnrollmentsRepository =
+      this.getEducationEnrollmentsRepository(qr);
+
+    return educationEnrollmentsRepository.find({
+      where: {
+        educationTermId: educationTerm.id,
+        id: In(ids),
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSummarizedSelect,
+      },
+    });
+  }
+
   async findEducationEnrollmentModelById(
     educationEnrollmentId: number,
     qr?: QueryRunner,
@@ -194,16 +210,14 @@ export class EducationEnrollmentsDomainService
 
   async createEducationEnrollment(
     educationTerm: EducationTermModel,
-    member: MemberModel,
-    dto: CreateEducationEnrollmentDto,
+    members: MemberModel[],
     qr: QueryRunner,
-  ): Promise<EducationEnrollmentModel> {
-    const educationEnrollmentsRepository =
-      this.getEducationEnrollmentsRepository(qr);
+  ): Promise<EducationEnrollmentModel[]> {
+    const repository = this.getEducationEnrollmentsRepository(qr);
 
     const isExistEnrollment = await this.isExistEnrollment(
       educationTerm,
-      member,
+      members,
       qr,
     );
 
@@ -211,52 +225,41 @@ export class EducationEnrollmentsDomainService
       throw new ConflictException(EducationEnrollmentException.ALREADY_EXIST);
     }
 
-    return educationEnrollmentsRepository.save({
-      member,
-      educationTerm,
-      status: dto.status,
-      note: dto.note,
-    });
+    const enrollments = repository.create(
+      members.map((member) => ({
+        educationTermId: educationTerm.id,
+        memberId: member.id,
+        status: EducationEnrollmentStatus.INCOMPLETE,
+      })),
+    );
+
+    return repository.save(enrollments);
   }
 
   async updateEducationEnrollment(
     educationEnrollment: EducationEnrollmentModel,
-    dto: UpdateEducationEnrollmentDto,
+    status: EducationEnrollmentStatus,
     qr: QueryRunner,
   ) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
-    await educationEnrollmentsRepository.update(
+    const result = await educationEnrollmentsRepository.update(
       {
         id: educationEnrollment.id,
       },
       {
-        status: dto.status,
-        note: dto.note,
+        status,
       },
     );
 
-    const updated = await educationEnrollmentsRepository.findOne({
-      where: {
-        id: educationEnrollment.id,
-      },
-      relations: {
-        member: {
-          group: true,
-          //groupRole: true,
-          officer: true,
-        },
-      },
-    });
-
-    if (!updated) {
+    if (result.affected === 0) {
       throw new InternalServerErrorException(
         EducationEnrollmentException.UPDATE_ERROR,
       );
     }
 
-    return updated;
+    return result;
   }
 
   async deleteEducationEnrollment(

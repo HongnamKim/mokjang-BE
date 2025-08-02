@@ -18,7 +18,7 @@ export interface ISessionAttendanceDomainService {
   ): Promise<SessionAttendanceModel[]>;
 
   createSessionAttendanceForNewEnrollment(
-    enrollment: EducationEnrollmentModel,
+    enrollments: EducationEnrollmentModel[],
     educationSessionIds: number[],
     qr: QueryRunner,
   ): Promise<SessionAttendanceModel[]>;

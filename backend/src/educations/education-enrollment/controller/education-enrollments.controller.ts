@@ -20,6 +20,7 @@ import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { GetNotEnrolledMembersDto } from '../dto/request/get-not-enrolled-members.dto';
 
 @ApiTags('Educations:Enrollments')
 @Controller('educations/:educationId/terms/:educationTermId/enrollments')
@@ -63,6 +64,21 @@ export class EducationEnrollmentsController {
     );
   }
 
+  @Get('not-enrolled-members')
+  getNotEnrolledMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Query() dto: GetNotEnrolledMembersDto,
+  ) {
+    return this.educationEnrollmentsService.getNotEnrolledMembers(
+      churchId,
+      educationId,
+      educationTermId,
+      dto,
+    );
+  }
+
   @EducationWriteGuard()
   @Patch(':educationEnrollmentId')
   @UseInterceptors(TransactionInterceptor)
@@ -79,7 +95,7 @@ export class EducationEnrollmentsController {
       educationId,
       educationTermId,
       educationEnrollmentId,
-      dto,
+      dto.status,
       qr,
     );
   }

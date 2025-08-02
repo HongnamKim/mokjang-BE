@@ -2,9 +2,8 @@ import { EducationTermModel } from '../../education-term/entity/education-term.e
 import { GetEducationEnrollmentDto } from '../../education-enrollment/dto/request/get-education-enrollment.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { EducationEnrollmentModel } from '../../education-enrollment/entity/education-enrollment.entity';
-import { CreateEducationEnrollmentDto } from '../../education-enrollment/dto/request/create-education-enrollment.dto';
-import { UpdateEducationEnrollmentDto } from '../../education-enrollment/dto/request/update-education-enrollment.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { EducationEnrollmentStatus } from '../../education-enrollment/const/education-enrollment-status.enum';
 
 export const IEDUCATION_ENROLLMENT_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_ENROLLMENT_DOMAIN_SERVICE',
@@ -34,6 +33,12 @@ export interface IEducationEnrollmentsDomainService {
     qr?: QueryRunner,
   ): Promise<EducationEnrollmentModel>;
 
+  findEducationEnrollmentsByIds(
+    educationTerm: EducationTermModel,
+    ids: number[],
+    qr?: QueryRunner,
+  ): Promise<EducationEnrollmentModel[]>;
+
   findEducationEnrollmentModelById(
     educationEnrollmentId: number,
     qr?: QueryRunner,
@@ -42,16 +47,16 @@ export interface IEducationEnrollmentsDomainService {
 
   createEducationEnrollment(
     educationTerm: EducationTermModel,
-    member: MemberModel,
-    dto: CreateEducationEnrollmentDto,
+    members: MemberModel[],
     qr: QueryRunner,
-  ): Promise<EducationEnrollmentModel>;
+  ): Promise<EducationEnrollmentModel[]>;
 
   updateEducationEnrollment(
     educationEnrollment: EducationEnrollmentModel,
-    dto: UpdateEducationEnrollmentDto,
+    //dto: UpdateEducationEnrollmentDto,
+    status: EducationEnrollmentStatus,
     qr: QueryRunner,
-  ): Promise<EducationEnrollmentModel>;
+  ): Promise<UpdateResult>;
 
   deleteEducationEnrollment(
     educationEnrollment: EducationEnrollmentModel,
