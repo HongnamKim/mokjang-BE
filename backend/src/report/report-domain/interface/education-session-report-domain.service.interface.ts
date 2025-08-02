@@ -1,13 +1,13 @@
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationSessionReportModel } from '../../entity/education-session-report.entity';
-import { EducationModel } from '../../../management/educations/entity/education.entity';
-import { EducationTermModel } from '../../../management/educations/entity/education-term.entity';
-import { EducationSessionModel } from '../../../management/educations/entity/education-session.entity';
 import { EducationSessionReportDomainPaginationResultDto } from '../../dto/education-report/session/response/education-session-report-domain-pagination-result.dto';
 import { GetEducationSessionReportDto } from '../../dto/education-report/session/request/get-education-session-report.dto';
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { EducationModel } from '../../../educations/entity/education.entity';
+import { EducationTermModel } from '../../../educations/entity/education-term.entity';
+import { EducationSessionModel } from '../../../educations/entity/education-session.entity';
 
 export const IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE',

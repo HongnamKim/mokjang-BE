@@ -1,13 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  IEDUCATION_SESSION_DOMAIN_SERVICE,
-  IEducationSessionDomainService,
-} from '../../management/educations/service/education-domain/interface/education-session-domain.service.interface';
+
 import { GetEducationSessionForCalendarDto } from '../dto/request/education/get-education-session-for-calendar.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IEDUCATION_SESSION_DOMAIN_SERVICE,
+  IEducationSessionDomainService,
+} from '../../educations/service/education-domain/interface/education-session-domain.service.interface';
 
 @Injectable()
 export class CalendarEducationService {

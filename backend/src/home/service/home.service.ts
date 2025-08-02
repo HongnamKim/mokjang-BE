@@ -34,10 +34,6 @@ import {
 } from '../../visitation/visitation-domain/interface/visitation-meta-domain.service.interface';
 import { ScheduleDto } from '../dto/schedule.dto';
 import { ScheduleType } from '../const/schedule-type.enum';
-import {
-  IEDUCATION_SESSION_DOMAIN_SERVICE,
-  IEducationSessionDomainService,
-} from '../../management/educations/service/education-domain/interface/education-session-domain.service.interface';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
 import {
@@ -54,7 +50,6 @@ import {
 } from '../../report/report-domain/interface/visitation-report-domain.service.interface';
 import { ScheduleReportDto } from '../dto/schedule-report.dto';
 import { TaskModel } from '../../task/entity/task.entity';
-import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { GetMyScheduleReportsResponseDto } from '../dto/response/get-my-schedule-reports-response.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../dto/request/get-low-worship-attendance-members.dto';
@@ -73,6 +68,11 @@ import {
 import { WorshipModel } from '../../worship/entity/worship.entity';
 import { GetLowWorshipAttendanceMembersResponseDto } from '../dto/response/get-low-worship-attendance-members-response.dto';
 import { AttendanceRange } from '../const/attendance-range.enum';
+import {
+  IEDUCATION_SESSION_DOMAIN_SERVICE,
+  IEducationSessionDomainService,
+} from '../../educations/service/education-domain/interface/education-session-domain.service.interface';
+import { EducationSessionModel } from '../../educations/entity/education-session.entity';
 
 @Injectable()
 export class HomeService {

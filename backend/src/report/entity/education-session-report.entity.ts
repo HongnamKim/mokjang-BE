@@ -1,8 +1,8 @@
 import { ChildEntity, Column, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { ReportModel } from './report.entity';
-import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
-import { EducationModel } from '../../management/educations/entity/education.entity';
-import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
+import { EducationSessionModel } from '../../educations/entity/education-session.entity';
+import { EducationModel } from '../../educations/entity/education.entity';
+import { EducationTermModel } from '../../educations/entity/education-term.entity';
 
 @ChildEntity('EDUCATIONSESSION')
 export class EducationSessionReportModel extends ReportModel {

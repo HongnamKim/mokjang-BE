@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
 import { IEDUCATION_HISTORY_DOMAIN_SERVICE } from './interface/education-history-domain.service.interface';
 import { EducationHistoryDomainService } from './service/education-history-domain.service';
+import { EducationEnrollmentModel } from '../../../educations/entity/education-enrollment.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([EducationEnrollmentModel])],

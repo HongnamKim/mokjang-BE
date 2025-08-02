@@ -13,11 +13,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
 import { ChurchesModule } from './churches/churches.module';
-import { EducationModel } from './management/educations/entity/education.entity';
-import { EducationTermModel } from './management/educations/entity/education-term.entity';
-import { EducationSessionModel } from './management/educations/entity/education-session.entity';
-import { SessionAttendanceModel } from './management/educations/entity/session-attendance.entity';
-import { EducationEnrollmentModel } from './management/educations/entity/education-enrollment.entity';
+
 import { OfficerModel } from './management/officers/entity/officer.entity';
 import { MinistryModel } from './management/ministries/entity/ministry.entity';
 import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
@@ -72,6 +68,12 @@ import { MinistryGroupHistoryModel } from './member-history/ministry-history/ent
 import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history/entity/child/ministry-group-role-history.entity';
 import { GroupDetailHistoryModel } from './member-history/group-history/entity/group-detail-history.entity';
 import { MinistryGroupDetailHistoryModel } from './member-history/ministry-history/entity/ministry-group-detail-history.entity';
+import { EducationsModule } from './educations/educations.module';
+import { EducationModel } from './educations/entity/education.entity';
+import { EducationTermModel } from './educations/entity/education-term.entity';
+import { EducationSessionModel } from './educations/entity/education-session.entity';
+import { SessionAttendanceModel } from './educations/entity/session-attendance.entity';
+import { EducationEnrollmentModel } from './educations/entity/education-enrollment.entity';
 
 @Module({
   imports: [
@@ -219,6 +221,7 @@ import { MinistryGroupDetailHistoryModel } from './member-history/ministry-histo
     FamilyRelationModule,
     MemberHistoryModule,
     ManagementModule,
+    EducationsModule,
     VisitationModule,
     TaskModule,
     WorshipModule,

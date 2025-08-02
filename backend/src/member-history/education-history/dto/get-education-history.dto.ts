@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsIn, IsNumber, IsOptional, Min } from 'class-validator';
-import { EducationEnrollmentStatus } from '../../../management/educations/const/education-status.enum';
+import { EducationEnrollmentStatus } from '../../../educations/const/education-status.enum';
 
 export class GetEducationHistoryDto {
   @ApiProperty({
