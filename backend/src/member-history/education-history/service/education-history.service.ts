@@ -14,8 +14,9 @@ import {
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
 import { EducationHistoryPaginationResultDto } from '../dto/education-history-pagination-result.dto';
-import { EducationEnrollmentModel } from '../../../educations/entity/education-enrollment.entity';
-import { EducationEnrollmentStatus } from '../../../educations/const/education-status.enum';
+import { EducationEnrollmentModel } from '../../../educations/education-enrollment/entity/education-enrollment.entity';
+
+import { EducationEnrollmentStatus } from '../../../educations/education-enrollment/const/education-enrollment-status.enum';
 
 @Injectable()
 export class EducationHistoryService {
@@ -62,7 +63,7 @@ export class EducationHistoryService {
       educationHistories.length,
       dto.page,
       totalPage,
-      educationStatusCount.inProgressCount,
+      //educationStatusCount.inProgressCount,
       educationStatusCount.completedCount,
       educationStatusCount.incompleteCount,
     );
@@ -71,9 +72,9 @@ export class EducationHistoryService {
   private getEducationStatusCount(enrollments: EducationEnrollmentModel[]) {
     return enrollments.reduce(
       (acc, enrollment) => ({
-        inProgressCount:
+        /*inProgressCount:
           acc.inProgressCount +
-          (enrollment.status === EducationEnrollmentStatus.IN_PROGRESS ? 1 : 0),
+          (enrollment.status === EducationEnrollmentStatus.IN_PROGRESS ? 1 : 0),*/
         completedCount:
           acc.completedCount +
           (enrollment.status === EducationEnrollmentStatus.COMPLETED ? 1 : 0),
@@ -81,7 +82,7 @@ export class EducationHistoryService {
           acc.incompleteCount +
           (enrollment.status === EducationEnrollmentStatus.INCOMPLETE ? 1 : 0),
       }),
-      { inProgressCount: 0, completedCount: 0, incompleteCount: 0 },
+      { /*inProgressCount: 0,*/ completedCount: 0, incompleteCount: 0 },
     );
   }
 }

@@ -69,11 +69,11 @@ import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history
 import { GroupDetailHistoryModel } from './member-history/group-history/entity/group-detail-history.entity';
 import { MinistryGroupDetailHistoryModel } from './member-history/ministry-history/entity/ministry-group-detail-history.entity';
 import { EducationsModule } from './educations/educations.module';
-import { EducationModel } from './educations/entity/education.entity';
-import { EducationTermModel } from './educations/entity/education-term.entity';
-import { EducationSessionModel } from './educations/entity/education-session.entity';
-import { SessionAttendanceModel } from './educations/entity/session-attendance.entity';
-import { EducationEnrollmentModel } from './educations/entity/education-enrollment.entity';
+import { EducationModel } from './educations/education/entity/education.entity';
+import { EducationTermModel } from './educations/education-term/entity/education-term.entity';
+import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
+import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
+import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
 
 @Module({
   imports: [

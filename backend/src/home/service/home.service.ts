@@ -71,8 +71,8 @@ import { AttendanceRange } from '../const/attendance-range.enum';
 import {
   IEDUCATION_SESSION_DOMAIN_SERVICE,
   IEducationSessionDomainService,
-} from '../../educations/service/education-domain/interface/education-session-domain.service.interface';
-import { EducationSessionModel } from '../../educations/entity/education-session.entity';
+} from '../../educations/education-domain/interface/education-session-domain.service.interface';
+import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
 
 @Injectable()
 export class HomeService {

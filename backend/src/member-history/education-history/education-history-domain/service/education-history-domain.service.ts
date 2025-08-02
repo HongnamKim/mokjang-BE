@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, QueryRunner, Repository } from 'typeorm';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GetEducationHistoryDto } from '../../dto/get-education-history.dto';
-import { EducationEnrollmentModel } from '../../../../educations/entity/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../../educations/education-enrollment/entity/education-enrollment.entity';
 
 @Injectable()
 export class EducationHistoryDomainService

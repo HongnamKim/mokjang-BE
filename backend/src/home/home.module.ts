@@ -14,7 +14,7 @@ import { VisitationReportDomainModule } from '../report/report-domain/visitation
 import { EducationSessionReportDomainModule } from '../report/report-domain/education-session-report-domain.module';
 import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
-import { EducationDomainModule } from '../educations/service/education-domain/education-domain.module';
+import { EducationDomainModule } from '../educations/education-domain/education-domain.module';
 
 @Module({
   imports: [

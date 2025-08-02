@@ -5,9 +5,9 @@ import { EducationSessionReportDomainPaginationResultDto } from '../../dto/educa
 import { GetEducationSessionReportDto } from '../../dto/education-report/session/request/get-education-session-report.dto';
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
-import { EducationModel } from '../../../educations/entity/education.entity';
-import { EducationTermModel } from '../../../educations/entity/education-term.entity';
-import { EducationSessionModel } from '../../../educations/entity/education-session.entity';
+import { EducationModel } from '../../../educations/education/entity/education.entity';
+import { EducationTermModel } from '../../../educations/education-term/entity/education-term.entity';
+import { EducationSessionModel } from '../../../educations/education-session/entity/education-session.entity';
 
 export const IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE',
