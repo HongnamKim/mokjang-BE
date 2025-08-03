@@ -1,14 +1,8 @@
 import { EducationSessionModel } from '../../entity/education-session.entity';
-import { BaseOffsetPaginationResponseDto } from '../../../../common/dto/reponse/base-offset-pagination-response.dto';
 
-export class EducationSessionPaginationResponseDto extends BaseOffsetPaginationResponseDto<EducationSessionModel> {
+export class EducationSessionPaginationResponseDto {
   constructor(
-    data: EducationSessionModel[],
-    totalCount: number,
-    count: number,
-    page: number,
-    totalPage: number,
-  ) {
-    super(data, totalCount, count, page, totalPage);
-  }
+    public readonly data: EducationSessionModel[],
+    public readonly timestamp: Date = new Date(),
+  ) {}
 }

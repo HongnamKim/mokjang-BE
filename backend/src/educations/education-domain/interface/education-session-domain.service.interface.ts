@@ -3,7 +3,6 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { EducationSessionModel } from '../../education-session/entity/education-session.entity';
 import { UpdateEducationSessionDto } from '../../education-session/dto/request/update-education-session.dto';
 import { CreateEducationSessionDto } from '../../education-session/dto/request/create-education-session.dto';
-import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
 import { GetEducationSessionDto } from '../../education-session/dto/request/get-education-session.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetEducationSessionForCalendarDto } from '../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
@@ -35,7 +34,7 @@ export interface IEducationSessionDomainService {
     educationTerm: EducationTermModel,
     dto: GetEducationSessionDto,
     qr?: QueryRunner,
-  ): Promise<EducationSessionDomainPaginationResultDto>;
+  ): Promise<EducationSessionModel[]>;
 
   findEducationSessionModelById(
     educationTerm: EducationTermModel,
@@ -62,11 +61,11 @@ export interface IEducationSessionDomainService {
     qr: QueryRunner,
   ): Promise<EducationSessionModel[]>;
 
-  createSingleEducationSession(
+  createEducationSession(
     educationTerm: EducationTermModel,
-    creatorMember: ChurchUserModel, //MemberModel,
+    creatorMember: ChurchUserModel,
     dto: CreateEducationSessionDto,
-    inCharge: ChurchUserModel | null, //MemberModel | null,
+    inCharge: ChurchUserModel | null,
     qr: QueryRunner,
   ): Promise<EducationSessionModel>;
 

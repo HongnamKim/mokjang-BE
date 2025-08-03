@@ -64,7 +64,6 @@ export class EducationSessionsController {
   //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationSession(
-    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @PermissionManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
@@ -72,10 +71,7 @@ export class EducationSessionsController {
     @Body() dto: CreateEducationSessionDto,
     @QueryRunner() qr: QR,
   ) {
-    //const userId = accessPayload.id;
-
-    return this.educationSessionsService.createSingleEducationSession(
-      //userId,
+    return this.educationSessionsService.createEducationSession(
       manager,
       churchId,
       educationId,

@@ -1,9 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationSessionModel } from '../../entity/education-session.entity';
-import { EducationSessionStatus } from '../../const/education-session-status.enum';
 import {
-  IsDate,
-  IsEnum,
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -14,19 +12,17 @@ import {
 import { EducationSessionConstraints } from '../../const/education-session-constraints.const';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
-import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
+import { IsBasicText } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
+import { IsDateTime } from '../../../../common/decorator/validator/is-date-time.validator';
 
 @SanitizeDto()
 export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   'title',
-  'startDate',
-  'endDate',
   'inChargeId',
   'content',
-  'status',
 ]) {
   @ApiProperty({
     description: '교육 회차명',
@@ -35,22 +31,28 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   @IsString()
   @IsNotEmpty()
   @RemoveSpaces()
-  @IsNoSpecialChar()
+  @IsBasicText('title')
   @MaxLength(EducationSessionConstraints.MAX_SESSION_NAME_LENGTH)
   override title: string;
 
   @ApiProperty({
-    description: '시작 날짜',
+    description: '시작 날짜 (yyyy-MM-ddTHH:MM:SS)',
   })
-  @IsDate()
-  override startDate: Date;
+  @IsDateString({ strict: true })
+  @IsDateTime('startDate')
+  startDate: string;
+
+  utcStartDate: Date;
 
   @ApiProperty({
-    description: '종료 날짜',
+    description: '종료 날짜 (yyyy-MM-ddTHH:MM:SS)',
   })
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsDateTime('endDate')
   @IsAfterDate('startDate')
-  override endDate: Date;
+  endDate: string;
+
+  utcEndDate: Date;
 
   @ApiProperty({
     description: '담당자 교인 ID',
@@ -70,13 +72,13 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   @PlainTextMaxLength(EducationSessionConstraints.MAX_SESSION_CONTENT_LENGTH)
   override content: string;
 
-  @ApiProperty({
+  /*@ApiProperty({
     description: '진행 상태',
     enum: EducationSessionStatus,
     default: EducationSessionStatus.RESERVE,
   })
   @IsEnum(EducationSessionStatus)
-  override status: EducationSessionStatus = EducationSessionStatus.RESERVE;
+  override status: EducationSessionStatus = EducationSessionStatus.RESERVE;*/
 
   @ApiProperty({
     description: '피보고자 ID',

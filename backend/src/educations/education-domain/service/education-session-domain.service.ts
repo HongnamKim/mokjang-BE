@@ -21,7 +21,6 @@ import {
 import { UpdateEducationSessionDto } from '../../education-session/dto/request/update-education-session.dto';
 import { CreateEducationSessionDto } from '../../education-session/dto/request/create-education-session.dto';
 import { GetEducationSessionDto } from '../../education-session/dto/request/get-education-session.dto';
-import { EducationSessionDomainPaginationResultDto } from '../dto/sessions/education-session-domain-pagination-result.dto';
 import { EducationSessionOrder } from '../../education-session/const/education-session-order.enum';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetEducationSessionForCalendarDto } from '../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
@@ -191,39 +190,30 @@ export class EducationSessionDomainService
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
-      educationSessionsRepository.find({
-        where: {
-          educationTermId: educationTerm.id,
-        },
-        relations: {
-          inCharge: MemberSummarizedRelation,
-        },
-        select: {
-          id: true,
-          createdAt: true,
-          updatedAt: true,
-          educationTermId: true,
-          session: true,
-          title: true,
-          inChargeId: true,
-          inCharge: MemberSummarizedSelect,
-          startDate: true,
-          endDate: true,
-          status: true,
-        },
-        order,
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      educationSessionsRepository.count({
-        where: {
-          educationTermId: educationTerm.id,
-        },
-      }),
-    ]);
-
-    return new EducationSessionDomainPaginationResultDto(data, totalCount);
+    return educationSessionsRepository.find({
+      where: {
+        educationTermId: educationTerm.id,
+      },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        educationTermId: true,
+        session: true,
+        title: true,
+        inChargeId: true,
+        inCharge: MemberSummarizedSelect,
+        startDate: true,
+        endDate: true,
+        status: true,
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   async findEducationSessionModelById(
@@ -322,7 +312,7 @@ export class EducationSessionDomainService
     );
   }
 
-  private assertValidInCharge(inCharge: ChurchUserModel /*MemberModel*/) {
+  private assertValidInCharge(inCharge: ChurchUserModel) {
     if (
       inCharge.role !== ChurchUserRole.MANAGER &&
       inCharge.role !== ChurchUserRole.OWNER
@@ -331,42 +321,16 @@ export class EducationSessionDomainService
         EducationSessionException.INVALID_IN_CHARGE_ROLE,
       );
     }
-
-    /*if (!inCharge.userId) {
-      throw new UnauthorizedException(
-        EducationSessionException.UNLINKED_IN_CHARGE,
-      );
-    }
-
-    // 담당자 조회 시 user 정보 join X
-    if (!inCharge.user) {
-      throw new InternalServerErrorException(MemberException.USER_ERROR);
-    }
-
-    if (
-      inCharge.user.role !== UserRole.OWNER &&
-      inCharge.user.role !== UserRole.MANAGER
-    ) {
-      throw new ConflictException(
-        EducationSessionException.INVALID_IN_CHARGE_ROLE,
-      );
-    }*/
   }
 
-  async createSingleEducationSession(
+  async createEducationSession(
     educationTerm: EducationTermModel,
-    creatorManager: ChurchUserModel, //MemberModel,
+    creatorManager: ChurchUserModel,
     dto: CreateEducationSessionDto,
-    inCharge: ChurchUserModel | null, //MemberModel | null,
+    inCharge: ChurchUserModel | null,
     qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
-
-    if (!educationTerm.canAddSession()) {
-      throw new ConflictException(
-        EducationSessionException.EXCEED_MAX_SESSION_NUMBER,
-      );
-    }
 
     const lastSession = await educationSessionsRepository.findOne({
       where: {
@@ -386,11 +350,11 @@ export class EducationSessionDomainService
       educationTermId: educationTerm.id,
       session: newSessionNumber,
       title: dto.title,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: dto.utcStartDate,
+      endDate: dto.utcEndDate,
       inChargeId: inCharge ? inCharge.member.id : undefined,
       content: dto.content,
-      status: dto.status,
+      //status: dto.status,
     });
   }
 
@@ -399,14 +363,14 @@ export class EducationSessionDomainService
     dto: UpdateEducationSessionDto,
   ) {
     // 시작 날짜 수정
-    if (dto.startDate && !dto.endDate) {
-      if (dto.startDate > educationSession.endDate) {
+    if (dto.utcStartDate && !dto.utcEndDate) {
+      if (dto.utcStartDate > educationSession.endDate) {
         throw new BadRequestException(
           EducationSessionException.INVALID_START_DATE,
         );
       }
-    } else if (dto.endDate && !dto.startDate) {
-      if (dto.endDate < educationSession.startDate) {
+    } else if (dto.utcEndDate && !dto.utcStartDate) {
+      if (dto.utcEndDate < educationSession.startDate) {
         throw new BadRequestException(
           EducationSessionException.INVALID_END_DATE,
         );
@@ -430,7 +394,11 @@ export class EducationSessionDomainService
         id: educationSession.id,
       },
       {
-        ...dto,
+        title: dto.title,
+        startDate: dto.utcStartDate,
+        endDate: dto.utcEndDate,
+        content: dto.content,
+        status: dto.status,
         inChargeId: inCharge ? inCharge.member.id : undefined,
       },
     );
