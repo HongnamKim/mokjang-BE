@@ -44,7 +44,7 @@ export class EducationSessionModel extends BaseModel {
   @Column({
     enum: EducationSessionStatus,
     default: EducationSessionStatus.RESERVE,
-    comment: '교육 진행 상태 (예정, 완료, 지연)',
+    comment: '교육 진행 상태 (예정, 진행중, 완료, 지연)',
   })
   status: EducationSessionStatus;
 

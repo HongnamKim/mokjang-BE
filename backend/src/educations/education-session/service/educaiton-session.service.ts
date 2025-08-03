@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { UpdateEducationSessionDto } from '../dto/request/update-education-session.dto';
 import {
@@ -48,14 +48,15 @@ import { ChurchUserModel } from '../../../church-user/entity/church-user.entity'
 import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
+import { EducationSessionException } from '../exception/education-session.exception';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
 
 @Injectable()
 export class EducationSessionService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
-    /*@Inject(IMEMBERS_DOMAIN_SERVICE)
-    private readonly membersDomainService: IMembersDomainService,*/
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
 
@@ -80,7 +81,7 @@ export class EducationSessionService {
     educationTermId: number,
     qr?: QueryRunner,
   ) {
-    const { church, education } = await this.getEducationInfo(
+    const { education } = await this.getEducationInfo(
       churchId,
       educationId,
       qr,
@@ -126,19 +127,12 @@ export class EducationSessionService {
       educationTermId,
     );
 
-    const { data, totalCount } =
-      await this.educationSessionDomainService.findEducationSessions(
-        educationTerm,
-        dto,
-      );
-
-    return new EducationSessionPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
+    const data = await this.educationSessionDomainService.findEducationSessions(
+      educationTerm,
+      dto,
     );
+
+    return new EducationSessionPaginationResponseDto(data);
   }
 
   async getEducationSessionById(
@@ -165,8 +159,7 @@ export class EducationSessionService {
     return new GetEducationSessionResponseDto(session);
   }
 
-  async createSingleEducationSession(
-    //creatorMemberId: number,
+  async createEducationSession(
     creatorManager: ChurchUserModel,
     churchId: number,
     educationId: number,
@@ -184,15 +177,16 @@ export class EducationSessionService {
         education,
         educationTermId,
         qr,
-        { educationEnrollments: true },
       );
 
-    /*const creatorMember = await this.managerDomainService.findManagerByMemberId(
-      church,
-      creatorMemberId,
-      qr,
-    );*/
+    // 기수 당 최대 50개 세션
+    if (!educationTerm.canAddSession()) {
+      throw new ConflictException(
+        EducationSessionException.EXCEED_MAX_SESSION_NUMBER,
+      );
+    }
 
+    // 세션 담당자
     const inCharge = dto.inChargeId
       ? await this.managerDomainService.findManagerByMemberId(
           church,
@@ -201,38 +195,42 @@ export class EducationSessionService {
         )
       : null;
 
+    dto.utcStartDate = fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
+    dto.utcEndDate = fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
+
+    // 세션 생성
     const newSession =
-      await this.educationSessionDomainService.createSingleEducationSession(
+      await this.educationSessionDomainService.createEducationSession(
         educationTerm,
-        //creatorMember,
         creatorManager,
         dto,
         inCharge,
         qr,
       );
 
-    await Promise.all([
-      // 교육 세션 개수 업데이트
-      this.educationTermDomainService.incrementNumberOfSessions(
-        educationTerm,
-        qr,
-      ),
-      // 세션 출석 정보 생성
-      this.sessionAttendanceDomainService.createSessionAttendance(
-        newSession,
-        educationTerm.educationEnrollments,
-        qr,
-      ),
-      // 완료 상태 회차를 만들 경우 isDoneCount 증가
-      dto.status === EducationSessionStatus.DONE &&
-        this.educationTermDomainService.incrementCompletedSessionsCount(
+    // 교육 세션 개수 업데이트
+    await this.educationTermDomainService.incrementNumberOfSessions(
+      educationTerm,
+      qr,
+    );
+
+    // 세션 출석 정보 생성
+    if (educationTerm.enrollmentCount > 0) {
+      const enrollments =
+        await this.educationEnrollmentsDomainService.findEducationEnrollmentModels(
           educationTerm,
           qr,
-        ),
-    ]);
+        );
+
+      await this.sessionAttendanceDomainService.createSessionAttendance(
+        newSession,
+        enrollments,
+        qr,
+      );
+    }
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
-      await this.handleAddTaskReport(
+      await this.handleAddEducationReport(
         church,
         education,
         educationTerm,
@@ -312,6 +310,10 @@ export class EducationSessionService {
         );
       }
     }
+
+    dto.utcStartDate =
+      dto.startDate && fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
+    dto.utcEndDate = dto.endDate && fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
 
     await this.educationSessionDomainService.updateEducationSession(
       targetSession,
@@ -442,7 +444,7 @@ export class EducationSessionService {
         qr,
       );
 
-    return this.handleAddTaskReport(
+    return this.handleAddEducationReport(
       church,
       education,
       educationTerm,
@@ -452,7 +454,7 @@ export class EducationSessionService {
     );
   }
 
-  private async handleAddTaskReport(
+  private async handleAddEducationReport(
     church: ChurchModel,
     education: EducationModel,
     educationTerm: EducationTermModel,
@@ -495,18 +497,12 @@ export class EducationSessionService {
     dto: DeleteEducationSessionReportDto,
     qr: QueryRunner,
   ) {
-    const { church, education } = await this.getEducationInfo(
+    const educationTerm = await this.getEducationTerm(
       churchId,
       educationId,
+      educationTermId,
       qr,
     );
-
-    const educationTerm =
-      await this.educationTermDomainService.findEducationTermModelById(
-        education,
-        educationTermId,
-        qr,
-      );
 
     const educationSession =
       await this.educationSessionDomainService.findEducationSessionModelById(
@@ -524,7 +520,7 @@ export class EducationSessionService {
       );
 
     return {
-      educationId: education.id,
+      educationId: educationTerm.educationId,
       educationTermId: educationTerm.id,
       educationSessionId: educationSession.id,
       addReceivers: educationSession.reports

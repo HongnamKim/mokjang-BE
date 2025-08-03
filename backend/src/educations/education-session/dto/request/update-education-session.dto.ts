@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDate,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -17,6 +18,7 @@ import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-sp
 import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
 import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
+import { IsDateTime } from '../../../../common/decorator/validator/is-date-time.validator';
 
 @SanitizeDto()
 export class UpdateEducationSessionDto {
@@ -38,8 +40,11 @@ export class UpdateEducationSessionDto {
     required: false,
   })
   @IsOptionalNotNull()
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsDateTime('startDate')
   startDate?: Date;
+
+  utcStartDate: Date | undefined;
 
   @ApiProperty({
     description: '종료 날짜',
@@ -49,6 +54,8 @@ export class UpdateEducationSessionDto {
   @IsDate()
   @IsAfterDate('startDate')
   endDate?: Date;
+
+  utcEndDate: Date | undefined;
 
   @ApiProperty({
     description: '담당자 교인 ID (담당자 삭제 시 null)',
