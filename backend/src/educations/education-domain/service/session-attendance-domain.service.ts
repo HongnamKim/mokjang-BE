@@ -2,8 +2,11 @@ import { ISessionAttendanceDomainService } from '../interface/session-attendance
 import { InjectRepository } from '@nestjs/typeorm';
 import { SessionAttendanceModel } from '../../session-attendance/entity/session-attendance.entity';
 import {
+  FindOptionsOrder,
   FindOptionsRelations,
+  In,
   IsNull,
+  Not,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -15,7 +18,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { UpdateAttendanceDto } from '../../session-attendance/dto/request/update-attendance.dto';
 import { EducationEnrollmentModel } from '../../education-enrollment/entity/education-enrollment.entity';
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
 import {
@@ -23,7 +25,9 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { SessionAttendanceException } from '../../session-attendance/exception/session-attendance.exception';
-import { AttendanceOrderEnum } from '../../session-attendance/const/attendance-order.enum';
+import { UpdateAttendanceNoteDto } from '../../session-attendance/dto/request/update-attendance-note.dto';
+import { SessionAttendanceStatus } from '../../session-attendance/const/session-attendance-status.enum';
+import { UpdateAttendancePresentDto } from '../../session-attendance/dto/request/update-attendance-present.dto';
 
 export class SessionAttendanceDomainService
   implements ISessionAttendanceDomainService
@@ -101,7 +105,7 @@ export class SessionAttendanceDomainService
     return await sessionAttendanceRepository.find({
       where: {
         educationSessionId: educationSession.id,
-        isPresent: true,
+        status: SessionAttendanceStatus.PRESENT,
       },
     });
   }
@@ -109,57 +113,39 @@ export class SessionAttendanceDomainService
   async findSessionAttendances(
     educationSession: EducationSessionModel,
     dto: GetAttendanceDto,
-  ): Promise<{ data: SessionAttendanceModel[]; totalCount: number }> {
+  ): Promise<SessionAttendanceModel[]> {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository();
 
-    const order: Partial<
-      Record<AttendanceOrderEnum, 'asc' | 'desc' | 'ASC' | 'DESC'>
-    > = {
+    const order: FindOptionsOrder<SessionAttendanceModel> = {
       [dto.order]: dto.orderDirection,
+      id: dto.orderDirection,
     };
 
-    if (dto.order !== AttendanceOrderEnum.createdAt) {
-      order.createdAt = 'desc';
-    }
-    const [result, totalCount] = await Promise.all([
-      sessionAttendanceRepository.find({
-        where: {
-          educationSessionId: educationSession.id,
+    return sessionAttendanceRepository.find({
+      where: {
+        educationSessionId: educationSession.id,
+      },
+      relations: {
+        educationEnrollment: {
+          member: MemberSummarizedRelation,
         },
-        relations: {
-          educationEnrollment: {
-            member: MemberSummarizedRelation,
-          },
+      },
+      select: {
+        educationEnrollment: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          memberId: true,
+          educationTermId: true,
+          status: true,
+          attendanceCount: true,
+          member: MemberSummarizedSelect,
         },
-        select: {
-          educationEnrollment: {
-            id: true,
-            createdAt: true,
-            updatedAt: true,
-            memberId: true,
-            educationTermId: true,
-            status: true,
-            attendanceCount: true,
-            //note: true,
-            member: MemberSummarizedSelect,
-          },
-        },
-        order,
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-
-      sessionAttendanceRepository.count({
-        where: {
-          educationSessionId: educationSession.id,
-        },
-      }),
-    ]);
-
-    return {
-      data: result,
-      totalCount,
-    };
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   async findSessionAttendanceModelById(
@@ -185,10 +171,52 @@ export class SessionAttendanceDomainService
     return sessionAttendance;
   }
 
+  findUnAttended(
+    educationSession: EducationSessionModel,
+    qr: QueryRunner,
+  ): Promise<SessionAttendanceModel[]> {
+    const repository = this.getSessionAttendanceRepository(qr);
+
+    return repository.find({
+      where: [
+        {
+          educationSessionId: educationSession.id,
+          status: Not(SessionAttendanceStatus.PRESENT),
+        },
+      ],
+    });
+  }
+
+  async bulkAttendance(
+    sessionAttendances: SessionAttendanceModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getSessionAttendanceRepository(qr);
+
+    const attendanceIds = sessionAttendances.map((sa) => sa.id);
+
+    const result = await repository.update(
+      {
+        id: In(attendanceIds),
+      },
+      {
+        status: SessionAttendanceStatus.PRESENT,
+      },
+    );
+
+    if (result.affected !== attendanceIds.length) {
+      throw new InternalServerErrorException(
+        SessionAttendanceException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
   async updateSessionAttendance(
     sessionAttendance: SessionAttendanceModel,
-    dto: UpdateAttendanceDto,
-    qr: QueryRunner,
+    dto: UpdateAttendancePresentDto | UpdateAttendanceNoteDto,
+    qr?: QueryRunner,
   ): Promise<UpdateResult> {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
@@ -198,8 +226,9 @@ export class SessionAttendanceDomainService
         deletedAt: IsNull(),
       },
       {
-        isPresent: dto.isPresent,
-        note: dto.note,
+        status:
+          dto instanceof UpdateAttendancePresentDto ? dto.status : undefined,
+        note: dto instanceof UpdateAttendanceNoteDto ? dto.note : undefined,
       },
     );
 
@@ -223,7 +252,7 @@ export class SessionAttendanceDomainService
     });
   }
 
-  deleteSessionAttendanceByEnrollmentDeletion(
+  deleteSessionAttendanceCascade(
     enrollment: EducationEnrollmentModel,
     qr: QueryRunner,
   ): Promise<UpdateResult> {

@@ -97,4 +97,16 @@ export interface IEducationSessionDomainService {
     from: Date,
     to: Date,
   ): Promise<EducationSessionModel[]>;
+
+  incrementAttendancesCount(
+    educationSession: EducationSessionModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementAttendancesCount(
+    educationSession: EducationSessionModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

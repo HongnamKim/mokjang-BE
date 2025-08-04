@@ -21,7 +21,7 @@ export interface IEducationEnrollmentsDomainService {
     qr?: QueryRunner,
   ): Promise<EducationEnrollmentModel[]>;
 
-  findMemberEducationEnrollments(
+  findEducationEnrollmentsByMemberId(
     //member: MemberModel,
     memberId: number,
     qr?: QueryRunner,
@@ -53,7 +53,6 @@ export interface IEducationEnrollmentsDomainService {
 
   updateEducationEnrollment(
     educationEnrollment: EducationEnrollmentModel,
-    //dto: UpdateEducationEnrollmentDto,
     status: EducationEnrollmentStatus,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
@@ -67,6 +66,11 @@ export interface IEducationEnrollmentsDomainService {
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<void>;
+
+  bulkIncrementAttendanceCount(
+    educationEnrollments: EducationEnrollmentModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 
   incrementAttendanceCount(
     educationEnrollment: EducationEnrollmentModel,

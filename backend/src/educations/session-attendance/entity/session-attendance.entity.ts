@@ -2,6 +2,7 @@ import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { EducationSessionModel } from '../../education-session/entity/education-session.entity';
 import { EducationEnrollmentModel } from '../../education-enrollment/entity/education-enrollment.entity';
 import { BaseModel } from '../../../common/entity/base.entity';
+import { SessionAttendanceStatus } from '../const/session-attendance-status.enum';
 
 @Entity()
 export class SessionAttendanceModel extends BaseModel {
@@ -26,9 +27,9 @@ export class SessionAttendanceModel extends BaseModel {
   educationEnrollment: EducationEnrollmentModel;
 
   @Index()
-  @Column({ type: 'boolean', comment: '출석 여부', nullable: true })
-  isPresent: boolean | null;
+  @Column({ default: SessionAttendanceStatus.NONE, comment: '출석 여부' })
+  status: SessionAttendanceStatus;
 
-  @Column({ type: 'varchar', length: 120, nullable: true, comment: '비고' })
-  note: string | null;
+  @Column({ type: 'varchar', length: 100, default: '', comment: '비고' })
+  note: string;
 }

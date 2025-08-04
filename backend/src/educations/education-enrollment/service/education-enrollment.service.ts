@@ -352,7 +352,7 @@ export class EducationEnrollmentService {
     );
 
     // 출석 정보 삭제
-    await this.sessionAttendanceDomainService.deleteSessionAttendanceByEnrollmentDeletion(
+    await this.sessionAttendanceDomainService.deleteSessionAttendanceCascade(
       targetEnrollment,
       qr,
     );

@@ -15,6 +15,7 @@ import {
   IsNull,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
 import { GetEducationEnrollmentDto } from '../../education-enrollment/dto/request/get-education-enrollment.dto';
@@ -107,7 +108,7 @@ export class EducationEnrollmentsDomainService
     });
   }
 
-  async findMemberEducationEnrollments(memberId: number, qr?: QueryRunner) {
+  async findEducationEnrollmentsByMemberId(memberId: number, qr?: QueryRunner) {
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
@@ -272,6 +273,33 @@ export class EducationEnrollmentsDomainService
     });
 
     return;
+  }
+
+  async bulkIncrementAttendanceCount(
+    educationEnrollments: EducationEnrollmentModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getEducationEnrollmentsRepository(qr);
+
+    const enrollmentIds = educationEnrollments.map(
+      (educationEnrollment) => educationEnrollment.id,
+    );
+
+    const result = await repository.increment(
+      {
+        id: In(enrollmentIds),
+      },
+      'attendanceCount',
+      1,
+    );
+
+    if (result.affected !== educationEnrollments.length) {
+      throw new InternalServerErrorException(
+        EducationEnrollmentException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
   }
 
   async incrementAttendanceCount(

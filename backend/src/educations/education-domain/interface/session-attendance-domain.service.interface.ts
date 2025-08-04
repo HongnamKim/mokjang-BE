@@ -2,9 +2,10 @@ import { EducationSessionModel } from '../../education-session/entity/education-
 import { GetAttendanceDto } from '../../session-attendance/dto/request/get-attendance.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { SessionAttendanceModel } from '../../session-attendance/entity/session-attendance.entity';
-import { UpdateAttendanceDto } from '../../session-attendance/dto/request/update-attendance.dto';
 import { EducationEnrollmentModel } from '../../education-enrollment/entity/education-enrollment.entity';
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
+import { UpdateAttendanceNoteDto } from '../../session-attendance/dto/request/update-attendance-note.dto';
+import { UpdateAttendancePresentDto } from '../../session-attendance/dto/request/update-attendance-present.dto';
 
 export const ISESSION_ATTENDANCE_DOMAIN_SERVICE = Symbol(
   'ISESSION_ATTENDANCE_DOMAIN_SERVICE',
@@ -29,7 +30,7 @@ export interface ISessionAttendanceDomainService {
     qr: QueryRunner,
   ): Promise<SessionAttendanceModel[]>;
 
-  deleteSessionAttendanceByEnrollmentDeletion(
+  deleteSessionAttendanceCascade(
     enrollment: EducationEnrollmentModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
@@ -42,7 +43,7 @@ export interface ISessionAttendanceDomainService {
   findSessionAttendances(
     educationSession: EducationSessionModel,
     dto: GetAttendanceDto,
-  ): Promise<{ data: SessionAttendanceModel[]; totalCount: number }>;
+  ): Promise<SessionAttendanceModel[]>;
 
   findSessionAttendanceModelById(
     educationSession: EducationSessionModel,
@@ -51,10 +52,20 @@ export interface ISessionAttendanceDomainService {
     relationOptions?: FindOptionsRelations<SessionAttendanceModel>,
   ): Promise<SessionAttendanceModel>;
 
+  findUnAttended(
+    educationSession: EducationSessionModel,
+    qr: QueryRunner,
+  ): Promise<SessionAttendanceModel[]>;
+
+  bulkAttendance(
+    sessionAttendances: SessionAttendanceModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
   updateSessionAttendance(
     sessionAttendance: SessionAttendanceModel,
-    dto: UpdateAttendanceDto,
-    qr: QueryRunner,
+    dto: UpdateAttendanceNoteDto | UpdateAttendancePresentDto,
+    qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
   deleteSessionAttendancesBySessionDeletion(
