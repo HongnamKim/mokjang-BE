@@ -2,28 +2,22 @@ import {
   Body,
   Controller,
   Get,
-  GoneException,
   Param,
   ParseIntPipe,
   Patch,
-  Post,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { QueryRunner as QR } from 'typeorm';
-import { UpdateAttendanceDto } from '../dto/request/update-attendance.dto';
 import { GetAttendanceDto } from '../dto/request/get-attendance.dto';
-import {
-  ApiGetSessionAttendance,
-  ApiLoadSessionAttendance,
-  ApiPatchSessionAttendance,
-} from '../swagger/session-attendance.swagger';
+import { ApiGetSessionAttendance } from '../swagger/session-attendance.swagger';
 import { SessionAttendanceService } from '../service/session-attendance.service';
 import { EducationReadGuard } from '../../guard/education-read.guard';
-import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
+import { UpdateAttendancePresentDto } from '../dto/request/update-attendance-present.dto';
+import { UpdateAttendanceNoteDto } from '../dto/request/update-attendance-note.dto';
 
 @ApiTags('Educations:Attendance')
 @Controller(
@@ -53,25 +47,26 @@ export class SessionAttendanceController {
     );
   }
 
-  @ApiLoadSessionAttendance()
-  @Post('create-table')
+  @ApiOperation({ summary: '일괄 출석' })
+  @Patch('all-attended')
   @UseInterceptors(TransactionInterceptor)
-  loadSessionAttendanceTable(
+  patchAllAttended(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @QueryRunner() qr: QR,
   ) {
-    throw new GoneException('이 엔드포인트는 더 이상 지원되지 않습니다.');
-    /*return this.educationsService.createSessionAttendance(
+    return this.sessionAttendanceService.bulkAttendance(
+      churchId,
+      educationId,
       educationTermId,
       sessionId,
       qr,
-    );*/
+    );
   }
 
-  @ApiPatchSessionAttendance()
+  /*@ApiPatchSessionAttendance()
   @EducationWriteGuard()
   @Patch(':attendanceId')
   @UseInterceptors(TransactionInterceptor)
@@ -92,6 +87,49 @@ export class SessionAttendanceController {
       attendanceId,
       dto,
       qr,
+    );
+  }*/
+
+  @ApiOperation({ summary: '출석 여부 개별 수정' })
+  @Patch(':attendanceId/attendance')
+  @UseInterceptors(TransactionInterceptor)
+  patchAttendancePresent(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+    @Param('attendanceId', ParseIntPipe) attendanceId: number,
+    @Body() dto: UpdateAttendancePresentDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.sessionAttendanceService.updateSessionAttendancePresent(
+      churchId,
+      educationId,
+      educationTermId,
+      sessionId,
+      attendanceId,
+      dto,
+      qr,
+    );
+  }
+
+  @ApiOperation({ summary: '출석 특이사항 수정' })
+  @Patch(':attendanceId/note')
+  patchAttendanceNote(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+    @Param('attendanceId', ParseIntPipe) attendanceId: number,
+    @Body() dto: UpdateAttendanceNoteDto,
+  ) {
+    return this.sessionAttendanceService.updateSessionAttendanceNote(
+      churchId,
+      educationId,
+      educationTermId,
+      sessionId,
+      attendanceId,
+      dto,
     );
   }
 }

@@ -1,6 +1,6 @@
 export enum AttendanceOrderEnum {
   educationEnrollmentId = 'educationEnrollmentId',
-  isPresent = 'isPresent',
+  status = 'status',
   createdAt = 'createdAt',
   updatedAt = 'updatedAt',
 }

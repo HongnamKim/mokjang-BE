@@ -35,7 +35,7 @@ export class MemberEducationEventHandler {
 
     try {
       const enrollments =
-        await this.educationEnrollmentDomainService.findMemberEducationEnrollments(
+        await this.educationEnrollmentDomainService.findEducationEnrollmentsByMemberId(
           memberId,
           qr,
         );

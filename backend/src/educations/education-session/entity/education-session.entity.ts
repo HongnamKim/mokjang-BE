@@ -60,6 +60,9 @@ export class EducationSessionModel extends BaseModel {
   )
   sessionAttendances: SessionAttendanceModel[];
 
+  @Column({ default: 0 })
+  attendancesCount: number;
+
   @Column()
   creatorId: number;
 

@@ -10,6 +10,7 @@ import {
   MoreThanOrEqual,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
 import {
@@ -494,8 +495,51 @@ export class EducationSessionDomainService
           educationId: true,
         },
       },
-      take: 50, //dto.take,
-      //skip: dto.take * (dto.page - 1),
+      take: 50,
     });
+  }
+
+  async incrementAttendancesCount(
+    educationSession: EducationSessionModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getEducationSessionsRepository(qr);
+
+    const result = await repository.increment(
+      { id: educationSession.id },
+      'attendancesCount',
+      count,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationSessionException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async decrementAttendancesCount(
+    educationSession: EducationSessionModel,
+    count: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getEducationSessionsRepository(qr);
+
+    const result = await repository.decrement(
+      { id: educationSession.id },
+      'attendancesCount',
+      count,
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationSessionException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
   }
 }

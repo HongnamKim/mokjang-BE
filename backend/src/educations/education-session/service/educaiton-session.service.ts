@@ -51,6 +51,7 @@ import { DeleteEducationSessionReportDto } from '../../../report/dto/education-r
 import { EducationSessionException } from '../exception/education-session.exception';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { SessionAttendanceStatus } from '../../session-attendance/const/session-attendance-status.enum';
 
 @Injectable()
 export class EducationSessionService {
@@ -389,7 +390,7 @@ export class EducationSessionService {
     // 해당 세션 하위의 출석 정보 삭제
     // 삭제할 세션에 출석한 교육 대상자 ID
     const attended = targetSession.sessionAttendances.filter(
-      (attendance) => attendance.isPresent,
+      (attendance) => attendance.status === SessionAttendanceStatus.PRESENT,
     );
 
     const attendedEnrollmentIds = attended.map(
