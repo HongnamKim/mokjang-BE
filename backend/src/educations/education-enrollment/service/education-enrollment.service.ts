@@ -178,14 +178,6 @@ export class EducationEnrollmentService {
       qr,
     );
 
-    // 교육 수강자 상태 통계값 업데이트
-    await this.educationTermDomainService.incrementEducationStatusCount(
-      educationTerm,
-      EducationEnrollmentStatus.INCOMPLETE,
-      members.length,
-      qr,
-    );
-
     // 기수 하위에 세션이 존재할 경우 출석 정보 생성
     if (educationTerm.sessionsCount > 0) {
       const educationSessionIds = (
@@ -245,36 +237,35 @@ export class EducationEnrollmentService {
         qr,
       );
 
+    // 기존과 동일한 status 로 요청 불가
     if (status === targetEducationEnrollment.status) {
       throw new BadRequestException(EducationEnrollmentException.SAME_STATUS);
     }
 
-    // 기존 status 감소
-    await this.educationTermDomainService.decrementEducationStatusCount(
-      educationTerm,
-      targetEducationEnrollment.status,
-      1,
-      qr,
-    );
-
-    // 새 status 증가
-    await this.educationTermDomainService.incrementEducationStatusCount(
-      educationTerm,
-      status,
-      1,
-      qr,
-    );
-
-    // 총 이수자 수 증가
+    // 미수료 --> 수료 변경
     if (status === EducationEnrollmentStatus.COMPLETED) {
+      // 기수의 이수자 증가
+      await this.educationTermDomainService.incrementCompletedMembersCount(
+        educationTerm,
+        qr,
+      );
+
+      // 교육의 총 이수자 증가
       await this.educationDomainService.incrementCompletionMembersCount(
         education,
         qr,
       );
     }
 
-    // 수료 --> 미수료 변경 시 총 이수자 감소
+    // 수료 --> 미수료 변경
     if (status === EducationEnrollmentStatus.INCOMPLETE) {
+      // 기수의 이수자 감소
+      await this.educationTermDomainService.decrementCompletedMembersCount(
+        educationTerm,
+        qr,
+      );
+
+      // 교육의 총 이수자 감소
       await this.educationDomainService.decrementCompletionMembersCount(
         education,
         qr,
@@ -329,16 +320,13 @@ export class EducationEnrollmentService {
       qr,
     );
 
-    // 상태별 카운트 감소
-    await this.educationTermDomainService.decrementEducationStatusCount(
-      educationTerm,
-      targetEnrollment.status,
-      1,
-      qr,
-    );
-
     // 총 이수자 감소
     if ((targetEnrollment.status = EducationEnrollmentStatus.COMPLETED)) {
+      await this.educationTermDomainService.decrementCompletedMembersCount(
+        educationTerm,
+        qr,
+      );
+
       await this.educationDomainService.decrementCompletionMembersCount(
         education,
         qr,

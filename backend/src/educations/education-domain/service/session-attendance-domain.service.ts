@@ -28,6 +28,7 @@ import { SessionAttendanceException } from '../../session-attendance/exception/s
 import { UpdateAttendanceNoteDto } from '../../session-attendance/dto/request/update-attendance-note.dto';
 import { SessionAttendanceStatus } from '../../session-attendance/const/session-attendance-status.enum';
 import { UpdateAttendancePresentDto } from '../../session-attendance/dto/request/update-attendance-present.dto';
+import { AttendanceOrder } from '../../session-attendance/const/attendance-order.enum';
 
 export class SessionAttendanceDomainService
   implements ISessionAttendanceDomainService
@@ -116,10 +117,20 @@ export class SessionAttendanceDomainService
   ): Promise<SessionAttendanceModel[]> {
     const sessionAttendanceRepository = this.getSessionAttendanceRepository();
 
-    const order: FindOptionsOrder<SessionAttendanceModel> = {
-      [dto.order]: dto.orderDirection,
-      id: dto.orderDirection,
-    };
+    const order: FindOptionsOrder<SessionAttendanceModel> =
+      dto.order !== AttendanceOrder.NAME
+        ? {
+            [dto.order]: dto.orderDirection,
+            id: dto.orderDirection,
+          }
+        : {
+            educationEnrollment: {
+              member: {
+                name: dto.orderDirection,
+              },
+            },
+            id: dto.orderDirection,
+          };
 
     return sessionAttendanceRepository.find({
       where: {
@@ -138,7 +149,7 @@ export class SessionAttendanceDomainService
           memberId: true,
           educationTermId: true,
           status: true,
-          attendanceCount: true,
+          attendancesCount: true,
           member: MemberSummarizedSelect,
         },
       },

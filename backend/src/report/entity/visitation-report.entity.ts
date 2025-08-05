@@ -1,8 +1,9 @@
 import { ChildEntity, Column, Index, ManyToOne } from 'typeorm';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { ReportModel } from './report.entity';
+import { ReportType } from '../const/report-type.enum';
 
-@ChildEntity('VISITATION')
+@ChildEntity(ReportType.VISITATION)
 export class VisitationReportModel extends ReportModel {
   @Index()
   @Column()

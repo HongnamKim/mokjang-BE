@@ -36,9 +36,6 @@ export class EducationTermModel extends BaseModel {
   @Column({ nullable: true })
   location: string; // 장소
 
-  /*@Column({ default: '' })
-  content: string;*/
-
   @Column({ default: EducationTermStatus.RESERVE })
   status: EducationTermStatus;
 
@@ -65,13 +62,13 @@ export class EducationTermModel extends BaseModel {
   completedSessionsCount: number;
 
   @Column({ default: 0, comment: '수강 대상 교인 수' })
-  enrollmentCount: number;
+  enrollmentsCount: number;
 
   @Column({ default: 0, comment: '수료한 교인 수' })
-  completedCount: number;
+  completedMembersCount: number;
 
-  @Column({ default: 0, comment: '미수료한 교인 수' })
-  incompleteCount: number;
+  /*@Column({ default: 0, comment: '미수료한 교인 수' })
+  incompleteMembersCount: number;*/
 
   @OneToMany(
     () => EducationEnrollmentModel,
@@ -100,9 +97,8 @@ export const EducationTermColumns = {
   inCharge: 'inCharge',
   educationSessions: 'educationSessions',
   completedSessionsCount: 'completedSessionsCount',
-  enrollmentCount: 'enrollmentCount',
-  //inProgressCount: 'inProgressCount',
-  completedCount: 'completedCount',
-  incompleteCount: 'incompleteCount',
+  enrollmentsCount: 'enrollmentsCount',
+  completedMembersCount: 'completedMembersCount',
+  //incompleteMembersCount: 'incompleteMembersCount',
   educationEnrollments: 'educationEnrollments',
 };

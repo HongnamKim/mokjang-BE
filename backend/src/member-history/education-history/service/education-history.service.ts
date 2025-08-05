@@ -63,26 +63,25 @@ export class EducationHistoryService {
       educationHistories.length,
       dto.page,
       totalPage,
-      //educationStatusCount.inProgressCount,
-      educationStatusCount.completedCount,
-      educationStatusCount.incompleteCount,
+      educationStatusCount.completedMembersCount,
+      educationStatusCount.incompleteMembersCount,
     );
   }
 
   private getEducationStatusCount(enrollments: EducationEnrollmentModel[]) {
     return enrollments.reduce(
       (acc, enrollment) => ({
-        /*inProgressCount:
-          acc.inProgressCount +
-          (enrollment.status === EducationEnrollmentStatus.IN_PROGRESS ? 1 : 0),*/
-        completedCount:
-          acc.completedCount +
+        completedMembersCount:
+          acc.completedMembersCount +
           (enrollment.status === EducationEnrollmentStatus.COMPLETED ? 1 : 0),
-        incompleteCount:
-          acc.incompleteCount +
+        incompleteMembersCount:
+          acc.incompleteMembersCount +
           (enrollment.status === EducationEnrollmentStatus.INCOMPLETE ? 1 : 0),
       }),
-      { /*inProgressCount: 0,*/ completedCount: 0, incompleteCount: 0 },
+      {
+        completedMembersCount: 0,
+        incompleteMembersCount: 0,
+      },
     );
   }
 }

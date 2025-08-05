@@ -61,12 +61,12 @@ export class GetMemberDto {
   @ApiProperty({
     name: 'orderDirection',
     description: '정렬 오름차순 / 내림차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC';
+  orderDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiProperty({
     required: false,

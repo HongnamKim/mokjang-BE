@@ -267,12 +267,21 @@ export class EducationSessionDomainService
           isRead: true,
           isConfirmed: true,
           receiver: MemberSummarizedSelect,
+          reportedAt: true,
         },
       },
     });
 
     if (!session) {
       throw new NotFoundException(EducationSessionException.NOT_FOUND);
+    }
+
+    // 보고 정렬
+    if (session?.reports) {
+      session.reports.sort(
+        (a, b) =>
+          new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime(),
+      );
     }
 
     return session;
@@ -313,17 +322,6 @@ export class EducationSessionDomainService
     );
   }
 
-  private assertValidInCharge(inCharge: ChurchUserModel) {
-    if (
-      inCharge.role !== ChurchUserRole.MANAGER &&
-      inCharge.role !== ChurchUserRole.OWNER
-    ) {
-      throw new ConflictException(
-        EducationSessionException.INVALID_IN_CHARGE_ROLE,
-      );
-    }
-  }
-
   async createEducationSession(
     educationTerm: EducationTermModel,
     creatorManager: ChurchUserModel,
@@ -344,8 +342,6 @@ export class EducationSessionDomainService
 
     const newSessionNumber = lastSession ? lastSession.session + 1 : 1;
 
-    inCharge && this.assertValidInCharge(inCharge);
-
     return educationSessionsRepository.save({
       creatorId: creatorManager.member.id,
       educationTermId: educationTerm.id,
@@ -355,7 +351,6 @@ export class EducationSessionDomainService
       endDate: dto.utcEndDate,
       inChargeId: inCharge ? inCharge.member.id : undefined,
       content: dto.content,
-      //status: dto.status,
     });
   }
 
@@ -382,13 +377,12 @@ export class EducationSessionDomainService
   async updateEducationSession(
     educationSession: EducationSessionModel,
     dto: UpdateEducationSessionDto,
-    inCharge: ChurchUserModel | null, //MemberModel | null,
+    inCharge: ChurchUserModel | null,
     qr: QueryRunner,
   ) {
     const educationSessionsRepository = this.getEducationSessionsRepository(qr);
 
     this.assertValidateSessionDate(educationSession, dto);
-    inCharge && this.assertValidInCharge(inCharge);
 
     const result = await educationSessionsRepository.update(
       {

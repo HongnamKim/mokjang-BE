@@ -10,6 +10,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { EducationEnrollmentOrder } from '../../const/education-enrollment-order.enum';
+import { EducationEnrollmentStatus } from '../../const/education-enrollment-status.enum';
 
 export class GetEducationEnrollmentDto {
   @ApiProperty({
@@ -36,20 +37,20 @@ export class GetEducationEnrollmentDto {
     description: '정렬 기준',
     required: false,
     enum: EducationEnrollmentOrder,
-    default: EducationEnrollmentOrder.MEMBER_ID,
+    default: EducationEnrollmentOrder.CREATED_AT,
   })
   @IsOptional()
   @IsEnum(EducationEnrollmentOrder)
-  order: EducationEnrollmentOrder = EducationEnrollmentOrder.MEMBER_ID;
+  order: EducationEnrollmentOrder = EducationEnrollmentOrder.CREATED_AT;
 
   @ApiProperty({
     description: '정렬 내림차순 / 오름차순',
     required: false,
-    default: 'asc',
+    default: 'ASC',
   })
   @IsOptional()
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'asc';
+  @IsIn(['ASC', 'DESC'])
+  orderDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiProperty({
     description: '수강 교인 이름',
@@ -59,4 +60,13 @@ export class GetEducationEnrollmentDto {
   @IsString()
   @IsNotEmpty()
   memberName?: string;
+
+  @ApiProperty({
+    description: '수료 상태 필터링',
+    required: false,
+    enum: EducationEnrollmentStatus,
+  })
+  @IsOptionalNotNull()
+  @IsEnum(EducationEnrollmentStatus)
+  status?: EducationEnrollmentStatus;
 }

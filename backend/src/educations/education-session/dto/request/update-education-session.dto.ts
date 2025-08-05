@@ -51,7 +51,8 @@ export class UpdateEducationSessionDto {
     required: false,
   })
   @IsOptionalNotNull()
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsDateTime('endDate')
   @IsAfterDate('startDate')
   endDate?: Date;
 

@@ -27,6 +27,7 @@ import {
 } from '../../../members/const/member-find-options.const';
 import { EducationEnrollmentException } from '../../education-enrollment/exception/education-enrollment.exception';
 import { EducationEnrollmentStatus } from '../../education-enrollment/const/education-enrollment-status.enum';
+import { EducationEnrollmentOrder } from '../../education-enrollment/const/education-enrollment-order.enum';
 
 @Injectable()
 export class EducationEnrollmentsDomainService
@@ -71,10 +72,18 @@ export class EducationEnrollmentsDomainService
     const educationEnrollmentsRepository =
       this.getEducationEnrollmentsRepository(qr);
 
-    const order: FindOptionsOrder<EducationEnrollmentModel> = {
-      [dto.order]: dto.orderDirection,
-      id: dto.orderDirection,
-    };
+    const order: FindOptionsOrder<EducationEnrollmentModel> =
+      dto.order !== EducationEnrollmentOrder.NAME
+        ? {
+            [dto.order]: dto.orderDirection,
+            id: dto.orderDirection,
+          }
+        : {
+            member: {
+              name: dto.orderDirection,
+            },
+            id: dto.orderDirection,
+          };
 
     return educationEnrollmentsRepository.find({
       where: {
@@ -82,6 +91,7 @@ export class EducationEnrollmentsDomainService
         member: {
           name: dto.memberName && ILike(`%${dto.memberName}%`),
         },
+        status: dto.status,
       },
       relations: {
         member: MemberSummarizedRelation,
@@ -289,7 +299,7 @@ export class EducationEnrollmentsDomainService
       {
         id: In(enrollmentIds),
       },
-      'attendanceCount',
+      'attendancesCount',
       1,
     );
 
@@ -311,7 +321,7 @@ export class EducationEnrollmentsDomainService
 
     const result = await educationEnrollmentsRepository.increment(
       { id: educationEnrollment.id, deletedAt: IsNull() },
-      'attendanceCount',
+      'attendancesCount',
       1,
     );
 
@@ -331,7 +341,7 @@ export class EducationEnrollmentsDomainService
 
     const result = await educationEnrollmentsRepository.decrement(
       { id: educationEnrollment.id, deletedAt: IsNull() },
-      'attendanceCount',
+      'attendancesCount',
       1,
     );
 
@@ -351,7 +361,7 @@ export class EducationEnrollmentsDomainService
 
     await educationEnrollmentsRepository.decrement(
       { id: In(attendedEnrollmentIds) },
-      'attendanceCount',
+      'attendancesCount',
       1,
     );
   }

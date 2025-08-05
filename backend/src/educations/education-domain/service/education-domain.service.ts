@@ -91,6 +91,7 @@ export class EducationDomainService implements IEducationDomainService {
         updatedAt: true,
         name: true,
         descriptionSummary: true,
+        termsCount: true,
         churchId: true,
       },
       order,

@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsIn, IsNumber, IsOptional, Min } from 'class-validator';
-import { AttendanceOrderEnum } from '../../const/attendance-order.enum';
+import { AttendanceOrder } from '../../const/attendance-order.enum';
+import { SessionAttendanceStatus } from '../../const/session-attendance-status.enum';
+import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class GetAttendanceDto {
   @ApiProperty({
@@ -24,21 +26,30 @@ export class GetAttendanceDto {
   page: number = 1;
 
   @ApiProperty({
-    description: '정렬 기준 (출석여부, 생성일, 수정일)',
-    enum: AttendanceOrderEnum,
-    default: AttendanceOrderEnum.educationEnrollmentId,
+    description: '정렬 기준 (생성일, 수정일, 교인 이름, 출석여부)',
+    enum: AttendanceOrder,
+    default: AttendanceOrder.CREATED_AT,
     required: false,
   })
   @IsOptional()
-  @IsEnum(AttendanceOrderEnum)
-  order: AttendanceOrderEnum = AttendanceOrderEnum.educationEnrollmentId;
+  @IsEnum(AttendanceOrder)
+  order: AttendanceOrder = AttendanceOrder.CREATED_AT;
 
   @ApiProperty({
     description: '정렬 내림차순 / 오름차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
   @IsOptional()
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'asc';
+  @IsIn(['ASC', 'DESC'])
+  orderDirection: 'ASC' | 'DESC' = 'ASC';
+
+  @ApiProperty({
+    description: '출석 status',
+    enum: SessionAttendanceStatus,
+    required: false,
+  })
+  @IsOptionalNotNull()
+  @IsEnum(SessionAttendanceStatus)
+  status?: SessionAttendanceStatus;
 }

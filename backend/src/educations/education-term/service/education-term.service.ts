@@ -282,7 +282,7 @@ export class EducationTermService {
       );
     }
 
-    if (educationTerm.enrollmentCount > 0) {
+    if (educationTerm.enrollmentsCount > 0) {
       // 기수의 교육 등록 삭제
       await this.educationEnrollmentDomainService.deleteEducationEnrollmentsCascade(
         educationTerm,
