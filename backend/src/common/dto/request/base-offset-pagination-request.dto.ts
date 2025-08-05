@@ -5,13 +5,13 @@ export abstract class BaseOffsetPaginationRequestDto<TOrder> {
   @ApiProperty({
     name: 'take',
     description: '조회할 데이터 개수',
-    default: 50,
-    example: 50,
+    default: 20,
+    example: 20,
     required: false,
   })
   @IsNumber()
   @IsOptional()
-  take: number = 50;
+  take: number = 20;
 
   @ApiProperty({
     name: 'page',

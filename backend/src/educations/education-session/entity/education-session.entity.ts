@@ -18,7 +18,7 @@ export class EducationSessionModel extends BaseModel {
   @Column({ comment: '교육 회차' })
   session: number; // 회차
 
-  @Column({ default: '기본 제목', comment: '교육 회차명' })
+  @Column({ comment: '교육 회차명' })
   title: string;
 
   @Column({
@@ -30,14 +30,12 @@ export class EducationSessionModel extends BaseModel {
   @Column({
     type: 'timestamptz',
     comment: '교육 회차 시작 날까',
-    default: new Date('2025-01-01'),
   })
   startDate: Date;
 
   @Column({
     type: 'timestamptz',
     comment: '교육 회차 종료 날짜',
-    default: new Date('2025-01-01'),
   })
   endDate: Date;
 

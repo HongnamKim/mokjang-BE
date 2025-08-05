@@ -1,6 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationSessionModel } from '../../entity/education-session.entity';
 import {
+  ArrayUnique,
+  IsArray,
   IsDateString,
   IsNotEmpty,
   IsNumber,
@@ -72,19 +74,13 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   @PlainTextMaxLength(EducationSessionConstraints.MAX_SESSION_CONTENT_LENGTH)
   override content: string;
 
-  /*@ApiProperty({
-    description: '진행 상태',
-    enum: EducationSessionStatus,
-    default: EducationSessionStatus.RESERVE,
-  })
-  @IsEnum(EducationSessionStatus)
-  override status: EducationSessionStatus = EducationSessionStatus.RESERVE;*/
-
   @ApiProperty({
     description: '피보고자 ID',
     isArray: true,
   })
-  @IsOptional()
+  @IsOptionalNotNull()
+  @IsArray()
+  @ArrayUnique()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
   receiverIds: number[];

@@ -78,26 +78,23 @@ export interface IEducationTermDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  incrementEducationStatusCount(
+  incrementCompletedMembersCount(
     educationTerm: EducationTermModel,
-    status: EducationEnrollmentStatus,
-    count: number,
+    //count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  decrementEducationStatusCount(
-    educationTerm: EducationTermModel,
-    status: EducationEnrollmentStatus,
-    count: number,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;
-
-  incrementNumberOfSessions(
+  decrementCompletedMembersCount(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  decrementNumberOfSessions(
+  incrementSessionsCount(
+    educationTerm: EducationTermModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementSessionsCount(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult>;

@@ -30,7 +30,7 @@ export class EducationEnrollmentModel extends BaseModel {
   status: EducationEnrollmentStatus;
 
   @Column({ default: 0, comment: '출석 횟수' })
-  attendanceCount: number;
+  attendancesCount: number;
 
   @OneToMany(
     () => SessionAttendanceModel,

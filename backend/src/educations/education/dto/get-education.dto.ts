@@ -43,12 +43,12 @@ export class GetEducationDto {
 
   @ApiProperty({
     description: '정렬 내림차순 / 오름차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'asc';
+  orderDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiProperty({
     description: '교육명',

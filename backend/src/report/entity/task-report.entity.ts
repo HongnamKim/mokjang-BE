@@ -1,8 +1,9 @@
 import { ChildEntity, Column, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { ReportModel } from './report.entity';
 import { TaskModel } from '../../task/entity/task.entity';
+import { ReportType } from '../const/report-type.enum';
 
-@ChildEntity('TASK')
+@ChildEntity(ReportType.TASK)
 export class TaskReportModel extends ReportModel {
   @Index()
   @Column()

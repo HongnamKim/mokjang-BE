@@ -210,13 +210,13 @@ export class EducationSessionService {
       );
 
     // 교육 세션 개수 업데이트
-    await this.educationTermDomainService.incrementNumberOfSessions(
+    await this.educationTermDomainService.incrementSessionsCount(
       educationTerm,
       qr,
     );
 
     // 세션 출석 정보 생성
-    if (educationTerm.enrollmentCount > 0) {
+    if (educationTerm.enrollmentsCount > 0) {
       const enrollments =
         await this.educationEnrollmentsDomainService.findEducationEnrollmentModels(
           educationTerm,
@@ -287,25 +287,17 @@ export class EducationSessionService {
         qr,
       );
 
-    /*
-    기존 session 의 isDone 이 true
-    --> dto.isDone = true -> isDoneCount 변화 X
-    --> dto.isDone = false -> isDoneCount 감소
-    */
-    if (dto.status) {
-      if (
-        targetSession.status === EducationSessionStatus.DONE &&
-        dto.status !== EducationSessionStatus.DONE
-      ) {
-        await this.educationTermDomainService.decrementCompletedSessionsCount(
+    // status 변경으로 EducationTerm 의 완료된 세션 수 업데이트
+    if (dto.status && dto.status !== targetSession.status) {
+      if (dto.status === EducationSessionStatus.DONE) {
+        // status 를 완료로 변경하는 경우
+        await this.educationTermDomainService.incrementCompletedSessionsCount(
           educationTerm,
           qr,
         );
-      } else if (
-        targetSession.status !== EducationSessionStatus.DONE &&
-        dto.status === EducationSessionStatus.DONE
-      ) {
-        await this.educationTermDomainService.incrementCompletedSessionsCount(
+      } else if (targetSession.status === EducationSessionStatus.DONE) {
+        // status 를 완료 이외의 것으로 변경하지만 기존에 완료였을 경우
+        await this.educationTermDomainService.decrementCompletedSessionsCount(
           educationTerm,
           qr,
         );
@@ -352,7 +344,6 @@ export class EducationSessionService {
         educationTerm,
         educationSessionId,
         qr,
-        { sessionAttendances: true },
       );
 
     // 세션 삭제
@@ -375,11 +366,12 @@ export class EducationSessionService {
     );
 
     // 해당 기수의 세션 개수 업데이트
-    await this.educationTermDomainService.decrementNumberOfSessions(
+    await this.educationTermDomainService.decrementSessionsCount(
       educationTerm,
       qr,
     );
 
+    // 완료된 세션일 경우
     if (targetSession.status === EducationSessionStatus.DONE) {
       await this.educationTermDomainService.decrementCompletedSessionsCount(
         educationTerm,
@@ -387,24 +379,26 @@ export class EducationSessionService {
       );
     }
 
-    // 해당 세션 하위의 출석 정보 삭제
+    // Enrollment 의 출석 횟수 업데이트
     // 삭제할 세션에 출석한 교육 대상자 ID
-    const attended = targetSession.sessionAttendances.filter(
-      (attendance) => attendance.status === SessionAttendanceStatus.PRESENT,
+    const presentedAttendances =
+      await this.sessionAttendanceDomainService.findAttendedSessionAttendances(
+        targetSession,
+        qr,
+      );
+
+    const presentedEnrollmentIds = presentedAttendances.map(
+      (p) => p.educationEnrollmentId,
     );
 
-    const attendedEnrollmentIds = attended.map(
-      (attendance) => attendance.educationEnrollmentId,
+    await this.educationEnrollmentsDomainService.decrementAttendanceCountBySessionDeletion(
+      presentedEnrollmentIds,
+      qr,
     );
 
     // 해당 세션의 출석 정보 삭제
     await this.sessionAttendanceDomainService.deleteSessionAttendancesBySessionDeletion(
       targetSession.id,
-      qr,
-    );
-
-    await this.educationEnrollmentsDomainService.decrementAttendanceCountBySessionDeletion(
-      attendedEnrollmentIds,
       qr,
     );
 
@@ -510,13 +504,19 @@ export class EducationSessionService {
         educationTerm,
         educationSessionId,
         qr,
-        { reports: { receiver: true } },
+      );
+
+    const targetReports =
+      await this.educationSessionReportDomainService.findEducationSessionReportModelsByReceiverIds(
+        educationSession,
+        dto.receiverIds,
+        qr,
+        { receiver: true },
       );
 
     const result =
       await this.educationSessionReportDomainService.deleteEducationSessionReports(
-        educationSession,
-        dto.receiverIds,
+        targetReports,
         qr,
       );
 
@@ -524,13 +524,11 @@ export class EducationSessionService {
       educationId: educationTerm.educationId,
       educationTermId: educationTerm.id,
       educationSessionId: educationSession.id,
-      addReceivers: educationSession.reports
-        .filter((report) => dto.receiverIds.includes(report.receiverId))
-        .map((report) => ({
-          id: report.receiver.id,
-          name: report.receiver.name,
-        })),
-      addedCount: result.affected,
+      deletedReceivers: targetReports.map((report) => ({
+        id: report.receiver.id,
+        name: report.receiver.name,
+      })),
+      deletedCount: result.affected,
     };
   }
 }

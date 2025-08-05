@@ -48,12 +48,12 @@ export class GetVisitationDto {
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',
-    default: 'desc',
+    default: 'DESC',
     required: false,
   })
   @IsOptional()
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'desc';
+  @IsIn(['ASC', 'DESC'])
+  orderDirection: 'ASC' | 'DESC' = 'DESC';
 
   @ApiProperty({
     description: '심방 날짜 ~ 부터',

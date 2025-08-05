@@ -3,8 +3,9 @@ import { ReportModel } from './report.entity';
 import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
 import { EducationModel } from '../../educations/education/entity/education.entity';
 import { EducationTermModel } from '../../educations/education-term/entity/education-term.entity';
+import { ReportType } from '../const/report-type.enum';
 
-@ChildEntity('EDUCATIONSESSION')
+@ChildEntity(ReportType.EDUCATION_SESSION)
 export class EducationSessionReportModel extends ReportModel {
   @Index()
   @Column()

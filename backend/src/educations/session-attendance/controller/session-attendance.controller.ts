@@ -66,30 +66,6 @@ export class SessionAttendanceController {
     );
   }
 
-  /*@ApiPatchSessionAttendance()
-  @EducationWriteGuard()
-  @Patch(':attendanceId')
-  @UseInterceptors(TransactionInterceptor)
-  patchSessionAttendance(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('educationId', ParseIntPipe) educationId: number,
-    @Param('educationTermId', ParseIntPipe) educationTermId: number,
-    @Param('sessionId', ParseIntPipe) sessionId: number,
-    @Param('attendanceId', ParseIntPipe) attendanceId: number,
-    @Body() dto: UpdateAttendanceDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.sessionAttendanceService.updateSessionAttendance(
-      churchId,
-      educationId,
-      educationTermId,
-      sessionId,
-      attendanceId,
-      dto,
-      qr,
-    );
-  }*/
-
   @ApiOperation({ summary: '출석 여부 개별 수정' })
   @Patch(':attendanceId/attendance')
   @UseInterceptors(TransactionInterceptor)

@@ -1,6 +1,7 @@
 export enum EducationEnrollmentOrder {
-  MEMBER_ID = 'memberId',
+  NAME = 'name',
   STATUS = 'status',
+  ATTENDANCE_COUNT = 'attendanceCount',
   CREATED_AT = 'createdAt',
   UPDATED_AT = 'updatedAt',
 }

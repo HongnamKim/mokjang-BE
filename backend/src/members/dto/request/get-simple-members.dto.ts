@@ -28,7 +28,7 @@ export class GetSimpleMembersDto extends BaseOffsetPaginationRequestDto<GetSimpl
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
   @IsOptional()

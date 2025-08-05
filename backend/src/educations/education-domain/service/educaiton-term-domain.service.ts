@@ -51,12 +51,6 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     private readonly educationSessionsRepository: Repository<EducationSessionModel>,
   ) {}
 
-  private CountColumnMap = {
-    [EducationEnrollmentStatus.COMPLETED]: EducationTermColumns.completedCount,
-    [EducationEnrollmentStatus.INCOMPLETE]:
-      EducationTermColumns.incompleteCount,
-  };
-
   private getEducationTermsRepository(qr?: QueryRunner) {
     return qr
       ? qr.manager.getRepository(EducationTermModel)
@@ -135,29 +129,8 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         status: EducationTermStatus.IN_PROGRESS,
       },
       order,
-      select: {
-        id: true,
-        createdAt: true,
-        updatedAt: true,
-        educationId: true,
-        educationName: true,
-        creatorId: true,
-        term: true,
-        status: true,
-        sessionsCount: true,
-        startDate: true,
-        endDate: true,
-        inChargeId: true,
-        completedSessionsCount: true,
-        enrollmentCount: true,
-        //inProgressCount: true,
-        completedCount: true,
-        incompleteCount: true,
-        inCharge: MemberSummarizedSelect,
-      },
-      relations: {
-        inCharge: MemberSummarizedRelation,
-      },
+      select: EducationTermSelectOptions,
+      relations: EducationTermRelationOptions,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
@@ -183,7 +156,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
     return educationTermsRepository.find({
       where: {
-        id: termIds ? In(termIds) : undefined,
+        id: termIds && In(termIds),
         educationId: education.id,
         inChargeId: dto.termInChargeId,
       },
@@ -397,7 +370,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
     const result = await educationTermsRepository.increment(
       { id: educationTerm.id },
-      EducationTermColumns.enrollmentCount, //'enrollmentCount',
+      EducationTermColumns.enrollmentsCount, //'enrollmentCount',
       count,
     );
 
@@ -425,7 +398,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
 
     const result = await educationTermsRepository.decrement(
       { id: educationTerm.id },
-      EducationTermColumns.enrollmentCount, //'enrollmentCount',
+      EducationTermColumns.enrollmentsCount, //'enrollmentCount',
       count,
     );
 
@@ -438,26 +411,18 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return result;
   }
 
-  async incrementEducationStatusCount(
+  async incrementCompletedMembersCount(
     educationTerm: EducationTermModel,
-    status: EducationEnrollmentStatus,
-    count: number,
     qr: QueryRunner,
   ) {
-    if (count < 1) {
-      throw new InternalServerErrorException(
-        EducationTermException.INVALID_INCREMENT_COUNT,
-      );
-    }
-
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const result = await educationTermsRepository.increment(
       {
         id: educationTerm.id,
       },
-      this.CountColumnMap[status],
-      count,
+      EducationTermColumns.completedMembersCount,
+      1,
     );
 
     if (result.affected === 0) {
@@ -469,26 +434,18 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return result;
   }
 
-  async decrementEducationStatusCount(
+  async decrementCompletedMembersCount(
     educationTerm: EducationTermModel,
-    status: EducationEnrollmentStatus,
-    count: number,
     qr: QueryRunner,
   ) {
-    if (count < 1) {
-      throw new InternalServerErrorException(
-        EducationTermException.INVALID_DECREMENT_COUNT,
-      );
-    }
-
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
     const result = await educationTermsRepository.decrement(
       {
         id: educationTerm.id,
       },
-      this.CountColumnMap[status],
-      count,
+      EducationTermColumns.completedMembersCount,
+      1,
     );
 
     if (result.affected === 0) {
@@ -500,7 +457,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return result;
   }
 
-  async incrementNumberOfSessions(
+  async incrementSessionsCount(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult> {
@@ -520,7 +477,7 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     return result;
   }
 
-  async decrementNumberOfSessions(
+  async decrementSessionsCount(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
   ): Promise<UpdateResult> {

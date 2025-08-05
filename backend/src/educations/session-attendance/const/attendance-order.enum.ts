@@ -1,6 +1,6 @@
-export enum AttendanceOrderEnum {
-  educationEnrollmentId = 'educationEnrollmentId',
-  status = 'status',
-  createdAt = 'createdAt',
-  updatedAt = 'updatedAt',
+export enum AttendanceOrder {
+  NAME = 'name',
+  STATUS = 'status',
+  CREATED_AT = 'createdAt',
+  UPDATED_AT = 'updatedAt',
 }

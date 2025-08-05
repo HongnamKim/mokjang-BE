@@ -20,10 +20,8 @@ export const EducationTermSelectOptions: FindOptionsSelect<EducationTermModel> =
     endDate: true,
     inChargeId: true,
     completedSessionsCount: true,
-    enrollmentCount: true,
-    //inProgressCount: true,
-    completedCount: true,
-    incompleteCount: true,
+    enrollmentsCount: true,
+    completedMembersCount: true,
     inCharge: MemberSummarizedSelect,
   };
 

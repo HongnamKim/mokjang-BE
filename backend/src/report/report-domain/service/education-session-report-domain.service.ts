@@ -101,40 +101,23 @@ export class EducationSessionReportDomainService
     education: EducationModel,
     educationTerm: EducationTermModel,
     educationSession: EducationSessionModel,
-    receivers: ChurchUserModel[], //MemberModel[],
+    receivers: ChurchUserModel[],
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
-    const oldReports = await repository.find({
-      where: { educationSessionId: educationSession.id },
+    const receiverIds = receivers.map((receiver) => receiver.memberId);
+
+    const alreadyReported = await repository.find({
+      where: {
+        educationSessionId: educationSession.id,
+        receiverId: In(receiverIds),
+      },
     });
-    const oldReceiverIds = new Set(
-      oldReports.map((report) => report.receiverId),
-    );
 
-    if (oldReports.length + receivers.length > MAX_RECEIVER_COUNT) {
+    if (alreadyReported.length > 0) {
       throw new ConflictException(
-        EducationSessionReportException.EXCEED_RECEIVERS,
-      );
-    }
-
-    const failed: { receiverId: number; reason: string }[] = [];
-
-    for (const receiver of receivers) {
-      // 피보고자 중복 등록
-      if (oldReceiverIds.has(receiver.id)) {
-        failed.push({
-          receiverId: receiver.id,
-          reason: EducationSessionReportException.ALREADY_REPORTED_MEMBER,
-        });
-      }
-    }
-
-    if (failed.length > 0) {
-      throw new AddConflictExceptionV2(
         EducationSessionReportException.FAIL_ADD_REPORT_RECEIVERS,
-        failed,
       );
     }
 
@@ -260,42 +243,47 @@ export class EducationSessionReportDomainService
   }
 
   async deleteEducationSessionReports(
-    educationSession: EducationSessionModel,
-    deleteReceiverIds: number[],
+    targetReports: EducationSessionReportModel[],
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
-    const reports = await repository.find({
-      where: {
-        educationSessionId: educationSession.id,
-      },
-    });
+    const reportIds = targetReports.map((report) => report.id);
 
-    const oldReceiverIds = new Set(reports.map((report) => report.receiverId));
-    const notExistReceiverIds = deleteReceiverIds.filter(
-      (id) => !oldReceiverIds.has(id),
-    );
+    const result = await repository.softDelete(reportIds);
 
-    if (notExistReceiverIds.length > 0) {
-      throw new RemoveConflictException(
-        EducationSessionReportException.NOT_EXIST_REPORTED_MEMBER,
-        notExistReceiverIds,
-      );
-    }
-
-    const result = await repository.softDelete({
-      educationSessionId: educationSession.id,
-      receiverId: In(deleteReceiverIds),
-    });
-
-    if (result.affected === 0) {
+    if (result.affected !== targetReports.length) {
       throw new InternalServerErrorException(
         EducationSessionReportException.DELETE_ERROR,
       );
     }
 
     return result;
+  }
+
+  async findEducationSessionReportModelsByReceiverIds(
+    educationSession: EducationSessionModel,
+    receiverIds: number[],
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationSessionReportModel>,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const reports = await repository.find({
+      where: {
+        educationSessionId: educationSession.id,
+        receiverId: In(receiverIds),
+      },
+      relations: relationOptions,
+    });
+
+    if (reports.length !== receiverIds.length) {
+      throw new NotFoundException(
+        EducationSessionReportException.NOT_EXIST_REPORTED_MEMBERS,
+      );
+    }
+
+    return reports;
   }
 
   findMyReports(
