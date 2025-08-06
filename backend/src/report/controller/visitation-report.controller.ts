@@ -21,7 +21,7 @@ import {
   ApiGetVisitationReportById,
   ApiGetVisitationReports,
   ApiPatchVisitationReport,
-} from '../const/swagger/visitation-report.swagger';
+} from '../swagger/visitation-report.swagger';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';

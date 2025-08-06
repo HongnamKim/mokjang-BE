@@ -477,7 +477,7 @@ export class EducationSessionService {
       educationTermId: educationTerm.id,
       educationSessionId: educationSession.id,
       addReceivers: newReceivers.map((receiver) => ({
-        id: receiver.id,
+        id: receiver.memberId,
         name: receiver.member.name,
       })),
       addedCount: newReceivers.length,

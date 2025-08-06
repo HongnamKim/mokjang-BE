@@ -18,7 +18,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { EducationSessionReportException } from '../../const/exception/education-session-report.exception';
+import { EducationSessionReportException } from '../../exception/education-session-report.exception';
 
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';

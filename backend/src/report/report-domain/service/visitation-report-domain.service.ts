@@ -19,7 +19,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { VisitationReportException } from '../../const/exception/visitation-report.exception';
+import { VisitationReportException } from '../../exception/visitation-report.exception';
 import { UpdateVisitationReportDto } from '../../dto/visitation-report/update-visitation-report.dto';
 import { VisitationReportOrderEnum } from '../../const/visitation-report-order.enum';
 import {
@@ -30,7 +30,7 @@ import {
 } from '../../const/report-find-options.const';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
-import { TaskReportException } from '../../const/exception/task-report.exception';
+import { TaskReportException } from '../../exception/task-report.exception';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
 import { differenceInDays } from 'date-fns';
