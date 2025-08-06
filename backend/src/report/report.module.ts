@@ -8,8 +8,10 @@ import { TaskReportService } from './service/task-report.service';
 import { TaskReportDomainModule } from './report-domain/task-report-domain.module';
 import { EducationSessionReportController } from './controller/education-session-report.controller';
 import { EducationSessionReportService } from './service/education-session-report.service';
-import { EducationSessionReportDomainModule } from './report-domain/education-session-report-domain.module';
+import { EducationReportDomainModule } from './report-domain/education-report-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
+import { EducationTermReportController } from './controller/education-term-report.controller';
+import { EducationTermReportService } from './service/education-term-report.service';
 
 @Module({
   imports: [
@@ -22,17 +24,19 @@ import { UserDomainModule } from '../user/user-domain/user-domain.module';
     UserDomainModule,
     VisitationReportDomainModule,
     TaskReportDomainModule,
-    EducationSessionReportDomainModule,
+    EducationReportDomainModule,
   ],
   controllers: [
     VisitationReportController,
     TaskReportController,
+    EducationTermReportController,
     EducationSessionReportController,
   ],
   providers: [
     VisitationReportService,
     TaskReportService,
     EducationSessionReportService,
+    EducationTermReportService,
   ],
   exports: [],
 })

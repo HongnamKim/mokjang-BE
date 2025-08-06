@@ -43,6 +43,14 @@ import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { EducationTermConstraints } from '../const/education-term.constraints';
 import { EducationTermException } from '../exception/education-term.exception';
+import { EducationModel } from '../../education/entity/education.entity';
+import { EducationTermModel } from '../entity/education-term.entity';
+import {
+  IEDUCATION_TERM_REPORT_DOMAIN_SERVICE,
+  IEducationTermReportDomainService,
+} from '../../../report/report-domain/interface/education-term-report-domain.service.interface';
+import { DeleteEducationTermReportDto } from '../dto/request/delete-education-term-report.dto';
+import { AddEducationTermReportDto } from '../dto/request/add-education-term-report.dto';
 
 @Injectable()
 export class EducationTermService {
@@ -62,6 +70,9 @@ export class EducationTermService {
     private readonly educationSessionDomainService: IEducationSessionDomainService,
     @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
     private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
+
+    @Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
+    private readonly educationTermReportDomainService: IEducationTermReportDomainService,
   ) {}
 
   async getEducationTerms(
@@ -171,6 +182,16 @@ export class EducationTermService {
       );
 
     await this.educationDomainService.incrementTermsCount(education, qr);
+
+    if (dto.receiverIds && dto.receiverIds.length > 0) {
+      await this.handleAddEducationTermReport(
+        church,
+        education,
+        educationTerm,
+        dto.receiverIds,
+        qr,
+      );
+    }
 
     return new PostEducationTermResponseDto(educationTerm);
   }
@@ -290,6 +311,12 @@ export class EducationTermService {
       );
     }
 
+    // 기수 보고 삭제
+    await this.educationTermReportDomainService.deleteEducationTermReportsCascade(
+      educationTerm,
+      qr,
+    );
+
     await this.educationTermDomainService.deleteEducationTerm(
       educationTerm,
       qr,
@@ -345,5 +372,119 @@ export class EducationTermService {
       educationTerm,
       qr,
     );
+  }
+
+  private async handleAddEducationTermReport(
+    church: ChurchModel,
+    education: EducationModel,
+    educationTerm: EducationTermModel,
+    receiverIds: number[],
+    qr: QueryRunner,
+  ) {
+    const newReceivers =
+      await this.managerDomainService.findManagersByMemberIds(
+        church,
+        receiverIds,
+        qr,
+      );
+
+    await this.educationTermReportDomainService.createEducationTermReports(
+      education,
+      educationTerm,
+      newReceivers,
+      qr,
+    );
+
+    return {
+      educationId: education.id,
+      educationTerm: educationTerm.id,
+      addReceivers: newReceivers.map((receiver) => ({
+        id: receiver.memberId,
+        name: receiver.member.name,
+      })),
+      addedCount: newReceivers.length,
+    };
+  }
+
+  async addReportReceivers(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    dto: AddEducationTermReportDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
+      educationId,
+      qr,
+    );
+
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        education,
+        educationTermId,
+        qr,
+      );
+
+    return this.handleAddEducationTermReport(
+      church,
+      education,
+      educationTerm,
+      dto.receiverIds,
+      qr,
+    );
+  }
+
+  async deleteEducationTermReportReceivers(
+    churchId: number,
+    educationId: number,
+    educationTermId: number,
+    dto: DeleteEducationTermReportDto,
+    qr: QueryRunner,
+  ) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      qr,
+    );
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
+      educationId,
+      qr,
+    );
+
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        education,
+        educationTermId,
+        qr,
+      );
+
+    const targetReports =
+      await this.educationTermReportDomainService.findEducationTermReportModelsByReceiverIds(
+        educationTerm,
+        dto.receiverIds,
+        qr,
+        { receiver: true },
+      );
+
+    const result =
+      await this.educationTermReportDomainService.deleteEducationSessionReports(
+        targetReports,
+        qr,
+      );
+
+    return {
+      educationId: educationTerm.educationId,
+      educationTermId: educationTerm.id,
+      deletedReceivers: targetReports.map((report) => ({
+        id: report.receiver.id,
+        name: report.receiver.name,
+      })),
+      deletedCount: result.affected,
+    };
   }
 }

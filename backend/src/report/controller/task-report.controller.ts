@@ -22,7 +22,7 @@ import {
   ApiGetTaskReportById,
   ApiGetTaskReports,
   ApiPatchTaskReport,
-} from '../const/swagger/task-report.swagger';
+} from '../swagger/task-report.swagger';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { Token } from '../../auth/decorator/jwt.decorator';

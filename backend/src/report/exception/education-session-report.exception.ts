@@ -1,4 +1,4 @@
-import { MAX_RECEIVER_COUNT } from '../report.constraints';
+import { MAX_RECEIVER_COUNT } from '../const/report.constraints';
 
 export const EducationSessionReportException = {
   NOT_FOUND: '해당 교육 보고를 찾을 수 없습니다.',

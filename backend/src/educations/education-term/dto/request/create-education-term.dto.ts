@@ -1,6 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationTermModel } from '../../entity/education-term.entity';
 import {
+  ArrayUnique,
+  IsArray,
   IsDate,
   IsDateString,
   IsNumber,
@@ -24,7 +26,6 @@ import { IsYYYYMMDD } from '../../../../common/decorator/validator/is-yyyy-mm-dd
 export class CreateEducationTermDto extends PickType(EducationTermModel, [
   'term',
   'location',
-  /*'content',*/
   'inChargeId',
 ]) {
   @ApiProperty({
@@ -44,15 +45,6 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @MaxLength(EducationTermConstraints.MAX_LOCATION_LENGTH)
   @IsBasicText('장소')
   override location: string;
-
-  /*@ApiProperty({
-    description: '내용',
-    required: false,
-  })
-  @IsOptionalNotNull()
-  @IsString()
-  @PlainTextMaxLength(500)
-  override content: string;*/
 
   @ApiProperty({
     description: '교육회차 시작일 (yyyy-MM-dd)',
@@ -82,4 +74,15 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @Min(1)
   @IsOptional()
   override inChargeId: number;
+
+  @ApiProperty({
+    description: '피보고자 ID',
+    isArray: true,
+  })
+  @IsOptionalNotNull()
+  @IsArray()
+  @ArrayUnique()
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  receiverIds: number[];
 }

@@ -234,7 +234,7 @@ export class ManagerDomainService implements IManagerDomainService {
 
   async findManagersByMemberIds(
     church: ChurchModel,
-    managerIds: number[],
+    memberIds: number[],
     qr?: QueryRunner,
   ): Promise<ChurchUserModel[]> {
     const repository = this.getRepository(qr);
@@ -242,7 +242,7 @@ export class ManagerDomainService implements IManagerDomainService {
     const managers = await repository.find({
       where: {
         churchId: church.id,
-        memberId: In(managerIds),
+        memberId: In(memberIds),
         role: ChurchUserManagers,
       },
       relations: {
@@ -254,13 +254,13 @@ export class ManagerDomainService implements IManagerDomainService {
     });
 
     // 요청한 매니저들을 모두 찾지 못한 경우
-    if (managers.length !== managerIds.length) {
+    if (managers.length !== memberIds.length) {
       const findManagerMemberIds = new Set(
         managers.map((manager) => manager.memberId),
       );
       const failed: { receiverId: number; reason: string }[] = [];
 
-      managerIds.forEach((managerId) => {
+      memberIds.forEach((managerId) => {
         if (!findManagerMemberIds.has(managerId)) {
           failed.push({
             receiverId: managerId,

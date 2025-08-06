@@ -10,6 +10,7 @@ import {
 } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationTermStatus } from '../const/education-term-status.enum';
+import { EducationTermReportModel } from '../../../report/entity/education-term-report.entity';
 
 @Entity()
 export class EducationTermModel extends BaseModel {
@@ -67,14 +68,14 @@ export class EducationTermModel extends BaseModel {
   @Column({ default: 0, comment: '수료한 교인 수' })
   completedMembersCount: number;
 
-  /*@Column({ default: 0, comment: '미수료한 교인 수' })
-  incompleteMembersCount: number;*/
-
   @OneToMany(
     () => EducationEnrollmentModel,
     (enrollment) => enrollment.educationTerm,
   )
   educationEnrollments: EducationEnrollmentModel[];
+
+  @OneToMany(() => EducationTermReportModel, (report) => report.educationTerm)
+  reports: EducationTermReportModel[];
 
   canAddSession(): boolean {
     return this.sessionsCount <= EducationSessionConstraints.MAX_SESSION_NUMBER;

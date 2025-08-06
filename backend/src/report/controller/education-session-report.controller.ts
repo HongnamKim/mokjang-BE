@@ -18,7 +18,7 @@ import {
   ApiGetEducationSessionReportById,
   ApiGetEducationSessionReports,
   ApiPatchEducationSessionReport,
-} from '../const/swagger/education-session-report.swagger';
+} from '../swagger/education-session-report.swagger';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';

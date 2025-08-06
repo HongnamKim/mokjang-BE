@@ -32,6 +32,8 @@ import { ChurchUserModel } from '../../../church-user/entity/church-user.entity'
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import { AddEducationTermReportDto } from '../dto/request/add-education-term-report.dto';
+import { DeleteEducationTermReportDto } from '../dto/request/delete-education-term-report.dto';
 
 @ApiTags('Educations:Terms')
 @Controller('educations/:educationId/terms')
@@ -143,6 +145,42 @@ export class EducationTermsController {
       churchId,
       educationId,
       educationTermId,
+      qr,
+    );
+  }
+
+  @Patch(':educationTermId/add-receivers')
+  @UseInterceptors(TransactionInterceptor)
+  addReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Body() dto: AddEducationTermReportDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.educationTermService.addReportReceivers(
+      churchId,
+      educationId,
+      educationTermId,
+      dto,
+      qr,
+    );
+  }
+
+  @Patch(':educationTermId/delete-receivers')
+  @UseInterceptors(TransactionInterceptor)
+  deleteReportReceivers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('educationId', ParseIntPipe) educationId: number,
+    @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @Body() dto: DeleteEducationTermReportDto,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.educationTermService.deleteEducationTermReportReceivers(
+      churchId,
+      educationId,
+      educationTermId,
+      dto,
       qr,
     );
   }

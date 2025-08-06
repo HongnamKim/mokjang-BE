@@ -36,7 +36,6 @@ import {
 } from '../../../members/const/member-find-options.const';
 import { EducationTermException } from '../../education-term/exception/education-term.exception';
 import { EducationTermStatus } from '../../education-term/const/education-term-status.enum';
-import { EducationEnrollmentStatus } from '../../education-enrollment/const/education-enrollment-status.enum';
 import {
   EducationTermRelationOptions,
   EducationTermSelectOptions,
@@ -161,8 +160,8 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         inChargeId: dto.termInChargeId,
       },
       order,
-      select: EducationTermSelectOptions,
       relations: EducationTermRelationOptions,
+      select: EducationTermSelectOptions,
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
@@ -183,10 +182,20 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       relations: {
         inCharge: MemberSummarizedRelation,
         creator: MemberSummarizedRelation,
+        reports: {
+          receiver: MemberSummarizedRelation,
+        },
       },
       select: {
         inCharge: MemberSummarizedSelect,
         creator: MemberSummarizedSelect,
+        reports: {
+          id: true,
+          isRead: true,
+          isConfirmed: true,
+          receiver: MemberSummarizedSelect,
+          reportedAt: true,
+        },
       },
     });
 
