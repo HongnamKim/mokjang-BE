@@ -54,7 +54,7 @@ export class UserDomainService implements IUserDomainService {
 
     const user = await repository
       .createQueryBuilder('user')
-      .leftJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
+      .innerJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
       .addSelect([
         'churchUser.id',
         'churchUser.createdAt',
@@ -77,17 +77,11 @@ export class UserDomainService implements IUserDomainService {
         'church.detailAddress',
       ])
       .leftJoin('churchUser.member', 'member') // 교인
-      .addSelect(
-        MemberSummarizedSelectQB /*['member.id', 'member.name', 'member.profileImageUrl']*/,
-      )
+      .addSelect(MemberSummarizedSelectQB)
       .leftJoin('member.group', 'group') // 교인 - 그룹
-      .addSelect(MemberSummarizedGroupSelectQB /*['group.id', 'group.name']*/)
+      .addSelect(MemberSummarizedGroupSelectQB)
       .leftJoin('member.officer', 'officer') // 교인 - 직분
-      .addSelect(
-        MemberSummarizedOfficerSelectQB /*['officer.id', 'officer.name']*/,
-      )
-      //.leftJoin('member.groupRole', 'groupRole') // 교인 - 그룹 역할
-      //.addSelect(['groupRole.id', 'groupRole.role'])
+      .addSelect(MemberSummarizedOfficerSelectQB)
       .leftJoin('churchUser.permissionTemplate', 'permissionTemplate') // 관리자 - 권한 유형
       .addSelect(['permissionTemplate.id', 'permissionTemplate.title'])
       .leftJoinAndSelect(

@@ -8,6 +8,7 @@ import { IEducationTermReportDomainService } from '../interface/education-term-r
 import { InjectRepository } from '@nestjs/typeorm';
 import { EducationTermReportModel } from '../../entity/education-term-report.entity';
 import {
+  FindOptionsOrder,
   FindOptionsRelations,
   In,
   QueryRunner,
@@ -18,6 +19,15 @@ import { EducationModel } from '../../../educations/education/entity/education.e
 import { EducationTermModel } from '../../../educations/education-term/entity/education-term.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { EducationTermReportException } from '../../exception/education-term-report.exception';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { GetEducationTermReportsDto } from '../../dto/education-report/term/request/get-education-term-reports.dto';
+import {
+  MemberSummarizedRelation,
+  MemberSummarizedSelect,
+} from '../../../members/const/member-find-options.const';
+import { BaseReportFindOptionsSelect } from '../../const/report-find-options.const';
+import { UpdateEducationTermReportDto } from '../../dto/education-report/term/request/update-education-term-report.dto';
+import { ReportOrder } from '../../const/report-order.enum';
 
 @Injectable()
 export class EducationTermReportDomainService
@@ -32,6 +42,124 @@ export class EducationTermReportDomainService
     return qr
       ? qr.manager.getRepository(EducationTermReportModel)
       : this.repository;
+  }
+
+  findEducationTermReports(
+    currentMember: MemberModel,
+    dto: GetEducationTermReportsDto,
+    qr?: QueryRunner,
+  ): Promise<EducationTermReportModel[]> {
+    const repository = this.getRepository(qr);
+
+    const order: FindOptionsOrder<EducationTermReportModel> =
+      dto.order === ReportOrder.START_DATE || dto.order === ReportOrder.END_DATE
+        ? {
+            educationTerm: {
+              [dto.order]: dto.orderDirection,
+            },
+          }
+        : {
+            [dto.order]: dto.orderDirection,
+          };
+
+    return repository.find({
+      where: {
+        receiverId: currentMember.id,
+        isRead: dto.isRead && dto.isRead,
+        isConfirmed: dto.isConfirmed && dto.isConfirmed,
+      },
+      relations: {
+        educationTerm: {
+          inCharge: MemberSummarizedRelation,
+        },
+      },
+      select: {
+        ...BaseReportFindOptionsSelect,
+        educationId: true,
+        educationTermId: true,
+        educationTerm: {
+          id: true,
+          educationName: true,
+          term: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          inCharge: MemberSummarizedSelect,
+        },
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+  }
+
+  async findEducationTermReportModelById(
+    receiver: MemberModel,
+    reportId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<EducationTermReportModel>,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const report = await repository.findOne({
+      where: {
+        receiverId: receiver.id,
+        id: reportId,
+      },
+      relations: relationOptions,
+    });
+
+    if (!report) {
+      throw new NotFoundException(EducationTermReportException.NOT_FOUND);
+    }
+
+    return report;
+  }
+
+  async findEducationTermReportById(
+    receiver: MemberModel,
+    reportId: number,
+    checkIsRead: boolean,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const report = await repository.findOne({
+      where: {
+        receiverId: receiver.id,
+        id: reportId,
+      },
+      relations: {
+        educationTerm: {
+          inCharge: MemberSummarizedRelation,
+        },
+      },
+      select: {
+        ...BaseReportFindOptionsSelect,
+        educationId: true,
+        educationTermId: true,
+        educationTerm: {
+          id: true,
+          educationName: true,
+          term: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          inCharge: MemberSummarizedSelect,
+        },
+      },
+    });
+
+    if (!report) {
+      throw new NotFoundException(EducationTermReportException.NOT_FOUND);
+    }
+
+    if (checkIsRead) {
+      report.isRead = true;
+      await repository.save(report);
+    }
+
+    return report;
   }
 
   async findEducationTermReportModelsByReceiverIds(
@@ -96,6 +224,31 @@ export class EducationTermReportDomainService
     return repository.save(reports);
   }
 
+  async updateEducationTermReport(
+    targetReport: EducationTermReportModel,
+    dto: UpdateEducationTermReportDto,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: targetReport.id,
+      },
+      {
+        ...dto,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        EducationTermReportException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
   deleteEducationTermReportsCascade(
     educationTerm: EducationTermModel,
     qr: QueryRunner,
@@ -107,7 +260,7 @@ export class EducationTermReportDomainService
     });
   }
 
-  async deleteEducationSessionReports(
+  async deleteEducationTermReports(
     targetReports: EducationTermReportModel[],
     qr?: QueryRunner,
   ) {
@@ -118,6 +271,23 @@ export class EducationTermReportDomainService
     const result = await repository.softDelete(reportIds);
 
     if (result.affected !== targetReports.length) {
+      throw new InternalServerErrorException(
+        EducationTermReportException.DELETE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async deleteEducationTermReport(
+    targetReport: EducationTermReportModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.softDelete(targetReport);
+
+    if (result.affected === 0) {
       throw new InternalServerErrorException(
         EducationTermReportException.DELETE_ERROR,
       );
