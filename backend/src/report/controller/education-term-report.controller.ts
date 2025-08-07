@@ -1,23 +1,77 @@
-import { Controller, Delete, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { EducationTermReportService } from '../service/education-term-report.service';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { JwtAccessPayload } from '../../auth/type/jwt';
+import { GetEducationTermReportsDto } from '../dto/education-report/term/request/get-education-term-reports.dto';
+import { UpdateEducationTermReportDto } from '../dto/education-report/term/request/update-education-term-report.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('MyPage:Reports:Education-Terms')
 @Controller('education-term')
 export class EducationTermReportController {
-  constructor() {}
+  constructor(
+    private readonly educationTermReportService: EducationTermReportService,
+  ) {}
 
   @UseGuards(AccessTokenGuard)
   @Get()
-  getEducationTermReport() {}
+  getEducationTermReport(
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @Query() dto: GetEducationTermReportsDto,
+  ) {
+    return this.educationTermReportService.getEducationTermReports(
+      accessToken.id,
+      dto,
+    );
+  }
 
   @UseGuards(AccessTokenGuard)
   @Get(':educationTermReportId')
-  getEducationTermReportById() {}
+  getEducationTermReportById(
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @Param('educationTermReportId', ParseIntPipe) reportId: number,
+  ) {
+    return this.educationTermReportService.getEducationTermReportById(
+      accessToken.id,
+      reportId,
+    );
+  }
 
   @UseGuards(AccessTokenGuard)
   @Patch(':educationTermReportId')
-  patchEducationTermReport() {}
+  patchEducationTermReport(
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @Param('educationTermReportId', ParseIntPipe) reportId: number,
+    @Body() dto: UpdateEducationTermReportDto,
+  ) {
+    return this.educationTermReportService.patchEducationTermReport(
+      accessToken.id,
+      reportId,
+      dto,
+    );
+  }
 
   @UseGuards(AccessTokenGuard)
   @Delete(':educationTermReportId')
-  deleteEducationTermReport() {}
+  deleteEducationTermReport(
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @Param('educationTermReportId', ParseIntPipe) reportId: number,
+  ) {
+    return this.educationTermReportService.deleteEducationTermReport(
+      accessToken.id,
+      reportId,
+    );
+  }
 }

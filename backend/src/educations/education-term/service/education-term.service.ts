@@ -472,7 +472,7 @@ export class EducationTermService {
       );
 
     const result =
-      await this.educationTermReportDomainService.deleteEducationSessionReports(
+      await this.educationTermReportDomainService.deleteEducationTermReports(
         targetReports,
         qr,
       );
