@@ -19,14 +19,8 @@ import {
 } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationSessionReportException } from '../../exception/education-session-report.exception';
-
-import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
-import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { GetEducationSessionReportDto } from '../../dto/education-report/session/request/get-education-session-report.dto';
-import { EducationSessionReportDomainPaginationResultDto } from '../../dto/education-report/session/response/education-session-report-domain-pagination-result.dto';
-import { EducationSessionReportOrderEnum } from '../../const/education-session-report-order.enum';
 import { UpdateEducationSessionReportDto } from '../../dto/education-report/session/request/update-education-session-report.dto';
-import { RemoveConflictException } from '../../../common/exception/remove-conflict.exception';
 import {
   EducationReportFindOptionsSelect,
   EducationReportsFindOptionsRelation,
@@ -41,6 +35,8 @@ import {
 import { EducationModel } from '../../../educations/education/entity/education.entity';
 import { EducationTermModel } from '../../../educations/education-term/entity/education-term.entity';
 import { EducationSessionModel } from '../../../educations/education-session/entity/education-session.entity';
+import { EducationTermReportModel } from '../../entity/education-term-report.entity';
+import { ReportOrder } from '../../const/report-order.enum';
 
 @Injectable()
 export class EducationSessionReportDomainService
@@ -60,41 +56,30 @@ export class EducationSessionReportDomainService
   async findEducationSessionReports(
     receiver: MemberModel,
     dto: GetEducationSessionReportDto,
-  ): Promise<EducationSessionReportDomainPaginationResultDto> {
+  ): Promise<EducationSessionReportModel[]> {
     const repository = this.getRepository();
 
-    const order: FindOptionsOrder<EducationSessionReportModel> = {
-      [dto.order]: dto.orderDirection,
-    };
+    const order: FindOptionsOrder<EducationSessionReportModel> =
+      dto.order === ReportOrder.START_DATE || dto.order === ReportOrder.END_DATE
+        ? {
+            educationSession: {
+              [dto.order]: dto.orderDirection,
+            },
+          }
+        : {
+            [dto.order]: dto.orderDirection,
+          };
 
-    if (dto.order !== EducationSessionReportOrderEnum.createdAt) {
-      order.createdAt = 'asc';
-    }
-
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: {
-          receiverId: receiver.id,
-          isRead: dto.isRead && dto.isRead,
-          isConfirmed: dto.isConfirmed && dto.isConfirmed,
-        },
-        order,
-        relations: EducationReportsFindOptionsRelation,
-        select: EducationReportsFindOptionsSelect,
-      }),
-      repository.count({
-        where: {
-          receiverId: receiver.id,
-          isRead: dto.isRead && dto.isRead,
-          isConfirmed: dto.isConfirmed && dto.isConfirmed,
-        },
-      }),
-    ]);
-
-    return new EducationSessionReportDomainPaginationResultDto(
-      data,
-      totalCount,
-    );
+    return repository.find({
+      where: {
+        receiverId: receiver.id,
+        isRead: dto.isRead && dto.isRead,
+        isConfirmed: dto.isConfirmed && dto.isConfirmed,
+      },
+      order,
+      relations: EducationReportsFindOptionsRelation,
+      select: EducationReportsFindOptionsSelect,
+    });
   }
 
   async createEducationSessionReports(

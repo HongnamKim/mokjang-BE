@@ -11,59 +11,44 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from '../../user/user-domain/interface/user-domain.service.interface';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class VisitationReportService {
   constructor(
-    @Inject(IUSER_DOMAIN_SERVICE)
-    private readonly userDomainService: IUserDomainService,
-
     @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
     private readonly visitationReportDomainService: IVisitationReportDomainService,
   ) {}
 
-  private async getCurrentMember(userId: number) {
-    const user = await this.userDomainService.findUserById(userId);
+  async getVisitationReport(
+    churchUser: ChurchUserModel,
+    dto: GetVisitationReportDto,
+  ) {
+    const receiver = churchUser.member;
 
-    const currentChurchUser = user.churchUser.find(
-      (churchUser) => churchUser.leftAt === null,
-    );
-
-    if (!currentChurchUser) {
-      throw new ForbiddenException('교회에 가입되지 않은 사용자');
-    }
-
-    if (!currentChurchUser.member) {
+    if (!receiver) {
       throw new ForbiddenException('교인 정보 없음');
     }
 
-    return currentChurchUser.member;
-  }
-
-  async getVisitationReport(userId: number, dto: GetVisitationReportDto) {
-    const receiver = await this.getCurrentMember(userId);
-
-    const { data, totalCount } =
+    const data =
       await this.visitationReportDomainService.findVisitationReportsByReceiver(
         receiver,
         dto,
       );
 
-    return new VisitationReportPaginationResultDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new VisitationReportPaginationResultDto(data);
   }
 
   async getVisitationReportById(
-    userId: number,
+    churchUser: ChurchUserModel,
     visitationReportId: number,
     qr: QueryRunner,
   ) {
-    const receiver = await this.getCurrentMember(userId);
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     return this.visitationReportDomainService.findVisitationReportById(
       receiver,
@@ -74,11 +59,15 @@ export class VisitationReportService {
   }
 
   async updateVisitationReport(
-    userId: number,
+    churchUser: ChurchUserModel,
     visitationReportId: number,
     dto: UpdateVisitationReportDto,
   ) {
-    const receiver = await this.getCurrentMember(userId);
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const targetReport =
       await this.visitationReportDomainService.findVisitationReportModelById(
@@ -98,8 +87,15 @@ export class VisitationReportService {
     );
   }
 
-  async deleteVisitationReport(userId: number, visitationReportId: number) {
-    const receiver = await this.getCurrentMember(userId);
+  async deleteVisitationReport(
+    churchUser: ChurchUserModel,
+    visitationReportId: number,
+  ) {
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const targetReport =
       await this.visitationReportDomainService.findVisitationReportModelById(

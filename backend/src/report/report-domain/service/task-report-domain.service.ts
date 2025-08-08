@@ -22,7 +22,6 @@ import { MemberModel } from '../../../members/entity/member.entity';
 import { TaskReportException } from '../../exception/task-report.exception';
 import { TaskReportDomainPaginationResultDto } from '../../dto/task-report/task-report-domain-pagination-result.dto';
 import { GetTaskReportDto } from '../../dto/task-report/get-task-report.dto';
-import { TaskReportOrderEnum } from '../../const/task-report-order.enum';
 import { MAX_RECEIVER_COUNT } from '../../const/report.constraints';
 import { AddConflictExceptionV2 } from '../../../common/exception/add-conflict.exception';
 import { UpdateTaskReportDto } from '../../dto/task-report/request/update-task-report.dto';
@@ -38,6 +37,7 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { differenceInDays } from 'date-fns';
+import { ReportOrder } from '../../const/report-order.enum';
 
 @Injectable()
 export class TaskReportDomainService implements ITaskReportDomainService {
@@ -104,35 +104,27 @@ export class TaskReportDomainService implements ITaskReportDomainService {
   ) {
     const repository = this.getTaskReportRepository(qr);
 
-    const order: FindOptionsOrder<TaskReportModel> = {
-      [dto.order]: dto.orderDirection,
-    };
+    const order: FindOptionsOrder<TaskReportModel> =
+      dto.order === ReportOrder.START_DATE || dto.order === ReportOrder.END_DATE
+        ? {
+            task: {
+              [dto.order]: dto.orderDirection,
+            },
+          }
+        : {
+            [dto.order]: dto.orderDirection,
+          };
 
-    if (dto.order !== TaskReportOrderEnum.createdAt) {
-      order.createdAt = 'asc';
-    }
-
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: {
-          receiverId: receiver.id,
-          isRead: dto.isRead && dto.isRead,
-          isConfirmed: dto.isConfirmed && dto.isConfirmed,
-        },
-        order,
-        relations: TaskReportsFindOptionsRelation,
-        select: TaskReportsFindOptionsSelect,
-      }),
-      repository.count({
-        where: {
-          receiverId: receiver.id,
-          isRead: dto.isRead && dto.isRead,
-          isConfirmed: dto.isConfirmed && dto.isConfirmed,
-        },
-      }),
-    ]);
-
-    return new TaskReportDomainPaginationResultDto(data, totalCount);
+    return repository.find({
+      where: {
+        receiverId: receiver.id,
+        isRead: dto.isRead && dto.isRead,
+        isConfirmed: dto.isConfirmed && dto.isConfirmed,
+      },
+      order,
+      relations: TaskReportsFindOptionsRelation,
+      select: TaskReportsFindOptionsSelect,
+    });
   }
 
   async findTaskReportById(

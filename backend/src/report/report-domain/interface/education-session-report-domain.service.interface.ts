@@ -17,7 +17,7 @@ export interface IEducationSessionReportDomainService {
   findEducationSessionReports(
     receiver: MemberModel,
     dto: GetEducationSessionReportDto,
-  ): Promise<EducationSessionReportDomainPaginationResultDto>;
+  ): Promise<EducationSessionReportModel[]>;
 
   findEducationSessionReportById(
     receiver: MemberModel,

@@ -1,19 +1,19 @@
 import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base-offset-pagination-request.dto';
-import { TaskReportOrderEnum } from '../../const/task-report-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
 import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
+import { ReportOrder } from '../../const/report-order.enum';
 
-export class GetTaskReportDto extends BaseOffsetPaginationRequestDto<TaskReportOrderEnum> {
+export class GetTaskReportDto extends BaseOffsetPaginationRequestDto<ReportOrder> {
   @ApiProperty({
     description: '정렬 기준',
-    enum: TaskReportOrderEnum,
-    default: TaskReportOrderEnum.createdAt,
+    enum: ReportOrder,
+    default: ReportOrder.REPORTED_AT,
     required: false,
   })
   @IsOptional()
-  @IsEnum(TaskReportOrderEnum)
-  order: TaskReportOrderEnum = TaskReportOrderEnum.createdAt;
+  @IsEnum(ReportOrder)
+  order: ReportOrder = ReportOrder.REPORTED_AT;
 
   @ApiProperty({
     description: '읽은 보고 or 읽지 않은 보고',

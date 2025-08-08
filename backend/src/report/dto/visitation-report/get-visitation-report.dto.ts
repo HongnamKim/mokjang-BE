@@ -1,46 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsEnum,
-  IsIn,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
-import { VisitationOrderEnum } from '../../../visitation/const/visitation-order.enum';
-import { VisitationReportOrderEnum } from '../../const/visitation-report-order.enum';
+import { IsBoolean, IsEnum, IsIn, IsOptional } from 'class-validator';
 import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
+import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base-offset-pagination-request.dto';
+import { ReportOrder } from '../../const/report-order.enum';
 
-export class GetVisitationReportDto {
-  @ApiProperty({
-    description: '요청 데이터 개수',
-    default: 20,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  take: number = 20;
-
-  @ApiProperty({
-    description: '요청 페이지',
-    default: 1,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  page: number = 1;
-
+export class GetVisitationReportDto extends BaseOffsetPaginationRequestDto<ReportOrder> {
   @ApiProperty({
     description: '정렬 기준',
-    enum: VisitationOrderEnum,
-    default: VisitationReportOrderEnum.createdAt,
+    enum: ReportOrder,
+    default: ReportOrder.REPORTED_AT,
     required: false,
   })
   @IsOptional()
-  @IsEnum(VisitationReportOrderEnum)
-  order: VisitationReportOrderEnum = VisitationReportOrderEnum.createdAt;
+  @IsEnum(ReportOrder)
+  order: ReportOrder = ReportOrder.REPORTED_AT;
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',

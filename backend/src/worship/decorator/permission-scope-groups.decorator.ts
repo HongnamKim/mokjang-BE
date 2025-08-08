@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { CustomRequest } from '../guard/worship-read-scope.guard';
+import { CustomRequest } from '../../common/custom-request';
 
 export const PermissionScopeGroups = createParamDecorator(
   (_, ctx: ExecutionContext) => {

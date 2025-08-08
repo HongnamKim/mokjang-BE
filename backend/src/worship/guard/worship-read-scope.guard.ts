@@ -23,17 +23,7 @@ import { PermissionScopeModel } from '../../permission/entity/permission-scope.e
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
-import { WorshipModel } from '../entity/worship.entity';
-import { Request } from 'express';
-import { JwtAccessPayload } from '../../auth/type/jwt';
-
-export interface CustomRequest extends Request {
-  church: ChurchModel;
-  worship: WorshipModel;
-  requestManager: ChurchUserModel;
-  permissionScopeGroupIds: number[];
-  tokenPayload: JwtAccessPayload;
-}
+import { CustomRequest } from '../../common/custom-request';
 
 /**
  * 필터링 요청한 그룹이 요청자의 권한 범위 내에 속하는지 검사
