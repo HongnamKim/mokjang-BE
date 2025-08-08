@@ -22,7 +22,7 @@ export interface ITaskReportDomainService {
     receiver: MemberModel,
     dto: GetTaskReportDto,
     qr?: QueryRunner,
-  ): Promise<TaskReportDomainPaginationResultDto>;
+  ): Promise<TaskReportModel[]>;
 
   findTaskReportById(
     receiver: MemberModel,

@@ -23,6 +23,9 @@ import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { Token } from '../../auth/decorator/jwt.decorator';
 import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
+import { ChurchUserGuard } from '../../church-user/guard/church-user.guard';
+import { RequestChurchUser } from '../../common/decorator/request-church-user.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('MyPage:Reports:Education-Sessions')
 @Controller('education-session')
@@ -32,55 +35,55 @@ export class EducationSessionReportController {
   ) {}
 
   @ApiGetEducationSessionReports()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Get()
   getEducationSessionReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() user: ChurchUserModel,
     @Query() dto: GetEducationSessionReportDto,
   ) {
     return this.educationSessionReportService.getEducationSessionReports(
-      accessToken.id,
+      user,
       dto,
     );
   }
 
   @ApiGetEducationSessionReportById()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Get(':educationSessionReportId')
   getEducationSessionReportById(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('educationSessionReportId', ParseIntPipe) reportId: number,
   ) {
     return this.educationSessionReportService.getEducationSessionReportById(
-      accessToken.id,
+      churchUser,
       reportId,
     );
   }
 
   @ApiPatchEducationSessionReport()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Patch(':educationSessionReportId')
   patchEducationSessionReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('educationSessionReportId', ParseIntPipe) reportId: number,
     @Body() dto: UpdateEducationSessionReportDto,
   ) {
     return this.educationSessionReportService.patchEducationSessionReport(
-      accessToken.id,
+      churchUser,
       reportId,
       dto,
     );
   }
 
   @ApiDeleteEducationSessionReport()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Delete(':educationSessionReportId')
   deleteEducationSessionReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('educationSessionReportId', ParseIntPipe) reportId: number,
   ) {
     return this.educationSessionReportService.deleteEducationSessionReport(
-      accessToken.id,
+      churchUser,
       reportId,
     );
   }

@@ -21,7 +21,6 @@ import {
 } from '@nestjs/common';
 import { VisitationReportException } from '../../exception/visitation-report.exception';
 import { UpdateVisitationReportDto } from '../../dto/visitation-report/update-visitation-report.dto';
-import { VisitationReportOrderEnum } from '../../const/visitation-report-order.enum';
 import {
   VisitationReportFindOptionsRelation,
   VisitationReportFindOptionsSelect,
@@ -38,6 +37,7 @@ import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
+import { ReportOrder } from '../../const/report-order.enum';
 
 export class VisitationReportDomainService
   implements IVisitationReportDomainService
@@ -105,33 +105,26 @@ export class VisitationReportDomainService
   ) {
     const repository = this.getRepository(qr);
 
-    const order: FindOptionsOrder<VisitationReportModel> = {
-      [dto.order]: dto.orderDirection,
-    };
+    const order: FindOptionsOrder<VisitationReportModel> =
+      dto.order === ReportOrder.START_DATE || dto.order === ReportOrder.END_DATE
+        ? {
+            visitation: {
+              [dto.order]: dto.orderDirection,
+            },
+          }
+        : {
+            [dto.order]: dto.orderDirection,
+          };
 
-    if (dto.order !== VisitationReportOrderEnum.createdAt) {
-      order.createdAt = 'asc';
-    }
-
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: {
-          receiverId: receiver.id,
-          isRead: dto.isRead,
-        },
-        relations: VisitationReportsFindOptionsRelation,
-        select: VisitationReportsFindOptionsSelect,
-        order,
-      }),
-      repository.count({
-        where: {
-          receiverId: receiver.id,
-          isRead: dto.isRead,
-        },
-      }),
-    ]);
-
-    return { data, totalCount };
+    return repository.find({
+      where: {
+        receiverId: receiver.id,
+        isRead: dto.isRead,
+      },
+      relations: VisitationReportsFindOptionsRelation,
+      select: VisitationReportsFindOptionsSelect,
+      order,
+    });
   }
 
   async findVisitationReportModelById(

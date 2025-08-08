@@ -17,6 +17,9 @@ import { JwtAccessPayload } from '../../auth/type/jwt';
 import { GetEducationTermReportsDto } from '../dto/education-report/term/request/get-education-term-reports.dto';
 import { UpdateEducationTermReportDto } from '../dto/education-report/term/request/update-education-term-report.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { ChurchUserGuard } from '../../church-user/guard/church-user.guard';
+import { RequestChurchUser } from '../../common/decorator/request-church-user.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('MyPage:Reports:Education-Terms')
 @Controller('education-term')
@@ -25,52 +28,52 @@ export class EducationTermReportController {
     private readonly educationTermReportService: EducationTermReportService,
   ) {}
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Get()
   getEducationTermReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Query() dto: GetEducationTermReportsDto,
   ) {
     return this.educationTermReportService.getEducationTermReports(
-      accessToken.id,
+      churchUser,
       dto,
     );
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Get(':educationTermReportId')
   getEducationTermReportById(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('educationTermReportId', ParseIntPipe) reportId: number,
   ) {
     return this.educationTermReportService.getEducationTermReportById(
-      accessToken.id,
+      churchUser,
       reportId,
     );
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Patch(':educationTermReportId')
   patchEducationTermReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('educationTermReportId', ParseIntPipe) reportId: number,
     @Body() dto: UpdateEducationTermReportDto,
   ) {
     return this.educationTermReportService.patchEducationTermReport(
-      accessToken.id,
+      churchUser,
       reportId,
       dto,
     );
   }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Delete(':educationTermReportId')
   deleteEducationTermReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('educationTermReportId', ParseIntPipe) reportId: number,
   ) {
     return this.educationTermReportService.deleteEducationTermReport(
-      accessToken.id,
+      churchUser,
       reportId,
     );
   }

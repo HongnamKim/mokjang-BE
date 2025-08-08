@@ -15,40 +15,24 @@ import { UpdateEducationTermReportDto } from '../dto/education-report/term/reque
 import { PatchEducationTermReportResponseDto } from '../dto/education-report/term/response/patch-education-term-report-response.dto';
 import { QueryRunner } from 'typeorm';
 import { DeleteEducationTermReportResponseDto } from '../dto/education-report/term/response/delete-education-term-report-response.dto';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @Injectable()
 export class EducationTermReportService {
   constructor(
-    @Inject(IUSER_DOMAIN_SERVICE)
-    private readonly userDomainService: IUserDomainService,
-
     @Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
     private readonly educationTermReportDomainService: IEducationTermReportDomainService,
   ) {}
 
-  private async getCurrentMember(userId: number): Promise<MemberModel> {
-    const user = await this.userDomainService.findUserById(userId);
-
-    const currentChurchUser = user.churchUser.find(
-      (churchUser) => churchUser.leftAt === null,
-    );
-
-    if (!currentChurchUser) {
-      throw new ForbiddenException('교회에 가입되지 않은 사용자');
-    }
-
-    if (!currentChurchUser.member) {
-      throw new ForbiddenException('교인 정보 없음');
-    }
-
-    return currentChurchUser.member;
-  }
-
   async getEducationTermReports(
-    userId: number,
+    churchUser: ChurchUserModel,
     dto: GetEducationTermReportsDto,
   ) {
-    const currentMember = await this.getCurrentMember(userId);
+    const currentMember = churchUser.member;
+
+    if (!currentMember) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const data =
       await this.educationTermReportDomainService.findEducationTermReports(
@@ -59,8 +43,15 @@ export class EducationTermReportService {
     return new EducationTermReportPaginationResponseDto(data);
   }
 
-  async getEducationTermReportById(userId: number, reportId: number) {
-    const currentMember = await this.getCurrentMember(userId);
+  async getEducationTermReportById(
+    churchUser: ChurchUserModel,
+    reportId: number,
+  ) {
+    const currentMember = churchUser.member;
+
+    if (!currentMember) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const report =
       await this.educationTermReportDomainService.findEducationTermReportById(
@@ -73,11 +64,15 @@ export class EducationTermReportService {
   }
 
   async patchEducationTermReport(
-    userId: number,
+    churchUser: ChurchUserModel,
     reportId: number,
     dto: UpdateEducationTermReportDto,
   ) {
-    const receiver = await this.getCurrentMember(userId);
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const targetReport =
       await this.educationTermReportDomainService.findEducationTermReportModelById(
@@ -101,11 +96,15 @@ export class EducationTermReportService {
   }
 
   async deleteEducationTermReport(
-    userId: number,
+    churchUser: ChurchUserModel,
     reportId: number,
     qr?: QueryRunner,
   ) {
-    const receiver = await this.getCurrentMember(userId);
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const targetReport =
       await this.educationTermReportDomainService.findEducationTermReportModelById(

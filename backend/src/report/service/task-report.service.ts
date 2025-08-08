@@ -14,58 +14,41 @@ import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
 } from '../../user/user-domain/interface/user-domain.service.interface';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { ChurchUserGuard } from '../../church-user/guard/church-user.guard';
 
 @Injectable()
 export class TaskReportService {
   constructor(
     @Inject(ITASK_REPORT_DOMAIN_SERVICE)
     private readonly taskReportDomainService: ITaskReportDomainService,
-    @Inject(IUSER_DOMAIN_SERVICE)
-    private readonly userDomainService: IUserDomainService,
   ) {}
 
-  private async getCurrentMember(userId: number) {
-    const user = await this.userDomainService.findUserById(userId);
+  async getTaskReports(churchUser: ChurchUserModel, dto: GetTaskReportDto) {
+    const receiver = churchUser.member;
 
-    const currentChurchUser = user.churchUser.find(
-      (churchUser) => churchUser.leftAt === null,
-    );
-
-    if (!currentChurchUser) {
-      throw new ForbiddenException('교회에 가입되지 않은 사용자');
-    }
-
-    if (!currentChurchUser.member) {
+    if (!receiver) {
       throw new ForbiddenException('교인 정보 없음');
     }
 
-    return currentChurchUser.member;
-  }
-
-  async getTaskReports(userId: number, dto: GetTaskReportDto) {
-    const receiver = await this.getCurrentMember(userId);
-
-    const { data, totalCount } =
-      await this.taskReportDomainService.findTaskReportsByReceiver(
-        receiver,
-        dto,
-      );
-
-    return new TaskReportPaginationResultDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
+    const data = await this.taskReportDomainService.findTaskReportsByReceiver(
+      receiver,
+      dto,
     );
+
+    return new TaskReportPaginationResultDto(data);
   }
 
   async getTaskReportById(
-    userId: number,
+    churchUser: ChurchUserModel,
     taskReportId: number,
     qr: QueryRunner,
   ) {
-    const receiver = await this.getCurrentMember(userId);
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const report = await this.taskReportDomainService.findTaskReportById(
       receiver,
@@ -78,11 +61,15 @@ export class TaskReportService {
   }
 
   async patchTaskReport(
-    userId: number,
+    churchUser: ChurchUserModel,
     taskReportId: number,
     dto: UpdateTaskReportDto,
   ) {
-    const receiver = await this.getCurrentMember(userId);
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const targetTaskReport =
       await this.taskReportDomainService.findTaskReportModelById(
@@ -102,8 +89,12 @@ export class TaskReportService {
     return new PatchTaskReportResponseDto(updatedTaskReport);
   }
 
-  async deleteTaskReport(userId: number, taskReportId: number) {
-    const receiver = await this.getCurrentMember(userId);
+  async deleteTaskReport(churchUser: ChurchUserModel, taskReportId: number) {
+    const receiver = churchUser.member;
+
+    if (!receiver) {
+      throw new ForbiddenException('교인 정보 없음');
+    }
 
     const targetReport =
       await this.taskReportDomainService.findTaskReportModelById(

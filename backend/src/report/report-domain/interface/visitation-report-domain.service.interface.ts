@@ -15,7 +15,7 @@ export interface IVisitationReportDomainService {
     receiver: MemberModel,
     dto: GetVisitationReportDto,
     qr?: QueryRunner,
-  ): Promise<{ data: VisitationReportModel[]; totalCount: number }>;
+  ): Promise<VisitationReportModel[]>;
 
   createVisitationReports(
     visitation: VisitationMetaModel,

@@ -24,9 +24,9 @@ import {
   ApiPatchTaskReport,
 } from '../swagger/task-report.swagger';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { AuthType } from '../../auth/const/enum/auth-type.enum';
-import { Token } from '../../auth/decorator/jwt.decorator';
-import { JwtAccessPayload } from '../../auth/type/jwt';
+import { ChurchUserGuard } from '../../church-user/guard/church-user.guard';
+import { RequestChurchUser } from '../../common/decorator/request-church-user.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('MyPage:Reports:Tasks')
 @Controller('tasks')
@@ -35,55 +35,52 @@ export class TaskReportController {
 
   @ApiGetTaskReports()
   @Get()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   getTaskReports(
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Query() dto: GetTaskReportDto,
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
   ) {
-    return this.taskReportService.getTaskReports(accessToken.id, dto);
+    return this.taskReportService.getTaskReports(churchUser, dto);
   }
 
   @ApiGetTaskReportById()
   @Get(':taskReportId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @UseInterceptors(TransactionInterceptor)
   getTaskReportById(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
     @QueryRunner() qr: QR,
   ) {
     return this.taskReportService.getTaskReportById(
-      accessToken.id,
+      churchUser,
       taskReportId,
       qr,
     );
   }
 
   @ApiPatchTaskReport()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Patch(':taskReportId')
   patchTaskReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
     @Body() dto: UpdateTaskReportDto,
   ) {
     return this.taskReportService.patchTaskReport(
-      accessToken.id,
+      churchUser,
       taskReportId,
       dto,
     );
   }
 
   @ApiDeleteTaskReport()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Delete(':taskReportId')
   deleteTaskReport(
-    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @RequestChurchUser() churchUser: ChurchUserModel,
     @Param('taskReportId', ParseIntPipe) taskReportId: number,
   ) {
-    return this.taskReportService.deleteTaskReport(
-      accessToken.id,
-      taskReportId,
-    );
+    return this.taskReportService.deleteTaskReport(churchUser, taskReportId);
   }
 }

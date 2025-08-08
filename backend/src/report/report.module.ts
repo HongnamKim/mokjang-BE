@@ -12,6 +12,7 @@ import { EducationReportDomainModule } from './report-domain/education-report-do
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { EducationTermReportController } from './controller/education-term-report.controller';
 import { EducationTermReportService } from './service/education-term-report.service';
+import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { EducationTermReportService } from './service/education-term-report.serv
       },
     ]),
     UserDomainModule,
+    ChurchUserDomainModule,
     VisitationReportDomainModule,
     TaskReportDomainModule,
     EducationReportDomainModule,

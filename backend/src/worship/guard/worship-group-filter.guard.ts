@@ -18,8 +18,8 @@ import {
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { WorshipException } from '../exception/worship.exception';
-import { CustomRequest } from './worship-read-scope.guard';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { CustomRequest } from '../../common/custom-request';
 
 /**
  * 필터링 요청한 그룹이 해당 예배의 대상 그룹인지 검사
