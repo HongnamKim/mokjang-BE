@@ -16,7 +16,7 @@ import { EducationPermissionService } from './guard/education-permission.service
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
-import { EducationReportDomainModule } from '../report/report-domain/education-report-domain.module';
+import { EducationReportDomainModule } from '../report/education-report/education-report-domain/education-report-domain.module';
 import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 
 @Module({

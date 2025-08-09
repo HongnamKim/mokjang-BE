@@ -10,7 +10,7 @@ import {
 } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationTermStatus } from '../const/education-term-status.enum';
-import { EducationTermReportModel } from '../../../report/entity/education-term-report.entity';
+import { EducationTermReportModel } from '../../../report/education-report/entity/education-term-report.entity';
 
 @Entity()
 export class EducationTermModel extends BaseModel {

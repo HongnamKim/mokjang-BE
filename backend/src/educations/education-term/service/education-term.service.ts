@@ -48,7 +48,7 @@ import { EducationTermModel } from '../entity/education-term.entity';
 import {
   IEDUCATION_TERM_REPORT_DOMAIN_SERVICE,
   IEducationTermReportDomainService,
-} from '../../../report/report-domain/interface/education-term-report-domain.service.interface';
+} from '../../../report/education-report/education-report-domain/interface/education-term-report-domain.service.interface';
 import { DeleteEducationTermReportDto } from '../dto/request/delete-education-term-report.dto';
 import { AddEducationTermReportDto } from '../dto/request/add-education-term-report.dto';
 

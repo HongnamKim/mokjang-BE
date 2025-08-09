@@ -4,7 +4,7 @@ import { SessionAttendanceModel } from '../../session-attendance/entity/session-
 import { EducationSessionStatus } from '../const/education-session-status.enum';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { EducationSessionReportModel } from '../../../report/entity/education-session-report.entity';
+import { EducationSessionReportModel } from '../../../report/education-report/entity/education-session-report.entity';
 
 @Entity()
 export class EducationSessionModel extends BaseModel {

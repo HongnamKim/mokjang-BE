@@ -39,15 +39,15 @@ import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
 import {
   ITASK_REPORT_DOMAIN_SERVICE,
   ITaskReportDomainService,
-} from '../../report/report-domain/interface/task-report-domain.service.interface';
+} from '../../report/task-report/task-report-domain/interface/task-report-domain.service.interface';
 import {
   IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
   IEducationSessionReportDomainService,
-} from '../../report/report-domain/interface/education-session-report-domain.service.interface';
+} from '../../report/education-report/education-report-domain/interface/education-session-report-domain.service.interface';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
-} from '../../report/report-domain/interface/visitation-report-domain.service.interface';
+} from '../../report/visitation-report/visitation-report-domain/interface/visitation-report-domain.service.interface';
 import { ScheduleReportDto } from '../dto/schedule-report.dto';
 import { TaskModel } from '../../task/entity/task.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
@@ -73,6 +73,10 @@ import {
   IEducationSessionDomainService,
 } from '../../educations/education-domain/interface/education-session-domain.service.interface';
 import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
+import {
+  IREPORT_DOMAIN_SERVICE,
+  IReportDomainService,
+} from '../../report/report-domain/interface/report-domain.service.interface';
 
 @Injectable()
 export class HomeService {
@@ -87,6 +91,8 @@ export class HomeService {
     @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
     private readonly educationSessionDomainService: IEducationSessionDomainService,
 
+    @Inject(IREPORT_DOMAIN_SERVICE)
+    private readonly reportDomainService: IReportDomainService,
     @Inject(ITASK_REPORT_DOMAIN_SERVICE)
     private readonly taskReportDomainService: ITaskReportDomainService,
     @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
@@ -222,7 +228,7 @@ export class HomeService {
   private createEducationSchedule(educationSession: EducationSessionModel) {
     return new ScheduleDto(
       educationSession.id,
-      ScheduleType.EDUCATION,
+      ScheduleType.EDUCATION_SESSION,
       educationSession.title,
       educationSession.startDate,
       educationSession.endDate,
@@ -278,6 +284,24 @@ export class HomeService {
     return schedules;
   }
 
+  async getMyReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
+    const receiver = pm.member;
+
+    const defaultRange = this.getScheduleRange(dto.range);
+
+    const [from, to] =
+      dto.from && dto.to
+        ? [
+            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
+            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
+          ]
+        : [defaultRange.from, defaultRange.to];
+
+    console.log(from, to);
+
+    return this.reportDomainService.paginateReports(receiver, from, to);
+  }
+
   async getMyScheduleReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
     const receiver = pm.member;
 
@@ -316,7 +340,7 @@ export class HomeService {
       (educationReport) =>
         new ScheduleReportDto(
           educationReport.id,
-          ScheduleType.EDUCATION,
+          ScheduleType.EDUCATION_SESSION,
           educationReport.educationSession.inCharge,
           this.createEducationSchedule(educationReport.educationSession),
         ),
