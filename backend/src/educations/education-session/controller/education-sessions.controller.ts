@@ -31,8 +31,8 @@ import { TransactionInterceptor } from '../../../common/interceptor/transaction.
 import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
-import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
+import { AddEducationSessionReportDto } from '../../../report/education-report/dto/session/request/add-education-session-report.dto';
+import { DeleteEducationSessionReportDto } from '../../../report/education-report/dto/session/request/delete-education-session-report.dto';
 
 @ApiTags('Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')

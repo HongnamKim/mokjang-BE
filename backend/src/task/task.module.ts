@@ -5,7 +5,7 @@ import { MembersDomainModule } from '../members/member-domain/members-domain.mod
 import { TaskController } from './controller/task.controller';
 import { TaskService } from './service/task.service';
 import { TaskDomainModule } from './task-domain/task-domain.module';
-import { TaskReportDomainModule } from '../report/report-domain/task-report-domain.module';
+import { TaskReportDomainModule } from '../report/task-report/task-report-domain/task-report-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 import { TaskPermissionService } from './service/task-permission.service';
 import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';

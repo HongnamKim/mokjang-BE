@@ -37,14 +37,14 @@ import { VisitationModule } from './visitation/visitation.module';
 import { VisitationMetaModel } from './visitation/entity/visitation-meta.entity';
 import { VisitationDetailModel } from './visitation/entity/visitation-detail.entity';
 import { ReportModule } from './report/report.module';
-import { ReportModel } from './report/entity/report.entity';
-import { VisitationReportModel } from './report/entity/visitation-report.entity';
+import { ReportModel } from './report/base-report/entity/report.entity';
+import { VisitationReportModel } from './report/visitation-report/entity/visitation-report.entity';
 import { ChurchJoinModel } from './church-join/entity/church-join.entity';
 import { ChurchJoinStatModel } from './church-join/entity/church-join-stat.entity';
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
-import { TaskReportModel } from './report/entity/task-report.entity';
-import { EducationSessionReportModel } from './report/entity/education-session-report.entity';
+import { TaskReportModel } from './report/task-report/entity/task-report.entity';
+import { EducationSessionReportModel } from './report/education-report/entity/education-session-report.entity';
 import { PermissionModule } from './permission/permission.module';
 import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
 import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
@@ -74,7 +74,7 @@ import { EducationTermModel } from './educations/education-term/entity/education
 import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
 import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
-import { EducationTermReportModel } from './report/entity/education-term-report.entity';
+import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
   imports: [

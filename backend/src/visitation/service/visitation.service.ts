@@ -31,7 +31,7 @@ import { MemberModel } from '../../members/entity/member.entity';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
-} from '../../report/report-domain/interface/visitation-report-domain.service.interface';
+} from '../../report/visitation-report/visitation-report-domain/interface/visitation-report-domain.service.interface';
 import { VisitationPaginationResultDto } from '../dto/response/visitation-pagination-result.dto';
 import { VisitationDetailService } from './visitation-detail.service';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';

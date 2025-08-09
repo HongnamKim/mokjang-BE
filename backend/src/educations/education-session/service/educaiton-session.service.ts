@@ -43,15 +43,14 @@ import {
 import {
   IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
   IEducationSessionReportDomainService,
-} from '../../../report/report-domain/interface/education-session-report-domain.service.interface';
+} from '../../../report/education-report/education-report-domain/interface/education-session-report-domain.service.interface';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
-import { AddEducationSessionReportDto } from '../../../report/dto/education-report/session/request/add-education-session-report.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { DeleteEducationSessionReportDto } from '../../../report/dto/education-report/session/request/delete-education-session-report.dto';
 import { EducationSessionException } from '../exception/education-session.exception';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
-import { SessionAttendanceStatus } from '../../session-attendance/const/session-attendance-status.enum';
+import { AddEducationSessionReportDto } from '../../../report/education-report/dto/session/request/add-education-session-report.dto';
+import { DeleteEducationSessionReportDto } from '../../../report/education-report/dto/session/request/delete-education-session-report.dto';
 
 @Injectable()
 export class EducationSessionService {

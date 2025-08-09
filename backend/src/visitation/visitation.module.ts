@@ -5,7 +5,7 @@ import { VisitationService } from './service/visitation.service';
 import { VisitationDomainModule } from './visitation-domain/visitation-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
-import { VisitationReportDomainModule } from '../report/report-domain/visitation-report-domain.module';
+import { VisitationReportDomainModule } from '../report/visitation-report/visitation-report-domain/visitation-report-domain.module';
 import { VisitationDetailController } from './controller/visitation-detail.controller';
 import { VisitationDetailService } from './service/visitation-detail.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
