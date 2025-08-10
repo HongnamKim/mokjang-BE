@@ -18,21 +18,20 @@ import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
-import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
-import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 import { MinistryHistoryModel } from '../../member-history/ministry-history/entity/child/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/officer-history/entity/officer-history.entity';
 import { GroupHistoryModel } from '../../member-history/group-history/entity/group-history.entity';
-import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { TaskModel } from '../../task/entity/task.entity';
-import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GroupRole } from '../../management/groups/const/group-role.enum';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
 import { MinistryGroupHistoryModel } from '../../member-history/ministry-history/entity/ministry-group-history.entity';
+import { EducationEnrollmentModel } from '../../educations/education-enrollment/entity/education-enrollment.entity';
+import { EducationTermModel } from '../../educations/education-term/entity/education-term.entity';
+import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -195,7 +194,7 @@ export class MemberModel extends BaseModel {
     () => EducationEnrollmentModel,
     (educationEnrollment) => educationEnrollment.member,
   )
-  educations: EducationEnrollmentModel[];
+  educationEnrollments: EducationEnrollmentModel[];
 
   @OneToMany(() => EducationTermModel, (term) => term.inCharge)
   inChargeEducationTerm: EducationTermModel[];
@@ -242,11 +241,11 @@ export class MemberModel extends BaseModel {
   visitationMetas: VisitationMetaModel[];
 
   // 나의 심방 세부 내용
-  @OneToMany(
+  /*@OneToMany(
     () => VisitationDetailModel,
     (visitingDetail) => visitingDetail.member,
   )
-  visitationDetails: VisitationDetailModel[];
+  visitationDetails: VisitationDetailModel[];*/
 
   // --------------- 심방 -------------------
 

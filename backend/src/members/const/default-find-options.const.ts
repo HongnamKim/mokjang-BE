@@ -9,7 +9,7 @@ export const DefaultMemberRelationOption: FindOptionsRelations<MemberModel> = {
   },
   officer: true,
   ministries: true,
-  educations: {
+  educationEnrollments: {
     educationTerm: true,
   },
   group: true,
@@ -30,7 +30,7 @@ export const DefaultMemberSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educations: {
+  educationEnrollments: {
     id: true,
     status: true,
     educationTerm: {
@@ -56,7 +56,7 @@ export const DefaultMembersRelationOption: FindOptionsRelations<MemberModel> = {
   group: true,
   //groupRole: true,
   ministries: true,
-  educations: {
+  educationEnrollments: {
     educationTerm: true,
   },
   officer: true,
@@ -87,7 +87,7 @@ export const DefaultMembersSelectOption: FindOptionsSelect<MemberModel> = {
     id: true,
     name: true,
   },
-  educations: {
+  educationEnrollments: {
     id: true,
     status: true,
     educationTerm: {

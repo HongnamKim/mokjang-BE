@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { GetEducationHistoryDto } from '../dto/get-education-history.dto';
-import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
-import { EducationEnrollmentStatus } from '../../../management/educations/const/education-status.enum';
 import {
   IEDUCATION_HISTORY_DOMAIN_SERVICE,
   IEducationHistoryDomainService,
@@ -16,6 +14,9 @@ import {
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
 import { EducationHistoryPaginationResultDto } from '../dto/education-history-pagination-result.dto';
+import { EducationEnrollmentModel } from '../../../educations/education-enrollment/entity/education-enrollment.entity';
+
+import { EducationEnrollmentStatus } from '../../../educations/education-enrollment/const/education-enrollment-status.enum';
 
 @Injectable()
 export class EducationHistoryService {
@@ -62,26 +63,25 @@ export class EducationHistoryService {
       educationHistories.length,
       dto.page,
       totalPage,
-      educationStatusCount.inProgressCount,
-      educationStatusCount.completedCount,
-      educationStatusCount.incompleteCount,
+      educationStatusCount.completedMembersCount,
+      educationStatusCount.incompleteMembersCount,
     );
   }
 
   private getEducationStatusCount(enrollments: EducationEnrollmentModel[]) {
     return enrollments.reduce(
       (acc, enrollment) => ({
-        inProgressCount:
-          acc.inProgressCount +
-          (enrollment.status === EducationEnrollmentStatus.IN_PROGRESS ? 1 : 0),
-        completedCount:
-          acc.completedCount +
+        completedMembersCount:
+          acc.completedMembersCount +
           (enrollment.status === EducationEnrollmentStatus.COMPLETED ? 1 : 0),
-        incompleteCount:
-          acc.incompleteCount +
+        incompleteMembersCount:
+          acc.incompleteMembersCount +
           (enrollment.status === EducationEnrollmentStatus.INCOMPLETE ? 1 : 0),
       }),
-      { inProgressCount: 0, completedCount: 0, incompleteCount: 0 },
+      {
+        completedMembersCount: 0,
+        incompleteMembersCount: 0,
+      },
     );
   }
 }

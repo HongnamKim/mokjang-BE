@@ -21,7 +21,8 @@ import {
 import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
 import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
-import { EducationEnrollmentStatus } from '../../../management/educations/const/education-status.enum';
+
+import { EducationEnrollmentStatus } from '../../../educations/education-enrollment/const/education-enrollment-status.enum';
 
 export class GetMemberDto {
   @ApiProperty({
@@ -60,12 +61,12 @@ export class GetMemberDto {
   @ApiProperty({
     name: 'orderDirection',
     description: '정렬 오름차순 / 내림차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC';
+  orderDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiProperty({
     required: false,

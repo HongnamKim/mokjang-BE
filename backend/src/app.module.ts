@@ -13,11 +13,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
 import { ChurchesModule } from './churches/churches.module';
-import { EducationModel } from './management/educations/entity/education.entity';
-import { EducationTermModel } from './management/educations/entity/education-term.entity';
-import { EducationSessionModel } from './management/educations/entity/education-session.entity';
-import { SessionAttendanceModel } from './management/educations/entity/session-attendance.entity';
-import { EducationEnrollmentModel } from './management/educations/entity/education-enrollment.entity';
+
 import { OfficerModel } from './management/officers/entity/officer.entity';
 import { MinistryModel } from './management/ministries/entity/ministry.entity';
 import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
@@ -41,14 +37,14 @@ import { VisitationModule } from './visitation/visitation.module';
 import { VisitationMetaModel } from './visitation/entity/visitation-meta.entity';
 import { VisitationDetailModel } from './visitation/entity/visitation-detail.entity';
 import { ReportModule } from './report/report.module';
-import { ReportModel } from './report/entity/report.entity';
-import { VisitationReportModel } from './report/entity/visitation-report.entity';
+import { ReportModel } from './report/base-report/entity/report.entity';
+import { VisitationReportModel } from './report/visitation-report/entity/visitation-report.entity';
 import { ChurchJoinModel } from './church-join/entity/church-join.entity';
 import { ChurchJoinStatModel } from './church-join/entity/church-join-stat.entity';
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
-import { TaskReportModel } from './report/entity/task-report.entity';
-import { EducationSessionReportModel } from './report/entity/education-session-report.entity';
+import { TaskReportModel } from './report/task-report/entity/task-report.entity';
+import { EducationSessionReportModel } from './report/education-report/entity/education-session-report.entity';
 import { PermissionModule } from './permission/permission.module';
 import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
 import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
@@ -72,6 +68,13 @@ import { MinistryGroupHistoryModel } from './member-history/ministry-history/ent
 import { MinistryGroupRoleHistoryModel } from './member-history/ministry-history/entity/child/ministry-group-role-history.entity';
 import { GroupDetailHistoryModel } from './member-history/group-history/entity/group-detail-history.entity';
 import { MinistryGroupDetailHistoryModel } from './member-history/ministry-history/entity/ministry-group-detail-history.entity';
+import { EducationsModule } from './educations/educations.module';
+import { EducationModel } from './educations/education/entity/education.entity';
+import { EducationTermModel } from './educations/education-term/entity/education-term.entity';
+import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
+import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
+import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
+import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
   imports: [
@@ -179,6 +182,7 @@ import { MinistryGroupDetailHistoryModel } from './member-history/ministry-histo
           VisitationReportModel,
           TaskReportModel,
           EducationSessionReportModel,
+          EducationTermReportModel,
           // 업무 관련 엔티티
           TaskModel,
           // 권한 관련
@@ -219,6 +223,7 @@ import { MinistryGroupDetailHistoryModel } from './member-history/ministry-histo
     FamilyRelationModule,
     MemberHistoryModule,
     ManagementModule,
+    EducationsModule,
     VisitationModule,
     TaskModule,
     WorshipModule,

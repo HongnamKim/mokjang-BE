@@ -36,7 +36,7 @@ import { WorshipException } from '../exception/worship.exception';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { WorshipModel } from '../entity/worship.entity';
-import { CustomRequest } from './worship-read-scope.guard';
+import { CustomRequest } from '../../common/custom-request';
 
 @Injectable()
 export class WorshipAttendanceWriteScopeGuard implements CanActivate {

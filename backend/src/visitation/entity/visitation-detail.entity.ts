@@ -1,7 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { VisitationMetaModel } from './visitation-meta.entity';
-import { MemberModel } from '../../members/entity/member.entity';
 
 @Entity()
 export class VisitationDetailModel extends BaseModel {
@@ -16,13 +15,13 @@ export class VisitationDetailModel extends BaseModel {
   @JoinColumn({ name: 'visitationMetaId' })
   visitationMeta: VisitationMetaModel;
 
-  @Index()
+  /*@Index()
   @Column()
   memberId: number;
 
   @ManyToOne(() => MemberModel, (member) => member.visitationDetails)
   @JoinColumn({ name: 'memberId' })
-  member: MemberModel;
+  member: MemberModel;*/
 
   @Column({ default: '' })
   visitationContent: string;

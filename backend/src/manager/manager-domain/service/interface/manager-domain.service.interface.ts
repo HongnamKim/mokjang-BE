@@ -75,12 +75,12 @@ export interface IManagerDomainService {
   /**
    * receiver 로 지정된 교인의 권한 확인용
    * @param church
-   * @param managerIds
+   * @param memberIds
    * @param qr
    */
   findManagersByMemberIds(
     church: ChurchModel,
-    managerIds: number[],
+    memberIds: number[],
     qr?: QueryRunner,
   ): Promise<ChurchUserModel[]>;
 

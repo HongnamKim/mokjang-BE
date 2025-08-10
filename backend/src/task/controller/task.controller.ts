@@ -29,8 +29,8 @@ import {
   ApiPostTask,
   ApiRefreshTaskCount,
 } from '../const/swagger/task.swagger';
-import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
-import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
+import { AddTaskReportReceiverDto } from '../../report/task-report/dto/request/add-task-report-receiver.dto';
+import { DeleteTaskReportReceiverDto } from '../../report/task-report/dto/request/delete-task-report-receiver.dto';
 import { TaskReadGuard } from '../guard/task-read.guard';
 import { TaskWriteGuard } from '../guard/task-write.guard';
 import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';

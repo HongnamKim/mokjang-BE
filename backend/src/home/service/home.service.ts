@@ -34,27 +34,22 @@ import {
 } from '../../visitation/visitation-domain/interface/visitation-meta-domain.service.interface';
 import { ScheduleDto } from '../dto/schedule.dto';
 import { ScheduleType } from '../const/schedule-type.enum';
-import {
-  IEDUCATION_SESSION_DOMAIN_SERVICE,
-  IEducationSessionDomainService,
-} from '../../management/educations/service/education-domain/interface/education-session-domain.service.interface';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
 import {
   ITASK_REPORT_DOMAIN_SERVICE,
   ITaskReportDomainService,
-} from '../../report/report-domain/interface/task-report-domain.service.interface';
+} from '../../report/task-report/task-report-domain/interface/task-report-domain.service.interface';
 import {
   IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
   IEducationSessionReportDomainService,
-} from '../../report/report-domain/interface/education-session-report-domain.service.interface';
+} from '../../report/education-report/education-report-domain/interface/education-session-report-domain.service.interface';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
-} from '../../report/report-domain/interface/visitation-report-domain.service.interface';
+} from '../../report/visitation-report/visitation-report-domain/interface/visitation-report-domain.service.interface';
 import { ScheduleReportDto } from '../dto/schedule-report.dto';
 import { TaskModel } from '../../task/entity/task.entity';
-import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { GetMyScheduleReportsResponseDto } from '../dto/response/get-my-schedule-reports-response.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../dto/request/get-low-worship-attendance-members.dto';
@@ -73,6 +68,16 @@ import {
 import { WorshipModel } from '../../worship/entity/worship.entity';
 import { GetLowWorshipAttendanceMembersResponseDto } from '../dto/response/get-low-worship-attendance-members-response.dto';
 import { AttendanceRange } from '../const/attendance-range.enum';
+import {
+  IEDUCATION_SESSION_DOMAIN_SERVICE,
+  IEducationSessionDomainService,
+} from '../../educations/education-domain/interface/education-session-domain.service.interface';
+import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
+import {
+  IREPORT_DOMAIN_SERVICE,
+  IReportDomainService,
+} from '../../report/report-domain/interface/report-domain.service.interface';
+import { GetMySchedulesResponseDto } from '../dto/response/get-my-schedules-response.dto';
 
 @Injectable()
 export class HomeService {
@@ -87,6 +92,8 @@ export class HomeService {
     @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
     private readonly educationSessionDomainService: IEducationSessionDomainService,
 
+    @Inject(IREPORT_DOMAIN_SERVICE)
+    private readonly reportDomainService: IReportDomainService,
     @Inject(ITASK_REPORT_DOMAIN_SERVICE)
     private readonly taskReportDomainService: ITaskReportDomainService,
     @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
@@ -222,7 +229,7 @@ export class HomeService {
   private createEducationSchedule(educationSession: EducationSessionModel) {
     return new ScheduleDto(
       educationSession.id,
-      ScheduleType.EDUCATION,
+      ScheduleType.EDUCATION_SESSION,
       educationSession.title,
       educationSession.startDate,
       educationSession.endDate,
@@ -275,7 +282,30 @@ export class HomeService {
 
     schedules.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 
-    return schedules;
+    return new GetMySchedulesResponseDto(dto.range, from, to, schedules);
+  }
+
+  async getMyReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
+    const receiver = pm.member;
+
+    const defaultRange = this.getScheduleRange(dto.range);
+
+    const [from, to] =
+      dto.from && dto.to
+        ? [
+            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
+            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
+          ]
+        : [defaultRange.from, defaultRange.to];
+
+    const reports = await this.reportDomainService.paginateReports(
+      receiver,
+      from,
+      to,
+      dto,
+    );
+
+    return new GetMyScheduleReportsResponseDto(reports);
   }
 
   async getMyScheduleReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
@@ -316,7 +346,7 @@ export class HomeService {
       (educationReport) =>
         new ScheduleReportDto(
           educationReport.id,
-          ScheduleType.EDUCATION,
+          ScheduleType.EDUCATION_SESSION,
           educationReport.educationSession.inCharge,
           this.createEducationSchedule(educationReport.educationSession),
         ),

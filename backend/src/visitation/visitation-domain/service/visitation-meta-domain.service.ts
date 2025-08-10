@@ -128,6 +128,11 @@ export class VisitationMetaDomainService
       },
       relations: VisitationRelationOptions,
       select: VisitationSelectOptions,
+      order: {
+        members: {
+          id: 'ASC',
+        },
+      },
     });
 
     if (!visitation) {

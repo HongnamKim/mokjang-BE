@@ -1,7 +1,9 @@
 import {
   ArrayMaxSize,
+  ArrayMinSize,
+  ArrayUnique,
   IsArray,
-  IsDate,
+  IsDateString,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -14,13 +16,12 @@ import { VisitationMethod } from '../../const/visitation-method.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { VisitationStatus } from '../../const/visitation-status.enum';
-import { VisitationDetailValidator } from '../../decorator/visitation-detail.validator';
 import { VisitationDetailDto } from '../internal/visittion-detail.dto';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
-import { VisitationException } from '../../const/exception/visitation.exception';
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
+import { IsDateTime } from '../../../common/decorator/validator/is-date-time.validator';
 
 @SanitizeDto()
 export class CreateVisitationDto {
@@ -56,17 +57,32 @@ export class CreateVisitationDto {
   inChargeId: number;
 
   @ApiProperty({
-    description: '심방 시작 날짜',
+    description: '심방 시작 날짜 (yyyy-MM-ddTHH:mm:ss)',
   })
-  @IsDate()
-  startDate: Date;
+  @IsDateString({ strict: true })
+  @IsDateTime('startDate')
+  //@IsDate()
+  startDate: string; //Date;
 
   @ApiProperty({
-    description: '심방 종료 날짜',
+    description: '심방 종료 날짜 (yyyy-MM-ddTHH:mm:ss)',
   })
-  @IsDate()
+  //@IsDate()
+  @IsDateString({ strict: true })
+  @IsDateTime('endDate')
   @IsAfterDate('startDate')
-  endDate: Date;
+  endDate: string; //Date;
+
+  @ApiProperty({
+    description: '심방 대상자 교인 ID 배열',
+    isArray: true,
+  })
+  @IsArray()
+  @ArrayUnique()
+  @ArrayMinSize(1)
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  memberIds: number[];
 
   @ApiProperty({
     description: '심방 세부 정보',
@@ -75,10 +91,12 @@ export class CreateVisitationDto {
   })
   @ValidateNested({ each: true })
   @Type(() => VisitationDetailDto)
-  @ArrayMaxSize(30, {
+  @ArrayMaxSize(
+    1 /*30, {
     message: VisitationException.EXCEED_VISITATION_MEMBER,
-  })
-  @VisitationDetailValidator()
+  }*/,
+  )
+  //@VisitationDetailValidator()
   visitationDetails: VisitationDetailDto[];
 
   @ApiProperty({

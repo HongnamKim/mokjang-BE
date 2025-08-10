@@ -133,6 +133,12 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
         userId: userId,
         leftAt: IsNull(),
       },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSummarizedSelect,
+      },
     });
 
     if (!churchUser) {

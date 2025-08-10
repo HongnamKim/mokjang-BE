@@ -130,24 +130,24 @@ export interface IMembersDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  startMemberOfficer(
+  /*startMemberOfficer(
     member: MemberModel,
     officer: OfficerModel,
     officerStartDate: Date,
     officerStartChurch: string,
     qr: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<UpdateResult>;*/
 
-  endMemberOfficer(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
+  /*endMemberOfficer(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;*/
 
-  startMemberGroup(
+  /*startMemberGroup(
     member: MemberModel,
     group: GroupModel,
     groupRole: GroupRole,
     qr: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<UpdateResult>;*/
 
-  endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;
+  /*endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;*/
 
   updateGroupRole(
     member: MemberModel,
