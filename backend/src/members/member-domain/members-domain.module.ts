@@ -11,6 +11,8 @@ import { IOFFICER_MEMBERS_DOMAIN_SERVICE } from './interface/officer-members-dom
 import { OfficerMembersDomainService } from './service/officer-members-domain.service';
 import { IGROUP_MEMBERS_DOMAIN_SERVICE } from './interface/group-members.domain.service.interface';
 import { GroupMembersDomainService } from './service/group-members-domain.service';
+import { IEDUCATION_MEMBERS_DOMAIN_SERVICE } from './interface/education-members-domain.service.interface';
+import { EducationMembersDomainService } from './service/education-members-domain.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([MemberModel])],
@@ -35,6 +37,10 @@ import { GroupMembersDomainService } from './service/group-members-domain.servic
       provide: IGROUP_MEMBERS_DOMAIN_SERVICE,
       useClass: GroupMembersDomainService,
     },
+    {
+      provide: IEDUCATION_MEMBERS_DOMAIN_SERVICE,
+      useClass: EducationMembersDomainService,
+    },
   ],
   exports: [
     IMEMBERS_DOMAIN_SERVICE,
@@ -42,6 +48,7 @@ import { GroupMembersDomainService } from './service/group-members-domain.servic
     IMINISTRY_MEMBERS_DOMAIN_SERVICE,
     IOFFICER_MEMBERS_DOMAIN_SERVICE,
     IGROUP_MEMBERS_DOMAIN_SERVICE,
+    IEDUCATION_MEMBERS_DOMAIN_SERVICE,
   ],
 })
 export class MembersDomainModule {}

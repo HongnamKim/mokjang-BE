@@ -504,7 +504,7 @@ export class MembersDomainService implements IMembersDomainService {
     return result;
   }
 
-  async startMemberOfficer(
+  /*async startMemberOfficer(
     member: MemberModel,
     officer: OfficerModel,
     officerStartDate: Date,
@@ -521,9 +521,9 @@ export class MembersDomainService implements IMembersDomainService {
         officerStartChurch,
       },
     );
-  }
+  }*/
 
-  async endMemberOfficer(member: MemberModel, qr: QueryRunner) {
+  /*async endMemberOfficer(member: MemberModel, qr: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
     return membersRepository.update(
@@ -534,9 +534,9 @@ export class MembersDomainService implements IMembersDomainService {
         officerStartChurch: null,
       },
     );
-  }
+  }*/
 
-  async startMemberGroup(
+  /*async startMemberGroup(
     member: MemberModel,
     group: GroupModel,
     groupRole: GroupRole,
@@ -553,9 +553,9 @@ export class MembersDomainService implements IMembersDomainService {
         groupRole,
       },
     );
-  }
+  }*/
 
-  async endMemberGroup(member: MemberModel, qr: QueryRunner) {
+  /*async endMemberGroup(member: MemberModel, qr: QueryRunner) {
     const membersRepository = this.getMembersRepository(qr);
 
     return membersRepository.update(
@@ -567,7 +567,7 @@ export class MembersDomainService implements IMembersDomainService {
         groupRole: GroupRole.NONE,
       },
     );
-  }
+  }*/
 
   async updateGroupRole(
     member: MemberModel,

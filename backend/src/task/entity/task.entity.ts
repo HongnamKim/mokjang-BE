@@ -11,7 +11,7 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 import { TaskStatus } from '../const/task-status.enum';
 import { MemberModel } from '../../members/entity/member.entity';
 import { TaskType } from '../const/task-type.enum';
-import { TaskReportModel } from '../../report/entity/task-report.entity';
+import { TaskReportModel } from '../../report/task-report/entity/task-report.entity';
 
 @Entity()
 export class TaskModel extends BaseModel {

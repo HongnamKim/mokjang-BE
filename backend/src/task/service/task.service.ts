@@ -16,12 +16,12 @@ import { TaskPaginationResultDto } from '../dto/response/task-pagination-result.
 import { UpdateTaskDto } from '../dto/request/update-task.dto';
 import { PatchTaskResponseDto } from '../dto/response/patch-task-response.dto';
 import { DeleteTaskResponseDto } from '../dto/response/delete-task-response.dto';
-import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
+import { AddTaskReportReceiverDto } from '../../report/task-report/dto/request/add-task-report-receiver.dto';
 import {
   ITASK_REPORT_DOMAIN_SERVICE,
   ITaskReportDomainService,
-} from '../../report/report-domain/interface/task-report-domain.service.interface';
-import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
+} from '../../report/task-report/task-report-domain/interface/task-report-domain.service.interface';
+import { DeleteTaskReportReceiverDto } from '../../report/task-report/dto/request/delete-task-report-receiver.dto';
 import {
   ChurchModel,
   ManagementCountType,

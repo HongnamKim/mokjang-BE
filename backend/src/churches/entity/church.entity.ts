@@ -10,7 +10,7 @@ import {
 import { UserModel } from '../../user/entity/user.entity';
 import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
-import { EducationModel } from '../../management/educations/entity/education.entity';
+
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
@@ -22,6 +22,7 @@ import { Exclude } from 'class-transformer';
 import { TaskModel } from '../../task/entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { WorshipModel } from '../../worship/entity/worship.entity';
+import { EducationModel } from '../../educations/education/entity/education.entity';
 
 @Entity()
 @Unique(['joinCode'])

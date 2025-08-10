@@ -14,17 +14,17 @@ export class VisitationDetailController {
 
   @ApiPatchVisitationDetail()
   @VisitationWriteGuard()
-  @Patch(':memberId')
+  @Patch(/*':memberId'*/)
   patchVisitationDetail(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    //@Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdateVisitationDetailDto,
   ) {
     return this.visitationDetailService.updateVisitationDetail(
       churchId,
       visitationId,
-      memberId,
+      //memberId,
       dto,
     );
   }

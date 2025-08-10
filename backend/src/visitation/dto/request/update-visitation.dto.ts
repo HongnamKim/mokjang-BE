@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   IsArray,
-  IsDate,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -17,6 +17,7 @@ import { RemoveSpaces } from '../../../common/decorator/transformer/remove-space
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsDateTime } from '../../../common/decorator/validator/is-date-time.validator';
 
 export class UpdateVisitationDto {
   @ApiProperty({
@@ -59,41 +60,25 @@ export class UpdateVisitationDto {
   inChargeId?: number;
 
   @ApiProperty({
-    description: '심방 날짜',
+    description: '심방 날짜 (yyyy-MM-ddTHH:mm:ss)',
     required: false,
   })
   @IsOptionalNotNull()
-  @IsDate()
-  startDate?: Date;
+  //@IsDate()
+  @IsDateString({ strict: true })
+  @IsDateTime('startDate')
+  startDate?: string; //Date;
 
   @ApiProperty({
-    description: '심방 종료 날짜',
+    description: '심방 종료 날짜 (yyyy-MM-ddTHH:mm:ss)',
     required: false,
   })
   @IsOptionalNotNull()
-  @IsDate()
+  //@IsDate()
+  @IsDateString({ strict: true })
+  @IsDateTime('endDate')
   @IsAfterDate('startDate')
-  endDate?: Date;
-
-  /*@ApiProperty({
-    description: '심방 대상자 추가할 교인 ID 들',
-    isArray: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @TransformNumberArray()
-  addMemberIds?: number[];
-
-  @ApiProperty({
-    description: '심방 대상자 제거할 교인 ID 들',
-    isArray: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @TransformNumberArray()
-  deleteMemberIds?: number[];*/
+  endDate?: string; //Date;
 
   @ApiProperty({
     description: '심방 대상자 교인 ID',

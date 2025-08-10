@@ -1,5 +1,5 @@
 import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
-import { EducationEnrollmentModel } from '../../../management/educations/entity/education-enrollment.entity';
+import { EducationEnrollmentModel } from '../../../educations/education-enrollment/entity/education-enrollment.entity';
 
 export class EducationHistoryPaginationResultDto extends BaseOffsetPaginationResponseDto<EducationEnrollmentModel> {
   constructor(
@@ -8,7 +8,7 @@ export class EducationHistoryPaginationResultDto extends BaseOffsetPaginationRes
     public readonly count: number,
     public readonly page: number,
     public readonly totalPage: number,
-    public readonly inProgressCount: number,
+    //public readonly inProgressCount: number,
     public readonly completedCount: number,
     public readonly incompleteCount: number,
   ) {

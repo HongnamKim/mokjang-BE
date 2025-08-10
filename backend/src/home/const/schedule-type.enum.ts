@@ -1,5 +1,6 @@
 export enum ScheduleType {
   VISITATION = 'visitation',
   TASK = 'task',
-  EDUCATION = 'education',
+  EDUCATION_SESSION = 'educationSession',
+  EDUCATION_TERM = 'educationTerm',
 }
