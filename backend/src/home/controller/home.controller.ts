@@ -19,7 +19,7 @@ import {
   ApiGetNewMemberDetail,
   ApiGetNewMemberSummary,
 } from '../swagger/home.swagger';
-import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
@@ -54,7 +54,7 @@ export class HomeController {
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMyInChargedSchedules(
     @Query() dto: GetMyInChargedSchedulesDto,
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
   ) {
     if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
       throw new BadRequestException('from, to 에러');
@@ -67,7 +67,7 @@ export class HomeController {
   @Get('reports')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMyScheduleReports(
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
     @Query() dto: GetMyReportsDto,
   ) {
     if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
@@ -83,7 +83,7 @@ export class HomeController {
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getLowWorshipAttendanceMembers(
     @PermissionChurch() church: ChurchModel,
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
     @Query() dto: GetLowWorshipAttendanceMembersDto,
   ) {
     return this.homeService.getLowWorshipAttendanceMembers(church, pm, dto);

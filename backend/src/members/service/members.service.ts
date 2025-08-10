@@ -43,6 +43,9 @@ import {
   IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
   IWorshipEnrollmentDomainService,
 } from '../../worship/worship-domain/interface/worship-enrollment-domain.service.interface';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { getHistoryStartDate } from '../../member-history/history-date.utils';
 
 @Injectable()
 export class MembersService {
@@ -148,6 +151,14 @@ export class MembersService {
     await this.churchesDomainService.incrementMemberCount(church, qr);
     church.memberCount++;
 
+    dto.utcRegisteredAt = dto.registeredAt
+      ? fromZonedTime(dto.registeredAt, TIME_ZONE.SEOUL)
+      : getHistoryStartDate(TIME_ZONE.SEOUL);
+
+    dto.utcBirth = dto.birth
+      ? fromZonedTime(dto.birth, TIME_ZONE.SEOUL)
+      : undefined;
+
     const newMember = await this.membersDomainService.createMember(
       church,
       dto,
@@ -185,22 +196,18 @@ export class MembersService {
   }
 
   async updateMember(
-    //churchId: number,
-    //memberId: number,
     church: ChurchModel,
     targetMember: MemberModel,
     dto: UpdateMemberDto,
     qr?: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const targetMember = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );*/
+    dto.utcRegisteredAt = dto.registeredAt
+      ? fromZonedTime(dto.registeredAt, TIME_ZONE.SEOUL)
+      : undefined;
+
+    dto.utcBirth = dto.birth
+      ? fromZonedTime(dto.birth, TIME_ZONE.SEOUL)
+      : undefined;
 
     const updatedMember = await this.membersDomainService.updateMember(
       church,
@@ -215,9 +222,7 @@ export class MembersService {
   // 교인 soft delete
   // 교육 등록도 soft delete
   async softDeleteMember(
-    //churchId: number,
     church: ChurchModel,
-    //memberId: number,
     targetMember: MemberModel,
     qr: QueryRunner,
   ): Promise<DeleteMemberResponseDto> {

@@ -38,34 +38,23 @@ export class MemberFilterService implements IMemberFilterService {
       return { ...this.concealInfo(member), isConcealed: true };
     }
 
-    const memberGroup = await this.groupsDomainService.findGroupModelById(
-      church,
-      member.groupId,
+    const permissionScopeIds = requestManager.permissionScopes.map(
+      (scope) => scope.groupId,
     );
 
-    const memberParentGroups = await this.groupsDomainService.findParentGroups(
-      church,
-      memberGroup,
-    );
+    const possibleGroups =
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        permissionScopeIds,
+      );
 
-    const possibleScopes = memberParentGroups.map(
-      (parentGroup) => parentGroup.id,
-    );
-    possibleScopes.push(member.groupId);
+    const possibleGroupIds = new Set(possibleGroups.map((group) => group.id));
 
-    const possibleScopesSet = new Set(possibleScopes);
-
-    const managerScopes = requestManager.permissionScopes.map(
-      (scope) => scope.group.id,
-    );
-
-    for (const managerScope of managerScopes) {
-      if (possibleScopesSet.has(managerScope)) {
-        return { ...member, isConcealed: false };
-      }
+    if (possibleGroupIds.has(member.groupId)) {
+      return { ...member, isConcealed: false };
+    } else {
+      return { ...this.concealInfo(member), isConcealed: true };
     }
-
-    return { ...this.concealInfo(member), isConcealed: true };
   }
 
   private concealInfo(member: MemberModel) {
@@ -79,9 +68,11 @@ export class MemberFilterService implements IMemberFilterService {
       'name',
       'birth',
       'isLunar',
+      'isLeafMonth',
       'gender',
       'group',
       'groupRole',
+      'ministryGroupRole',
       'officer',
       'ministries',
       'educations',

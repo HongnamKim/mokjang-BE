@@ -27,7 +27,7 @@ import {
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
@@ -61,7 +61,7 @@ export class EducationTermsController {
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postEducationTerms(
-    @PermissionManager() manager: ChurchUserModel,
+    @RequestManager() manager: ChurchUserModel,
     @PermissionChurch() church: ChurchModel,
     @Param('churchId', ParseIntPipe)
     churchId: number,

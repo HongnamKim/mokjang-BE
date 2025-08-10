@@ -23,7 +23,9 @@ export class DummyMembersDomainService implements IDummyMembersDomainService {
 
     return membersRepository.create({
       ...dto,
-      birthdayMMDD: dto.birth?.toISOString().slice(5, 10),
+      birth: dto.utcBirth,
+      registeredAt: dto.utcRegisteredAt,
+      birthdayMMDD: dto.utcBirth?.toISOString().slice(5, 10),
     });
   }
 
