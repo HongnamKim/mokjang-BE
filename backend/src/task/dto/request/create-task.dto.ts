@@ -2,7 +2,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import { TaskModel } from '../../entity/task.entity';
 import {
   IsArray,
-  IsDate,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -17,14 +17,13 @@ import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator
 import { TaskStatus } from '../../const/task-status.enum';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
 import { Transform } from 'class-transformer';
+import { IsDateTime } from '../../../common/decorator/validator/is-date-time.validator';
 
 @SanitizeDto()
 export class CreateTaskDto extends PickType(TaskModel, [
   'parentTaskId',
   'title',
   'status',
-  'startDate',
-  'endDate',
   'content',
   'inChargeId',
 ]) {
@@ -57,17 +56,23 @@ export class CreateTaskDto extends PickType(TaskModel, [
   override status: TaskStatus = TaskStatus.RESERVE;
 
   @ApiProperty({
-    description: '업무 시작 일자',
+    description: '업무 시작 일자 (yyyy-MM-ddTHH:MM:SS)',
   })
-  @IsDate()
-  override startDate: Date;
+  @IsDateString({ strict: true })
+  @IsDateTime('startDate')
+  startDate: string;
+
+  utcStartDate: Date;
 
   @ApiProperty({
-    description: '업무 종료 일자',
+    description: '업무 종료 일자 (yyyy-MM-ddTHH:MM:SS)',
   })
-  @IsDate()
-  @IsAfterDate('taskStartDate')
-  override endDate: Date;
+  @IsDateString({ strict: true })
+  @IsDateTime('endDate')
+  @IsAfterDate('startDate')
+  endDate: string;
+
+  utcEndDate: Date;
 
   @ApiProperty({
     description: '업무 내용',
