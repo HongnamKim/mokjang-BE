@@ -18,6 +18,7 @@ export class ScheduleDto {
   educationTermId?: number;
   educationId?: number;
   educationName?: string;
+  educationTerm?: number;
 
   constructor(
     id: number,
@@ -33,6 +34,7 @@ export class ScheduleDto {
     educationTermId?: number,
     educationId?: number,
     educationName?: string,
+    educationTerm?: number,
   ) {
     this.id = id;
     this.type = type;
@@ -43,5 +45,6 @@ export class ScheduleDto {
     this.educationTermId = educationTermId;
     this.educationId = educationId;
     this.educationName = educationName;
+    this.educationTerm = educationTerm;
   }
 }

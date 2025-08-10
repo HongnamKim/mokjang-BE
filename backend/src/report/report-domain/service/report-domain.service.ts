@@ -12,6 +12,7 @@ import { VisitationReportModel } from '../../visitation-report/entity/visitation
 import { EducationSessionReportModel } from '../../education-report/entity/education-session-report.entity';
 import { EducationTermReportModel } from '../../education-report/entity/education-term-report.entity';
 import { ReportType } from '../../base-report/const/report-type.enum';
+import { GetMyReportsDto } from '../../../home/dto/request/get-my-reports.dto';
 
 @Injectable()
 export class ReportDomainService implements IReportDomainService {
@@ -28,6 +29,7 @@ export class ReportDomainService implements IReportDomainService {
     receiver: MemberModel,
     from: Date,
     to: Date,
+    dto: GetMyReportsDto,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -45,20 +47,20 @@ export class ReportDomainService implements IReportDomainService {
     const startDateCoalesce =
       'COALESCE(task.startDate, visitation.startDate, educationSession.startDate, term.startDate)';
     const endDateCoalesce =
-      'COALESCE(task.endDate, visitation.endDate, educationSession.endDate, term.endDate)';
+      'COALESCE(task.endDate, visitation.endDate, educationSession.endDate, term.startDate)';
 
     reportsQb
       .addSelect(startDateCoalesce, 'start_date')
       .addSelect(endDateCoalesce, 'end_date')
       .andWhere(`${startDateCoalesce} <= :to`, { to })
       .andWhere(`${endDateCoalesce} >= :from`, { from })
-      .orderBy('end_date', 'ASC', 'NULLS LAST');
+      .orderBy('end_date', 'ASC', 'NULLS LAST')
+      .limit(dto.take)
+      .offset(dto.take * (dto.page - 1));
 
     const { entities, raw } = await reportsQb.getRawAndEntities();
 
-    return entities;
-
-    /*return entities.map((report, index) => {
+    return entities.map((report, index) => {
       if (report instanceof TaskReportModel) {
         return new ScheduleReportDto(
           report.id,
@@ -91,10 +93,6 @@ export class ReportDomainService implements IReportDomainService {
         report instanceof EducationSessionReportModel &&
         raw[index].report_reportType === ReportType.EDUCATION_SESSION
       ) {
-        console.log(raw[index].report_reportType);
-        console.log(raw[index]);
-        console.log(report);
-
         return new ScheduleReportDto(
           report.id,
           ScheduleType.EDUCATION_SESSION,
@@ -130,12 +128,13 @@ export class ReportDomainService implements IReportDomainService {
             undefined,
             report.educationId,
             report.educationTerm.educationName,
+            report.educationTerm.term,
           ),
         );
       } else {
         throw new InternalServerErrorException();
       }
-    });*/
+    });
   }
 
   private createQuery(

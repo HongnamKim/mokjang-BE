@@ -77,6 +77,7 @@ import {
   IREPORT_DOMAIN_SERVICE,
   IReportDomainService,
 } from '../../report/report-domain/interface/report-domain.service.interface';
+import { GetMySchedulesResponseDto } from '../dto/response/get-my-schedules-response.dto';
 
 @Injectable()
 export class HomeService {
@@ -281,7 +282,7 @@ export class HomeService {
 
     schedules.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 
-    return schedules;
+    return new GetMySchedulesResponseDto(dto.range, from, to, schedules);
   }
 
   async getMyReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
@@ -297,9 +298,14 @@ export class HomeService {
           ]
         : [defaultRange.from, defaultRange.to];
 
-    console.log(from, to);
+    const reports = await this.reportDomainService.paginateReports(
+      receiver,
+      from,
+      to,
+      dto,
+    );
 
-    return this.reportDomainService.paginateReports(receiver, from, to);
+    return new GetMyScheduleReportsResponseDto(reports);
   }
 
   async getMyScheduleReports(pm: ChurchUserModel, dto: GetMyReportsDto) {
