@@ -30,8 +30,6 @@ import {
 import { MemberException } from '../../exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
-import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { GroupModel } from '../../../management/groups/entity/group.entity';
 import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
@@ -435,8 +433,10 @@ export class MembersDomainService implements IMembersDomainService {
 
     return membersRepository.save({
       ...dto,
-      birthdayMMDD: dto.birth
-        ? dto.birth.toISOString().slice(5, 10)
+      registeredAt: dto.utcRegisteredAt,
+      birth: dto.utcBirth,
+      birthdayMMDD: dto.utcBirth
+        ? dto.utcBirth.toISOString().slice(5, 10)
         : undefined,
       churchId: church.id,
     });
@@ -471,8 +471,10 @@ export class MembersDomainService implements IMembersDomainService {
       },
       {
         ...dto,
-        birthdayMMDD: dto.birth
-          ? dto.birth.toISOString().slice(5, 10)
+        registeredAt: dto.utcRegisteredAt,
+        birth: dto.utcBirth,
+        birthdayMMDD: dto.utcBirth
+          ? dto.utcBirth.toISOString().slice(5, 10)
           : undefined,
       },
     );
@@ -503,71 +505,6 @@ export class MembersDomainService implements IMembersDomainService {
 
     return result;
   }
-
-  /*async startMemberOfficer(
-    member: MemberModel,
-    officer: OfficerModel,
-    officerStartDate: Date,
-    officerStartChurch: string,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    return membersRepository.update(
-      { id: member.id },
-      {
-        officerId: officer.id,
-        officerStartDate,
-        officerStartChurch,
-      },
-    );
-  }*/
-
-  /*async endMemberOfficer(member: MemberModel, qr: QueryRunner) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    return membersRepository.update(
-      { id: member.id },
-      {
-        officerId: null,
-        officerStartDate: null,
-        officerStartChurch: null,
-      },
-    );
-  }*/
-
-  /*async startMemberGroup(
-    member: MemberModel,
-    group: GroupModel,
-    groupRole: GroupRole,
-    qr: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    return membersRepository.update(
-      {
-        id: member.id,
-      },
-      {
-        group,
-        groupRole,
-      },
-    );
-  }*/
-
-  /*async endMemberGroup(member: MemberModel, qr: QueryRunner) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    return membersRepository.update(
-      {
-        id: member.id,
-      },
-      {
-        groupId: null,
-        groupRole: GroupRole.NONE,
-      },
-    );
-  }*/
 
   async updateGroupRole(
     member: MemberModel,

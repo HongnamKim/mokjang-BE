@@ -22,7 +22,7 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
 import { MemberReadGuard } from '../guard/member-read.guard';
 import { MemberWriteGuard } from '../guard/member-write.guard';
-import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { TargetMember } from '../decorator/target-member.decorator';
 import { MemberModel } from '../entity/member.entity';
@@ -41,7 +41,7 @@ export class MembersController {
   getMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMemberDto,
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
   ) {
     return this.membersService.getMembers(churchId, pm, dto);
   }
@@ -71,7 +71,7 @@ export class MembersController {
   getMemberById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
   ) {
     return this.membersService.getMemberById(churchId, memberId, pm);
   }

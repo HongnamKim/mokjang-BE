@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsEnum,
   IsIn,
   IsNotEmpty,
@@ -24,16 +25,23 @@ import { MarriageOptions } from '../../member-domain/const/marriage-options.cons
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { getHistoryStartDate } from '../../../member-history/history-date.utils';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { Transform } from 'class-transformer';
 
 export class CreateMemberDto {
   @ApiProperty({
     name: 'registeredAt',
-    description: '교회 등록일자',
-    default: new Date(),
+    description: '교회 등록일자 (YYYY-MM-DD)',
+    default: new Date().toISOString().slice(0, 10),
   })
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('registeredAt')
   @IsOptional()
-  registeredAt?: Date;
+  registeredAt?: string;
+
+  utcRegisteredAt?: Date;
 
   @ApiProperty({
     description: '프로필 이미지 url',
@@ -119,13 +127,16 @@ export class CreateMemberDto {
 
   @ApiProperty({
     name: 'birth',
-    description: '생년월일',
+    description: '생년월일 (YYYY-MM-DD)',
     example: '2000-01-01',
     required: false,
   })
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('birth')
   @IsOptional()
-  birth?: Date;
+  birth?: string;
+
+  utcBirth?: Date;
 
   @ApiProperty({
     name: 'gender',
@@ -218,17 +229,19 @@ export class CreateMemberDto {
 
   @ApiProperty({
     name: 'vehicleNumber',
-    description: '차량번호 4자리',
-    example: ['1234', '5432'],
+    description: '차량번호',
+    example: ['1234', '141부5432'],
     type: 'array',
     required: false,
   })
+  @Transform(({ value }) => value.map((item) => item.replace(' ', '')))
   @IsArray()
+  @ArrayUnique()
   @ArrayMaxSize(3)
   @IsString({ each: true })
-  @Length(4, 4, { each: true })
+  @Length(4, 10, { each: true })
   @IsNotEmpty({ each: true })
-  @IsValidVehicleNumber()
+  //@IsValidVehicleNumber()
   @IsOptional()
   vehicleNumber?: string[];
 

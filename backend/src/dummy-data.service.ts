@@ -57,11 +57,11 @@ export class DummyDataService {
 
       return this.dummyMembersDomainService.createDummyMemberModel({
         churchId: church.id,
-        registeredAt,
+        utcRegisteredAt: registeredAt,
         name,
         mobilePhone,
         isLunar,
-        birth,
+        utcBirth: birth,
         gender,
         address,
         detailAddress,

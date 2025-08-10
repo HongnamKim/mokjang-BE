@@ -30,7 +30,7 @@ import { AddReceiverDto } from '../dto/receiever/add-receiver.dto';
 import { DeleteReceiverDto } from '../dto/receiever/delete-receiver.dto';
 import { VisitationReadGuard } from '../guard/visitation-read.guard';
 import { VisitationWriteGuard } from '../guard/visitation-write.guard';
-import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
@@ -55,7 +55,7 @@ export class VisitationController {
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postVisitationReservation(
-    @PermissionManager() manager: ChurchUserModel,
+    @RequestManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateVisitationDto,
     @QueryRunner() qr: QR,
