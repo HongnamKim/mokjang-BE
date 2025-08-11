@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { FamilyRelationException } from '../../const/exception/family-relation.exception';
-import { GenderEnum } from '../../../members/const/enum/gender.enum';
+import { Gender } from '../../../members/const/enum/gender.enum';
 import {
   GenderBasedRelations,
   NeutralRelations,
@@ -203,7 +203,7 @@ export class FamilyRelationDomainService
     }
 
     if (GenderBasedRelations[relation]) {
-      return me.gender === GenderEnum.male
+      return me.gender === Gender.MALE
         ? GenderBasedRelations[relation][0]
         : GenderBasedRelations[relation][1];
     }

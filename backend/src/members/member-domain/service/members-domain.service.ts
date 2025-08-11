@@ -19,6 +19,7 @@ import {
   Not,
   QueryRunner,
   Repository,
+  SelectQueryBuilder,
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -46,6 +47,9 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
+import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
+import { SortColumn } from '../../const/enum/list/sort-column.enum';
+import { DisplayColumn } from '../../const/enum/list/display-column.enum';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -591,5 +595,204 @@ export class MembersDomainService implements IMembersDomainService {
       take: dto.take,
       skip: dto.take * (dto.page - 1),
     });
+  }
+
+  async getMemberListWithPagination(
+    church: ChurchModel,
+    dto: GetMemberListDto,
+  ) {
+    const repository = this.getMembersRepository();
+
+    const { cursor, limit, displayColumns } = dto;
+
+    const query = repository
+      .createQueryBuilder('member')
+      .select([
+        'member.id',
+        'member.name',
+        'member.profileImageUrl',
+        'member.groupRole',
+        'member.ministryGroupRole',
+      ])
+      .where('member.churchId = :churchId', { churchId: church.id });
+
+    // 사용자가 선택한 컬럼 SELECT
+    displayColumns.forEach((column) => {
+      switch (column) {
+        case DisplayColumn.OFFICER:
+          query
+            .leftJoin('member.officer', 'officer')
+            .addSelect(['officer.id', 'officer.name']);
+          break;
+        case DisplayColumn.GROUP:
+          query
+            .leftJoin('member.group', 'group')
+            .addSelect(['group.id', 'group.name']);
+          break;
+        case DisplayColumn.BIRTH:
+          query.addSelect([
+            'member.birth',
+            'member.isLunar',
+            'member.isLeafMonth',
+          ]);
+          break;
+        default:
+          query.addSelect(`member.${column}`);
+      }
+    });
+
+    // 정렬에 필요한 컬럼이 SELECT 되지 않았다면 추가
+    switch (dto.sortBy) {
+      case SortColumn.OFFICER:
+        if (!displayColumns.includes(DisplayColumn.OFFICER))
+          query
+            .leftJoin('member.officer', 'officer')
+            .addSelect(['officer.id', 'officer.name']);
+        break;
+      case SortColumn.GROUP:
+        if (!displayColumns.includes(DisplayColumn.GROUP))
+          query
+            .leftJoin('member.group', 'group')
+            .addSelect(['group.id', 'group.name']);
+        break;
+      default:
+        const sortColumn = this.getSortColumnPath(dto.sortBy);
+        if (!sortColumn.startsWith('member.')) break;
+        query.addSelect(sortColumn);
+    }
+
+    // 정렬 적용 (1순위: 사용자 지정(기본값-등록일자), 2순위: ID)
+    this.applySorting(query, dto.sortBy, dto.sortDirection);
+
+    // 커서가 있으면 해당 위치부터 조회
+    if (cursor) {
+      this.applyCursorPagination(query, cursor, dto.sortBy, dto.sortDirection);
+    }
+
+    // limit + 1개를 조회해서 다음 페이지 존재 여부 확인
+    const items = await query.limit(limit + 1).getMany();
+
+    const hasMore = items.length > limit;
+    if (hasMore) {
+      items.pop(); // 추가로 가져온 마지막 항목 제거
+    }
+
+    // 커서 생성
+    const nextCursor =
+      hasMore && items.length > 0
+        ? this.encodeCursor(items[items.length - 1], dto.sortBy)
+        : undefined;
+
+    return {
+      items,
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  private applySorting(
+    query: SelectQueryBuilder<MemberModel>,
+    sortBy: SortColumn,
+    sortDirection: 'ASC' | 'DESC',
+  ) {
+    switch (sortBy) {
+      case SortColumn.OFFICER:
+        query.orderBy('officer.name', sortDirection);
+        break;
+      case SortColumn.GROUP:
+        query.orderBy('group.name', sortDirection);
+        break;
+      default:
+        query.orderBy(`member.${sortBy}`, sortDirection);
+        break;
+    }
+
+    query.addOrderBy('member.id', 'ASC');
+  }
+
+  private applyCursorPagination(
+    query: SelectQueryBuilder<MemberModel>,
+    cursor: string,
+    sortBy: SortColumn,
+    sortDirection: 'ASC' | 'DESC',
+  ) {
+    const decodedCursor = this.decodeCursor(cursor);
+    // 커서가 없는 경우
+    if (!decodedCursor) return;
+
+    // 커서와 정렬 조건이 다른 경우
+    if (decodedCursor.column !== sortBy) return;
+
+    const { id, value } = decodedCursor;
+
+    const column = this.getSortColumnPath(sortBy);
+
+    // 마지막 교인의 정렬 조건 값이 null 인 경우 (그룹명, 직분명)
+    if (value === null) {
+      if (sortDirection === 'ASC') {
+        query.where(
+          `(${column} IS NOT NULL OR (${column} IS NULL AND member.id > :id))`,
+          { id },
+        );
+      } else {
+        query.where(`member.id > :id`, { id });
+      }
+    } else {
+      if (sortDirection === 'ASC') {
+        query.where(
+          `(${column} > :value OR (${column} = :value AND member.id > :id) OR (${column} IS NULL))`,
+          { value, id },
+        );
+      } else {
+        query.where(
+          `(${column} < :value OR (${column} = :value AND member.id > :id))`,
+          { value, id },
+        );
+      }
+    }
+  }
+
+  private getSortColumnPath(sortBy: SortColumn): string {
+    switch (sortBy) {
+      case SortColumn.OFFICER:
+        return 'officer.name';
+      case SortColumn.GROUP:
+        return 'group.name';
+      default:
+        return `member.${sortBy}`;
+    }
+  }
+
+  private encodeCursor(member: MemberModel, sortBy: SortColumn) {
+    let value: any;
+
+    switch (sortBy) {
+      case SortColumn.OFFICER:
+        value = member.officer?.name || null;
+        break;
+      case SortColumn.GROUP:
+        value = member.group?.name || null;
+        break;
+      default:
+        value = member[sortBy];
+        break;
+    }
+
+    const cursorData = {
+      id: member.id,
+      value,
+      column: sortBy,
+    };
+
+    return Buffer.from(JSON.stringify(cursorData)).toString('base64');
+  }
+
+  private decodeCursor(cursor: string) {
+    try {
+      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
   }
 }

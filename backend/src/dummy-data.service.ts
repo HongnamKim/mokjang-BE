@@ -13,9 +13,9 @@ import {
   incheonRoads,
   occupations,
 } from './const/dummy-data/dummy-member.const';
-import { GenderEnum } from './members/const/enum/gender.enum';
-import { MarriageOptions } from './members/member-domain/const/marriage-options.const';
-import { BaptismEnum } from './members/const/enum/baptism.enum';
+import { Gender } from './members/const/enum/gender.enum';
+import { Marriage } from './members/const/enum/marriage.enum';
+import { Baptism } from './members/const/enum/baptism.enum';
 import {
   IDUMMY_MEMBERS_DOMAIN_SERVICE,
   IDummyMembersDomainService,
@@ -123,7 +123,7 @@ export class DummyDataService {
   private getRandomGender() {
     const num = Math.random();
 
-    return num > 0.5 ? GenderEnum.male : GenderEnum.female;
+    return num > 0.5 ? Gender.MALE : Gender.FEMALE;
   }
 
   private generateRandomAddress(): string {
@@ -161,19 +161,17 @@ export class DummyDataService {
   }
 
   private generateRandomMarriage() {
-    return Math.random() > 0.6
-      ? MarriageOptions.Married
-      : MarriageOptions.Single;
+    return Math.random() > 0.6 ? Marriage.MARRIED : Marriage.SINGLE;
   }
 
   private generateRandomBaptism() {
     const baptisms = [
-      BaptismEnum.baptized,
-      BaptismEnum.immersionBaptism,
-      BaptismEnum.infantBaptism,
-      BaptismEnum.confirmation,
-      BaptismEnum.catechumenate,
-      BaptismEnum.default,
+      Baptism.BAPTIZED,
+      Baptism.IMMERSION_BAPTISM,
+      Baptism.INFANT_BAPTISM,
+      Baptism.CONFIRMATION,
+      Baptism.CATECHUMENATE,
+      Baptism.NONE,
     ];
 
     return baptisms[Math.floor(Math.random() * baptisms.length)];

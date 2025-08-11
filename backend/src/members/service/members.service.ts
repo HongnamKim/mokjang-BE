@@ -46,6 +46,7 @@ import {
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { getHistoryStartDate } from '../../member-history/history-date.utils';
+import { GetMemberListDto } from '../dto/list/get-member-list.dto';
 
 @Injectable()
 export class MembersService {
@@ -274,5 +275,29 @@ export class MembersService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
+  }
+
+  async getMemberList(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    dto: GetMemberListDto,
+  ) {
+    const result = await this.membersDomainService.getMemberListWithPagination(
+      church,
+      dto,
+    );
+
+    return {
+      items: result.items,
+      /*items: result.items.map((member) => ({
+        id: member.id,
+        name: member.name,
+        profileImage: member.profileImage,
+        registeredAt: member.registeredAt,
+        birth: member.birth,
+      })),*/
+      nextCursor: result.nextCursor,
+      hasMore: result.hasMore,
+    };
   }
 }
