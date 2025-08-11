@@ -11,14 +11,14 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { GenderEnum } from '../../const/enum/gender.enum';
-import { BaptismEnum } from '../../const/enum/baptism.enum';
+import { Gender } from '../../const/enum/gender.enum';
+import { Baptism } from '../../const/enum/baptism.enum';
 import { GetMemberOrderEnum } from '../../const/enum/get-member-order.enum';
 import {
   TransformNumberArray,
   TransformStringArray,
 } from '../../../common/decorator/transformer/transform-array';
-import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
+import { Marriage } from '../../const/enum/marriage.enum';
 import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 
@@ -214,14 +214,14 @@ export class GetMemberDto {
 
   @ApiProperty({
     description: '결혼 여부',
-    enum: MarriageOptions,
+    enum: Marriage,
     isArray: true,
     required: false,
   })
   @TransformStringArray()
-  @IsEnum(MarriageOptions, { each: true })
+  @IsEnum(Marriage, { each: true })
   @IsOptional()
-  marriage?: MarriageOptions[];
+  marriage?: Marriage[];
 
   @ApiProperty({
     name: 'birthAfter',
@@ -243,14 +243,14 @@ export class GetMemberDto {
 
   @ApiProperty({
     description: '성별',
-    enum: GenderEnum,
+    enum: Gender,
     isArray: true,
     required: false,
   })
   @TransformStringArray()
-  @IsEnum(GenderEnum, { each: true })
+  @IsEnum(Gender, { each: true })
   @IsOptional()
-  gender?: GenderEnum[];
+  gender?: Gender[];
 
   @ApiProperty({
     name: 'school',
@@ -369,12 +369,12 @@ export class GetMemberDto {
   @ApiProperty({
     name: 'baptism',
     description: '신급',
-    enum: BaptismEnum,
+    enum: Baptism,
     isArray: true,
     required: false,
   })
   @TransformStringArray()
-  @IsEnum(BaptismEnum, { each: true })
+  @IsEnum(Baptism, { each: true })
   @IsOptional()
-  baptism?: BaptismEnum[];
+  baptism?: Baptism[];
 }

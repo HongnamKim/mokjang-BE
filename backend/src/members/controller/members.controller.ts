@@ -30,6 +30,8 @@ import { PermissionChurch } from '../../permission/decorator/permission-church.d
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { GetMemberListDto } from '../dto/list/get-member-list.dto';
+import { DisplayColumn } from '../const/enum/list/display-column.enum';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -55,6 +57,27 @@ export class MembersController {
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.createMember(churchId, dto, qr);
+  }
+
+  @Get('v2')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getMemberList(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @PermissionChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
+    @Query() query: GetMemberListDto,
+  ) {
+    if (query.displayColumns.length === 0) {
+      query.displayColumns = [
+        DisplayColumn.OFFICER,
+        DisplayColumn.BIRTH,
+        DisplayColumn.GROUP,
+        DisplayColumn.MOBILE_PHONE,
+        DisplayColumn.ADDRESS,
+      ];
+    }
+
+    return this.membersService.getMemberList(church, requestManager, query);
   }
 
   @Get('simple')
