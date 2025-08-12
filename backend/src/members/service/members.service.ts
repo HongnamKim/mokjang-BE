@@ -294,15 +294,9 @@ export class MembersService {
     );
 
     return {
-      items: result.items,
-      /*items: result.items.map((member) => ({
-        id: member.id,
-        name: member.name,
-        profileImage: member.profileImage,
-        registeredAt: member.registeredAt,
-        birth: member.birth,
-      })),*/
+      data: result.items,
       nextCursor: result.nextCursor,
+      count: result.items.length,
       hasMore: result.hasMore,
     };
   }
