@@ -17,6 +17,10 @@ import {
 } from '../../members/service/interface/member-filter.service.interface';
 import { HttpMethod } from '../../common/const/http-method.enum';
 import { PermissionScopeException } from '../exception/permission-scope.exception';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 
 export function createScopeGuard(
   excludeHttpMethods: HttpMethod[],
@@ -28,6 +32,8 @@ export function createScopeGuard(
       private readonly membersDomainService: IMembersDomainService,
       @Inject(IMEMBER_FILTER_SERVICE)
       private readonly memberFilterService: IMemberFilterService,
+      @Inject(IGROUPS_DOMAIN_SERVICE)
+      private readonly groupsDomainService: IGroupsDomainService,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -48,10 +54,22 @@ export function createScopeGuard(
         memberId,
       );
 
+      const permissionScopeIds = requestManager.permissionScopes.map(
+        (scope) => scope.group.id,
+      );
+
+      const possibleGroups =
+        await this.groupsDomainService.findGroupAndDescendantsByIds(
+          church,
+          permissionScopeIds,
+        );
+
+      const scopeGroupIds = possibleGroups.map((group) => group.id);
+
       const concealedMember = await this.memberFilterService.filterMember(
-        church,
         requestManager,
         targetMember,
+        scopeGroupIds,
       );
 
       if (concealedMember.isConcealed) {

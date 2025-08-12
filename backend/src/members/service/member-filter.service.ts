@@ -6,7 +6,6 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
-import { ChurchModel } from '../../churches/entity/church.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { ConcealedMemberDto } from '../dto/response/get-member-response.dto';
 
@@ -18,9 +17,9 @@ export class MemberFilterService implements IMemberFilterService {
   ) {}
 
   async filterMember(
-    church: ChurchModel,
     requestManager: ChurchUserModel,
     member: MemberModel,
+    scopeGroupIds: number[],
   ): Promise<ConcealedMemberDto> {
     if (requestManager.memberId === member.id) {
       return { ...member, isConcealed: false };
@@ -38,17 +37,7 @@ export class MemberFilterService implements IMemberFilterService {
       return { ...this.concealInfo(member), isConcealed: true };
     }
 
-    const permissionScopeIds = requestManager.permissionScopes.map(
-      (scope) => scope.groupId,
-    );
-
-    const possibleGroups =
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        permissionScopeIds,
-      );
-
-    const possibleGroupIds = new Set(possibleGroups.map((group) => group.id));
+    const possibleGroupIds = new Set(scopeGroupIds);
 
     if (possibleGroupIds.has(member.groupId)) {
       return { ...member, isConcealed: false };
@@ -76,6 +65,7 @@ export class MemberFilterService implements IMemberFilterService {
       'officer',
       'ministries',
       'educations',
+      'vehicleNumber',
     ]);
 
     for (const key of Object.keys(member)) {
@@ -89,13 +79,13 @@ export class MemberFilterService implements IMemberFilterService {
   }
 
   async filterMembers(
-    church: ChurchModel,
     requestManager: ChurchUserModel,
     members: MemberModel[],
+    scopeGroupIds: number[],
   ) {
     return Promise.all(
       members.map((member) =>
-        this.filterMember(church, requestManager, member),
+        this.filterMember(requestManager, member, scopeGroupIds),
       ),
     );
   }

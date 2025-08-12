@@ -106,14 +106,25 @@ export class MembersService {
       qr,
     );
 
+    const permissionScopeIds = requestManager.permissionScopes.map(
+      (scope) => scope.groupId,
+    );
+
+    const possibleGroups =
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        permissionScopeIds,
+      );
+
+    const possibleGroupIds = possibleGroups.map((group) => group.id);
+
     const filteredMember = await this.memberFilterService.filterMembers(
-      church,
       requestManager,
       data,
+      possibleGroupIds,
     );
 
     return new MemberPaginationResponseDto(
-      //data,
       filteredMember,
       totalCount,
       data.length,
@@ -139,10 +150,12 @@ export class MembersService {
       qr,
     );
 
+    const scopeGroupIds = await this.getScopeGroupIds(church, requestManager);
+
     const filteredMember = await this.memberFilterService.filterMember(
-      church,
       requestManager,
       member,
+      scopeGroupIds,
     );
 
     return new GetMemberResponseDto(filteredMember);
@@ -233,16 +246,6 @@ export class MembersService {
     targetMember: MemberModel,
     qr: QueryRunner,
   ): Promise<DeleteMemberResponseDto> {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const targetMember = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );*/
-
     // 교인 삭제
     await this.membersDomainService.deleteMember(church, targetMember, qr);
 
@@ -293,11 +296,39 @@ export class MembersService {
       dto,
     );
 
+    const possibleGroupIds = await this.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMembers = await this.memberFilterService.filterMembers(
+      requestManager,
+      result.items,
+      possibleGroupIds,
+    );
+
     return {
-      data: result.items,
+      data: filteredMembers,
       nextCursor: result.nextCursor,
       count: result.items.length,
       hasMore: result.hasMore,
     };
+  }
+
+  private async getScopeGroupIds(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+  ) {
+    const permissionScopeIds = requestManager.permissionScopes.map(
+      (scope) => scope.group.id,
+    );
+
+    const possibleGroups =
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        permissionScopeIds,
+      );
+
+    return possibleGroups.map((group) => group.id);
   }
 }
