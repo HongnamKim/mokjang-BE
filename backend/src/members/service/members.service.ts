@@ -47,6 +47,10 @@ import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { getHistoryStartDate } from '../../member-history/history-date.utils';
 import { GetMemberListDto } from '../dto/list/get-member-list.dto';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 
 @Injectable()
 export class MembersService {
@@ -68,6 +72,8 @@ export class MembersService {
 
     @Inject(IMEMBER_FILTER_SERVICE)
     private readonly memberFilterService: IMemberFilterService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
   async getMembers(

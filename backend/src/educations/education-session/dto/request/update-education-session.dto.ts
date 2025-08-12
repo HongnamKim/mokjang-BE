@@ -42,7 +42,7 @@ export class UpdateEducationSessionDto {
   @IsOptionalNotNull()
   @IsDateString({ strict: true })
   @IsDateTime('startDate')
-  startDate?: Date;
+  startDate?: string;
 
   utcStartDate: Date | undefined;
 
@@ -54,7 +54,7 @@ export class UpdateEducationSessionDto {
   @IsDateString({ strict: true })
   @IsDateTime('endDate')
   @IsAfterDate('startDate')
-  endDate?: Date;
+  endDate?: string;
 
   utcEndDate: Date | undefined;
 
