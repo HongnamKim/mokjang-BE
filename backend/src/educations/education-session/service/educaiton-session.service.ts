@@ -303,9 +303,12 @@ export class EducationSessionService {
       }
     }
 
-    dto.utcStartDate =
-      dto.startDate && fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
-    dto.utcEndDate = dto.endDate && fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
+    dto.utcStartDate = dto.startDate
+      ? fromZonedTime(dto.startDate, TIME_ZONE.SEOUL)
+      : undefined;
+    dto.utcEndDate = dto.endDate
+      ? fromZonedTime(dto.endDate, TIME_ZONE.SEOUL)
+      : undefined;
 
     await this.educationSessionDomainService.updateEducationSession(
       targetSession,

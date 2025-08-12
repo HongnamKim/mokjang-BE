@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MemberModel } from '../../entity/member.entity';
 import {
   Between,
+  Brackets,
   FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsSelect,
@@ -21,6 +22,7 @@ import {
   Repository,
   SelectQueryBuilder,
   UpdateResult,
+  WhereExpressionBuilder,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetMemberDto } from '../../dto/request/get-member.dto';
@@ -50,6 +52,13 @@ import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
 import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
 import { SortColumn } from '../../const/enum/list/sort-column.enum';
 import { DisplayColumn } from '../../const/enum/list/display-column.enum';
+import { MarriageStatusFilter } from '../../const/enum/list/marriage-status-filter.enum';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import {
+  getFromDate,
+  getToDate,
+} from '../../../member-history/history-date.utils';
+import { MembersService } from '../../service/members.service';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -661,6 +670,9 @@ export class MembersDomainService implements IMembersDomainService {
         query.addSelect(sortColumn);
     }
 
+    this.applyFilters(query, dto);
+    this.applySearch(query, dto.search);
+
     // 정렬 적용 (1순위: 사용자 지정(기본값-등록일자), 2순위: ID)
     this.applySorting(query, dto.sortBy, dto.sortDirection);
 
@@ -688,6 +700,165 @@ export class MembersDomainService implements IMembersDomainService {
       nextCursor,
       hasMore,
     };
+  }
+
+  private applySearch(query: SelectQueryBuilder<MemberModel>, search?: string) {
+    if (!search || search.length < 2) return;
+
+    const searchWithoutSpace = search.replaceAll(' ', '');
+    const pattern = `%${searchWithoutSpace}%`;
+
+    const aliases = query.expressionMap.aliases.map((a) => a.name);
+    if (!aliases.includes('officer')) {
+      query.leftJoin('member.officer', 'officer');
+    }
+    if (!aliases.includes('group')) {
+      query.leftJoin('member.group', 'group');
+    }
+
+    query.andWhere(
+      new Brackets((qb) => {
+        // 텍스트 필드 검색
+        this.addSearchCondition(qb, 'member.name', pattern);
+        this.addSearchCondition(qb, 'member.address', pattern);
+        this.addSearchCondition(qb, 'member.school', pattern);
+        this.addSearchCondition(qb, 'member.occupation', pattern);
+        this.addSearchCondition(qb, 'officer.name', pattern);
+        this.addSearchCondition(qb, 'group.name', pattern);
+
+        // 차랑 번호 검색
+        qb.orWhere('member."vehicleNumber"::text LIKE :vehiclePattern', {
+          vehiclePattern: pattern,
+        });
+
+        // 전화번호 검색
+        qb.orWhere('member.mobilePhone LIKE :phonePattern', {
+          phonePattern: pattern,
+        }).orWhere('member.homePhone LIKE :homePhonePattern', {
+          homePhonePattern: pattern,
+        });
+      }),
+    );
+  }
+
+  private addSearchCondition(
+    qb: WhereExpressionBuilder,
+    field: string,
+    pattern: string,
+  ) {
+    const paramName = field.replace(/[.]/g, '_') + '_search';
+
+    qb.orWhere(`REPLACE(${field}, ' ', '') LIKE :${paramName}`, {
+      [paramName]: pattern,
+    });
+  }
+
+  private applyFilters(
+    query: SelectQueryBuilder<MemberModel>,
+    filter: GetMemberListDto,
+  ) {
+    // 1. 직분 필터 (OR 조건, NULL 처리)
+    if (filter.officerIds && filter.officerIds.length > 0) {
+      const hasNull = filter.officerIds.includes('null');
+      const realIds = filter.officerIds.filter(
+        (id) => id !== 'null',
+      ) as number[];
+
+      if (hasNull && realIds.length > 0) {
+        query.andWhere(
+          '(member.officerId IN (:...officerIds) OR member.officerId IS NULL)',
+          { officerIds: realIds },
+        );
+      } else if (hasNull) {
+        query.andWhere('(member.officerId IS NULL)');
+      } else if (realIds.length > 0) {
+        query.andWhere('member.officerId IN (:...officerIds)', {
+          officerIds: realIds,
+        });
+      }
+    }
+
+    // 2. 그룹 필터
+    if (filter.groupIds && filter.groupIds.length > 0) {
+      const hasNull = filter.groupIds.includes('null');
+      const realIds = filter.groupIds.filter((id) => id !== 'null') as number[];
+
+      if (hasNull && realIds.length > 0) {
+        query.andWhere(
+          '(member.groupId IN (:...groupIds) OR member.groupId is NULL)',
+          { groupIds: realIds },
+        );
+      } else if (hasNull) {
+        query.andWhere('(member.groupId IS NULL)');
+      } else if (realIds.length > 0) {
+        query.andWhere('member.groupId IN (:...groupIds)', {
+          groupIds: realIds,
+        });
+      }
+    }
+
+    // 3. 결혼 상태 필터 (OR 조건, NULL 처리)
+    if (filter.marriageStatuses && filter.marriageStatuses.length > 0) {
+      const hasNull = filter.marriageStatuses.includes(
+        MarriageStatusFilter.NULL,
+      );
+      const realStatuses = filter.marriageStatuses.filter(
+        (s) => s !== MarriageStatusFilter.NULL,
+      );
+
+      if (hasNull && realStatuses.length > 0) {
+        query.andWhere(
+          '(member.marriage IN (:...marriageStatuses) OR member.marriage IS NULL)',
+          { marriageStatuses: realStatuses },
+        );
+      } else if (hasNull) {
+        query.andWhere('member.marriage IS NULL');
+      } else if (realStatuses.length > 0) {
+        query.andWhere('member.marriage IN (:...marriageStatuses)', {
+          marriageStatuses: realStatuses,
+        });
+      }
+    }
+
+    // 4. 신급 필터
+    if (filter.baptismStatuses && filter.baptismStatuses.length > 0) {
+      query.andWhere('member.baptism IN (:...baptismStatuses)', {
+        baptismStatuses: filter.baptismStatuses,
+      });
+    }
+
+    // 5. 생년월일 범위 필터
+    if (filter.birthFrom) {
+      const birthFrom = getFromDate(filter.birthFrom, TIME_ZONE.SEOUL);
+
+      query.andWhere('member.birth >= :birthFrom', {
+        birthFrom: birthFrom,
+      });
+    }
+    if (filter.birthTo) {
+      const birthTo = getToDate(filter.birthTo, TIME_ZONE.SEOUL);
+
+      query.andWhere('member.birth <= :birthTo', { birthTo });
+    }
+
+    // 6. 등록일 범위 필터
+    if (filter.registeredFrom) {
+      const registeredFrom = getFromDate(
+        filter.registeredFrom,
+        TIME_ZONE.SEOUL,
+      );
+
+      query.andWhere('member.registeredAt >= :registeredFrom', {
+        registeredFrom: registeredFrom,
+      });
+    }
+    if (filter.registeredTo) {
+      const registeredTo = getToDate(filter.registeredTo, TIME_ZONE.SEOUL);
+
+      query.andWhere('member.registeredAt <= :registeredTo', {
+        registeredTo: registeredTo,
+      });
+    }
   }
 
   private applySorting(
@@ -730,21 +901,21 @@ export class MembersDomainService implements IMembersDomainService {
     // 마지막 교인의 정렬 조건 값이 null 인 경우 (그룹명, 직분명)
     if (value === null) {
       if (sortDirection === 'ASC') {
-        query.where(
+        query.andWhere(
           `(${column} IS NOT NULL OR (${column} IS NULL AND member.id > :id))`,
           { id },
         );
       } else {
-        query.where(`member.id > :id`, { id });
+        query.andWhere(`member.id > :id`, { id });
       }
     } else {
       if (sortDirection === 'ASC') {
-        query.where(
+        query.andWhere(
           `(${column} > :value OR (${column} = :value AND member.id > :id) OR (${column} IS NULL))`,
           { value, id },
         );
       } else {
-        query.where(
+        query.andWhere(
           `(${column} < :value OR (${column} = :value AND member.id > :id))`,
           { value, id },
         );
