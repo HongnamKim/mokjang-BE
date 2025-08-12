@@ -1,20 +1,13 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { IMemberFilterService } from './interface/member-filter.service.interface';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { MemberModel } from '../entity/member.entity';
-import {
-  IGROUPS_DOMAIN_SERVICE,
-  IGroupsDomainService,
-} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { ConcealedMemberDto } from '../dto/response/get-member-response.dto';
 
 @Injectable()
 export class MemberFilterService implements IMemberFilterService {
-  constructor(
-    @Inject(IGROUPS_DOMAIN_SERVICE)
-    private readonly groupsDomainService: IGroupsDomainService,
-  ) {}
+  constructor() {}
 
   async filterMember(
     requestManager: ChurchUserModel,
