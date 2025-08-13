@@ -26,10 +26,6 @@ import {
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetMemberDto } from '../../dto/request/get-member.dto';
-import {
-  DefaultMemberRelationOption,
-  DefaultMemberSelectOption,
-} from '../../const/default-find-options.const';
 import { MemberException } from '../../exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
@@ -50,15 +46,14 @@ import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { NewMemberSummaryDto } from '../../../home/dto/new-member-summary.dto';
 import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
-import { SortColumn } from '../../const/enum/list/sort-column.enum';
-import { DisplayColumn } from '../../const/enum/list/display-column.enum';
+import { MemberSortColumn } from '../../const/enum/list/sort-column.enum';
+import { MemberDisplayColumn } from '../../const/enum/list/display-column.enum';
 import { MarriageStatusFilter } from '../../const/enum/list/marriage-status-filter.enum';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import {
   getFromDate,
   getToDate,
 } from '../../../member-history/history-date.utils';
-import { MembersService } from '../../service/members.service';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -238,7 +233,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     const whereOptions: FindOptionsWhere<MemberModel> = {
       churchId: church.id,
-      name: ILike(`%${dto.name}%`),
+      name: dto.name && ILike(`%${dto.name}%`),
       mobilePhone: dto.mobilePhone && ILike(`%${dto.mobilePhone}%`),
     };
 
@@ -296,14 +291,43 @@ export class MembersDomainService implements IMembersDomainService {
   ) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const member = await membersRepository.findOne({
-      where: {
-        id: memberId,
-        churchId: church.id,
-      },
-      relations: DefaultMemberRelationOption,
-      select: DefaultMemberSelectOption,
-    });
+    const member = await membersRepository
+      .createQueryBuilder('member')
+      .leftJoin('member.guidedBy', 'guidedBy')
+      .addSelect(['guidedBy.id', 'guidedBy.name', 'guidedBy.profileImageUrl'])
+      .leftJoin(
+        'member.officerHistory',
+        'officer_history',
+        'officer_history.endDate IS NULL',
+      )
+      .addSelect(['officer_history.id', 'officer_history.startDate'])
+      .leftJoin('officer_history.officer', 'officer_history_officer')
+      .addSelect(['officer_history_officer.id', 'officer_history_officer.name'])
+      .leftJoin(
+        'member.groupHistory',
+        'group_history',
+        'group_history.endDate IS NULL',
+      )
+      .addSelect([
+        'group_history.id',
+        'group_history.groupId',
+        'group_history.startDate',
+      ])
+      .leftJoin('group_history.group', 'group_history_group')
+      .addSelect(['group_history_group.id', 'group_history_group.name'])
+      .leftJoin(
+        'group_history.groupDetailHistory',
+        'group_detail_history',
+        'group_detail_history.endDate IS NULL',
+      )
+      .addSelect([
+        'group_detail_history.id',
+        'group_detail_history.role',
+        'group_detail_history.startDate',
+      ])
+      .where('member.churchId = :churchId', { churchId: church.id })
+      .andWhere('member.id = :memberId', { memberId })
+      .getOne();
 
     if (!member) {
       throw new NotFoundException(MemberException.NOT_FOUND);
@@ -616,29 +640,32 @@ export class MembersDomainService implements IMembersDomainService {
 
     const query = repository
       .createQueryBuilder('member')
+      .leftJoin('member.churchUser', 'churchUser')
       .select([
         'member.id',
         'member.name',
         'member.profileImageUrl',
         'member.groupRole',
         'member.ministryGroupRole',
+        'churchUser.id',
+        'churchUser.role',
       ])
       .where('member.churchId = :churchId', { churchId: church.id });
 
     // 사용자가 선택한 컬럼 SELECT
     displayColumns.forEach((column) => {
       switch (column) {
-        case DisplayColumn.OFFICER:
+        case MemberDisplayColumn.OFFICER:
           query
             .leftJoin('member.officer', 'officer')
             .addSelect(['officer.id', 'officer.name']);
           break;
-        case DisplayColumn.GROUP:
+        case MemberDisplayColumn.GROUP:
           query
             .leftJoin('member.group', 'group')
             .addSelect(['group.id', 'group.name']);
           break;
-        case DisplayColumn.BIRTH:
+        case MemberDisplayColumn.BIRTH:
           query.addSelect([
             'member.birth',
             'member.isLunar',
@@ -652,14 +679,14 @@ export class MembersDomainService implements IMembersDomainService {
 
     // 정렬에 필요한 컬럼이 SELECT 되지 않았다면 추가
     switch (dto.sortBy) {
-      case SortColumn.OFFICER:
-        if (!displayColumns.includes(DisplayColumn.OFFICER))
+      case MemberSortColumn.OFFICER:
+        if (!displayColumns.includes(MemberDisplayColumn.OFFICER))
           query
             .leftJoin('member.officer', 'officer')
             .addSelect(['officer.id', 'officer.name']);
         break;
-      case SortColumn.GROUP:
-        if (!displayColumns.includes(DisplayColumn.GROUP))
+      case MemberSortColumn.GROUP:
+        if (!displayColumns.includes(MemberDisplayColumn.GROUP))
           query
             .leftJoin('member.group', 'group')
             .addSelect(['group.id', 'group.name']);
@@ -863,14 +890,14 @@ export class MembersDomainService implements IMembersDomainService {
 
   private applySorting(
     query: SelectQueryBuilder<MemberModel>,
-    sortBy: SortColumn,
+    sortBy: MemberSortColumn,
     sortDirection: 'ASC' | 'DESC',
   ) {
     switch (sortBy) {
-      case SortColumn.OFFICER:
+      case MemberSortColumn.OFFICER:
         query.orderBy('officer.name', sortDirection);
         break;
-      case SortColumn.GROUP:
+      case MemberSortColumn.GROUP:
         query.orderBy('group.name', sortDirection);
         break;
       default:
@@ -884,7 +911,7 @@ export class MembersDomainService implements IMembersDomainService {
   private applyCursorPagination(
     query: SelectQueryBuilder<MemberModel>,
     cursor: string,
-    sortBy: SortColumn,
+    sortBy: MemberSortColumn,
     sortDirection: 'ASC' | 'DESC',
   ) {
     const decodedCursor = this.decodeCursor(cursor);
@@ -923,25 +950,25 @@ export class MembersDomainService implements IMembersDomainService {
     }
   }
 
-  private getSortColumnPath(sortBy: SortColumn): string {
+  private getSortColumnPath(sortBy: MemberSortColumn): string {
     switch (sortBy) {
-      case SortColumn.OFFICER:
+      case MemberSortColumn.OFFICER:
         return 'officer.name';
-      case SortColumn.GROUP:
+      case MemberSortColumn.GROUP:
         return 'group.name';
       default:
         return `member.${sortBy}`;
     }
   }
 
-  private encodeCursor(member: MemberModel, sortBy: SortColumn) {
+  private encodeCursor(member: MemberModel, sortBy: MemberSortColumn) {
     let value: any;
 
     switch (sortBy) {
-      case SortColumn.OFFICER:
+      case MemberSortColumn.OFFICER:
         value = member.officer?.name || null;
         break;
-      case SortColumn.GROUP:
+      case MemberSortColumn.GROUP:
         value = member.group?.name || null;
         break;
       default:

@@ -51,6 +51,12 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import { MemberCursorPaginationResponseDto } from '../dto/response/member-cursor-pagination-response.dto';
+import { filter } from 'rxjs';
 
 @Injectable()
 export class MembersService {
@@ -69,6 +75,9 @@ export class MembersService {
     private readonly worshipDomainService: IWorshipDomainService,
     @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
     private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
 
     @Inject(IMEMBER_FILTER_SERVICE)
     private readonly memberFilterService: IMemberFilterService,
@@ -149,6 +158,13 @@ export class MembersService {
       memberId,
       qr,
     );
+
+    member.ministryGroupHistory = (
+      await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistoryList(
+        member,
+        { sortDirection: 'DESC', limit: 3 },
+      )
+    ).items;
 
     const scopeGroupIds = await this.getScopeGroupIds(church, requestManager);
 
@@ -307,12 +323,12 @@ export class MembersService {
       possibleGroupIds,
     );
 
-    return {
-      data: filteredMembers,
-      nextCursor: result.nextCursor,
-      count: result.items.length,
-      hasMore: result.hasMore,
-    };
+    return new MemberCursorPaginationResponseDto(
+      filteredMembers,
+      filteredMembers.length,
+      result.nextCursor,
+      result.hasMore,
+    );
   }
 
   private async getScopeGroupIds(

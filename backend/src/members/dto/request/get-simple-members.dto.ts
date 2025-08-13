@@ -47,7 +47,9 @@ export class GetSimpleMembersDto extends BaseOffsetPaginationRequestDto<GetSimpl
 
   @ApiProperty({
     description: '교인 이름',
+    required: false,
   })
+  @IsOptionalNotNull()
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)

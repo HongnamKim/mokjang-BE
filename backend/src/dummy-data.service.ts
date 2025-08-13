@@ -53,7 +53,7 @@ export class DummyDataService {
       const marriage = this.generateRandomMarriage();
       const baptism = this.generateRandomBaptism();
       const vehicleNumber = this.generateRandomVehicleNumbers();
-      const previousChurch = this.generatePreviousChurchName();
+      //const previousChurch = this.generatePreviousChurchName();
 
       return this.dummyMembersDomainService.createDummyMemberModel({
         churchId: church.id,
@@ -69,7 +69,7 @@ export class DummyDataService {
         marriage,
         baptism,
         vehicleNumber,
-        previousChurch,
+        //previousChurch,
       });
     });
 
@@ -201,12 +201,12 @@ export class DummyDataService {
     return Array.from(numbers);
   }
 
-  private generatePreviousChurchName(): string | undefined {
+  /*private generatePreviousChurchName(): string | undefined {
     // 85% 확률로 null 반환
     if (Math.random() > 0.15) {
       return undefined;
     }
 
     return churchNames[Math.floor(Math.random() * churchNames.length)];
-  }
+  }*/
 }

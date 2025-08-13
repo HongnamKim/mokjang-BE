@@ -19,6 +19,7 @@ import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -146,5 +147,5 @@ export interface IMembersDomainService {
   getMemberListWithPagination(
     church: ChurchModel,
     dto: GetMemberListDto,
-  ): Promise<any>;
+  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 }
