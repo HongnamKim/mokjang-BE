@@ -59,6 +59,7 @@ export class MemberFilterService implements IMemberFilterService {
       'ministries',
       'educations',
       'vehicleNumber',
+      'churchUser',
     ]);
 
     for (const key of Object.keys(member)) {

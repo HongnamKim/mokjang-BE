@@ -1,4 +1,4 @@
-import { ChildEntity, Column, Index, ManyToOne } from 'typeorm';
+import { ChildEntity, Column, Index, ManyToOne, OneToMany } from 'typeorm';
 import { MinistryModel } from '../../../../management/ministries/entity/ministry.entity';
 import { MinistryGroupDetailHistoryModel } from '../ministry-group-detail-history.entity';
 
@@ -17,4 +17,10 @@ export class MinistryHistoryModel extends MinistryGroupDetailHistoryModel {
 
   @Column({ comment: '사역 종료일 시점의 사역 이름', nullable: true })
   ministrySnapShot: string;
+
+  @OneToMany(
+    () => MinistryGroupDetailHistoryModel,
+    (detail) => detail.ministryGroupHistory,
+  )
+  ministryGroupDetailHistory: MinistryGroupDetailHistoryModel[];
 }

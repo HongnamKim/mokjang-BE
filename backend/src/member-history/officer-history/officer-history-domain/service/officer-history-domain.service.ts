@@ -191,14 +191,14 @@ export class OfficerHistoryDomainService
         memberId: member.id,
         endDate: IsNull(),
       },
-      relations: relationOptions,
+      relations: { ...relationOptions },
     });
 
     if (!history) {
       throw new NotFoundException(OfficerHistoryException.NOT_FOUND);
     }
 
-    if (!history.officer) {
+    if (!history.officerId) {
       throw new InternalServerErrorException(
         OfficerHistoryException.RELATION_OPTIONS_ERROR,
         //'현재 직분 이력의 직분 정보를 가져올 수 없음',

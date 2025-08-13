@@ -1,4 +1,4 @@
-export enum DisplayColumn {
+export enum MemberDisplayColumn {
   OFFICER = 'officer',
   GROUP = 'group',
   BIRTH = 'birth', // 클라이언트에서 나이 계산용

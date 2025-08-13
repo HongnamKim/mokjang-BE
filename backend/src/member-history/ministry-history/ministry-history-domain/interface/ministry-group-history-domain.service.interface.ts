@@ -4,6 +4,8 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { MinistryGroupHistoryModel } from '../../entity/ministry-group-history.entity';
 import { GetMinistryGroupHistoriesDto } from '../../dto/request/group/get-ministry-group-histories.dto';
 import { HistoryUpdateDate } from '../../../history-date.utils';
+import { GetMinistryGroupHistoryListDto } from '../../dto/request/group/get-ministry-group-history-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../../common/dto/domain-cursor-pagination-result.dto';
 
 export const IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE = Symbol(
   'IMINISTRY_GROUP_DOMAIN_SERVICE',
@@ -21,6 +23,11 @@ export interface IMinistryGroupHistoryDomainService {
     ministryGroup: MinistryGroupModel,
     qr: QueryRunner,
   ): Promise<MinistryGroupHistoryModel>;
+
+  findCurrentMinistryGroupHistoryList(
+    member: MemberModel,
+    dto: GetMinistryGroupHistoryListDto,
+  ): Promise<DomainCursorPaginationResultDto<MinistryGroupHistoryModel>>;
 
   findMinistryGroupHistoryModelById(
     member: MemberModel,

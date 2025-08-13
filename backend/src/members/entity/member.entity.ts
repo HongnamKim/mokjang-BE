@@ -83,6 +83,7 @@ export class MemberModel extends BaseModel {
   @Column({ enum: Gender, nullable: true, comment: '성별' })
   gender: Gender;
 
+  @Index()
   @Column({ length: 50, nullable: true, comment: '도로명 주소' })
   address: string;
 
@@ -132,8 +133,8 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => MemberModel, (member) => member.guidedBy)
   guiding: MemberModel[];
 
-  @Column({ length: 30, nullable: true, comment: '이전교회 이름' })
-  previousChurch: string;
+  /*@Column({ length: 30, nullable: true, comment: '이전교회 이름' })
+  previousChurch: string;*/
 
   @Index()
   @Column({
@@ -178,11 +179,11 @@ export class MemberModel extends BaseModel {
   @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
 
-  @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
-  officerStartDate: Date | null;
+  /*@Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
+  officerStartDate: Date | null;*/
 
-  @Column({ type: 'varchar', nullable: true, comment: '임직교회' })
-  officerStartChurch: string | null;
+  /*@Column({ type: 'varchar', nullable: true, comment: '임직교회' })
+  officerStartChurch: string | null;*/
 
   @OneToMany(
     () => OfficerHistoryModel,

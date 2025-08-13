@@ -31,7 +31,7 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 import { GetMemberListDto } from '../dto/list/get-member-list.dto';
-import { DisplayColumn } from '../const/enum/list/display-column.enum';
+import { MemberDisplayColumn } from '../const/enum/list/display-column.enum';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -69,11 +69,11 @@ export class MembersController {
   ) {
     if (query.displayColumns.length === 0) {
       query.displayColumns = [
-        DisplayColumn.OFFICER,
-        DisplayColumn.BIRTH,
-        DisplayColumn.GROUP,
-        DisplayColumn.MOBILE_PHONE,
-        DisplayColumn.ADDRESS,
+        MemberDisplayColumn.OFFICER,
+        MemberDisplayColumn.BIRTH,
+        MemberDisplayColumn.GROUP,
+        MemberDisplayColumn.MOBILE_PHONE,
+        MemberDisplayColumn.ADDRESS,
       ];
     }
 

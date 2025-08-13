@@ -1,4 +1,4 @@
-export enum SortColumn {
+export enum MemberSortColumn {
   NAME = 'name',
   OFFICER = 'officer',
   GROUP = 'group',

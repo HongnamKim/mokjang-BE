@@ -10,8 +10,8 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { SortColumn } from '../../const/enum/list/sort-column.enum';
-import { DisplayColumn } from '../../const/enum/list/display-column.enum';
+import { MemberSortColumn } from '../../const/enum/list/sort-column.enum';
+import { MemberDisplayColumn } from '../../const/enum/list/display-column.enum';
 import { Transform } from 'class-transformer';
 import { MarriageStatusFilter } from '../../const/enum/list/marriage-status-filter.enum';
 import { BaptismStatusFilter } from '../../const/enum/list/baptism-status-filter.enum';
@@ -30,13 +30,13 @@ export class GetMemberListDto {
   cursor?: string;
 
   @ApiPropertyOptional({
-    enum: SortColumn,
+    enum: MemberSortColumn,
     description: '정렬 기준 컬럼',
-    default: SortColumn.REGISTERED_AT,
+    default: MemberSortColumn.REGISTERED_AT,
   })
   @IsOptional()
-  @IsEnum(SortColumn)
-  sortBy: SortColumn = SortColumn.REGISTERED_AT;
+  @IsEnum(MemberSortColumn)
+  sortBy: MemberSortColumn = MemberSortColumn.REGISTERED_AT;
 
   @ApiPropertyOptional({ description: '정렬 방향', default: 'ASC' })
   @IsOptional()
@@ -44,7 +44,7 @@ export class GetMemberListDto {
   sortDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiPropertyOptional({
-    enum: DisplayColumn,
+    enum: MemberDisplayColumn,
     isArray: true,
     description: '표시할 컬럼 목록 (사진, 이름은 항상 포함)',
   })
@@ -55,8 +55,8 @@ export class GetMemberListDto {
   })
   @IsArray()
   @ArrayUnique()
-  @IsEnum(DisplayColumn, { each: true })
-  displayColumns: DisplayColumn[] = [];
+  @IsEnum(MemberDisplayColumn, { each: true })
+  displayColumns: MemberDisplayColumn[] = [];
 
   @ApiPropertyOptional({
     description: '그룹 ID 목록 ("null" 포함 시 그룹 없는 교인 조회)',

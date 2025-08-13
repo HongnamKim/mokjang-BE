@@ -18,7 +18,6 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Gender } from '../../const/enum/gender.enum';
-import { IsValidVehicleNumber } from '../../decorator/is-valid-vehicle-number.decorator';
 import { Baptism } from '../../const/enum/baptism.enum';
 import { FamilyRelationConst } from '../../../family-relation/family-relation-domain/const/family-relation.const';
 import { Marriage } from '../../const/enum/marriage.enum';
@@ -26,8 +25,6 @@ import { RemoveSpaces } from '../../../common/decorator/transformer/remove-space
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
 import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
-import { getHistoryStartDate } from '../../../member-history/history-date.utils';
-import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { Transform } from 'class-transformer';
 
 export class CreateMemberDto {
@@ -257,7 +254,7 @@ export class CreateMemberDto {
   @IsOptional()
   baptism?: Baptism = Baptism.NONE;
 
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'previousChurch',
     description: '이전 교회',
     example: 'a교회',
@@ -267,5 +264,5 @@ export class CreateMemberDto {
   @IsNotEmpty()
   @IsOptional()
   @MaxLength(30)
-  previousChurch?: string;
+  previousChurch?: string;*/
 }
