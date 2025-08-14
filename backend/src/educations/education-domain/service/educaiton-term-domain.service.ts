@@ -182,20 +182,20 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       relations: {
         inCharge: MemberSummarizedRelation,
         creator: MemberSummarizedRelation,
-        reports: {
+        /*reports: {
           receiver: MemberSummarizedRelation,
-        },
+        },*/
       },
       select: {
         inCharge: MemberSummarizedSelect,
         creator: MemberSummarizedSelect,
-        reports: {
+        /*reports: {
           id: true,
           isRead: true,
           isConfirmed: true,
           receiver: MemberSummarizedSelect,
           reportedAt: true,
-        },
+        },*/
       },
     });
 

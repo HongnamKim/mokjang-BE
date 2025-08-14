@@ -10,7 +10,7 @@ import { ScheduleReportDto } from '../../../home/dto/schedule-report.dto';
 import { ScheduleType } from '../../../home/const/schedule-type.enum';
 import { VisitationReportModel } from '../../visitation-report/entity/visitation-report.entity';
 import { EducationSessionReportModel } from '../../education-report/entity/education-session-report.entity';
-import { EducationTermReportModel } from '../../education-report/entity/education-term-report.entity';
+//import { EducationTermReportModel } from '../../education-report/entity/education-term-report.entity';
 import { ReportType } from '../../base-report/const/report-type.enum';
 import { GetMyReportsDto } from '../../../home/dto/request/get-my-reports.dto';
 
@@ -32,7 +32,7 @@ export class ReportDomainService implements IReportDomainService {
     dto: GetMyReportsDto,
     qr?: QueryRunner,
   ) {
-    const repository = this.getRepository(qr);
+    /*const repository = this.getRepository(qr);
 
     const reportsQb = repository
       .createQueryBuilder('report')
@@ -134,7 +134,7 @@ export class ReportDomainService implements IReportDomainService {
       } else {
         throw new InternalServerErrorException();
       }
-    });
+    });*/
   }
 
   private createQuery(

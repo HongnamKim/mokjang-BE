@@ -6,15 +6,15 @@ import {
 import { QueryRunner } from 'typeorm';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { GetEducationTermReportsDto } from '../dto/term/request/get-education-term-reports.dto';
-import { EducationTermReportPaginationResponseDto } from '../dto/term/response/education-term-report-pagination-response.dto';
-import { GetEducationTermReportResponseDto } from '../dto/term/response/get-education-term-report-response.dto';
+//import { EducationTermReportPaginationResponseDto } from '../dto/term/response/education-term-report-pagination-response.dto';
+//import { GetEducationTermReportResponseDto } from '../dto/term/response/get-education-term-report-response.dto';
 import { UpdateEducationTermReportDto } from '../dto/term/request/update-education-term-report.dto';
-import { PatchEducationTermReportResponseDto } from '../dto/term/response/patch-education-term-report-response.dto';
+//import { PatchEducationTermReportResponseDto } from '../dto/term/response/patch-education-term-report-response.dto';
 import { DeleteEducationTermReportResponseDto } from '../dto/term/response/delete-education-term-report-response.dto';
 
 @Injectable()
 export class EducationTermReportService {
-  constructor(
+  /*constructor(
     @Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
     private readonly educationTermReportDomainService: IEducationTermReportDomainService,
   ) {}
@@ -123,5 +123,5 @@ export class EducationTermReportService {
       targetReport.educationTermId,
       true,
     );
-  }
+  }*/
 }

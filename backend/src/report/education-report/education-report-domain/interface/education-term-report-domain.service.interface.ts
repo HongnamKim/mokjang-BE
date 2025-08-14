@@ -2,7 +2,7 @@ import { EducationModel } from '../../../../educations/education/entity/educatio
 import { EducationTermModel } from '../../../../educations/education-term/entity/education-term.entity';
 import { ChurchUserModel } from '../../../../church-user/entity/church-user.entity';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
-import { EducationTermReportModel } from '../../entity/education-term-report.entity';
+//import { EducationTermReportModel } from '../../entity/education-term-report.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GetEducationTermReportsDto } from '../../dto/term/request/get-education-term-reports.dto';
 import { UpdateEducationTermReportDto } from '../../dto/term/request/update-education-term-report.dto';
@@ -12,7 +12,7 @@ export const IEDUCATION_TERM_REPORT_DOMAIN_SERVICE = Symbol(
 );
 
 export interface IEducationTermReportDomainService {
-  findEducationTermReports(
+  /*findEducationTermReports(
     currentMember: MemberModel,
     dto: GetEducationTermReportsDto,
     qr?: QueryRunner,
@@ -65,5 +65,5 @@ export interface IEducationTermReportDomainService {
   deleteEducationTermReport(
     targetReport: EducationTermReportModel,
     qr?: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<UpdateResult>;*/
 }

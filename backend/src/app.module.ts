@@ -74,7 +74,7 @@ import { EducationTermModel } from './educations/education-term/entity/education
 import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
 import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
-import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
+//import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
   imports: [
@@ -182,7 +182,7 @@ import { EducationTermReportModel } from './report/education-report/entity/educa
           VisitationReportModel,
           TaskReportModel,
           EducationSessionReportModel,
-          EducationTermReportModel,
+          //EducationTermReportModel,
           // 업무 관련 엔티티
           TaskModel,
           // 권한 관련

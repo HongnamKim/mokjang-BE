@@ -71,8 +71,8 @@ export class EducationTermService {
     @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
     private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
 
-    @Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
-    private readonly educationTermReportDomainService: IEducationTermReportDomainService,
+    /*@Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
+    private readonly educationTermReportDomainService: IEducationTermReportDomainService,*/
   ) {}
 
   async getEducationTerms(
@@ -184,13 +184,13 @@ export class EducationTermService {
     await this.educationDomainService.incrementTermsCount(education, qr);
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
-      await this.handleAddEducationTermReport(
+      /*await this.handleAddEducationTermReport(
         church,
         education,
         educationTerm,
         dto.receiverIds,
         qr,
-      );
+      );*/
     }
 
     return new PostEducationTermResponseDto(educationTerm);
@@ -312,10 +312,10 @@ export class EducationTermService {
     }
 
     // 기수 보고 삭제
-    await this.educationTermReportDomainService.deleteEducationTermReportsCascade(
+    /*await this.educationTermReportDomainService.deleteEducationTermReportsCascade(
       educationTerm,
       qr,
-    );
+    );*/
 
     await this.educationTermDomainService.deleteEducationTerm(
       educationTerm,
@@ -374,7 +374,7 @@ export class EducationTermService {
     );
   }
 
-  private async handleAddEducationTermReport(
+  /*private async handleAddEducationTermReport(
     church: ChurchModel,
     education: EducationModel,
     educationTerm: EducationTermModel,
@@ -404,9 +404,9 @@ export class EducationTermService {
       })),
       addedCount: newReceivers.length,
     };
-  }
+  }*/
 
-  async addReportReceivers(
+  /*async addReportReceivers(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -437,9 +437,9 @@ export class EducationTermService {
       dto.receiverIds,
       qr,
     );
-  }
+  }*/
 
-  async deleteEducationTermReportReceivers(
+  /*async deleteEducationTermReportReceivers(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -486,5 +486,5 @@ export class EducationTermService {
       })),
       deletedCount: result.affected,
     };
-  }
+  }*/
 }

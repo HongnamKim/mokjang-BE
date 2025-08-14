@@ -158,13 +158,13 @@ export class EducationTermsController {
     @Body() dto: AddEducationTermReportDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationTermService.addReportReceivers(
+    /*return this.educationTermService.addReportReceivers(
       churchId,
       educationId,
       educationTermId,
       dto,
       qr,
-    );
+    );*/
   }
 
   @Patch(':educationTermId/delete-receivers')
@@ -176,12 +176,12 @@ export class EducationTermsController {
     @Body() dto: DeleteEducationTermReportDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.educationTermService.deleteEducationTermReportReceivers(
+    /*return this.educationTermService.deleteEducationTermReportReceivers(
       churchId,
       educationId,
       educationTermId,
       dto,
       qr,
-    );
+    );*/
   }
 }
