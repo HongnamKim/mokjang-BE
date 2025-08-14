@@ -1,19 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IMemberFilterService } from './interface/member-filter.service.interface';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { MemberModel } from '../entity/member.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { ConcealedMemberDto } from '../dto/response/get-member-response.dto';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import { QueryRunner } from 'typeorm';
 
 @Injectable()
 export class MemberFilterService implements IMemberFilterService {
-  constructor() {}
+  constructor(
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
+  ) {}
 
-  async filterMember(
+  filterMember(
     requestManager: ChurchUserModel,
     member: MemberModel,
     scopeGroupIds: number[],
-  ): Promise<ConcealedMemberDto> {
+  ): ConcealedMemberDto {
     if (requestManager.memberId === member.id) {
       return { ...member, isConcealed: false };
     }
@@ -72,15 +81,32 @@ export class MemberFilterService implements IMemberFilterService {
     return member;
   }
 
-  async filterMembers(
+  filterMembers(
     requestManager: ChurchUserModel,
     members: MemberModel[],
     scopeGroupIds: number[],
   ) {
-    return Promise.all(
-      members.map((member) =>
-        this.filterMember(requestManager, member, scopeGroupIds),
-      ),
+    return members.map((member) =>
+      this.filterMember(requestManager, member, scopeGroupIds),
     );
+  }
+
+  async getScopeGroupIds(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    qr?: QueryRunner,
+  ): Promise<number[]> {
+    const permissionScopeIds = requestManager.permissionScopes.map(
+      (scope) => scope.group.id,
+    );
+
+    const possibleGroups =
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        permissionScopeIds,
+        qr,
+      );
+
+    return possibleGroups.map((group) => group.id);
   }
 }

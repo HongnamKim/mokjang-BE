@@ -35,7 +35,7 @@ import { TaskReadGuard } from '../guard/task-read.guard';
 import { TaskWriteGuard } from '../guard/task-write.guard';
 import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Tasks')
@@ -71,7 +71,7 @@ export class TaskController {
   @Patch('refresh-count')
   @UseInterceptors(TransactionInterceptor)
   refreshTaskCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.refreshTaskCount(church, qr);

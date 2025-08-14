@@ -32,7 +32,7 @@ import { VisitationReadGuard } from '../guard/visitation-read.guard';
 import { VisitationWriteGuard } from '../guard/visitation-write.guard';
 import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Visitations')
@@ -69,7 +69,7 @@ export class VisitationController {
   @UseInterceptors(TransactionInterceptor)
   refreshVisitationCount(
     //@Param('churchId', ParseIntPipe) churchId: number,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.refreshVisitationCount(church, qr);

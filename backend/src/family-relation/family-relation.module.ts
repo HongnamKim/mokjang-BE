@@ -8,6 +8,9 @@ import { RouterModule } from '@nestjs/core';
 import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 import { FamilyPermissionService } from './service/family-permission.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { IMEMBER_FILTER_SERVICE } from '../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../members/service/member-filter.service';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -18,11 +21,16 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     ManagerDomainModule,
     MembersDomainModule,
     FamilyRelationDomainModule,
+    GroupsDomainModule,
   ],
   controllers: [FamilyRelationController],
   providers: [
     FamilyRelationService,
     { provide: IDOMAIN_PERMISSION_SERVICE, useClass: FamilyPermissionService },
+    {
+      provide: IMEMBER_FILTER_SERVICE,
+      useClass: MemberFilterService,
+    },
   ],
   exports: [],
 })

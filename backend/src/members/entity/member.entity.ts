@@ -179,12 +179,6 @@ export class MemberModel extends BaseModel {
   @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
 
-  /*@Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
-  officerStartDate: Date | null;*/
-
-  /*@Column({ type: 'varchar', nullable: true, comment: '임직교회' })
-  officerStartChurch: string | null;*/
-
   @OneToMany(
     () => OfficerHistoryModel,
     (officerHistory) => officerHistory.member,
