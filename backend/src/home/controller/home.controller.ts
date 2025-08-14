@@ -74,8 +74,8 @@ export class HomeController {
       throw new BadRequestException('from, to 에러');
     }
 
-    //return this.homeService.getMyReports(pm, dto);
-    return this.homeService.getMyScheduleReports(pm, dto);
+    return this.homeService.getMyReports(pm, dto);
+    //return this.homeService.getMyScheduleReports(pm, dto);
   }
 
   @ApiGetLowWorshipAttendanceMembers()

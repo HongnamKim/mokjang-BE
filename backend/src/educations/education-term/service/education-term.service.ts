@@ -46,11 +46,11 @@ import { EducationTermException } from '../exception/education-term.exception';
 import { EducationModel } from '../../education/entity/education.entity';
 import { EducationTermModel } from '../entity/education-term.entity';
 import {
-  IEDUCATION_TERM_REPORT_DOMAIN_SERVICE,
-  IEducationTermReportDomainService,
-} from '../../../report/education-report/education-report-domain/interface/education-term-report-domain.service.interface';
-import { DeleteEducationTermReportDto } from '../dto/request/delete-education-term-report.dto';
-import { AddEducationTermReportDto } from '../dto/request/add-education-term-report.dto';
+  IEDUCATION_REPORT_DOMAIN_SERVICE,
+  IEducationReportDomainService,
+} from '../../../report/education-report/education-report-domain/interface/education-report-domain.service.interface';
+import { AddEducationTermReportDto } from '../dto/request/report/add-education-term-report.dto';
+import { DeleteEducationTermReportDto } from '../dto/request/report/delete-education-term-report.dto';
 
 @Injectable()
 export class EducationTermService {
@@ -71,8 +71,8 @@ export class EducationTermService {
     @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
     private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
 
-    /*@Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
-    private readonly educationTermReportDomainService: IEducationTermReportDomainService,*/
+    @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
+    private readonly educationReportDomainService: IEducationReportDomainService,
   ) {}
 
   async getEducationTerms(
@@ -184,13 +184,13 @@ export class EducationTermService {
     await this.educationDomainService.incrementTermsCount(education, qr);
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
-      /*await this.handleAddEducationTermReport(
+      await this.handleAddEducationTermReport(
         church,
         education,
         educationTerm,
         dto.receiverIds,
         qr,
-      );*/
+      );
     }
 
     return new PostEducationTermResponseDto(educationTerm);
@@ -312,10 +312,10 @@ export class EducationTermService {
     }
 
     // 기수 보고 삭제
-    /*await this.educationTermReportDomainService.deleteEducationTermReportsCascade(
+    await this.educationReportDomainService.deleteEducationTermReportsCascade(
       educationTerm,
       qr,
-    );*/
+    );
 
     await this.educationTermDomainService.deleteEducationTerm(
       educationTerm,
@@ -374,7 +374,7 @@ export class EducationTermService {
     );
   }
 
-  /*private async handleAddEducationTermReport(
+  private async handleAddEducationTermReport(
     church: ChurchModel,
     education: EducationModel,
     educationTerm: EducationTermModel,
@@ -388,7 +388,7 @@ export class EducationTermService {
         qr,
       );
 
-    await this.educationTermReportDomainService.createEducationTermReports(
+    await this.educationReportDomainService.createEducationTermReports(
       education,
       educationTerm,
       newReceivers,
@@ -404,9 +404,9 @@ export class EducationTermService {
       })),
       addedCount: newReceivers.length,
     };
-  }*/
+  }
 
-  /*async addReportReceivers(
+  async addReportReceivers(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -437,9 +437,9 @@ export class EducationTermService {
       dto.receiverIds,
       qr,
     );
-  }*/
+  }
 
-  /*async deleteEducationTermReportReceivers(
+  async deleteEducationTermReportReceivers(
     churchId: number,
     educationId: number,
     educationTermId: number,
@@ -464,7 +464,7 @@ export class EducationTermService {
       );
 
     const targetReports =
-      await this.educationTermReportDomainService.findEducationTermReportModelsByReceiverIds(
+      await this.educationReportDomainService.findEducationTermReportModelsByReceiverIds(
         educationTerm,
         dto.receiverIds,
         qr,
@@ -472,7 +472,7 @@ export class EducationTermService {
       );
 
     const result =
-      await this.educationTermReportDomainService.deleteEducationTermReports(
+      await this.educationReportDomainService.deleteEducationTermReports(
         targetReports,
         qr,
       );
@@ -486,5 +486,5 @@ export class EducationTermService {
       })),
       deletedCount: result.affected,
     };
-  }*/
+  }
 }

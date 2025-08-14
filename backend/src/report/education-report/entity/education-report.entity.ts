@@ -4,16 +4,15 @@ import { EducationSessionModel } from '../../../educations/education-session/ent
 import { EducationModel } from '../../../educations/education/entity/education.entity';
 import { EducationTermModel } from '../../../educations/education-term/entity/education-term.entity';
 import { ReportType } from '../../base-report/const/report-type.enum';
+import { EducationReportType } from '../const/education-report-type.enum';
 
-@ChildEntity(ReportType.EDUCATION_SESSION)
-export class EducationSessionReportModel extends ReportModel {
+@Index(['educationReportType', 'educationTermId'])
+@Index(['educationReportType', 'educationSessionId'])
+@ChildEntity(ReportType.EDUCATION)
+export class EducationReportModel extends ReportModel {
   @Index()
   @Column()
-  educationSessionId: number;
-
-  @ManyToOne(() => EducationSessionModel, (session) => session.reports)
-  @JoinColumn({ name: 'educationSessionId' })
-  educationSession: EducationSessionModel;
+  educationReportType: EducationReportType;
 
   @Index()
   @Column()
@@ -27,7 +26,17 @@ export class EducationSessionReportModel extends ReportModel {
   @Column()
   educationTermId: number;
 
-  @ManyToOne(() => EducationTermModel)
+  @ManyToOne(() => EducationTermModel, (educationTerm) => educationTerm.reports)
   @JoinColumn({ name: 'educationTermId' })
   educationTerm: EducationTermModel;
+
+  @Index()
+  @Column({ nullable: true })
+  educationSessionId?: number;
+
+  @ManyToOne(() => EducationSessionModel, (session) => session.reports, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'educationSessionId' })
+  educationSession?: EducationSessionModel;
 }

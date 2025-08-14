@@ -41,9 +41,9 @@ import {
   IManagerDomainService,
 } from '../../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import {
-  IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
-  IEducationSessionReportDomainService,
-} from '../../../report/education-report/education-report-domain/interface/education-session-report-domain.service.interface';
+  IEDUCATION_REPORT_DOMAIN_SERVICE,
+  IEducationReportDomainService,
+} from '../../../report/education-report/education-report-domain/interface/education-report-domain.service.interface';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { EducationSessionException } from '../exception/education-session.exception';
@@ -71,8 +71,8 @@ export class EducationSessionService {
     @Inject(ISESSION_ATTENDANCE_DOMAIN_SERVICE)
     private readonly sessionAttendanceDomainService: ISessionAttendanceDomainService,
 
-    @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
-    private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
+    @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
+    private readonly educationSessionReportDomainService: IEducationReportDomainService,
   ) {}
 
   private async getEducationTerm(

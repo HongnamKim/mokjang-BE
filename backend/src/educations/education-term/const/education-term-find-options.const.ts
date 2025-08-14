@@ -1,6 +1,6 @@
 import {
+  InChargeSummarizedSelect,
   MemberSummarizedRelation,
-  MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { EducationTermModel } from '../entity/education-term.entity';
@@ -22,7 +22,7 @@ export const EducationTermSelectOptions: FindOptionsSelect<EducationTermModel> =
     completedSessionsCount: true,
     enrollmentsCount: true,
     completedMembersCount: true,
-    inCharge: MemberSummarizedSelect,
+    inCharge: InChargeSummarizedSelect,
   };
 
 export const EducationTermRelationOptions: FindOptionsRelations<EducationTermModel> =

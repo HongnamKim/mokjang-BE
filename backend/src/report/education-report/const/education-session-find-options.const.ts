@@ -1,19 +1,22 @@
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
-import { EducationSessionReportModel } from '../entity/education-session-report.entity';
+import { EducationReportModel } from '../entity/education-report.entity';
 import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
-import { BaseReportFindOptionsSelect } from '../../base-report/const/base-report-find-options.const';
+import {
+  BaseReportFindOptionsSelect,
+  BaseReportSummarizedSelectQB,
+} from '../../base-report/const/base-report-find-options.const';
 
-export const EducationReportsFindOptionsRelation: FindOptionsRelations<EducationSessionReportModel> =
+export const EducationReportsFindOptionsRelation: FindOptionsRelations<EducationReportModel> =
   {
     educationSession: {
       inCharge: MemberSummarizedRelation,
     },
   };
 
-export const EducationReportsFindOptionsSelect: FindOptionsSelect<EducationSessionReportModel> =
+export const EducationReportsFindOptionsSelect: FindOptionsSelect<EducationReportModel> =
   {
     ...BaseReportFindOptionsSelect,
     educationId: true,
@@ -30,7 +33,7 @@ export const EducationReportsFindOptionsSelect: FindOptionsSelect<EducationSessi
     },
   };
 
-export const EducationReportFindOptionsSelect: FindOptionsSelect<EducationSessionReportModel> =
+export const EducationReportFindOptionsSelect: FindOptionsSelect<EducationReportModel> =
   {
     ...BaseReportFindOptionsSelect,
     educationId: true,
@@ -47,3 +50,8 @@ export const EducationReportFindOptionsSelect: FindOptionsSelect<EducationSessio
       inCharge: MemberSummarizedSelect,
     },
   };
+
+export const EducationReportSummarizedSelectQB: string[] = [
+  ...BaseReportSummarizedSelectQB,
+  'report.educationReportType',
+];

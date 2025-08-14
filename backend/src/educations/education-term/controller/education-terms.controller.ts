@@ -32,8 +32,8 @@ import { ChurchUserModel } from '../../../church-user/entity/church-user.entity'
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { AddEducationTermReportDto } from '../dto/request/add-education-term-report.dto';
-import { DeleteEducationTermReportDto } from '../dto/request/delete-education-term-report.dto';
+import { AddEducationTermReportDto } from '../dto/request/report/add-education-term-report.dto';
+import { DeleteEducationTermReportDto } from '../dto/request/report/delete-education-term-report.dto';
 
 @ApiTags('Educations:Terms')
 @Controller('educations/:educationId/terms')
@@ -158,13 +158,13 @@ export class EducationTermsController {
     @Body() dto: AddEducationTermReportDto,
     @QueryRunner() qr: QR,
   ) {
-    /*return this.educationTermService.addReportReceivers(
+    return this.educationTermService.addReportReceivers(
       churchId,
       educationId,
       educationTermId,
       dto,
       qr,
-    );*/
+    );
   }
 
   @Patch(':educationTermId/delete-receivers')
@@ -176,12 +176,12 @@ export class EducationTermsController {
     @Body() dto: DeleteEducationTermReportDto,
     @QueryRunner() qr: QR,
   ) {
-    /*return this.educationTermService.deleteEducationTermReportReceivers(
+    return this.educationTermService.deleteEducationTermReportReceivers(
       churchId,
       educationId,
       educationTermId,
       dto,
       qr,
-    );*/
+    );
   }
 }
