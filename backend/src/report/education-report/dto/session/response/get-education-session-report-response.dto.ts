@@ -1,8 +1,8 @@
 import { BaseGetResponseDto } from '../../../../../common/dto/reponse/base-get-response.dto';
-import { EducationSessionReportModel } from '../../../entity/education-session-report.entity';
+import { EducationReportModel } from '../../../entity/education-report.entity';
 
-export class GetEducationSessionReportResponseDto extends BaseGetResponseDto<EducationSessionReportModel> {
-  constructor(data: EducationSessionReportModel) {
+export class GetEducationSessionReportResponseDto extends BaseGetResponseDto<EducationReportModel> {
+  constructor(data: EducationReportModel) {
     super(data);
   }
 }

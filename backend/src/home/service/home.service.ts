@@ -1,4 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
@@ -41,9 +45,9 @@ import {
   ITaskReportDomainService,
 } from '../../report/task-report/task-report-domain/interface/task-report-domain.service.interface';
 import {
-  IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
-  IEducationSessionReportDomainService,
-} from '../../report/education-report/education-report-domain/interface/education-session-report-domain.service.interface';
+  IEDUCATION_REPORT_DOMAIN_SERVICE,
+  IEducationReportDomainService,
+} from '../../report/education-report/education-report-domain/interface/education-report-domain.service.interface';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
@@ -96,8 +100,8 @@ export class HomeService {
     private readonly reportDomainService: IReportDomainService,
     @Inject(ITASK_REPORT_DOMAIN_SERVICE)
     private readonly taskReportDomainService: ITaskReportDomainService,
-    @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
-    private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
+    @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
+    private readonly educationSessionReportDomainService: IEducationReportDomainService,
     @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
     private readonly visitationReportDomainService: IVisitationReportDomainService,
 
@@ -342,15 +346,18 @@ export class HomeService {
         from,
         to,
       );
-    const educationScheduleReports = educationReports.map(
-      (educationReport) =>
-        new ScheduleReportDto(
+    const educationScheduleReports = educationReports.map((educationReport) => {
+      if (educationReport.educationSession) {
+        return new ScheduleReportDto(
           educationReport.id,
           ScheduleType.EDUCATION_SESSION,
           educationReport.educationSession.inCharge,
           this.createEducationSchedule(educationReport.educationSession),
-        ),
-    );
+        );
+      } else {
+        throw new InternalServerErrorException('교육 회차 누락 에러');
+      }
+    });
 
     const visitationReports =
       await this.visitationReportDomainService.findMyReports(

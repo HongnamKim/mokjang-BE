@@ -44,7 +44,7 @@ import { ChurchJoinStatModel } from './church-join/entity/church-join-stat.entit
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
 import { TaskReportModel } from './report/task-report/entity/task-report.entity';
-import { EducationSessionReportModel } from './report/education-report/entity/education-session-report.entity';
+import { EducationReportModel } from './report/education-report/entity/education-report.entity';
 import { PermissionModule } from './permission/permission.module';
 import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
 import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
@@ -181,7 +181,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
           ReportModel,
           VisitationReportModel,
           TaskReportModel,
-          EducationSessionReportModel,
+          EducationReportModel,
           //EducationTermReportModel,
           // 업무 관련 엔티티
           TaskModel,

@@ -4,7 +4,7 @@ import { SessionAttendanceModel } from '../../session-attendance/entity/session-
 import { EducationSessionStatus } from '../const/education-session-status.enum';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
-import { EducationSessionReportModel } from '../../../report/education-report/entity/education-session-report.entity';
+import { EducationReportModel } from '../../../report/education-report/entity/education-report.entity';
 
 @Entity()
 export class EducationSessionModel extends BaseModel {
@@ -67,9 +67,6 @@ export class EducationSessionModel extends BaseModel {
   @ManyToOne(() => MemberModel)
   creator: MemberModel;
 
-  @OneToMany(
-    () => EducationSessionReportModel,
-    (report) => report.educationSession,
-  )
-  reports: EducationSessionReportModel[];
+  @OneToMany(() => EducationReportModel, (report) => report.educationSession)
+  reports: EducationReportModel[];
 }
