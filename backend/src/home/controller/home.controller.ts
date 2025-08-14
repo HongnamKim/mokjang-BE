@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { HomeService } from '../service/home.service';
 import { GetNewMemberSummaryDto } from '../dto/request/get-new-member-summary.dto';
@@ -33,7 +33,7 @@ export class HomeController {
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @Get('members/new/summary')
   getNewMemberSummary(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetNewMemberSummaryDto,
   ) {
     return this.homeService.getNewMemberSummary(church, dto);
@@ -43,7 +43,7 @@ export class HomeController {
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @Get('members/new/details')
   getNewMemberDetails(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetNewMemberDetailDto,
   ) {
     return this.homeService.getNewMemberDetails(church, dto);
@@ -82,7 +82,7 @@ export class HomeController {
   @Get('worship-attendances')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getLowWorshipAttendanceMembers(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() pm: ChurchUserModel,
     @Query() dto: GetLowWorshipAttendanceMembersDto,
   ) {

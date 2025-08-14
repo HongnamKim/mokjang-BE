@@ -33,7 +33,7 @@ import { TransactionInterceptor } from '../../../common/interceptor/transaction.
 import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Educations')
@@ -82,7 +82,7 @@ export class EducationsController {
   @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshEducationCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.refreshEducationCount(church, qr);

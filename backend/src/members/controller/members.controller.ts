@@ -26,7 +26,7 @@ import { RequestManager } from '../../permission/decorator/permission-manager.de
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { TargetMember } from '../decorator/target-member.decorator';
 import { MemberModel } from '../entity/member.entity';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
@@ -39,7 +39,8 @@ export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
   @Get()
-  @MemberReadGuard()
+  //@MemberReadGuard()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMemberDto,
@@ -63,7 +64,7 @@ export class MembersController {
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMemberList(
     @Param('churchId', ParseIntPipe) churchId: number,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
     @Query() query: GetMemberListDto,
   ) {
@@ -105,7 +106,7 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdateMemberDto,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @TargetMember() targetMember: MemberModel,
   ) {
     return this.membersService.updateMember(church, targetMember, dto);
@@ -118,7 +119,7 @@ export class MembersController {
   deleteMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @TargetMember() targetMember: MemberModel,
     @QueryRunner() qr: QR,
   ) {

@@ -14,6 +14,7 @@ import {
   IDomainPermissionService,
   IDOMAIN_PERMISSION_SERVICE,
 } from '../service/domain-permission.service.interface';
+import { CustomRequest } from '../../common/custom-request';
 
 export function createDomainGuard(
   domainType: DomainType,
@@ -28,7 +29,7 @@ export function createDomainGuard(
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const req = context.switchToHttp().getRequest();
+      const req: CustomRequest = context.switchToHttp().getRequest();
 
       const token = req.tokenPayload;
 

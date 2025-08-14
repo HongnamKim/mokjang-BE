@@ -1,7 +1,13 @@
 import { IFamilyRelationDomainService } from './interface/family-relation-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FamilyRelationModel } from '../../entity/family-relation.entity';
-import { FindOptionsRelations, IsNull, QueryRunner, Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  IsNull,
+  QueryRunner,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import {
   ConflictException,
   Injectable,
@@ -17,6 +23,8 @@ import {
 } from '../const/family-relation.rules';
 import { FamilyRelationConst } from '../const/family-relation.const';
 import { FamilyRelation } from '../const/family-relation.interface';
+import { GetFamilyRelationListDto } from '../../dto/get-family-relation-list.dto';
+import { MemberSummarizedSelect } from '../../../members/const/member-find-options.const';
 
 @Injectable()
 export class FamilyRelationDomainService
@@ -33,21 +41,147 @@ export class FamilyRelationDomainService
       : this.familyRepository;
   }
 
-  async findFamilyRelations(member: MemberModel, qr?: QueryRunner) {
+  async findFamilyRelations(
+    member: MemberModel,
+    dto: GetFamilyRelationListDto,
+    qr?: QueryRunner,
+  ) {
     const familyRepository = this.getFamilyRepository(qr);
 
-    return familyRepository.find({
+    const query = familyRepository
+      .createQueryBuilder('family')
+      .where('family.meId = :meId', { meId: member.id })
+      .leftJoin('family.familyMember', 'familyMember')
+      .addSelect([
+        'familyMember.id',
+        'familyMember.name',
+        'familyMember.profileImageUrl',
+        'familyMember.mobilePhone',
+        'familyMember.registeredAt',
+        'familyMember.birth',
+        'familyMember.isLunar',
+        'familyMember.isLeafMonth',
+        'familyMember.groupRole',
+        'familyMember.ministryGroupRole',
+      ])
+      .leftJoin('familyMember.officer', 'officer')
+      .addSelect(['officer.id', 'officer.name'])
+      .leftJoin('familyMember.group', 'group')
+      .addSelect(['group.id', 'group.name'])
+      .orderBy('familyMember.birth', dto.sortDirection)
+      .addOrderBy('familyMember.id', dto.sortDirection);
+
+    if (dto.cursor) {
+      this.applyCursorPagination(query, dto.cursor, dto.sortDirection);
+    }
+
+    const items = await query.limit(dto.limit + 1).getMany();
+
+    const hasMore = items.length > dto.limit;
+    if (hasMore) {
+      items.pop();
+    }
+
+    const nextCursor = hasMore
+      ? this.encodeCursor(items[items.length - 1])
+      : undefined;
+
+    return {
+      items,
+      nextCursor,
+      hasMore,
+    };
+  }
+
+  private applyCursorPagination(
+    query: SelectQueryBuilder<FamilyRelationModel>,
+    cursor: string,
+    sortDirection: 'ASC' | 'DESC',
+  ) {
+    const decodedCursor = this.decodeCursor(cursor);
+
+    if (!decodedCursor) return;
+
+    const { familyMemberId, value } = decodedCursor;
+
+    if (sortDirection === 'ASC') {
+      if (value === null) {
+        // 이전 커서의 birth가 NULL인 경우
+        // NULL은 마지막에 오므로, NULL이면서 id가 큰 것만
+        query.andWhere(
+          `(familyMember.birth IS NULL AND familyMember.id > :id)`,
+          { id: familyMemberId },
+        );
+      } else {
+        // 이전 커서의 birth가 값이 있는 경우
+        query.andWhere(
+          `(familyMember.birth > :birth 
+          OR (familyMember.birth = :birth AND familyMember.id > :id)
+          OR familyMember.birth IS NULL)`,
+          { birth: value, id: familyMemberId },
+        );
+      }
+    } else {
+      // DESC
+      if (value === null) {
+        // DESC에서 NULL은 처음에 옴, 다음은 값이 있는 것들
+        query.andWhere(`familyMember.birth IS NOT NULL`);
+      } else {
+        query.andWhere(
+          `(familyMember.birth < :birth 
+          OR (familyMember.birth = :birth AND familyMember.id > :id))`,
+          { birth: value, id: familyMemberId },
+        );
+      }
+    }
+  }
+
+  private encodeCursor(familyRelation: FamilyRelationModel) {
+    const cursorData = {
+      familyMemberId: familyRelation.familyMemberId,
+      value: familyRelation.familyMember.birth,
+    };
+
+    return Buffer.from(JSON.stringify(cursorData)).toString('base64');
+  }
+
+  private decodeCursor(cursor: string) {
+    try {
+      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  }
+
+  async findFamilyRelationById(
+    meId: number,
+    familyId: number,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getFamilyRepository(qr);
+
+    const relation = await repository.findOne({
       where: {
-        meId: member.id,
+        meId,
+        familyMemberId: familyId,
       },
-      relations: { familyMember: true },
-      order: {
+      relations: {
         familyMember: {
-          birth: 'asc',
+          officer: true,
+          group: true,
         },
-        familyMemberId: 'asc',
+      },
+      select: {
+        familyMember: MemberSummarizedSelect,
       },
     });
+
+    if (!relation) {
+      throw new NotFoundException(FamilyRelationException.NOT_FOUND);
+    }
+
+    return relation;
   }
 
   async findFamilyRelationModelById(
@@ -135,30 +269,6 @@ export class FamilyRelationDomainService
       newFamilyIds,
       relation,
     );
-    /*let familyRelations: any[] = [];
-
-    for (const newFamilyExistingFamilyMemberId of newFamilyIds) {
-      for (const myFamilyMemberId of myFamilyIds) {
-        const isRelationFixed =
-          myFamilyMemberId === me.id &&
-          newFamilyExistingFamilyMemberId === newFamilyMember.id;
-
-        familyRelations.push(
-          {
-            meId: myFamilyMemberId,
-            familyMemberId: newFamilyExistingFamilyMemberId,
-            relation: isRelationFixed ? relation : FamilyRelationConst.FAMILY,
-          },
-          {
-            meId: newFamilyExistingFamilyMemberId,
-            familyMemberId: myFamilyMemberId,
-            relation: isRelationFixed
-              ? this.getCounterRelation(relation, me)
-              : FamilyRelationConst.FAMILY,
-          },
-        );
-      }
-    }*/
 
     return familyRepository.save(familyRelations);
   }
@@ -203,6 +313,8 @@ export class FamilyRelationDomainService
     }
 
     if (GenderBasedRelations[relation]) {
+      if (!me.gender) return FamilyRelationConst.FAMILY;
+
       return me.gender === Gender.MALE
         ? GenderBasedRelations[relation][0]
         : GenderBasedRelations[relation][1];
@@ -235,11 +347,7 @@ export class FamilyRelationDomainService
       );
     }
 
-    return this.findFamilyRelationModelById(
-      familyRelation.meId,
-      familyRelation.familyMemberId,
-      qr,
-    );
+    return result;
   }
 
   async deleteFamilyRelation(
@@ -260,7 +368,7 @@ export class FamilyRelationDomainService
       );
     }
 
-    return `familyRelation me: ${familyRelation.meId}, family: ${familyRelation.familyMemberId} deleted`;
+    return result;
   }
 
   async createFamilyRelation(

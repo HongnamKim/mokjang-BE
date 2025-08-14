@@ -56,7 +56,6 @@ import {
   IMinistryGroupHistoryDomainService,
 } from '../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
 import { MemberCursorPaginationResponseDto } from '../dto/response/member-cursor-pagination-response.dto';
-import { filter } from 'rxjs';
 
 @Injectable()
 export class MembersService {
@@ -115,19 +114,13 @@ export class MembersService {
       qr,
     );
 
-    const permissionScopeIds = requestManager.permissionScopes.map(
-      (scope) => scope.groupId,
+    const possibleGroupIds = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+      qr,
     );
 
-    const possibleGroups =
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        permissionScopeIds,
-      );
-
-    const possibleGroupIds = possibleGroups.map((group) => group.id);
-
-    const filteredMember = await this.memberFilterService.filterMembers(
+    const filteredMember = this.memberFilterService.filterMembers(
       requestManager,
       data,
       possibleGroupIds,
@@ -166,9 +159,13 @@ export class MembersService {
       )
     ).items;
 
-    const scopeGroupIds = await this.getScopeGroupIds(church, requestManager);
+    const scopeGroupIds = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+      qr,
+    );
 
-    const filteredMember = await this.memberFilterService.filterMember(
+    const filteredMember = this.memberFilterService.filterMember(
       requestManager,
       member,
       scopeGroupIds,
@@ -261,7 +258,7 @@ export class MembersService {
     church: ChurchModel,
     targetMember: MemberModel,
     qr: QueryRunner,
-  ): Promise<DeleteMemberResponseDto> {
+  ) {
     // 교인 삭제
     await this.membersDomainService.deleteMember(church, targetMember, qr);
 
@@ -317,7 +314,7 @@ export class MembersService {
       requestManager,
     );
 
-    const filteredMembers = await this.memberFilterService.filterMembers(
+    const filteredMembers = this.memberFilterService.filterMembers(
       requestManager,
       result.items,
       possibleGroupIds,

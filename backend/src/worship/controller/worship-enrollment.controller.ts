@@ -18,7 +18,7 @@ import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
@@ -51,7 +51,7 @@ export class WorshipEnrollmentController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Query() dto: GetWorshipEnrollmentsDto,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
     @PermissionScopeGroups() permissionScopeGroupIds?: number[],
   ) {
