@@ -1,3 +1,4 @@
+/*
 import { EducationTermReportModel } from '../../../entity/education-term-report.entity';
 
 export class EducationTermReportPaginationResponseDto {
@@ -6,3 +7,4 @@ export class EducationTermReportPaginationResponseDto {
     public readonly timestamp: Date = new Date(),
   ) {}
 }
+*/

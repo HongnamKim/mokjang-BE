@@ -25,7 +25,7 @@ export class EducationTermReportController {
     private readonly educationTermReportService: EducationTermReportService,
   ) {}
 
-  @UseGuards(AccessTokenGuard, ChurchUserGuard)
+  /*@UseGuards(AccessTokenGuard, ChurchUserGuard)
   @Get()
   getEducationTermReport(
     @RequestChurchUser() churchUser: ChurchUserModel,
@@ -73,5 +73,5 @@ export class EducationTermReportController {
       churchUser,
       reportId,
     );
-  }
+  }*/
 }

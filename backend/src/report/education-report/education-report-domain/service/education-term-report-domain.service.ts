@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { IEducationTermReportDomainService } from '../interface/education-term-report-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EducationTermReportModel } from '../../entity/education-term-report.entity';
+//import { EducationTermReportModel } from '../../entity/education-term-report.entity';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
@@ -31,9 +31,8 @@ import { UpdateEducationTermReportDto } from '../../dto/term/request/update-educ
 
 @Injectable()
 export class EducationTermReportDomainService
-  implements IEducationTermReportDomainService
-{
-  constructor(
+  implements IEducationTermReportDomainService {
+  /*constructor(
     @InjectRepository(EducationTermReportModel)
     private readonly repository: Repository<EducationTermReportModel>,
   ) {}
@@ -294,5 +293,5 @@ export class EducationTermReportDomainService
     }
 
     return result;
-  }
+  }*/
 }

@@ -4,7 +4,7 @@ import { ReportModel } from '../../base-report/entity/report.entity';
 import { EducationTermModel } from '../../../educations/education-term/entity/education-term.entity';
 import { EducationModel } from '../../../educations/education/entity/education.entity';
 
-@ChildEntity(ReportType.EDUCATION_TERM)
+/*@ChildEntity(ReportType.EDUCATION_TERM)
 export class EducationTermReportModel extends ReportModel {
   @Index()
   @Column()
@@ -21,4 +21,4 @@ export class EducationTermReportModel extends ReportModel {
   @ManyToOne(() => EducationModel)
   @JoinColumn({ name: 'educationId' })
   education: EducationModel;
-}
+}*/
