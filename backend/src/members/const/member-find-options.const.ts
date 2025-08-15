@@ -40,6 +40,19 @@ export const MemberSummarizedSelectQB: string[] = [
   'member.ministryGroupRole',
 ];
 
+export const MemberSimpleSelectQB: string[] = [
+  'member.id',
+  'member.name',
+  'member.profileImageUrl',
+  //'member.mobilePhone',
+  'member.registeredAt',
+  //'member.birth',
+  //'member.isLunar',
+  //'member.isLeafMonth',
+  'member.groupRole',
+  'member.ministryGroupRole',
+];
+
 export const MemberSummarizedOfficerSelectQB: string[] = [
   'officer.id',
   'officer.name',

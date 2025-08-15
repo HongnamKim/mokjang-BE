@@ -56,6 +56,7 @@ import {
   IMinistryGroupHistoryDomainService,
 } from '../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
 import { MemberCursorPaginationResponseDto } from '../dto/response/member-cursor-pagination-response.dto';
+import { GetSimpleMemberListDto } from '../dto/list/get-simple-member-list.dto';
 
 @Injectable()
 export class MembersService {
@@ -287,15 +288,25 @@ export class MembersService {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const { data, totalCount } =
-      await this.membersDomainService.findSimpleMembers(church, dto);
+    const data = await this.membersDomainService.findSimpleMembers(church, dto);
 
-    return new SimpleMembersPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
+    return new SimpleMembersPaginationResponseDto(data);
+  }
+
+  async getSimpleMemberList(
+    church: ChurchModel,
+    query: GetSimpleMemberListDto,
+  ) {
+    const result = await this.membersDomainService.findSimpleMemberList(
+      church,
+      query,
+    );
+
+    return new MemberCursorPaginationResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
     );
   }
 
