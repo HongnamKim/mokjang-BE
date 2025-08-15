@@ -11,15 +11,15 @@ import { MemberModel } from '../../entity/member.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
-import { OfficerModel } from '../../../management/officers/entity/officer.entity';
-import { GroupModel } from '../../../management/groups/entity/group.entity';
-import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import { GetRecommendLinkMemberDto } from '../../dto/request/get-recommend-link-member.dto';
 import { GetBirthdayMembersDto } from '../../../calendar/dto/request/birthday/get-birthday-members.dto';
 import { WidgetRange } from '../../../home/const/widget-range.enum';
 import { GetNewMemberDetailDto } from '../../../home/dto/request/get-new-member-detail.dto';
 import { GroupRole } from '../../../management/groups/const/group-role.enum';
+import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
+import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -45,7 +45,12 @@ export interface IMembersDomainService {
     church: ChurchModel,
     dto: GetSimpleMembersDto,
     qr?: QueryRunner,
-  ): Promise<MembersDomainPaginationResultDto>;
+  ): Promise<MemberModel[]>;
+
+  findSimpleMemberList(
+    church: ChurchModel,
+    query: GetSimpleMemberListDto,
+  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
   findAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<MemberModel[]>;
 
@@ -61,12 +66,6 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
     relationOptions?: FindOptionsRelations<MemberModel>,
   ): Promise<MemberModel[]>;
-
-  /*findMinistryGroupMembersByIds(
-    ministryGroup: MinistryGroupModel,
-    memberIds: number[],
-    qr?: QueryRunner,
-  ): Promise<MemberModel[]>;*/
 
   countAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<number>;
 
@@ -130,25 +129,6 @@ export interface IMembersDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  /*startMemberOfficer(
-    member: MemberModel,
-    officer: OfficerModel,
-    officerStartDate: Date,
-    officerStartChurch: string,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;*/
-
-  /*endMemberOfficer(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;*/
-
-  /*startMemberGroup(
-    member: MemberModel,
-    group: GroupModel,
-    groupRole: GroupRole,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;*/
-
-  /*endMemberGroup(member: MemberModel, qr: QueryRunner): Promise<UpdateResult>;*/
-
   updateGroupRole(
     member: MemberModel,
     groupRole: GroupRole,
@@ -168,4 +148,9 @@ export interface IMembersDomainService {
     from: Date,
     to: Date,
   ): Promise<MemberModel[]>;
+
+  getMemberListWithPagination(
+    church: ChurchModel,
+    dto: GetMemberListDto,
+  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 }

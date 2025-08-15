@@ -33,9 +33,9 @@ import { AddTaskReportReceiverDto } from '../../report/task-report/dto/request/a
 import { DeleteTaskReportReceiverDto } from '../../report/task-report/dto/request/delete-task-report-receiver.dto';
 import { TaskReadGuard } from '../guard/task-read.guard';
 import { TaskWriteGuard } from '../guard/task-write.guard';
-import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Tasks')
@@ -58,7 +58,7 @@ export class TaskController {
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postTask(
-    @PermissionManager() manager: ChurchUserModel,
+    @RequestManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateTaskDto,
     @QueryRunner() qr: QR,
@@ -71,7 +71,7 @@ export class TaskController {
   @Patch('refresh-count')
   @UseInterceptors(TransactionInterceptor)
   refreshTaskCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.refreshTaskCount(church, qr);

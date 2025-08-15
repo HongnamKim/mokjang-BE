@@ -1,6 +1,6 @@
 import { MAX_RECEIVER_COUNT } from '../../base-report/const/report.constraints';
 
-export const EducationSessionReportException = {
+export const EducationReportException = {
   NOT_FOUND: '해당 교육 보고를 찾을 수 없습니다.',
   ALREADY_REPORTED_MEMBER: '이미 피보고자로 등록된 교인입니다.',
   NOT_EXIST_REPORTED_MEMBER: '피보고자로 등록되지 않은 교인입니다.',

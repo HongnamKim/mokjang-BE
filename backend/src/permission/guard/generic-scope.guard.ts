@@ -17,6 +17,7 @@ import {
 } from '../../members/service/interface/member-filter.service.interface';
 import { HttpMethod } from '../../common/const/http-method.enum';
 import { PermissionScopeException } from '../exception/permission-scope.exception';
+import { CustomRequest } from '../../common/custom-request';
 
 export function createScopeGuard(
   excludeHttpMethods: HttpMethod[],
@@ -31,10 +32,10 @@ export function createScopeGuard(
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const req = context.switchToHttp().getRequest();
+      const req: CustomRequest = context.switchToHttp().getRequest();
 
       // 수정, 삭제 시에만 가드 적용
-      if (excludeHttpMethods.includes(req.method)) {
+      if ((excludeHttpMethods as string[]).includes(req.method)) {
         return true;
       }
 
@@ -48,10 +49,15 @@ export function createScopeGuard(
         memberId,
       );
 
-      const concealedMember = await this.memberFilterService.filterMember(
+      const scopeGroupIds = await this.memberFilterService.getScopeGroupIds(
         church,
         requestManager,
+      );
+
+      const concealedMember = this.memberFilterService.filterMember(
+        requestManager,
         targetMember,
+        scopeGroupIds,
       );
 
       if (concealedMember.isConcealed) {

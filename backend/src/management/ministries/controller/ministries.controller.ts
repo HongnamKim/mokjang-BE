@@ -29,7 +29,7 @@ import {
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
-import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:MinistryGroups:Ministries')
@@ -71,7 +71,7 @@ export class MinistriesController {
   @UseInterceptors(TransactionInterceptor)
   @Patch('refresh-count')
   refreshMinistryCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @QueryRunner() qr: QR,
   ) {

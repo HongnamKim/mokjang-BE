@@ -1,9 +1,8 @@
-import { BaseOffsetPaginationResponseDto } from '../../../../../common/dto/reponse/base-offset-pagination-response.dto';
-import { EducationSessionReportModel } from '../../../entity/education-session-report.entity';
+import { EducationReportModel } from '../../../entity/education-report.entity';
 
 export class EducationSessionReportPaginationResultDto {
   constructor(
-    public readonly data: EducationSessionReportModel[],
+    public readonly data: EducationReportModel[],
     public readonly timestamp: Date = new Date(),
   ) {}
 }

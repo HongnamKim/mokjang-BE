@@ -71,16 +71,10 @@ export class VisitationService {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const { visitations, totalCount } =
+    const visitations =
       await this.visitationMetaDomainService.paginateVisitations(church, dto);
 
-    return new VisitationPaginationResultDto(
-      visitations,
-      totalCount,
-      visitations.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new VisitationPaginationResultDto(visitations);
   }
 
   async getVisitationById(

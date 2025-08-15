@@ -27,13 +27,13 @@ import {
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { AddEducationTermReportDto } from '../dto/request/add-education-term-report.dto';
-import { DeleteEducationTermReportDto } from '../dto/request/delete-education-term-report.dto';
+import { AddEducationTermReportDto } from '../dto/request/report/add-education-term-report.dto';
+import { DeleteEducationTermReportDto } from '../dto/request/report/delete-education-term-report.dto';
 
 @ApiTags('Educations:Terms')
 @Controller('educations/:educationId/terms')
@@ -46,7 +46,7 @@ export class EducationTermsController {
   getEducationTerms(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetEducationTermDto,
   ) {
     return this.educationTermService.getEducationTerms(
@@ -61,8 +61,8 @@ export class EducationTermsController {
   @Post()
   @UseInterceptors(TransactionInterceptor)
   postEducationTerms(
-    @PermissionManager() manager: ChurchUserModel,
-    @PermissionChurch() church: ChurchModel,
+    @RequestManager() manager: ChurchUserModel,
+    @RequestChurch() church: ChurchModel,
     @Param('churchId', ParseIntPipe)
     churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,

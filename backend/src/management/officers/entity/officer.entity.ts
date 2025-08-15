@@ -13,6 +13,7 @@ export class OfficerModel extends BaseModel {
   @ManyToOne(() => ChurchModel, (church) => church.officers)
   church: ChurchModel;
 
+  @Index()
   @Column({ length: 30, nullable: true })
   name: string;
 

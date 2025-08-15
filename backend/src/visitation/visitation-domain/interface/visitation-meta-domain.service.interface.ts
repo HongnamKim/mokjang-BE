@@ -14,7 +14,7 @@ export interface IVisitationMetaDomainService {
   paginateVisitations(
     church: ChurchModel,
     dto: GetVisitationDto,
-  ): Promise<{ visitations: VisitationMetaModel[]; totalCount: number }>;
+  ): Promise<VisitationMetaModel[]>;
 
   findVisitationMetaById(
     church: ChurchModel,

@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-export const PermissionManager = createParamDecorator(
+export const RequestManager = createParamDecorator(
   (_, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest();
 

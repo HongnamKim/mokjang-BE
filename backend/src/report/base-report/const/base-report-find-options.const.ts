@@ -6,3 +6,10 @@ export const BaseReportFindOptionsSelect = {
   isRead: true,
   isConfirmed: true,
 };
+
+export const BaseReportSummarizedSelectQB = [
+  'report.id',
+  'report.isRead',
+  'report.isConfirmed',
+  'report.reportedAt',
+];

@@ -31,8 +31,10 @@ import { ChurchUserModel } from '../../../church-user/entity/church-user.entity'
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import {
-  MemberSummarizedRelation,
-  MemberSummarizedSelect,
+  GroupSelectQB,
+  InChargeSummarizedSelectQB,
+  OfficerSelectQB,
+  ReceiverSummarizedSelectQB,
 } from '../../../members/const/member-find-options.const';
 import { EducationTermException } from '../../education-term/exception/education-term.exception';
 import { EducationTermStatus } from '../../education-term/const/education-term-status.enum';
@@ -40,6 +42,8 @@ import {
   EducationTermRelationOptions,
   EducationTermSelectOptions,
 } from '../../education-term/const/education-term-find-options.const';
+import { EducationReportType } from '../../../report/education-report/const/education-report-type.enum';
+import { EducationReportSummarizedSelectQB } from '../../../report/education-report/const/education-session-find-options.const';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -174,30 +178,33 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   ) {
     const educationTermsRepository = this.getEducationTermsRepository(qr);
 
-    const educationTerm = await educationTermsRepository.findOne({
-      where: {
-        id: educationTermId,
-        educationId: education.id,
-      },
-      relations: {
-        inCharge: MemberSummarizedRelation,
-        creator: MemberSummarizedRelation,
-        reports: {
-          receiver: MemberSummarizedRelation,
-        },
-      },
-      select: {
-        inCharge: MemberSummarizedSelect,
-        creator: MemberSummarizedSelect,
-        reports: {
-          id: true,
-          isRead: true,
-          isConfirmed: true,
-          receiver: MemberSummarizedSelect,
-          reportedAt: true,
-        },
-      },
-    });
+    const query = educationTermsRepository
+      .createQueryBuilder('educationTerm')
+      .where(
+        'educationTerm.id = :educationTermId AND educationTerm.educationId = :educationId',
+        { educationTermId, educationId: education.id },
+      )
+      .leftJoin('educationTerm.inCharge', 'inCharge')
+      .addSelect(InChargeSummarizedSelectQB)
+      .leftJoin('inCharge.group', 'group')
+      .addSelect(GroupSelectQB('group'))
+      .leftJoin('inCharge.officer', 'officer')
+      .addSelect(OfficerSelectQB('officer'))
+      .leftJoin(
+        'educationTerm.reports',
+        'report',
+        'report.educationReportType = :reportType',
+        { reportType: EducationReportType.TERM },
+      )
+      .addSelect(EducationReportSummarizedSelectQB)
+      .leftJoin('report.receiver', 'receiver')
+      .addSelect(ReceiverSummarizedSelectQB)
+      .leftJoin('receiver.group', 'receiver_group')
+      .addSelect(GroupSelectQB('receiver_group'))
+      .leftJoin('receiver.officer', 'receiver_officer')
+      .addSelect(OfficerSelectQB('receiver_officer'));
+
+    const educationTerm = await query.getOne();
 
     if (!educationTerm) {
       throw new NotFoundException(EducationTermException.NOT_FOUND);
@@ -258,7 +265,6 @@ export class EducationTermDomainService implements IEducationTermDomainService {
       creatorId: creator.member.id,
       term: dto.term,
       location: dto.location,
-      //content: dto.content,
       startDate: dto.utcStartDate,
       endDate: dto.utcEndDate,
       inChargeId: inCharge ? inCharge.member.id : undefined,

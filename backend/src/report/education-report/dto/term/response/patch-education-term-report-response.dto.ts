@@ -1,8 +1,8 @@
 import { BasePatchResponseDto } from '../../../../../common/dto/reponse/base-patch-response.dto';
-import { EducationTermReportModel } from '../../../entity/education-term-report.entity';
+import { EducationReportModel } from '../../../entity/education-report.entity';
 
-export class PatchEducationTermReportResponseDto extends BasePatchResponseDto<EducationTermReportModel> {
-  constructor(data: EducationTermReportModel) {
+export class PatchEducationTermReportResponseDto extends BasePatchResponseDto<EducationReportModel> {
+  constructor(data: EducationReportModel) {
     super(data);
   }
 }
