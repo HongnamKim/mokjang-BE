@@ -11,5 +11,5 @@ export interface IReportDomainService {
     to: Date,
     dto: GetMyReportsDto,
     qr?: QueryRunner,
-  ): Promise<any[]>;
+  ): any;
 }

@@ -1,22 +1,22 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
-import {
-  IEDUCATION_TERM_REPORT_DOMAIN_SERVICE,
-  IEducationTermReportDomainService,
-} from '../education-report-domain/interface/education-term-report-domain.service.interface';
 import { QueryRunner } from 'typeorm';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { GetEducationTermReportsDto } from '../dto/term/request/get-education-term-reports.dto';
+import { UpdateEducationTermReportDto } from '../dto/term/request/update-education-term-report.dto';
+import { DeleteEducationTermReportResponseDto } from '../dto/term/response/delete-education-term-report-response.dto';
+import {
+  IEDUCATION_REPORT_DOMAIN_SERVICE,
+  IEducationReportDomainService,
+} from '../education-report-domain/interface/education-report-domain.service.interface';
 import { EducationTermReportPaginationResponseDto } from '../dto/term/response/education-term-report-pagination-response.dto';
 import { GetEducationTermReportResponseDto } from '../dto/term/response/get-education-term-report-response.dto';
-import { UpdateEducationTermReportDto } from '../dto/term/request/update-education-term-report.dto';
 import { PatchEducationTermReportResponseDto } from '../dto/term/response/patch-education-term-report-response.dto';
-import { DeleteEducationTermReportResponseDto } from '../dto/term/response/delete-education-term-report-response.dto';
 
 @Injectable()
 export class EducationTermReportService {
   constructor(
-    @Inject(IEDUCATION_TERM_REPORT_DOMAIN_SERVICE)
-    private readonly educationTermReportDomainService: IEducationTermReportDomainService,
+    @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
+    private readonly educationReportDomainService: IEducationReportDomainService,
   ) {}
 
   async getEducationTermReports(
@@ -30,7 +30,7 @@ export class EducationTermReportService {
     }
 
     const data =
-      await this.educationTermReportDomainService.findEducationTermReports(
+      await this.educationReportDomainService.findEducationTermReports(
         currentMember,
         dto,
       );
@@ -49,7 +49,7 @@ export class EducationTermReportService {
     }
 
     const report =
-      await this.educationTermReportDomainService.findEducationTermReportById(
+      await this.educationReportDomainService.findEducationTermReportById(
         currentMember,
         reportId,
         true,
@@ -70,18 +70,18 @@ export class EducationTermReportService {
     }
 
     const targetReport =
-      await this.educationTermReportDomainService.findEducationTermReportModelById(
+      await this.educationReportDomainService.findEducationTermReportModelById(
         receiver,
         reportId,
       );
 
-    await this.educationTermReportDomainService.updateEducationTermReport(
+    await this.educationReportDomainService.updateEducationTermReport(
       targetReport,
       dto,
     );
 
     const updatedReport =
-      await this.educationTermReportDomainService.findEducationTermReportById(
+      await this.educationReportDomainService.findEducationTermReportById(
         receiver,
         reportId,
         false,
@@ -102,7 +102,7 @@ export class EducationTermReportService {
     }
 
     const targetReport =
-      await this.educationTermReportDomainService.findEducationTermReportModelById(
+      await this.educationReportDomainService.findEducationTermReportModelById(
         receiver,
         reportId,
         qr,
@@ -111,7 +111,7 @@ export class EducationTermReportService {
         },
       );
 
-    await this.educationTermReportDomainService.deleteEducationTermReport(
+    await this.educationReportDomainService.deleteEducationTermReport(
       targetReport,
       qr,
     );

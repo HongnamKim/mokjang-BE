@@ -28,7 +28,7 @@ import {
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { AddEducationSessionReportDto } from '../../../report/education-report/dto/session/request/add-education-session-report.dto';
@@ -64,7 +64,7 @@ export class EducationSessionsController {
   //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationSession(
-    @PermissionManager() manager: ChurchUserModel,
+    @RequestManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,

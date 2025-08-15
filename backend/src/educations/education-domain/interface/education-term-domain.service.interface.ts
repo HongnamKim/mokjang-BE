@@ -12,7 +12,6 @@ import { UpdateEducationTermDto } from '../../education-term/dto/request/update-
 import { GetInProgressEducationTermDto } from '../../education-term/dto/request/get-in-progress-education-term.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
-import { EducationEnrollmentStatus } from '../../education-enrollment/const/education-enrollment-status.enum';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',
@@ -80,7 +79,6 @@ export interface IEducationTermDomainService {
 
   incrementCompletedMembersCount(
     educationTerm: EducationTermModel,
-    //count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 

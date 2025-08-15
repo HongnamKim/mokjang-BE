@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsEnum,
   IsIn,
   IsNotEmpty,
@@ -16,24 +17,28 @@ import {
   MaxLength,
   ValidateIf,
 } from 'class-validator';
-import { GenderEnum } from '../../const/enum/gender.enum';
-import { IsValidVehicleNumber } from '../../decorator/is-valid-vehicle-number.decorator';
-import { BaptismEnum } from '../../const/enum/baptism.enum';
+import { Gender } from '../../const/enum/gender.enum';
+import { Baptism } from '../../const/enum/baptism.enum';
 import { FamilyRelationConst } from '../../../family-relation/family-relation-domain/const/family-relation.const';
-import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
+import { Marriage } from '../../const/enum/marriage.enum';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
+import { IsYYYYMMDD } from '../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { Transform } from 'class-transformer';
 
 export class CreateMemberDto {
   @ApiProperty({
     name: 'registeredAt',
-    description: '교회 등록일자',
-    default: new Date(),
+    description: '교회 등록일자 (YYYY-MM-DD)',
+    default: new Date().toISOString().slice(0, 10),
   })
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('registeredAt')
   @IsOptional()
-  registeredAt?: Date;
+  registeredAt?: string;
+
+  utcRegisteredAt?: Date;
 
   @ApiProperty({
     description: '프로필 이미지 url',
@@ -119,24 +124,27 @@ export class CreateMemberDto {
 
   @ApiProperty({
     name: 'birth',
-    description: '생년월일',
+    description: '생년월일 (YYYY-MM-DD)',
     example: '2000-01-01',
     required: false,
   })
-  @IsDate()
+  @IsDateString({ strict: true })
+  @IsYYYYMMDD('birth')
   @IsOptional()
-  birth?: Date;
+  birth?: string;
+
+  utcBirth?: Date;
 
   @ApiProperty({
     name: 'gender',
     description: '성별',
-    enum: GenderEnum,
-    example: GenderEnum.male,
+    enum: Gender,
+    example: Gender.MALE,
     required: false,
   })
-  @IsEnum(GenderEnum)
+  @IsEnum(Gender)
   @IsOptional()
-  gender?: GenderEnum;
+  gender?: Gender;
 
   @ApiProperty({
     name: 'address',
@@ -208,43 +216,45 @@ export class CreateMemberDto {
     name: 'marriage',
     description: '결혼',
     example: '미혼',
-    enum: MarriageOptions,
+    enum: Marriage,
     required: false,
   })
-  @IsEnum(MarriageOptions)
+  @IsEnum(Marriage)
   @IsNotEmpty()
   @IsOptional()
-  marriage?: MarriageOptions;
+  marriage?: Marriage;
 
   @ApiProperty({
     name: 'vehicleNumber',
-    description: '차량번호 4자리',
-    example: ['1234', '5432'],
+    description: '차량번호',
+    example: ['1234', '141부5432'],
     type: 'array',
     required: false,
   })
+  @Transform(({ value }) => value.map((item) => item.replace(' ', '')))
   @IsArray()
+  @ArrayUnique()
   @ArrayMaxSize(3)
   @IsString({ each: true })
-  @Length(4, 4, { each: true })
+  @Length(4, 10, { each: true })
   @IsNotEmpty({ each: true })
-  @IsValidVehicleNumber()
+  //@IsValidVehicleNumber()
   @IsOptional()
   vehicleNumber?: string[];
 
   @ApiProperty({
     name: 'baptism',
     description: '신급',
-    enum: BaptismEnum,
-    example: BaptismEnum.baptized,
-    default: BaptismEnum.default,
+    enum: Baptism,
+    example: Baptism.BAPTIZED,
+    default: Baptism.NONE,
     required: false,
   })
-  @IsEnum(BaptismEnum)
+  @IsEnum(Baptism)
   @IsOptional()
-  baptism?: BaptismEnum = BaptismEnum.default;
+  baptism?: Baptism = Baptism.NONE;
 
-  @ApiProperty({
+  /*@ApiProperty({
     name: 'previousChurch',
     description: '이전 교회',
     example: 'a교회',
@@ -254,5 +264,5 @@ export class CreateMemberDto {
   @IsNotEmpty()
   @IsOptional()
   @MaxLength(30)
-  previousChurch?: string;
+  previousChurch?: string;*/
 }

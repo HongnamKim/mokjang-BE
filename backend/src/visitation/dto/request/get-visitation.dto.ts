@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDate,
   IsEnum,
@@ -121,4 +121,10 @@ export class GetVisitationDto {
   @IsNumber()
   @Min(1)
   inChargeId?: number;
+
+  @ApiPropertyOptional({ description: '심방 대상자 교인 ID' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  memberId?: number;
 }

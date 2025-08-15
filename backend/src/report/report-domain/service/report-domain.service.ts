@@ -9,10 +9,10 @@ import { ScheduleDto } from '../../../home/dto/schedule.dto';
 import { ScheduleReportDto } from '../../../home/dto/schedule-report.dto';
 import { ScheduleType } from '../../../home/const/schedule-type.enum';
 import { VisitationReportModel } from '../../visitation-report/entity/visitation-report.entity';
-import { EducationSessionReportModel } from '../../education-report/entity/education-session-report.entity';
-import { EducationTermReportModel } from '../../education-report/entity/education-term-report.entity';
-import { ReportType } from '../../base-report/const/report-type.enum';
+import { EducationReportModel } from '../../education-report/entity/education-report.entity';
+//import { EducationTermReportModel } from '../../education-report/entity/education-term-report.entity';
 import { GetMyReportsDto } from '../../../home/dto/request/get-my-reports.dto';
+import { EducationReportType } from '../../education-report/const/education-report-type.enum';
 
 @Injectable()
 export class ReportDomainService implements IReportDomainService {
@@ -36,7 +36,12 @@ export class ReportDomainService implements IReportDomainService {
 
     const reportsQb = repository
       .createQueryBuilder('report')
-      .select(['report.id', 'report.reportedAt', 'report.reportType'])
+      .select([
+        'report.id',
+        'report.reportedAt',
+        'report.reportType',
+        'report.educationReportType',
+      ])
       .where('report.receiverId = :receiverId', { receiverId: receiver.id });
 
     this.createQuery(reportsQb, 'task');
@@ -58,9 +63,9 @@ export class ReportDomainService implements IReportDomainService {
       .limit(dto.take)
       .offset(dto.take * (dto.page - 1));
 
-    const { entities, raw } = await reportsQb.getRawAndEntities();
+    const entities = await reportsQb.getMany();
 
-    return entities.map((report, index) => {
+    return entities.map((report) => {
       if (report instanceof TaskReportModel) {
         return new ScheduleReportDto(
           report.id,
@@ -90,9 +95,13 @@ export class ReportDomainService implements IReportDomainService {
           ),
         );
       } else if (
-        report instanceof EducationSessionReportModel &&
-        raw[index].report_reportType === ReportType.EDUCATION_SESSION
+        report instanceof EducationReportModel &&
+        report.educationReportType === EducationReportType.SESSION
       ) {
+        if (!report.educationSession) {
+          throw new InternalServerErrorException();
+        }
+
         return new ScheduleReportDto(
           report.id,
           ScheduleType.EDUCATION_SESSION,
@@ -106,13 +115,14 @@ export class ReportDomainService implements IReportDomainService {
             report.educationSession.startDate,
             report.educationSession.endDate,
             report.educationSession.status,
-            report.educationTermId,
-            report.educationId,
+            report.educationTerm.id,
+            report.educationTerm.educationId,
+            report.educationTerm.educationName,
           ),
         );
       } else if (
-        report instanceof EducationTermReportModel &&
-        raw[index].report_reportType === ReportType.EDUCATION_TERM
+        report instanceof EducationReportModel &&
+        report.educationReportType === EducationReportType.TERM
       ) {
         return new ScheduleReportDto(
           report.id,
@@ -125,8 +135,8 @@ export class ReportDomainService implements IReportDomainService {
             report.educationTerm.startDate,
             report.educationTerm.endDate,
             report.educationTerm.status,
-            undefined,
-            report.educationId,
+            report.educationTerm.id, //undefined,
+            report.educationTerm.educationId,
             report.educationTerm.educationName,
             report.educationTerm.term,
           ),
@@ -149,6 +159,7 @@ export class ReportDomainService implements IReportDomainService {
           ? [
               `${alias}.id`,
               `${alias}.educationName`,
+              `${alias}.educationId`,
               `${alias}.term`,
               `${alias}.startDate`,
               `${alias}.endDate`,
@@ -167,11 +178,11 @@ export class ReportDomainService implements IReportDomainService {
         `${alias}_inCharge.id`,
         `${alias}_inCharge.name`,
         `${alias}_inCharge.profileImageUrl`,
-        `${alias}_inCharge.mobilePhone`,
-        `${alias}_inCharge.registeredAt`,
-        `${alias}_inCharge.birth`,
-        `${alias}_inCharge.isLunar`,
-        `${alias}_inCharge.isLeafMonth`,
+        //`${alias}_inCharge.mobilePhone`,
+        //`${alias}_inCharge.registeredAt`,
+        //`${alias}_inCharge.birth`,
+        //`${alias}_inCharge.isLunar`,
+        //`${alias}_inCharge.isLeafMonth`,
         `${alias}_inCharge.groupRole`,
         `${alias}_inCharge.ministryGroupRole`,
       ])

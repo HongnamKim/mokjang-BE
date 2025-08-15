@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-export const PermissionChurch = createParamDecorator(
+export const RequestChurch = createParamDecorator(
   (_, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest();
 

@@ -22,14 +22,17 @@ import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
 import { MemberReadGuard } from '../guard/member-read.guard';
 import { MemberWriteGuard } from '../guard/member-write.guard';
-import { PermissionManager } from '../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { TargetMember } from '../decorator/target-member.decorator';
 import { MemberModel } from '../entity/member.entity';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { GetMemberListDto } from '../dto/list/get-member-list.dto';
+import { MemberDisplayColumn } from '../const/enum/list/display-column.enum';
+import { GetSimpleMemberListDto } from '../dto/list/get-simple-member-list.dto';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -37,11 +40,12 @@ export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
   @Get()
-  @MemberReadGuard()
+  //@MemberReadGuard()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMemberDto,
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
   ) {
     return this.membersService.getMembers(churchId, pm, dto);
   }
@@ -57,6 +61,27 @@ export class MembersController {
     return this.membersService.createMember(churchId, dto, qr);
   }
 
+  @Get('v2')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getMemberList(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
+    @Query() query: GetMemberListDto,
+  ) {
+    if (query.displayColumns.length === 0) {
+      query.displayColumns = [
+        MemberDisplayColumn.OFFICER,
+        MemberDisplayColumn.BIRTH,
+        MemberDisplayColumn.GROUP,
+        MemberDisplayColumn.MOBILE_PHONE,
+        MemberDisplayColumn.ADDRESS,
+      ];
+    }
+
+    return this.membersService.getMemberList(church, requestManager, query);
+  }
+
   @Get('simple')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembersSimple(
@@ -66,12 +91,22 @@ export class MembersController {
     return this.membersService.getSimpleMembers(churchId, dto);
   }
 
+  @Get('simple/v2')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getSimpleMemberList(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @Query() query: GetSimpleMemberListDto,
+  ) {
+    return this.membersService.getSimpleMemberList(church, query);
+  }
+
   @Get(':memberId')
   @MemberReadGuard()
   getMemberById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
   ) {
     return this.membersService.getMemberById(churchId, memberId, pm);
   }
@@ -82,7 +117,7 @@ export class MembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
     @Body() dto: UpdateMemberDto,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @TargetMember() targetMember: MemberModel,
   ) {
     return this.membersService.updateMember(church, targetMember, dto);
@@ -95,7 +130,7 @@ export class MembersController {
   deleteMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @TargetMember() targetMember: MemberModel,
     @QueryRunner() qr: QR,
   ) {

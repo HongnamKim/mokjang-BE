@@ -1,7 +1,16 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import {
+  createParamDecorator,
+  ExecutionContext,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { CustomRequest } from '../../common/custom-request';
 
 export const TargetMember = createParamDecorator((_, ctx: ExecutionContext) => {
-  const req = ctx.switchToHttp().getRequest();
+  const req: CustomRequest = ctx.switchToHttp().getRequest();
 
-  return req.targetMember;
+  if (req.targetMember) {
+    return req.targetMember;
+  } else {
+    throw new InternalServerErrorException('요청 처리 대상 교인 처리 누락');
+  }
 });

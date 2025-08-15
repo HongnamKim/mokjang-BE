@@ -9,10 +9,10 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
-import { GenderEnum } from '../const/enum/gender.enum';
-import { BaptismEnum } from '../const/enum/baptism.enum';
+import { Gender } from '../const/enum/gender.enum';
+import { Baptism } from '../const/enum/baptism.enum';
 import { FamilyRelationModel } from '../../family-relation/entity/family-relation.entity';
-import { MarriageOptions } from '../member-domain/const/marriage-options.const';
+import { Marriage } from '../const/enum/marriage.enum';
 import { Exclude } from 'class-transformer';
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
@@ -80,9 +80,10 @@ export class MemberModel extends BaseModel {
   birthdayMMDD: string;
 
   @Index()
-  @Column({ enum: GenderEnum, nullable: true, comment: '성별' })
-  gender: GenderEnum;
+  @Column({ enum: Gender, nullable: true, comment: '성별' })
+  gender: Gender;
 
+  @Index()
   @Column({ length: 50, nullable: true, comment: '도로명 주소' })
   address: string;
 
@@ -109,8 +110,8 @@ export class MemberModel extends BaseModel {
   school: string;
 
   @Index()
-  @Column({ enum: MarriageOptions, nullable: true, comment: '결혼 정보' })
-  marriage: MarriageOptions;
+  @Column({ enum: Marriage, nullable: true, comment: '결혼 정보' })
+  marriage: Marriage;
 
   @Column({ nullable: true, comment: '세부 결혼 정보' })
   marriageDetail: string;
@@ -132,16 +133,16 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => MemberModel, (member) => member.guidedBy)
   guiding: MemberModel[];
 
-  @Column({ length: 30, nullable: true, comment: '이전교회 이름' })
-  previousChurch: string;
+  /*@Column({ length: 30, nullable: true, comment: '이전교회 이름' })
+  previousChurch: string;*/
 
   @Index()
   @Column({
-    enum: BaptismEnum,
-    default: BaptismEnum.default,
+    enum: Baptism,
+    default: Baptism.NONE,
     comment: '신급',
   })
-  baptism: BaptismEnum;
+  baptism: Baptism;
 
   @ManyToMany(
     () => MinistryGroupModel,
@@ -177,12 +178,6 @@ export class MemberModel extends BaseModel {
   @ManyToOne(() => OfficerModel, (officer) => officer.members)
   @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
-
-  @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
-  officerStartDate: Date | null;
-
-  @Column({ type: 'varchar', nullable: true, comment: '임직교회' })
-  officerStartChurch: string | null;
 
   @OneToMany(
     () => OfficerHistoryModel,

@@ -21,7 +21,7 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateWorshipDto } from '../dto/request/worship/update-worship.dto';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
-import { PermissionChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { WorshipReadGuard } from '../guard/worship-read.guard';
@@ -36,7 +36,7 @@ export class WorshipController {
   getWorships(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetWorshipsDto,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
   ) {
     return this.worshipService.findWorships(church, dto);
   }
@@ -48,7 +48,7 @@ export class WorshipController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateWorshipDto,
     @QueryRunner() qr: QR,
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
   ) {
     return this.worshipService.postWorship(church, dto, qr);
   }
@@ -58,7 +58,7 @@ export class WorshipController {
   @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshWorshipCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.worshipService.refreshWorshipCount(church, qr);

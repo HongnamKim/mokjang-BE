@@ -44,7 +44,7 @@ import { ChurchJoinStatModel } from './church-join/entity/church-join-stat.entit
 import { TaskModule } from './task/task.module';
 import { TaskModel } from './task/entity/task.entity';
 import { TaskReportModel } from './report/task-report/entity/task-report.entity';
-import { EducationSessionReportModel } from './report/education-report/entity/education-session-report.entity';
+import { EducationReportModel } from './report/education-report/entity/education-report.entity';
 import { PermissionModule } from './permission/permission.module';
 import { PermissionUnitModel } from './permission/entity/permission-unit.entity';
 import { PermissionDomainModule } from './permission/permission-domain/permission-domain.module';
@@ -74,7 +74,7 @@ import { EducationTermModel } from './educations/education-term/entity/education
 import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
 import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
-import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
+//import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
   imports: [
@@ -181,8 +181,8 @@ import { EducationTermReportModel } from './report/education-report/entity/educa
           ReportModel,
           VisitationReportModel,
           TaskReportModel,
-          EducationSessionReportModel,
-          EducationTermReportModel,
+          EducationReportModel,
+          //EducationTermReportModel,
           // 업무 관련 엔티티
           TaskModel,
           // 권한 관련

@@ -14,6 +14,7 @@ import { GroupsDomainModule } from '../management/groups/groups-domain/groups-do
 import { IMEMBER_FILTER_SERVICE } from './service/interface/member-filter.service.interface';
 import { MemberFilterService } from './service/member-filter.service';
 import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.module';
+import { MinistryHistoryDomainModule } from '../member-history/ministry-history/ministry-history-domain/ministry-history-domain.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.mo
     FamilyRelationDomainModule,
     GroupsDomainModule,
     WorshipDomainModule,
+    MinistryHistoryDomainModule,
   ],
   controllers: [MembersController],
   providers: [

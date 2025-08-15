@@ -1,8 +1,8 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import {
-  IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE,
-  IEducationSessionReportDomainService,
-} from '../education-report-domain/interface/education-session-report-domain.service.interface';
+  IEDUCATION_REPORT_DOMAIN_SERVICE,
+  IEducationReportDomainService,
+} from '../education-report-domain/interface/education-report-domain.service.interface';
 import { QueryRunner } from 'typeorm';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { GetEducationSessionReportDto } from '../dto/session/request/get-education-session-report.dto';
@@ -15,8 +15,8 @@ import { DeleteEducationSessionReportResponseDto } from '../dto/session/response
 @Injectable()
 export class EducationSessionReportService {
   constructor(
-    @Inject(IEDUCATION_SESSION_REPORT_DOMAIN_SERVICE)
-    private readonly educationSessionReportDomainService: IEducationSessionReportDomainService,
+    @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
+    private readonly educationSessionReportDomainService: IEducationReportDomainService,
   ) {}
 
   async getEducationSessionReports(
@@ -119,8 +119,8 @@ export class EducationSessionReportService {
       reportId,
       deleteTarget.educationId,
       deleteTarget.educationTermId,
-      deleteTarget.educationSessionId,
-      deleteTarget.educationSession.title,
+      deleteTarget.educationSessionId ? deleteTarget.educationSessionId : 0,
+      deleteTarget.educationSession ? deleteTarget.educationSession.title : '',
       true,
     );
   }

@@ -206,6 +206,12 @@ export class GroupsDomainService implements IGroupsDomainService {
       }
     }
 
+    rootGroupIds.forEach((rootGroupId) => {
+      if (!groupMap.get(rootGroupId)) {
+        throw new NotFoundException(GroupException.NOT_FOUND);
+      }
+    });
+
     const visited = new Set<number>();
     const resultIds: number[] = [];
     const queue = [...rootGroupIds];

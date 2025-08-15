@@ -30,10 +30,10 @@ import { GetInProgressEducationTermDto } from '../../education-term/dto/request/
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { PermissionManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Educations')
@@ -59,7 +59,7 @@ export class EducationsController {
   @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postEducation(
-    @PermissionManager() pm: ChurchUserModel,
+    @RequestManager() pm: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Body() dto: CreateEducationDto,
     @QueryRunner() qr: QR,
@@ -82,7 +82,7 @@ export class EducationsController {
   @EducationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshEducationCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.educationsService.refreshEducationCount(church, qr);
