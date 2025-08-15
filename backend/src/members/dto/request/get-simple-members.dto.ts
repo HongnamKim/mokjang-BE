@@ -11,11 +11,11 @@ import {
 import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
 import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base-offset-pagination-request.dto';
 
-export enum GetSimpleMemberOrder {
+export enum SimpleMemberOrder {
   REGISTERED_AT = 'registeredAt',
 }
 
-export class GetSimpleMembersDto extends BaseOffsetPaginationRequestDto<GetSimpleMemberOrder> {
+export class GetSimpleMembersDto extends BaseOffsetPaginationRequestDto<SimpleMemberOrder> {
   @ApiProperty({
     description: '조회할 데이터 개수',
     default: 20,
@@ -38,12 +38,12 @@ export class GetSimpleMembersDto extends BaseOffsetPaginationRequestDto<GetSimpl
   @ApiProperty({
     description: '정렬 기준',
     required: false,
-    enum: GetSimpleMemberOrder,
-    default: GetSimpleMemberOrder.REGISTERED_AT,
+    enum: SimpleMemberOrder,
+    default: SimpleMemberOrder.REGISTERED_AT,
   })
   @IsOptional()
-  @IsEnum(GetSimpleMemberOrder)
-  order: GetSimpleMemberOrder = GetSimpleMemberOrder.REGISTERED_AT;
+  @IsEnum(SimpleMemberOrder)
+  order: SimpleMemberOrder = SimpleMemberOrder.REGISTERED_AT;
 
   @ApiProperty({
     description: '교인 이름',

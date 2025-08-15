@@ -29,9 +29,9 @@ import { GetMemberDto } from '../../dto/request/get-member.dto';
 import { MemberException } from '../../exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
-import { MembersDomainPaginationResultDto } from '../dto/members-domain-pagination-result.dto';
 import { GetSimpleMembersDto } from '../../dto/request/get-simple-members.dto';
 import {
+  MemberSimpleSelectQB,
   MemberSummarizedGroupSelectQB,
   MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
@@ -54,6 +54,7 @@ import {
   getFromDate,
   getToDate,
 } from '../../../member-history/history-date.utils';
+import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -228,7 +229,7 @@ export class MembersDomainService implements IMembersDomainService {
     church: ChurchModel,
     dto: GetSimpleMembersDto,
     qr?: QueryRunner,
-  ): Promise<MembersDomainPaginationResultDto> {
+  ): Promise<MemberModel[]> {
     const repository = this.getMembersRepository(qr);
 
     const whereOptions: FindOptionsWhere<MemberModel> = {
@@ -237,18 +238,91 @@ export class MembersDomainService implements IMembersDomainService {
       mobilePhone: dto.mobilePhone && ILike(`%${dto.mobilePhone}%`),
     };
 
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: whereOptions,
-        relations: MemberSummarizedRelation,
-        select: MemberSummarizedSelect,
-      }),
-      repository.count({
-        where: whereOptions,
-      }),
-    ]);
+    return repository.find({
+      where: whereOptions,
+      relations: MemberSummarizedRelation,
+      order: {
+        [dto.order]: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      select: {
+        id: true,
+        name: true,
+        profileImageUrl: true,
+        registeredAt: true,
+        officer: {
+          id: true,
+          name: true,
+        },
+        group: {
+          id: true,
+          name: true,
+        },
+        groupRole: true,
+        ministryGroupRole: true,
+      },
+    });
+  }
 
-    return new MembersDomainPaginationResultDto(data, totalCount);
+  async findSimpleMemberList(church: ChurchModel, dto: GetSimpleMemberListDto) {
+    const repository = this.getMembersRepository();
+
+    const query = repository
+      .createQueryBuilder('member')
+      .where('member.churchId = :churchId', { churchId: church.id })
+      .select(MemberSimpleSelectQB)
+      .leftJoin('member.group', 'group')
+      .addSelect(MemberSummarizedGroupSelectQB)
+      .leftJoin('member.officer', 'officer')
+      .addSelect(MemberSummarizedOfficerSelectQB)
+      .orderBy(`member.${dto.sortBy}`, dto.sortDirection)
+      .addOrderBy('member.id', dto.sortDirection);
+
+    if (dto.name) {
+      const searchWithoutSpace = dto.name.replaceAll(' ', '');
+      const pattern = `%${searchWithoutSpace}%`;
+
+      query.andWhere(`REPLACE(member.name, ' ', '') LIKE :name`, {
+        name: pattern,
+      });
+    }
+
+    if (dto.mobilePhone) {
+      query.andWhere('member.mobilePhone LIKE :mobilePhone', {
+        mobilePhone: `%${dto.mobilePhone}%`,
+      });
+    }
+
+    if (dto.cursor) {
+      this.applyCursorPagination(
+        query,
+        dto.cursor,
+        MemberSortColumn.REGISTERED_AT,
+        dto.sortDirection,
+      );
+    }
+
+    const items = await query.limit(dto.limit + 1).getMany();
+
+    const hasMore = items.length > dto.limit;
+    if (hasMore) {
+      items.pop(); // 추가로 가져온 마지막 항목 제거
+    }
+
+    // 커서 생성
+    const nextCursor =
+      hasMore && items.length > 0
+        ? this.encodeCursor(
+            items[items.length - 1],
+            MemberSortColumn.REGISTERED_AT,
+          )
+        : undefined;
+
+    return {
+      items,
+      nextCursor,
+      hasMore,
+    };
   }
 
   async countAllMembers(church: ChurchModel, qr?: QueryRunner) {
@@ -293,6 +367,8 @@ export class MembersDomainService implements IMembersDomainService {
 
     const member = await membersRepository
       .createQueryBuilder('member')
+      .leftJoin('member.churchUser', 'churchUser')
+      .addSelect(['churchUser.id', 'churchUser.role'])
       .leftJoin('member.guidedBy', 'guidedBy')
       .addSelect(['guidedBy.id', 'guidedBy.name', 'guidedBy.profileImageUrl'])
       .leftJoin(

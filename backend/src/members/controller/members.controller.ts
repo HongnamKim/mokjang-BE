@@ -32,6 +32,7 @@ import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 import { GetMemberListDto } from '../dto/list/get-member-list.dto';
 import { MemberDisplayColumn } from '../const/enum/list/display-column.enum';
+import { GetSimpleMemberListDto } from '../dto/list/get-simple-member-list.dto';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -88,6 +89,16 @@ export class MembersController {
     @Query() dto: GetSimpleMembersDto,
   ) {
     return this.membersService.getSimpleMembers(churchId, dto);
+  }
+
+  @Get('simple/v2')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getSimpleMemberList(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @Query() query: GetSimpleMemberListDto,
+  ) {
+    return this.membersService.getSimpleMemberList(church, query);
   }
 
   @Get(':memberId')
