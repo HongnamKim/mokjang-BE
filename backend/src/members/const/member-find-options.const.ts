@@ -40,6 +40,27 @@ export const MemberSummarizedSelectQB: string[] = [
   'member.ministryGroupRole',
 ];
 
+export const MemberSimpleSelect: FindOptionsSelect<MemberModel> = {
+  id: true,
+  name: true,
+  profileImageUrl: true,
+  registeredAt: true,
+  //mobilePhone: true,
+  //birth: true,
+  //isLunar: true,
+  //isLeafMonth: true,
+  officer: {
+    id: true,
+    name: true,
+  },
+  group: {
+    id: true,
+    name: true,
+  },
+  groupRole: true,
+  ministryGroupRole: true,
+};
+
 export const MemberSimpleSelectQB: string[] = [
   'member.id',
   'member.name',

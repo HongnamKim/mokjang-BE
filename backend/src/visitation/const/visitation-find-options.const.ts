@@ -1,7 +1,7 @@
 import { FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
 import { VisitationDetailModel } from '../entity/visitation-detail.entity';
-import { MemberSummarizedSelect } from '../../members/const/member-find-options.const';
+import { MemberSimpleSelect } from '../../members/const/member-find-options.const';
 
 export const VisitationRelationOptions: FindOptionsRelations<VisitationMetaModel> =
   {
@@ -26,27 +26,34 @@ export const VisitationRelationOptions: FindOptionsRelations<VisitationMetaModel
     visitationDetails: true,
   };
 
+export const VisitationListRelationOptions: FindOptionsRelations<VisitationMetaModel> =
+  {
+    members: {
+      officer: true,
+      group: true,
+    },
+    inCharge: {
+      officer: true,
+      group: true,
+    },
+    //visitationDetails: true,
+  };
+
+export const VisitationListSelectOptions: FindOptionsSelect<VisitationMetaModel> =
+  {
+    inCharge: MemberSimpleSelect,
+    members: MemberSimpleSelect,
+  };
+
 export const VisitationSelectOptions: FindOptionsSelect<VisitationMetaModel> = {
-  creator: MemberSummarizedSelect,
-  inCharge: MemberSummarizedSelect,
-  members: MemberSummarizedSelect,
+  creator: MemberSimpleSelect,
+  inCharge: MemberSimpleSelect,
+  members: MemberSimpleSelect,
   reports: {
     id: true,
     isRead: true,
     isConfirmed: true,
-    receiver: {
-      id: true,
-      name: true,
-      officer: {
-        id: true,
-        name: true,
-      },
-      group: {
-        id: true,
-        name: true,
-      },
-      groupRole: true,
-    },
+    receiver: MemberSimpleSelect,
   },
   visitationDetails: {
     id: true,
