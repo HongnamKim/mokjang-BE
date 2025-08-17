@@ -324,4 +324,14 @@ export class WorshipSessionDomainService
 
     return deletedSessionIds;
   }
+
+  async countByWorship(worship: WorshipModel): Promise<number> {
+    const repository = this.getRepository();
+
+    return repository.count({
+      where: {
+        worshipId: worship.id,
+      },
+    });
+  }
 }

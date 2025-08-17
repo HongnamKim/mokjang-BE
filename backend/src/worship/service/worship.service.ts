@@ -1,4 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -68,13 +72,7 @@ export class WorshipService {
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
-  async findWorships(
-    church: ChurchModel /*churchId: number*/,
-    dto: GetWorshipsDto,
-  ) {
-    /*const church =
-      await this.churchesDomainService.findChurchModelById(churchId);*/
-
+  async findWorships(church: ChurchModel, dto: GetWorshipsDto) {
     const { data, totalCount } = await this.worshipDomainService.findWorships(
       church,
       dto,
@@ -324,5 +322,135 @@ export class WorshipService {
     );
 
     return { worshipCount };
+  }
+
+  private async getDefaultGroupIds(church: ChurchModel, worship: WorshipModel) {
+    if (!worship.worshipTargetGroups) {
+      throw new InternalServerErrorException('WorshipTargetGroup Join Error');
+    }
+
+    const rootTargetGroupIds = worship.worshipTargetGroups.map(
+      (targetGroup) => targetGroup.groupId,
+    );
+
+    if (rootTargetGroupIds.length === 0) {
+      return undefined;
+    }
+
+    const defaultTargetGroupIds = (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        rootTargetGroupIds,
+      )
+    ).map((group) => group.id);
+
+    return new Set(defaultTargetGroupIds);
+  }
+
+  async getWorshipStatistics(
+    church: ChurchModel,
+    worshipId: number,
+    groupId?: number,
+  ) {
+    const worship = await this.worshipDomainService.findWorshipModelById(
+      church,
+      worshipId,
+      undefined,
+      { worshipTargetGroups: true },
+    );
+
+    const totalSessions =
+      await this.worshipSessionDomainService.countByWorship(worship);
+
+    const requestGroupIds = await this.getRequestGroupIds(
+      church,
+      worship,
+      groupId,
+    );
+
+    const attendanceStats =
+      await this.worshipAttendanceDomainService.getAttendanceStatsByWorship(
+        worship,
+        requestGroupIds,
+      );
+
+    const totalChecked =
+      attendanceStats.presentCount + attendanceStats.absentCount;
+    const overallRate =
+      totalChecked > 0
+        ? (attendanceStats.presentCount / totalChecked) * 100
+        : 0;
+
+    const movingAverages =
+      await this.worshipAttendanceDomainService.getMovingAverageAttendance(
+        worship,
+        requestGroupIds,
+      );
+
+    const trend = this.calculateTrendRates(
+      overallRate,
+      movingAverages.last12Weeks,
+      movingAverages.last4Weeks,
+    );
+
+    return {
+      worshipId,
+      totalSessions,
+      attendanceRate: {
+        overall: Math.round(overallRate * 100) / 100,
+        last4Weeks: Math.round(movingAverages.last4Weeks * 100) / 100,
+        last12Weeks: Math.round(movingAverages.last12Weeks * 100) / 100,
+      },
+      trend,
+    };
+  }
+
+  private calculateTrendRates(
+    overall: number,
+    week12: number,
+    week4: number,
+  ): {
+    longTerm: number; // 전체 → 12주 변화율
+    shortTerm: number; // 12주 → 4주 변화율
+    overall: number; // 전체 → 4주 변화율
+  } {
+    // 장기 변화율: (12주 - 전체) / 전체 × 100
+    const longTerm = overall > 0 ? ((week12 - overall) / overall) * 100 : 0;
+
+    // 단기 변화율: (4주 - 12주) / 12주 × 100
+    const shortTerm = week12 > 0 ? ((week4 - week12) / week12) * 100 : 0;
+
+    // 전체 변화율: (4주 - 전체) / 전체 × 100
+    const overallChange = overall > 0 ? ((week4 - overall) / overall) * 100 : 0;
+
+    return {
+      longTerm: Math.round(longTerm * 100) / 100,
+      shortTerm: Math.round(shortTerm * 100) / 100,
+      overall: Math.round(overallChange * 100) / 100,
+    };
+  }
+
+  private async getRequestGroupIds(
+    church: ChurchModel,
+    worship: WorshipModel,
+    groupId?: number,
+  ) {
+    // 조회 대상 groupId
+    if (groupId) {
+      return (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
+          groupId,
+        ])
+      ).map((group) => group.id);
+    } else {
+      const defaultTargetGroupIds = await this.getDefaultGroupIds(
+        church,
+        worship,
+      );
+
+      return defaultTargetGroupIds
+        ? Array.from(defaultTargetGroupIds)
+        : undefined;
+    }
   }
 }

@@ -5,6 +5,7 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
+import { WorshipModel } from '../../entity/worship.entity';
 
 export const IWORSHIP_ATTENDANCE_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ATTENDANCE_DOMAIN_SERVICE',
@@ -65,8 +66,17 @@ export interface IWorshipAttendanceDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  /*countPresentAndAbsent(enrollment: WorshipEnrollmentModel): Promise<{
+  getAttendanceStatsByWorship(
+    worship: WorshipModel,
+    requestGroupIds: number[] | undefined,
+  ): Promise<{
     presentCount: number;
     absentCount: number;
-  }>;*/
+    unknownCount: number;
+  }>;
+
+  getMovingAverageAttendance(
+    worship: WorshipModel,
+    requestGroupIds: number[] | undefined,
+  ): Promise<{ last4Weeks: number; last12Weeks: number }>;
 }
