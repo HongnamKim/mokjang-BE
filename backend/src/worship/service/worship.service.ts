@@ -49,6 +49,7 @@ import {
   IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
   IWorshipAttendanceDomainService,
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
+import { GetWorshipStatsResponseDto } from '../dto/response/worship/get-worship-stats-response.dto';
 
 @Injectable()
 export class WorshipService {
@@ -393,16 +394,16 @@ export class WorshipService {
       movingAverages.last4Weeks,
     );
 
-    return {
+    return new GetWorshipStatsResponseDto(
       worshipId,
       totalSessions,
-      attendanceRate: {
+      {
         overall: Math.round(overallRate * 100) / 100,
         last4Weeks: Math.round(movingAverages.last4Weeks * 100) / 100,
         last12Weeks: Math.round(movingAverages.last12Weeks * 100) / 100,
       },
       trend,
-    };
+    );
   }
 
   private calculateTrendRates(
