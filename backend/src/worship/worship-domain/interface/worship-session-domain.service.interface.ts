@@ -66,4 +66,6 @@ export interface IWorshipSessionDomainService {
     worship: WorshipModel,
     qr: QueryRunner,
   ): Promise<number[]>;
+
+  countByWorship(worship: WorshipModel): Promise<number>;
 }

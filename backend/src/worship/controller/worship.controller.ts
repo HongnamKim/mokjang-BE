@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { WorshipService } from '../service/worship.service';
 import { GetWorshipsDto } from '../dto/request/worship/get-worships.dto';
 import { CreateWorshipDto } from '../dto/request/worship/create-worship.dto';
@@ -25,6 +25,13 @@ import { RequestChurch } from '../../permission/decorator/permission-church.deco
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { WorshipReadGuard } from '../guard/worship-read.guard';
+import { GetWorshipStatsDto } from '../dto/request/worship/get-worship-stats.dto';
+import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
+import { DomainType } from '../../permission/const/domain-type.enum';
+import { DomainName } from '../../permission/const/domain-name.enum';
+import { DomainAction } from '../../permission/const/domain-action.enum';
+import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
+import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
 
 @ApiTags('Worships')
 @Controller()
@@ -98,5 +105,30 @@ export class WorshipController {
     @QueryRunner() qr: QR,
   ) {
     return this.worshipService.deleteWorshipById(churchId, worshipId, qr);
+  }
+
+  @Get(':worshipId/statistics')
+  @ApiQuery({ name: 'groupId', required: false })
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(
+      DomainType.WORSHIP,
+      DomainName.WORSHIP,
+      DomainAction.READ,
+    ),
+    WorshipGroupFilterGuard,
+    WorshipReadScopeGuard,
+  )
+  getWorshipStatistics(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('worshipId', ParseIntPipe) worshipId: number,
+    @RequestChurch() church: ChurchModel,
+    @Query() dto: GetWorshipStatsDto,
+  ) {
+    return this.worshipService.getWorshipStatistics(
+      church,
+      worshipId,
+      dto.groupId,
+    );
   }
 }

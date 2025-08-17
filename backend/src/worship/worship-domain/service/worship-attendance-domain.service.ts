@@ -27,6 +27,8 @@ import {
 } from '../../../members/const/member-find-options.const';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
 import { WorshipAttendanceOrderEnum } from '../../const/worship-attendance-order.enum';
+import { WorshipModel } from '../../entity/worship.entity';
+import { AttendanceStatus } from '../../const/attendance-status.enum';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -311,23 +313,115 @@ export class WorshipAttendanceDomainService
     });
   }
 
-  /*async countPresentAndAbsent(enrollment: WorshipEnrollmentModel) {
+  async getAttendanceStatsByWorship(
+    worship: WorshipModel,
+    requestGroupIds: number[] | undefined,
+  ): Promise<{
+    presentCount: number;
+    absentCount: number;
+    unknownCount: number;
+  }> {
     const repository = this.getRepository();
 
-    const presentCount = await repository.count({
-      where: {
-        worshipEnrollmentId: enrollment.id,
-        attendanceStatus: AttendanceStatus.PRESENT,
-      },
-    });
+    const query = repository
+      .createQueryBuilder('attendance')
+      .innerJoin(
+        'attendance.worshipSession',
+        'session',
+        'session.worshipId = :worshipId',
+      )
+      .where('session.worshipId = :worshipId', { worshipId: worship.id })
+      .select([
+        'SUM(CASE WHEN attendance.attendanceStatus = :present THEN 1 ELSE 0 END) as presentCount',
+        'SUM(CASE WHEN attendance.attendanceStatus = :absent THEN 1 ELSE 0 END) as absentCount',
+        'SUM(CASE WHEN attendance.attendanceStatus = :unknown THEN 1 ELSE 0 END) as unknownCount',
+      ])
+      .setParameters({
+        present: AttendanceStatus.PRESENT,
+        absent: AttendanceStatus.ABSENT,
+        unknown: AttendanceStatus.UNKNOWN,
+      });
 
-    const absentCount = await repository.count({
-      where: {
-        worshipEnrollmentId: enrollment.id,
-        attendanceStatus: AttendanceStatus.ABSENT,
-      },
-    });
+    if (requestGroupIds) {
+      query
+        .leftJoin('attendance.worshipEnrollment', 'enrollment')
+        .leftJoin('enrollment.member', 'member')
+        .andWhere('member.groupId IN (:...groupIds)', {
+          groupIds: requestGroupIds,
+        });
+    }
 
-    return { presentCount, absentCount };
-  }*/
+    const result = await query.getRawOne();
+
+    return {
+      presentCount: parseInt(result.presentcount) || 0,
+      absentCount: parseInt(result.absentcount) || 0,
+      unknownCount: parseInt(result.unknowncount) || 0,
+    };
+  }
+
+  async getMovingAverageAttendance(
+    worship: WorshipModel,
+    requestGroupIds: number[] | undefined,
+  ): Promise<{
+    last4Weeks: number;
+    last12Weeks: number;
+  }> {
+    const repository = this.getRepository();
+
+    const now = new Date();
+    const fourWeeksAgo = new Date(now.getTime() - 4 * 7 * 24 * 60 * 60 * 1000);
+    const twelveWeeksAgo = new Date(
+      now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000,
+    );
+
+    const statsQuery = (weeksAgo: Date) => {
+      const query = repository
+        .createQueryBuilder('attendance')
+        .innerJoin('attendance.worshipSession', 'session')
+        .where('session.worshipId = :worshipId', { worshipId: worship.id })
+        .andWhere('session.sessionDate >= :weeksAgo', { weeksAgo })
+        .select([
+          'SUM(CASE WHEN attendance.attendanceStatus = :present THEN 1 ELSE 0 END) as presentCount',
+          'SUM(CASE WHEN attendance.attendanceStatus = :absent THEN 1 ELSE 0 END) as absentCount',
+        ])
+        .setParameters({
+          present: AttendanceStatus.PRESENT,
+          absent: AttendanceStatus.ABSENT,
+        });
+
+      if (requestGroupIds) {
+        query
+          .leftJoin('attendance.worshipEnrollment', 'enrollment')
+          .leftJoin('enrollment.member', 'member')
+          .andWhere('member.groupId IN (:...groupId)', {
+            groupId: requestGroupIds,
+          });
+      }
+
+      return query;
+    };
+
+    const last4WeeksStatsQuery = statsQuery(fourWeeksAgo);
+
+    const last12WeeksStatsQuery = statsQuery(twelveWeeksAgo);
+
+    const [last4WeeksStats, last12WeeksStats] = await Promise.all([
+      last4WeeksStatsQuery.getRawOne(),
+      last12WeeksStatsQuery.getRawOne(),
+    ]);
+
+    const calc = (stats: any) => {
+      const present = parseInt(stats.presentcount) || 0;
+      const absent = parseInt(stats.absentcount) || 0;
+      const total = present + absent;
+
+      return total > 0 ? (present / total) * 100 : 0;
+    };
+
+    return {
+      last4Weeks: calc(last4WeeksStats),
+      last12Weeks: calc(last12WeeksStats),
+    };
+  }
 }
