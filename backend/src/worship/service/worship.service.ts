@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -88,12 +84,11 @@ export class WorshipService {
     );
   }
 
-  async findWorshipById(churchId: number, worshipId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async findWorshipById(
+    church: ChurchModel,
+    worshipId: number,
+    qr?: QueryRunner,
+  ) {
     const worship = await this.worshipDomainService.findWorshipById(
       church,
       worshipId,
@@ -155,15 +150,15 @@ export class WorshipService {
   }
 
   async patchWorshipById(
-    churchId: number,
+    church: ChurchModel,
     worshipId: number,
     dto: UpdateWorshipDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
 
     const targetWorship = await this.worshipDomainService.findWorshipModelById(
       church,
@@ -200,12 +195,12 @@ export class WorshipService {
   }
 
   async deleteWorshipById(
-    churchId: number,
+    //churchId: number,
+    church: ChurchModel,
     worshipId: number,
     qr: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+    //const church = await this.churchesDomainService.findChurchModelById(churchId);
 
     const targetWorship = await this.worshipDomainService.findWorshipModelById(
       church,
@@ -325,7 +320,7 @@ export class WorshipService {
     return { worshipCount };
   }
 
-  private async getDefaultGroupIds(church: ChurchModel, worship: WorshipModel) {
+  /*private async getDefaultGroupIds(church: ChurchModel, worship: WorshipModel) {
     if (!worship.worshipTargetGroups) {
       throw new InternalServerErrorException('WorshipTargetGroup Join Error');
     }
@@ -344,25 +339,17 @@ export class WorshipService {
         rootTargetGroupIds,
       )
     ).map((group) => group.id);
-
-    //return new Set(defaultTargetGroupIds);
-  }
+  }*/
 
   async getWorshipStatistics(
     church: ChurchModel,
-    worshipId: number,
+    worship: WorshipModel,
+    defaultWorshipTargetGroupIds: number[] | undefined,
     groupId?: number,
   ) {
-    const worship = await this.worshipDomainService.findWorshipModelById(
-      church,
-      worshipId,
-      undefined,
-      { worshipTargetGroups: true },
-    );
-
     const requestGroupIds = await this.getRequestGroupIds(
       church,
-      worship,
+      defaultWorshipTargetGroupIds,
       groupId,
     );
 
@@ -388,7 +375,7 @@ export class WorshipService {
     );
 
     return new GetWorshipStatsResponseDto(
-      worshipId,
+      worship.id,
       totalSessions,
       {
         overall: Math.round(overallRate * 100) / 100,
@@ -426,7 +413,7 @@ export class WorshipService {
 
   private async getRequestGroupIds(
     church: ChurchModel,
-    worship: WorshipModel,
+    defaultTargetGroupIds: number[] | undefined,
     groupId?: number,
   ) {
     // 조회 대상 groupId 가 있는 경우
@@ -439,7 +426,8 @@ export class WorshipService {
     } else {
       // 조회 대상 groupId 가 없을 경우
       // 예배 대상 그룹
-      return await this.getDefaultGroupIds(church, worship);
+      return defaultTargetGroupIds;
+      //await this.getDefaultGroupIds(church, worship);
 
       /*return defaultTargetGroupIds
         ? Array.from(defaultTargetGroupIds)

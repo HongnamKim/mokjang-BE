@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { WorshipService } from '../service/worship.service';
 import { GetWorshipsDto } from '../dto/request/worship/get-worships.dto';
 import { CreateWorshipDto } from '../dto/request/worship/create-worship.dto';
@@ -32,12 +32,25 @@ import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
+import { RequestWorship } from '../decorator/request-worship.decorator';
+import { WorshipModel } from '../entity/worship.entity';
+import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
+import {
+  ApiDeleteWorship,
+  ApiGetWorshipById,
+  ApiGetWorships,
+  ApiGetWorshipStatistics,
+  ApiPatchWorship,
+  ApiPostWorship,
+  ApiRefreshWorshipCount,
+} from '../swagger/worship.swagger';
 
 @ApiTags('Worships')
 @Controller()
 export class WorshipController {
   constructor(private readonly worshipService: WorshipService) {}
 
+  @ApiGetWorships()
   @Get()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getWorships(
@@ -48,6 +61,7 @@ export class WorshipController {
     return this.worshipService.findWorships(church, dto);
   }
 
+  @ApiPostWorship()
   @Post()
   @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
@@ -60,7 +74,7 @@ export class WorshipController {
     return this.worshipService.postWorship(church, dto, qr);
   }
 
-  @ApiParam({ name: 'churchId' })
+  @ApiRefreshWorshipCount()
   @Patch('refresh-count')
   @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
@@ -71,44 +85,46 @@ export class WorshipController {
     return this.worshipService.refreshWorshipCount(church, qr);
   }
 
+  @ApiGetWorshipById()
   @Get(':worshipId')
   @WorshipReadGuard()
   getWorshipById(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('worshipId', ParseIntPipe) worshipId: number,
   ) {
-    return this.worshipService.findWorshipById(churchId, worshipId);
+    return this.worshipService.findWorshipById(church, worshipId);
   }
 
+  @ApiPatchWorship()
   @Patch(':worshipId')
   @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchWorshipById(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Body() dto: UpdateWorshipDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.worshipService.patchWorshipById(churchId, worshipId, dto, qr);
+    return this.worshipService.patchWorshipById(church, worshipId, dto, qr);
   }
 
-  @ApiOperation({
-    summary: '예배 삭제',
-    description: '하위 enrollment, session, attendance 삭제',
-  })
+  @ApiDeleteWorship()
   @Delete(':worshipId')
   @WorshipWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   DeleteWorshipById(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.worshipService.deleteWorshipById(churchId, worshipId, qr);
+    return this.worshipService.deleteWorshipById(church, worshipId, qr);
   }
 
+  @ApiGetWorshipStatistics()
   @Get(':worshipId/statistics')
-  @ApiQuery({ name: 'groupId', required: false })
   @UseGuards(
     AccessTokenGuard,
     createDomainGuard(
@@ -123,11 +139,14 @@ export class WorshipController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @RequestChurch() church: ChurchModel,
+    @RequestWorship() worship: WorshipModel,
+    @WorshipTargetGroupIds() defaultTargetGroupIds: number[] | undefined,
     @Query() dto: GetWorshipStatsDto,
   ) {
     return this.worshipService.getWorshipStatistics(
       church,
-      worshipId,
+      worship,
+      defaultTargetGroupIds,
       dto.groupId,
     );
   }

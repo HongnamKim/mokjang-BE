@@ -28,8 +28,8 @@ import { MemberException } from '../../../members/exception/member.exception';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { TaskException } from '../../../task/const/exception-message/task.exception';
 import {
+  MemberSimpleSelect,
   MemberSummarizedRelation,
-  MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 
 @Injectable()
@@ -106,7 +106,7 @@ export class WorshipSessionDomainService
     return true;
   }
 
-  async findOrCreateWorshipSessionByDate(
+  async findOrCreateWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
@@ -122,6 +122,12 @@ export class WorshipSessionDomainService
         worshipId: worship.id,
         sessionDate,
       },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+      },
+      select: {
+        inCharge: MemberSimpleSelect,
+      },
     });
 
     if (existSession) {
@@ -136,7 +142,7 @@ export class WorshipSessionDomainService
     return { ...createdSession, isCreated: true };
   }
 
-  async findOrCreateRecentWorshipSession(
+  /*async findOrCreateRecentWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
@@ -160,7 +166,7 @@ export class WorshipSessionDomainService
     });
 
     return { ...createdSession, isCreated: true };
-  }
+  }*/
 
   private assertValidInChargeMember(inChargeMember: ChurchUserModel | null) {
     if (!inChargeMember) {
@@ -223,7 +229,7 @@ export class WorshipSessionDomainService
         inCharge: MemberSummarizedRelation,
       },
       select: {
-        inCharge: MemberSummarizedSelect,
+        inCharge: MemberSimpleSelect,
       },
     });
 
@@ -264,9 +270,6 @@ export class WorshipSessionDomainService
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
-
-    /*dto.sessionDate &&
-      (await this.assertValidNewSession(worship, dto.sessionDate, repository));*/
 
     this.assertValidInChargeMember(inCharge);
 

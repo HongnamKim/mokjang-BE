@@ -30,9 +30,9 @@ export class WorshipSessionModel extends BaseModel {
   description: string;
 
   @Column({ nullable: true })
-  inChargeId: number;
+  inChargeId: number | null;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { nullable: true })
   @JoinColumn({ name: 'inChargeId' })
-  inCharge: MemberModel;
+  inCharge: MemberModel | null;
 }

@@ -14,4 +14,6 @@ export interface CustomRequest extends Request {
   tokenPayload: JwtAccessPayload;
 
   targetMember: MemberModel;
+
+  worshipTargetGroupIds: number[] | undefined;
 }
