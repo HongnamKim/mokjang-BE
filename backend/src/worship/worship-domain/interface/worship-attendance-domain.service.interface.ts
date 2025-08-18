@@ -66,6 +66,16 @@ export interface IWorshipAttendanceDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
+  getAttendanceStatsBySession(
+    worshipSession: WorshipSessionModel,
+    requestGroupIds: number[] | undefined,
+    qr?: QueryRunner,
+  ): Promise<{
+    presentCount: number;
+    absentCount: number;
+    unknownCount: number;
+  }>;
+
   getAttendanceStatsByWorship(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,

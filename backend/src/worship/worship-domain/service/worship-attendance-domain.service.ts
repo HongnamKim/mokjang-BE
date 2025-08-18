@@ -29,9 +29,9 @@ import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance
 import { WorshipAttendanceOrderEnum } from '../../const/worship-attendance-order.enum';
 import { WorshipModel } from '../../entity/worship.entity';
 import { AttendanceStatus } from '../../const/attendance-status.enum';
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
-import { getDay, startOfDay, subDays, subWeeks } from 'date-fns';
+import { subWeeks } from 'date-fns';
+import { getRecentSessionDate } from '../../utils/worship-utils';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -316,6 +316,50 @@ export class WorshipAttendanceDomainService
     });
   }
 
+  async getAttendanceStatsBySession(
+    worshipSession: WorshipSessionModel,
+    requestGroupIds: number[] | undefined,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const query = repository
+      .createQueryBuilder('attendance')
+      .innerJoin(
+        'attendance.worshipSession',
+        'session',
+        'session.id = :sessionId',
+        { sessionId: worshipSession.id },
+      )
+      .select([
+        'SUM(CASE WHEN attendance.attendanceStatus = :present THEN 1 ELSE 0 END) as present_count',
+        'SUM(CASE WHEN attendance.attendanceStatus = :absent THEN 1 ELSE 0 END) as absent_count',
+        'SUM(CASE WHEN attendance.attendanceStatus = :unknown THEN 1 ELSE 0 END) as unknown_count',
+      ])
+      .setParameters({
+        present: AttendanceStatus.PRESENT,
+        absent: AttendanceStatus.ABSENT,
+        unknown: AttendanceStatus.UNKNOWN,
+      });
+
+    if (requestGroupIds) {
+      query
+        .leftJoin('attendance.worshipEnrollment', 'enrollment')
+        .leftJoin('enrollment.member', 'member')
+        .andWhere('member.groupId IN (:...groupIds)', {
+          groupIds: requestGroupIds,
+        });
+    }
+
+    const result = await query.getRawOne();
+
+    return {
+      presentCount: parseInt(result.present_count) || 0,
+      absentCount: parseInt(result.absent_count) || 0,
+      unknownCount: parseInt(result.unknown_count) || 0,
+    };
+  }
+
   async getAttendanceStatsByWorship(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
@@ -369,7 +413,11 @@ export class WorshipAttendanceDomainService
   }> {
     const repository = this.getRepository();
 
-    const nowKst = toZonedTime(new Date(), TIME_ZONE.SEOUL);
+    const lastWorshipDate = getRecentSessionDate(worship, TIME_ZONE.SEOUL);
+    const fourWeeksAgo = subWeeks(lastWorshipDate, 4);
+    const twelveWeeksAgo = subWeeks(lastWorshipDate, 12);
+
+    /*const nowKst = toZonedTime(new Date(), TIME_ZONE.SEOUL);
     const currentDayOfWeek = getDay(nowKst);
 
     const worshipDay = worship.worshipDay;
@@ -389,9 +437,9 @@ export class WorshipAttendanceDomainService
     const fourWeeksAgoKst = subWeeks(lastWorshipDateKst, 4);
     const twelveWeeksAgoKst = subWeeks(lastWorshipDateKst, 12);
 
-    //const now = new Date();
+    const now = new Date();
     const fourWeeksAgo = fromZonedTime(fourWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 4 * 7 * 24 * 60 * 60 * 1000);
-    const twelveWeeksAgo = fromZonedTime(twelveWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000);
+    const twelveWeeksAgo = fromZonedTime(twelveWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000);*/
 
     const statsQuery = (weeksAgo: Date) => {
       const query = repository

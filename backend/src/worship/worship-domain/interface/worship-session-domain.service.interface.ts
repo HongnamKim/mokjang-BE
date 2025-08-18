@@ -25,17 +25,17 @@ export interface IWorshipSessionDomainService {
     qr?: QueryRunner,
   ): Promise<WorshipSessionModel>;
 
-  findOrCreateWorshipSessionByDate(
+  findOrCreateWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
   ): Promise<WorshipSessionModel & { isCreated: boolean }>;
 
-  findOrCreateRecentWorshipSession(
+  /*findOrCreateRecentWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
-  ): Promise<WorshipSessionModel & { isCreated: boolean }>;
+  ): Promise<WorshipSessionModel & { isCreated: boolean }>;*/
 
   findWorshipSessionById(
     worship: WorshipModel,
