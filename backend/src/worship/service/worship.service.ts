@@ -338,14 +338,14 @@ export class WorshipService {
       return undefined;
     }
 
-    const defaultTargetGroupIds = (
+    return (
       await this.groupsDomainService.findGroupAndDescendantsByIds(
         church,
         rootTargetGroupIds,
       )
     ).map((group) => group.id);
 
-    return new Set(defaultTargetGroupIds);
+    //return new Set(defaultTargetGroupIds);
   }
 
   async getWorshipStatistics(
@@ -360,33 +360,26 @@ export class WorshipService {
       { worshipTargetGroups: true },
     );
 
-    const totalSessions =
-      await this.worshipSessionDomainService.countByWorship(worship);
-
     const requestGroupIds = await this.getRequestGroupIds(
       church,
       worship,
       groupId,
     );
 
-    const attendanceStats =
-      await this.worshipAttendanceDomainService.getAttendanceStatsByWorship(
+    const [totalSessions, overallRate, movingAverages] = await Promise.all([
+      // Session Count
+      this.worshipSessionDomainService.countByWorship(worship),
+      // 전체 출석률
+      this.worshipAttendanceDomainService.getAttendanceStatsByWorship(
         worship,
         requestGroupIds,
-      );
-
-    const totalChecked =
-      attendanceStats.presentCount + attendanceStats.absentCount;
-    const overallRate =
-      totalChecked > 0
-        ? (attendanceStats.presentCount / totalChecked) * 100
-        : 0;
-
-    const movingAverages =
-      await this.worshipAttendanceDomainService.getMovingAverageAttendance(
+      ),
+      // 이동평균
+      this.worshipAttendanceDomainService.getMovingAverageAttendance(
         worship,
         requestGroupIds,
-      );
+      ),
+    ]);
 
     const trend = this.calculateTrendRates(
       overallRate,
@@ -436,7 +429,7 @@ export class WorshipService {
     worship: WorshipModel,
     groupId?: number,
   ) {
-    // 조회 대상 groupId
+    // 조회 대상 groupId 가 있는 경우
     if (groupId) {
       return (
         await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
@@ -444,14 +437,13 @@ export class WorshipService {
         ])
       ).map((group) => group.id);
     } else {
-      const defaultTargetGroupIds = await this.getDefaultGroupIds(
-        church,
-        worship,
-      );
+      // 조회 대상 groupId 가 없을 경우
+      // 예배 대상 그룹
+      return await this.getDefaultGroupIds(church, worship);
 
-      return defaultTargetGroupIds
+      /*return defaultTargetGroupIds
         ? Array.from(defaultTargetGroupIds)
-        : undefined;
+        : undefined;*/
     }
   }
 }

@@ -29,6 +29,9 @@ import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance
 import { WorshipAttendanceOrderEnum } from '../../const/worship-attendance-order.enum';
 import { WorshipModel } from '../../entity/worship.entity';
 import { AttendanceStatus } from '../../const/attendance-status.enum';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { getDay, startOfDay, subDays, subWeeks } from 'date-fns';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -316,11 +319,7 @@ export class WorshipAttendanceDomainService
   async getAttendanceStatsByWorship(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
-  ): Promise<{
-    presentCount: number;
-    absentCount: number;
-    unknownCount: number;
-  }> {
+  ): Promise<number> {
     const repository = this.getRepository();
 
     const query = repository
@@ -353,11 +352,12 @@ export class WorshipAttendanceDomainService
 
     const result = await query.getRawOne();
 
-    return {
-      presentCount: parseInt(result.presentcount) || 0,
-      absentCount: parseInt(result.absentcount) || 0,
-      unknownCount: parseInt(result.unknowncount) || 0,
-    };
+    const presentCount = parseInt(result.presentcount) || 0;
+    const absentCount = parseInt(result.absentcount) || 0;
+
+    const totalChecked = presentCount + absentCount;
+
+    return totalChecked > 0 ? (presentCount / totalChecked) * 100 : 0;
   }
 
   async getMovingAverageAttendance(
@@ -369,11 +369,29 @@ export class WorshipAttendanceDomainService
   }> {
     const repository = this.getRepository();
 
-    const now = new Date();
-    const fourWeeksAgo = new Date(now.getTime() - 4 * 7 * 24 * 60 * 60 * 1000);
-    const twelveWeeksAgo = new Date(
-      now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000,
-    );
+    const nowKst = toZonedTime(new Date(), TIME_ZONE.SEOUL);
+    const currentDayOfWeek = getDay(nowKst);
+
+    const worshipDay = worship.worshipDay;
+    let daysToLastWorship = currentDayOfWeek - worshipDay;
+
+    // 이미 지난 예배
+    if (daysToLastWorship < 0) {
+      daysToLastWorship += 7;
+    } else if (daysToLastWorship === 0) {
+      // 예배 당일
+      daysToLastWorship = 0;
+    }
+
+    // 최근 예배일 (한국 시간 기준)
+    const lastWorshipDateKst = subDays(startOfDay(nowKst), daysToLastWorship);
+
+    const fourWeeksAgoKst = subWeeks(lastWorshipDateKst, 4);
+    const twelveWeeksAgoKst = subWeeks(lastWorshipDateKst, 12);
+
+    //const now = new Date();
+    const fourWeeksAgo = fromZonedTime(fourWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 4 * 7 * 24 * 60 * 60 * 1000);
+    const twelveWeeksAgo = fromZonedTime(twelveWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000);
 
     const statsQuery = (weeksAgo: Date) => {
       const query = repository
@@ -403,7 +421,6 @@ export class WorshipAttendanceDomainService
     };
 
     const last4WeeksStatsQuery = statsQuery(fourWeeksAgo);
-
     const last12WeeksStatsQuery = statsQuery(twelveWeeksAgo);
 
     const [last4WeeksStats, last12WeeksStats] = await Promise.all([
