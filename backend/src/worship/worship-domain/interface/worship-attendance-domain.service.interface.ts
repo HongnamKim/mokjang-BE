@@ -69,11 +69,7 @@ export interface IWorshipAttendanceDomainService {
   getAttendanceStatsByWorship(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
-  ): Promise<{
-    presentCount: number;
-    absentCount: number;
-    unknownCount: number;
-  }>;
+  ): Promise<number>;
 
   getMovingAverageAttendance(
     worship: WorshipModel,
