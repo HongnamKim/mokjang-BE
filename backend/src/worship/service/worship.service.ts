@@ -46,6 +46,7 @@ import {
   IWorshipAttendanceDomainService,
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
 import { GetWorshipStatsResponseDto } from '../dto/response/worship/get-worship-stats-response.dto';
+import { getIntersectionGroupIds } from '../utils/worship-utils';
 
 @Injectable()
 export class WorshipService {
@@ -345,6 +346,7 @@ export class WorshipService {
     church: ChurchModel,
     worship: WorshipModel,
     defaultWorshipTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
     groupId?: number,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
@@ -353,18 +355,26 @@ export class WorshipService {
       groupId,
     );
 
+    const intersectionGroupIds = getIntersectionGroupIds(
+      //defaultWorshipTargetGroupIds,
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
+
     const [totalSessions, overallRate, movingAverages] = await Promise.all([
       // Session Count
       this.worshipSessionDomainService.countByWorship(worship),
       // 전체 출석률
       this.worshipAttendanceDomainService.getAttendanceStatsByWorship(
         worship,
-        requestGroupIds,
+        //requestGroupIds,
+        intersectionGroupIds,
       ),
       // 이동평균
       this.worshipAttendanceDomainService.getMovingAverageAttendance(
         worship,
-        requestGroupIds,
+        //requestGroupIds,
+        intersectionGroupIds,
       ),
     ]);
 

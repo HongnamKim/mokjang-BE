@@ -32,6 +32,9 @@ import { RequestChurch } from '../../permission/decorator/permission-church.deco
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
+import { ApiGetWorshipAttendance } from '../swagger/worship-attendance.swagger';
+import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/get-worship-attendance-list.dto';
+import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
 
 @ApiTags('Worships:Attendance')
 @Controller(':worshipId/sessions/:sessionId/attendances')
@@ -40,6 +43,7 @@ export class WorshipAttendanceController {
     private readonly worshipAttendanceService: WorshipAttendanceService,
   ) {}
 
+  @ApiGetWorshipAttendance()
   @Get()
   @UseGuards(
     AccessTokenGuard,
@@ -59,13 +63,46 @@ export class WorshipAttendanceController {
     @Query() dto: GetWorshipAttendancesDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @PermissionScopeGroups() permissionScopeGroupIds?: number[],
+    @WorshipTargetGroupIds() defaultTargetGroupIds: number[] | undefined,
+    @PermissionScopeGroups() permissionScopeGroupIds: number[],
   ) {
     return this.worshipAttendanceService.getAttendances(
       church,
       worship,
       sessionId,
       dto,
+      defaultTargetGroupIds,
+      permissionScopeGroupIds,
+    );
+  }
+
+  @Get('v2')
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(
+      DomainType.WORSHIP,
+      DomainName.WORSHIP,
+      DomainAction.READ,
+    ),
+    WorshipGroupFilterGuard,
+    WorshipReadScopeGuard,
+  )
+  getAttendanceList(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('worshipId', ParseIntPipe) worshipId: number,
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+    @Query() query: GetWorshipAttendanceListDto,
+    @RequestChurch() church: ChurchModel,
+    @RequestWorship() worship: WorshipModel,
+    @WorshipTargetGroupIds() defaultTargetGroupIds: number[] | undefined,
+    @PermissionScopeGroups() permissionScopeGroupIds: number[] | undefined,
+  ) {
+    return this.worshipAttendanceService.getAttendancesV2(
+      church,
+      worship,
+      sessionId,
+      query,
+      defaultTargetGroupIds,
       permissionScopeGroupIds,
     );
   }

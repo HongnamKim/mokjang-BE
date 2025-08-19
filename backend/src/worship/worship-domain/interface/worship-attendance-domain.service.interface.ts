@@ -6,12 +6,21 @@ import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
 import { WorshipModel } from '../../entity/worship.entity';
+import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendance/get-worship-attendance-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 
 export const IWORSHIP_ATTENDANCE_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ATTENDANCE_DOMAIN_SERVICE',
 );
 
 export interface IWorshipAttendanceDomainService {
+  findAttendanceList(
+    session: WorshipSessionModel,
+    dto: GetWorshipAttendanceListDto,
+    groupIds: number[] | undefined,
+    qr?: QueryRunner,
+  ): Promise<DomainCursorPaginationResultDto<WorshipAttendanceModel>>;
+
   findAttendances(
     session: WorshipSessionModel,
     dto: GetWorshipAttendancesDto,

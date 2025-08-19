@@ -1,4 +1,4 @@
-export enum WorshipAttendanceOrderEnum {
+export enum WorshipAttendanceOrder {
   //CREATED_AT = 'createdAt',
   ID = 'id',
   UPDATED_AT = 'updatedAt',

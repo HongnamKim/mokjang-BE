@@ -31,6 +31,9 @@ import {
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipModel } from '../entity/worship.entity';
+import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/get-worship-attendance-list.dto';
+import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { WorshipAttendanceListResponseDto } from '../dto/response/worship-attendance/worship-attendance-list-response.dto';
 
 @Injectable()
 export class WorshipAttendanceService {
@@ -50,71 +53,13 @@ export class WorshipAttendanceService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  private async getRequestGroupIds(
-    church: ChurchModel,
-    dto: GetWorshipAttendancesDto,
-  ) {
-    if (!dto.groupId) {
-      return;
-    }
-
-    const group = await this.groupsDomainService.findGroupModelById(
-      church,
-      dto.groupId,
-    );
-
-    const groupIds = (
-      await this.groupsDomainService.findChildGroups(group)
-    ).map((group) => group.id);
-
-    groupIds && groupIds.unshift(group.id);
-
-    return groupIds;
-  }
-
-  private async getDefaultGroupIds(church: ChurchModel, worship: WorshipModel) {
-    const rootTargetGroupIds = worship.worshipTargetGroups.map(
-      (group) => group.group.id,
-    );
-
-    const defaultGroupIds = (
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        rootTargetGroupIds,
-      )
-    ).map((group) => group.id);
-
-    if (defaultGroupIds.length) {
-      return defaultGroupIds;
-    } else {
-      return undefined;
-    }
-  }
-
-  private intersection(
-    defaultWorshipTargetGroupIds?: number[],
-    permissionScopeGroupIds?: number[],
-  ) {
-    if (!defaultWorshipTargetGroupIds) {
-      return permissionScopeGroupIds;
-    }
-    if (!permissionScopeGroupIds) {
-      return defaultWorshipTargetGroupIds;
-    }
-
-    const targetGroupIdSet = new Set(defaultWorshipTargetGroupIds);
-
-    return permissionScopeGroupIds.filter((scopeGroupId) =>
-      targetGroupIdSet.has(scopeGroupId),
-    );
-  }
-
   async getAttendances(
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
     dto: GetWorshipAttendancesDto,
-    permissionScopeGroupIds?: number[],
+    defaultTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
   ) {
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
@@ -122,24 +67,24 @@ export class WorshipAttendanceService {
         sessionId,
       );
 
-    const requestGroupIds = await this.getRequestGroupIds(church, dto);
-    const defaultWorshipTargetGroupIds = await this.getDefaultGroupIds(
+    // 요청한 그룹 or 예배 대상 그룹
+    const requestGroupIds = await this.getRequestGroupIds(
       church,
-      worship,
+      defaultTargetGroupIds,
+      dto.groupId,
     );
 
-    const groupIds = requestGroupIds
-      ? requestGroupIds
-      : this.intersection(
-          defaultWorshipTargetGroupIds,
-          permissionScopeGroupIds,
-        );
+    // 예배 대상 그룹 * 권한 범위의 교집합
+    const intersectionGroupIds = getIntersectionGroupIds(
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
 
     const { data, totalCount } =
       await this.worshipAttendanceDomainService.findAttendances(
         session,
         dto,
-        groupIds,
+        intersectionGroupIds,
       );
 
     return new WorshipAttendancePaginationResponseDto(
@@ -148,6 +93,45 @@ export class WorshipAttendanceService {
       data.length,
       dto.page,
       Math.ceil(totalCount / dto.take),
+    );
+  }
+
+  async getAttendancesV2(
+    church: ChurchModel,
+    worship: WorshipModel,
+    sessionId: number,
+    query: GetWorshipAttendanceListDto,
+    defaultTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
+  ) {
+    const session =
+      await this.worshipSessionDomainService.findWorshipSessionModelById(
+        worship,
+        sessionId,
+      );
+
+    const requestGroupIds = await this.getRequestGroupIds(
+      church,
+      defaultTargetGroupIds,
+      query.groupId,
+    );
+
+    const intersectionGroupIds = getIntersectionGroupIds(
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
+
+    const result = await this.worshipAttendanceDomainService.findAttendanceList(
+      session,
+      query,
+      intersectionGroupIds,
+    );
+
+    return new WorshipAttendanceListResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
     );
   }
 
@@ -254,20 +238,6 @@ export class WorshipAttendanceService {
     );
   }
 
-  /*async joinAttendance(
-    enrollment: WorshipEnrollmentModel,
-    fromSessionDate?: Date,
-    toSessionDate?: Date,
-    qr?: QueryRunner,
-  ) {
-    return this.worshipAttendanceDomainService.joinAttendance(
-      enrollment,
-      fromSessionDate,
-      toSessionDate,
-      qr,
-    );
-  }*/
-
   private async updatePresentAbsentCount(
     targetAttendance: WorshipAttendanceModel,
     enrollment: WorshipEnrollmentModel,
@@ -326,6 +296,22 @@ export class WorshipAttendanceService {
         enrollment,
         qr,
       );
+    }
+  }
+
+  private async getRequestGroupIds(
+    church: ChurchModel,
+    defaultTargetGroupIds: number[] | undefined,
+    groupId?: number,
+  ) {
+    if (groupId) {
+      return (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
+          groupId,
+        ])
+      ).map((group) => group.id);
+    } else {
+      return defaultTargetGroupIds;
     }
   }
 }
