@@ -14,6 +14,7 @@ import {
   In,
   QueryRunner,
   Repository,
+  SelectQueryBuilder,
   UpdateResult,
 } from 'typeorm';
 import { WorshipSessionModel } from '../../entity/worship-session.entity';
@@ -22,16 +23,22 @@ import { WorshipAttendanceDomainPaginationResultDto } from '../dto/worship-atten
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { WorshipAttendanceException } from '../../exception/worship-attendance.exception';
 import {
+  MemberSimpleSelectQB,
+  MemberSummarizedGroupSelectQB,
+  MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
-import { WorshipAttendanceOrderEnum } from '../../const/worship-attendance-order.enum';
+import { WorshipAttendanceOrder } from '../../const/worship-attendance-order.enum';
 import { WorshipModel } from '../../entity/worship.entity';
 import { AttendanceStatus } from '../../const/attendance-status.enum';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { subWeeks } from 'date-fns';
 import { getRecentSessionDate } from '../../utils/worship-utils';
+import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendance/get-worship-attendance-list.dto';
+import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort-column.enum';
+import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -51,7 +58,7 @@ export class WorshipAttendanceDomainService
   private parseOrderOption(
     dto: GetWorshipAttendancesDto,
   ): FindOptionsOrder<WorshipAttendanceModel> {
-    if (dto.order === WorshipAttendanceOrderEnum.GROUP_NAME) {
+    if (dto.order === WorshipAttendanceOrder.GROUP_NAME) {
       return {
         worshipEnrollment: {
           member: {
@@ -62,7 +69,7 @@ export class WorshipAttendanceDomainService
           },
         },
       };
-    } else if (dto.order === WorshipAttendanceOrderEnum.NAME) {
+    } else if (dto.order === WorshipAttendanceOrder.NAME) {
       return {
         worshipEnrollment: {
           member: {
@@ -74,6 +81,170 @@ export class WorshipAttendanceDomainService
       return {
         [dto.order]: dto.orderDirection,
       };
+    }
+  }
+
+  async findAttendanceList(
+    session: WorshipSessionModel,
+    dto: GetWorshipAttendanceListDto,
+    groupIds: number[] | undefined,
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const query = repository
+      .createQueryBuilder('attendance')
+      .where('attendance.worshipSessionId = :sessionId', {
+        sessionId: session.id,
+      })
+      .select([
+        'attendance.id',
+        'attendance.attendanceStatus',
+        'attendance.note',
+      ])
+      .leftJoin('attendance.worshipEnrollment', 'enrollment')
+      .addSelect(['enrollment.id'])
+      .leftJoin('enrollment.member', 'member')
+      .addSelect(MemberSimpleSelectQB)
+      .leftJoin('member.group', 'group')
+      .addSelect(MemberSummarizedGroupSelectQB)
+      .leftJoin('member.officer', 'officer')
+      .addSelect(MemberSummarizedOfficerSelectQB);
+
+    if (groupIds) {
+      query.andWhere('member.groupId IN (:...groupIds)', { groupIds });
+    }
+
+    this.applySorting(query, dto.sortBy, dto.sortDirection);
+
+    if (dto.cursor) {
+      this.applyCursorPagination(
+        query,
+        dto.cursor,
+        dto.sortBy,
+        dto.sortDirection,
+      );
+    }
+
+    const items = await query.limit(dto.limit + 1).getMany();
+
+    const hasMore = items.length > dto.limit;
+    if (hasMore) {
+      items.pop();
+    }
+
+    const nextCursor =
+      hasMore && items.length > 0
+        ? this.encodeCursor(items[items.length - 1], dto.sortBy)
+        : undefined;
+
+    return new DomainCursorPaginationResultDto(items, nextCursor, hasMore);
+  }
+
+  private applySorting(
+    query: SelectQueryBuilder<WorshipAttendanceModel>,
+    sortBy: WorshipAttendanceSortColumn,
+    sortDirection: 'ASC' | 'DESC',
+  ) {
+    switch (sortBy) {
+      case WorshipAttendanceSortColumn.ATTENDANCE_STATUS:
+        query.orderBy('attendance.attendanceStatus', sortDirection);
+        break;
+      case WorshipAttendanceSortColumn.GROUP_NAME:
+        query.orderBy('group.name', sortDirection);
+        break;
+      case WorshipAttendanceSortColumn.NAME:
+        query.orderBy('member.name', sortDirection);
+        break;
+    }
+
+    query.addOrderBy('attendance.id', sortDirection);
+  }
+
+  private applyCursorPagination(
+    query: SelectQueryBuilder<WorshipAttendanceModel>,
+    cursor: string,
+    sortBy: WorshipAttendanceSortColumn,
+    sortDirection: 'ASC' | 'DESC',
+  ) {
+    const decodedCursor = this.decodeCursor(cursor);
+
+    if (!decodedCursor) return;
+
+    if (decodedCursor.column !== sortBy) return;
+
+    const { id, value } = decodedCursor;
+
+    const column = this.getSortColumnPath(sortBy);
+
+    if (value === null) {
+      if (sortDirection === 'ASC') {
+        query.andWhere(
+          `(${column} IS NOT NULL OR (${column} IS NULL AND attendance.id > :id))`,
+          { id },
+        );
+      } else {
+        query.andWhere('attendance.id < :id', { id });
+      }
+    } else {
+      if (sortDirection === 'ASC') {
+        query.andWhere(
+          `(${column} > :value OR (${column} = :value AND attendance.id > :id) OR (${column} IS NULL))`,
+          { value, id },
+        );
+      } else {
+        query.andWhere(
+          `(${column} < :value OR (${column} = :value AND attendance.id < :id))`,
+          { value, id },
+        );
+      }
+    }
+  }
+
+  private getSortColumnPath(sortBy: WorshipAttendanceSortColumn) {
+    switch (sortBy) {
+      case WorshipAttendanceSortColumn.ATTENDANCE_STATUS:
+        return 'attendance.attendanceStatus';
+      case WorshipAttendanceSortColumn.GROUP_NAME:
+        return 'group.name';
+      case WorshipAttendanceSortColumn.NAME:
+        return 'member.name';
+    }
+  }
+
+  private encodeCursor(
+    attendance: WorshipAttendanceModel,
+    sortBy: WorshipAttendanceSortColumn,
+  ) {
+    let value: any;
+
+    switch (sortBy) {
+      case WorshipAttendanceSortColumn.NAME:
+        value = attendance.worshipEnrollment.member.name;
+        break;
+      case WorshipAttendanceSortColumn.GROUP_NAME:
+        value = attendance.worshipEnrollment.member.group?.name || null;
+        break;
+      default:
+        value = attendance.attendanceStatus;
+        break;
+    }
+
+    const cursorData = {
+      id: attendance.id,
+      value,
+      column: sortBy,
+    };
+
+    return Buffer.from(JSON.stringify(cursorData)).toString('base64');
+  }
+
+  private decodeCursor(cursor: string) {
+    try {
+      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+      return JSON.parse(decoded);
+    } catch {
+      return null;
     }
   }
 
@@ -97,7 +268,7 @@ export class WorshipAttendanceDomainService
     const orderOptions: FindOptionsOrder<WorshipAttendanceModel> =
       this.parseOrderOption(dto);
 
-    if (dto.order !== WorshipAttendanceOrderEnum.ID) {
+    if (dto.order !== WorshipAttendanceOrder.ID) {
       orderOptions.id = 'ASC';
     }
 

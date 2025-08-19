@@ -44,6 +44,7 @@ import {
   ApiPostWorship,
   ApiRefreshWorshipCount,
 } from '../swagger/worship.swagger';
+import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
 
 @ApiTags('Worships')
 @Controller()
@@ -141,12 +142,14 @@ export class WorshipController {
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
     @WorshipTargetGroupIds() defaultTargetGroupIds: number[] | undefined,
+    @PermissionScopeGroups() permissionScopeGroupIds: number[] | undefined,
     @Query() dto: GetWorshipStatsDto,
   ) {
     return this.worshipService.getWorshipStatistics(
       church,
       worship,
       defaultTargetGroupIds,
+      permissionScopeGroupIds,
       dto.groupId,
     );
   }

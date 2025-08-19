@@ -23,3 +23,27 @@ export function getRecentSessionDate(
 
   return fromZonedTime(lastWorshipDateKst, timeZone);
 }
+
+export function getIntersectionGroupIds(
+  defaultWorshipTargetGroupIds: number[] | undefined,
+  permissionScopeGroupIds: number[] | undefined,
+) {
+  if (!defaultWorshipTargetGroupIds) {
+    // 요청 그룹이 없고, 예배 대상이 전체인 경우
+    // 요청자의 권한 범위 전체 --> number[] | undefined
+    return permissionScopeGroupIds;
+  }
+
+  // 요청 그룹이 특정된 경우 (요청 그룹이 있거나, 예배 대상이 있는 경우)
+  if (!permissionScopeGroupIds) {
+    // 요청자의 권한 범위가 전체인 경우
+    // 특정 예배 대상 그룹
+    return defaultWorshipTargetGroupIds;
+  }
+
+  const targetGroupIdSet = new Set(defaultWorshipTargetGroupIds);
+
+  return permissionScopeGroupIds.filter((scopeGroupId) =>
+    targetGroupIdSet.has(scopeGroupId),
+  );
+}

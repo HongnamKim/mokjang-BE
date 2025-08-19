@@ -49,7 +49,10 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
-import { getRecentSessionDate } from '../utils/worship-utils';
+import {
+  getIntersectionGroupIds,
+  getRecentSessionDate,
+} from '../utils/worship-utils';
 
 @Injectable()
 export class WorshipSessionService {
@@ -174,6 +177,7 @@ export class WorshipSessionService {
     worship: WorshipModel,
     sessionId: number,
     defaultWorshipTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
     dto: GetWorshipSessionStatsDto,
   ) {
     const session =
@@ -188,10 +192,17 @@ export class WorshipSessionService {
       dto.groupId,
     );
 
+    const intersectionGroupIds = getIntersectionGroupIds(
+      //defaultWorshipTargetGroupIds,
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
+
     const stats =
       await this.worshipAttendanceDomainService.getAttendanceStatsBySession(
         session,
-        requestGroupIds,
+        //requestGroupIds,
+        intersectionGroupIds,
       );
 
     return {
