@@ -3,7 +3,6 @@ import { QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
-import { WorshipEnrollmentDomainPaginationResultDto } from '../dto/worship-enrollment-domain-pagination-result.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
 
 export const IWORSHIP_ENROLLMENT_DOMAIN_SERVICE = Symbol(
@@ -11,12 +10,12 @@ export const IWORSHIP_ENROLLMENT_DOMAIN_SERVICE = Symbol(
 );
 
 export interface IWorshipEnrollmentDomainService {
-  findEnrollments(
+  /*findEnrollments(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
     groupIds?: number[],
     qr?: QueryRunner,
-  ): Promise<WorshipEnrollmentDomainPaginationResultDto>;
+  ): Promise<WorshipEnrollmentDomainPaginationResultDto>;*/
 
   findEnrollmentsByQueryBuilder(
     worship: WorshipModel,
