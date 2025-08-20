@@ -39,6 +39,7 @@ import { getRecentSessionDate } from '../../utils/worship-utils';
 import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendance/get-worship-attendance-list.dto';
 import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort-column.enum';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -658,6 +659,46 @@ export class WorshipAttendanceDomainService
     return {
       last4Weeks: calc(last4WeeksStats),
       last12Weeks: calc(last12WeeksStats),
+    };
+  }
+
+  async getStatisticsByMemberAndPeriod(
+    member: MemberModel,
+    worship: WorshipModel,
+    from: Date,
+    to: Date,
+  ) {
+    const repository = this.getRepository();
+
+    const query = repository
+      .createQueryBuilder('attendance')
+      .innerJoin('attendance.worshipSession', 'session')
+      .innerJoin(
+        'attendance.worshipEnrollment',
+        'enrollment',
+        'enrollment.memberId = :memberId AND enrollment.worshipId = :worshipId',
+        { memberId: member.id, worshipId: worship.id },
+      )
+      .where('attendance.sessionDate BETWEEN :from AND :to', { from, to })
+      .select([
+        'COUNT(CASE WHEN attendance.attendanceStatus = :present THEN 1 END) as presentCount',
+        'COUNT(CASE WHEN attendance.attendanceStatus = :absent THEN 1 END) as absentCount',
+        'COUNT(CASE WHEN attendance.attendanceStatus = :unknown THEN 1 END) as unknownCount',
+        'COUNT(DISTINCT session.id) as totalSessions',
+      ])
+      .setParameters({
+        present: AttendanceStatus.PRESENT,
+        absent: AttendanceStatus.ABSENT,
+        unknown: AttendanceStatus.UNKNOWN,
+      });
+
+    const result = await query.getRawOne();
+
+    return {
+      presentCount: +result.presentcount || 0,
+      absentCount: +result.absentcount || 0,
+      unknownCount: +result.unknowncount || 0,
+      totalSessions: +result.totalsessions || 0,
     };
   }
 }

@@ -2,22 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { IWorshipEnrollmentDomainService } from '../interface/worship-enrollment-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
-import {
-  FindOptionsOrder,
-  FindOptionsWhere,
-  In,
-  QueryRunner,
-  Repository,
-  SelectQueryBuilder,
-} from 'typeorm';
+import { QueryRunner, Repository, SelectQueryBuilder } from 'typeorm';
 import { WorshipModel } from '../../entity/worship.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
 import { WorshipEnrollmentDomainPaginationResultDto } from '../dto/worship-enrollment-domain-pagination-result.dto';
-import {
-  MemberSummarizedRelation,
-  MemberSummarizedSelect,
-} from '../../../members/const/member-find-options.const';
 import { WorshipEnrollmentOrderEnum } from '../../const/worship-enrollment-order.enum';
 import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
 import { LowAttendanceOrder } from '../../../home/const/low-attendance-order.enum';
@@ -39,35 +28,6 @@ export class WorshipEnrollmentDomainService
     return qr
       ? qr.manager.getRepository(WorshipEnrollmentModel)
       : this.repository;
-  }
-
-  private parseOrderOption(dto: GetWorshipEnrollmentsDto) {
-    if (dto.order === WorshipEnrollmentOrderEnum.NAME) {
-      const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-        member: {
-          name: dto.orderDirection,
-        },
-      };
-
-      return orderOptions;
-    } else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
-      const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-        member: {
-          group: {
-            name: dto.orderDirection,
-          },
-          name: dto.orderDirection,
-        },
-      };
-
-      return orderOptions;
-    } else {
-      const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-        [dto.order]: dto.orderDirection,
-      };
-
-      return orderOptions;
-    }
   }
 
   private initEnrollmentQb(
@@ -107,37 +67,23 @@ export class WorshipEnrollmentDomainService
     qb: SelectQueryBuilder<WorshipEnrollmentModel>,
     dto: GetWorshipEnrollmentsDto,
   ) {
-    if (dto.order === WorshipEnrollmentOrderEnum.ATTENDANCE_RATE) {
-      qb.orderBy(
-        'attendance_rate',
-        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
-      );
-      qb.addOrderBy('enrollment.id', 'ASC');
-    } else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
-      // 그룹 이름
-      qb.orderBy(
-        'group.name',
-        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
-      );
-      // 교인 이름
-      qb.addOrderBy(
-        'member.name',
-        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
-      );
-      qb.addOrderBy('enrollment.id', 'ASC');
-    } else if (dto.order === WorshipEnrollmentOrderEnum.NAME) {
-      // 교인 이름
-      qb.addOrderBy(
-        'member.name',
-        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
-      );
-      qb.addOrderBy('enrollment.id', 'ASC');
-    } else {
-      qb.addOrderBy(
-        `enrollment.${dto.order}`,
-        dto.orderDirection.toUpperCase() as 'ASC' | 'DESC',
-      );
+    switch (dto.order) {
+      case WorshipEnrollmentOrderEnum.ATTENDANCE_RATE:
+        qb.orderBy('attendance_rate', dto.orderDirection);
+        break;
+      case WorshipEnrollmentOrderEnum.NAME:
+        qb.addOrderBy('member.name', dto.orderDirection);
+        break;
+      case WorshipEnrollmentOrderEnum.GROUP_NAME:
+        qb.orderBy('group.name', dto.orderDirection); // 그룹 이름
+        qb.addOrderBy('member.name', dto.orderDirection); // 교인 이름
+        break;
+      default:
+        qb.orderBy(`enrollment.${dto.order}`, dto.orderDirection);
+        break;
     }
+
+    qb.addOrderBy('enrollment.id', 'ASC');
   }
 
   async findEnrollmentsByQueryBuilder(
@@ -170,49 +116,6 @@ export class WorshipEnrollmentDomainService
         attendanceRate: rate,
       };
     });
-
-    return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
-  }
-
-  async findEnrollments(
-    worship: WorshipModel,
-    dto: GetWorshipEnrollmentsDto,
-    groupIds?: number[],
-    qr?: QueryRunner,
-  ) {
-    const repository = this.getRepository(qr);
-
-    const whereOptions: FindOptionsWhere<WorshipEnrollmentModel> = {
-      worshipId: worship.id,
-      member: {
-        groupId: groupIds && In(groupIds),
-      },
-    };
-
-    const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> =
-      this.parseOrderOption(dto);
-
-    if (dto.order !== WorshipEnrollmentOrderEnum.ID) {
-      orderOptions.id = 'ASC';
-    }
-
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: whereOptions,
-        order: orderOptions,
-        relations: {
-          member: MemberSummarizedRelation,
-        },
-        select: {
-          member: MemberSummarizedSelect,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      repository.count({
-        where: whereOptions,
-      }),
-    ]);
 
     return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
   }
@@ -438,6 +341,76 @@ export class WorshipEnrollmentDomainService
     });
   }
 
+  /*async findEnrollments(
+    worship: WorshipModel,
+    dto: GetWorshipEnrollmentsDto,
+    groupIds?: number[],
+    qr?: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const whereOptions: FindOptionsWhere<WorshipEnrollmentModel> = {
+      worshipId: worship.id,
+      member: {
+        groupId: groupIds && In(groupIds),
+      },
+    };
+
+    const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> =
+      this.parseOrderOption(dto);
+    orderOptions.id = 'ASC';
+
+    /!*if (dto.order !== WorshipEnrollmentOrderEnum.ID) {
+      orderOptions.id = 'ASC';
+    }*!/
+
+    const [data, totalCount] = await Promise.all([
+      repository.find({
+        where: whereOptions,
+        order: orderOptions,
+        relations: {
+          member: MemberSummarizedRelation,
+        },
+        select: {
+          member: MemberSummarizedSelect,
+        },
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+      repository.count({
+        where: whereOptions,
+      }),
+    ]);
+
+    return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
+  }*/
+  /*private parseOrderOption(dto: GetWorshipEnrollmentsDto) {
+      if (dto.order === WorshipEnrollmentOrderEnum.NAME) {
+        const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
+          member: {
+            name: dto.orderDirection,
+          },
+        };
+
+        return orderOptions;
+      } else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
+        const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
+          member: {
+            group: {
+              name: dto.orderDirection,
+            },
+            name: dto.orderDirection,
+          },
+        };
+
+        return orderOptions;
+      } else {
+        const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
+          //[dto.order]: dto.orderDirection,
+        };
+        return orderOptions;
+      }
+    }*/
   /*async updatePresentAbsentCount(
     enrollment: WorshipEnrollmentModel,
     presentCount: number,

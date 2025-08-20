@@ -5,6 +5,7 @@ import { WorshipDomainPaginationResultDto } from '../dto/worship-domain-paginati
 import { WorshipModel } from '../../entity/worship.entity';
 import { CreateWorshipDto } from '../../dto/request/worship/create-worship.dto';
 import { UpdateWorshipDto } from '../../dto/request/worship/update-worship.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 export const IWORSHIP_DOMAIN_SERVICE = Symbol('IWORSHIP_DOMAIN_SERVICE');
 
@@ -52,4 +53,9 @@ export interface IWorshipDomainService {
   ): Promise<UpdateResult>;
 
   countAllWorships(church: ChurchModel, qr: QueryRunner): Promise<number>;
+
+  findAvailableWorships(
+    member: MemberModel,
+    targetGroupIds: number[] | undefined,
+  ): Promise<WorshipModel[]>;
 }

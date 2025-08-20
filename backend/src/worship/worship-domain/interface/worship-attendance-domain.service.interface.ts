@@ -8,6 +8,7 @@ import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance
 import { WorshipModel } from '../../entity/worship.entity';
 import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendance/get-worship-attendance-list.dto';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 export const IWORSHIP_ATTENDANCE_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ATTENDANCE_DOMAIN_SERVICE',
@@ -94,4 +95,11 @@ export interface IWorshipAttendanceDomainService {
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
   ): Promise<{ last4Weeks: number; last12Weeks: number }>;
+
+  getStatisticsByMemberAndPeriod(
+    member: MemberModel,
+    worship: WorshipModel,
+    utcFrom: Date,
+    utcTo: Date,
+  ): any;
 }
