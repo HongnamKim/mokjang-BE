@@ -111,4 +111,21 @@ export interface IWorshipAttendanceDomainService {
     worship: WorshipModel,
     dto: GetMemberWorshipAttendancesDto,
   ): Promise<DomainCursorPaginationResultDto<WorshipAttendanceModel>>;
+
+  findUnknownAttendances(
+    session: WorshipSessionModel,
+    groupIds: number[] | undefined,
+    qr: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]>;
+
+  findAbsentAttendances(
+    session: WorshipSessionModel,
+    groupIds: number[] | undefined,
+    qr: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]>;
+
+  updateAllAttended(
+    updateTargetIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

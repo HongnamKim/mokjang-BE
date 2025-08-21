@@ -34,6 +34,7 @@ import { WorshipModel } from '../entity/worship.entity';
 import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/get-worship-attendance-list.dto';
 import { getIntersectionGroupIds } from '../utils/worship-utils';
 import { WorshipAttendanceListResponseDto } from '../dto/response/worship-attendance/worship-attendance-list-response.dto';
+import { PatchWorshipAllAttendedResponseDto } from '../dto/response/worship-attendance/patch-worship-all-attended-response.dto';
 
 @Injectable()
 export class WorshipAttendanceService {
@@ -313,5 +314,72 @@ export class WorshipAttendanceService {
     } else {
       return defaultTargetGroupIds;
     }
+  }
+
+  async patchAllAttended(
+    church: ChurchModel,
+    worship: WorshipModel,
+    sessionId: number,
+    defaultTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
+    qr: QueryRunner,
+  ) {
+    const requestGroupIds = await this.getRequestGroupIds(
+      church,
+      defaultTargetGroupIds,
+    );
+
+    const intersectionGroupIds = getIntersectionGroupIds(
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
+
+    const session =
+      await this.worshipSessionDomainService.findWorshipSessionModelById(
+        worship,
+        sessionId,
+        qr,
+      );
+
+    const unknownAttendances =
+      await this.worshipAttendanceDomainService.findUnknownAttendances(
+        session,
+        intersectionGroupIds,
+        qr,
+      );
+
+    const absentAttendance =
+      await this.worshipAttendanceDomainService.findAbsentAttendances(
+        session,
+        intersectionGroupIds,
+        qr,
+      );
+
+    const updateTargetIds = [...unknownAttendances, ...absentAttendance].map(
+      (attendance) => attendance.id,
+    );
+
+    if (updateTargetIds.length === 0) {
+      return new PatchWorshipAllAttendedResponseDto(
+        true,
+        updateTargetIds.length,
+      );
+    }
+
+    await this.worshipAttendanceDomainService.updateAllAttended(
+      updateTargetIds,
+      qr,
+    );
+
+    await this.worshipEnrollmentDomainService.incrementPresentCounts(
+      [...unknownAttendances, ...absentAttendance],
+      qr,
+    );
+    await this.worshipEnrollmentDomainService.decrementAbsentCounts(
+      absentAttendance,
+      qr,
+    );
+
+    return new PatchWorshipAllAttendedResponseDto(true, updateTargetIds.length);
   }
 }

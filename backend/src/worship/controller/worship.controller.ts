@@ -31,7 +31,7 @@ import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
-import { WorshipReadScopeGuard } from '../guard/worship-read-scope.guard';
+import { WorshipScopeGuard } from '../guard/worship-scope.guard';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
 import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
@@ -134,7 +134,7 @@ export class WorshipController {
       DomainAction.READ,
     ),
     WorshipGroupFilterGuard,
-    WorshipReadScopeGuard,
+    WorshipScopeGuard,
   )
   getWorshipStatistics(
     @Param('churchId', ParseIntPipe) churchId: number,
