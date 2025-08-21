@@ -40,7 +40,7 @@ import {
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
-import { getDay } from 'date-fns';
+import { differenceInWeeks, getDay, subWeeks } from 'date-fns';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { GetWorshipSessionDto } from '../dto/request/worship-session/get-worship-session.dto';
 import { GetWorshipSessionStatsDto } from '../dto/request/worship-session/get-worship-session-stats.dto';
@@ -53,6 +53,11 @@ import {
   getIntersectionGroupIds,
   getRecentSessionDate,
 } from '../utils/worship-utils';
+import { GetWorshipSessionCheckStatusDto } from '../dto/request/worship-session/get-worship-session-check-status.dto';
+import {
+  getFromDate,
+  getToDate,
+} from '../../member-history/history-date.utils';
 
 @Injectable()
 export class WorshipSessionService {
@@ -97,6 +102,48 @@ export class WorshipSessionService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
+  }
+
+  async getSessionCheckStatus(
+    church: ChurchModel,
+    worship: WorshipModel,
+    defaultTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
+    dto: GetWorshipSessionCheckStatusDto,
+  ) {
+    const requestGroupIds = await this.getRequestGroupIds(
+      church,
+      defaultTargetGroupIds,
+      dto.groupId,
+    );
+
+    const intersectionGroupIds = getIntersectionGroupIds(
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
+
+    const from = dto.from
+      ? getFromDate(dto.from, TIME_ZONE.SEOUL)
+      : subWeeks(getRecentSessionDate(worship, TIME_ZONE.SEOUL), 14);
+    const to = dto.from
+      ? getToDate(dto.to, TIME_ZONE.SEOUL)
+      : getRecentSessionDate(worship, TIME_ZONE.SEOUL);
+
+    console.log(from, to);
+
+    if (differenceInWeeks(to, from) > 15) {
+      throw new BadRequestException('지원하지 않는 기간 범위입니다.');
+    }
+
+    const result =
+      await this.worshipSessionDomainService.findSessionCheckStatus(
+        worship,
+        intersectionGroupIds,
+        from,
+        to,
+      );
+
+    return { data: result, timestamp: new Date() };
   }
 
   /**

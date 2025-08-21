@@ -12,7 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WorshipSessionService } from '../service/worship-session.service';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
@@ -47,6 +47,7 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
 import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
+import { GetWorshipSessionCheckStatusDto } from '../dto/request/worship-session/get-worship-session-check-status.dto';
 
 @ApiTags('Worships:Sessions')
 @Controller(':worshipId/sessions')
@@ -83,6 +84,36 @@ export class WorshipSessionController {
       worshipId,
       dto,
       qr,
+    );
+  }
+
+  @ApiOperation({ summary: '예배 세션의 출석체크 완료 여부' })
+  @Get('check-status')
+  @UseGuards(
+    AccessTokenGuard,
+    createDomainGuard(
+      DomainType.WORSHIP,
+      DomainName.WORSHIP,
+      DomainAction.READ,
+    ),
+    WorshipGroupFilterGuard,
+    WorshipReadScopeGuard,
+  )
+  getSessionCheckStatus(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('worshipId', ParseIntPipe) worshipId: number,
+    @Query() dto: GetWorshipSessionCheckStatusDto,
+    @RequestChurch() church: ChurchModel,
+    @RequestWorship() worship: WorshipModel,
+    @WorshipTargetGroupIds() defaultTargetGroupIds?: number[],
+    @PermissionScopeGroups() permissionScopeGroupIds?: number[],
+  ) {
+    return this.worshipSessionService.getSessionCheckStatus(
+      church,
+      worship,
+      defaultTargetGroupIds,
+      permissionScopeGroupIds,
+      dto,
     );
   }
 
