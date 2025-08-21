@@ -34,9 +34,10 @@ import { GetMemberListDto } from '../dto/list/get-member-list.dto';
 import { MemberDisplayColumn } from '../const/enum/list/display-column.enum';
 import { GetSimpleMemberListDto } from '../dto/list/get-simple-member-list.dto';
 import { GetMemberWorshipStatisticsDto } from '../dto/request/worship/get-member-worship-statistics.dto';
-import { endOfYear, startOfYear } from 'date-fns';
+import { endOfToday, startOfToday, subYears } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-member-worship-attendances.dto';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -161,12 +162,12 @@ export class MembersController {
     @RequestChurch() church: ChurchModel,
     @Query() dto: GetMemberWorshipStatisticsDto,
   ) {
-    dto.utcFrom = dto.from
+    dto.utcFrom = dto.utcFrom
       ? fromZonedTime(dto.from, TIME_ZONE.SEOUL)
-      : fromZonedTime(startOfYear(new Date()), TIME_ZONE.SEOUL);
+      : fromZonedTime(subYears(startOfToday(), 1), TIME_ZONE.SEOUL);
     dto.utcTo = dto.to
       ? fromZonedTime(dto.to, TIME_ZONE.SEOUL)
-      : fromZonedTime(endOfYear(new Date()), TIME_ZONE.SEOUL);
+      : fromZonedTime(endOfToday(), TIME_ZONE.SEOUL);
 
     return this.membersService.getMemberWorshipStatistics(
       church,
@@ -175,6 +176,25 @@ export class MembersController {
     );
   }
 
-  @Get(':memberId/worship/recent')
-  getMemberWorshipRecentAttendance() {}
+  @Get(':memberId/worship/attendances')
+  @MemberReadGuard()
+  getMemberWorshipRecentAttendance(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @RequestChurch() church: ChurchModel,
+    @Query() dto: GetMemberWorshipAttendancesDto,
+  ) {
+    dto.utcFrom = dto.utcFrom
+      ? fromZonedTime(dto.from, TIME_ZONE.SEOUL)
+      : fromZonedTime(subYears(startOfToday(), 1), TIME_ZONE.SEOUL);
+    dto.utcTo = dto.to
+      ? fromZonedTime(dto.to, TIME_ZONE.SEOUL)
+      : fromZonedTime(endOfToday(), TIME_ZONE.SEOUL);
+
+    return this.membersService.getMemberWorshipAttendances(
+      church,
+      memberId,
+      dto,
+    );
+  }
 }

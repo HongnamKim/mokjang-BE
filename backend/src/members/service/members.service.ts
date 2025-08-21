@@ -64,6 +64,8 @@ import {
   IWorshipAttendanceDomainService,
 } from '../../worship/worship-domain/interface/worship-attendance-domain.service.interface';
 import { GetMemberWorshipStatisticsResponseDto } from '../dto/response/worship/get-member-worship-statistics-response.dto';
+import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-member-worship-attendances.dto';
+import { GetMemberWorshipAttendancesResponseDto } from '../dto/response/worship/get-member-worship-attendances-response.dto';
 
 @Injectable()
 export class MembersService {
@@ -425,5 +427,30 @@ export class MembersService {
   private calculateRate(numerator: number, denominator: number) {
     if (denominator === 0) return 0;
     return Math.round((numerator / denominator) * 1000) / 10;
+  }
+
+  async getMemberWorshipAttendances(
+    church: ChurchModel,
+    memberId: number,
+    dto: GetMemberWorshipAttendancesDto,
+  ) {
+    const [member, worship] = await Promise.all([
+      this.membersDomainService.findMemberModelById(church, memberId),
+      this.worshipDomainService.findWorshipModelById(church, dto.worshipId),
+    ]);
+
+    const result =
+      await this.worshipAttendanceDomainService.findMemberWorshipAttendances(
+        member,
+        worship,
+        dto,
+      );
+
+    return new GetMemberWorshipAttendancesResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
+    );
   }
 }
