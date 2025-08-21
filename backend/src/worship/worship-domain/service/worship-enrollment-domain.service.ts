@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { IWorshipEnrollmentDomainService } from '../interface/worship-enrollment-domain.service.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
-import { QueryRunner, Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  In,
+  QueryRunner,
+  Repository,
+  SelectQueryBuilder,
+  UpdateResult,
+} from 'typeorm';
 import { WorshipModel } from '../../entity/worship.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
@@ -14,6 +20,7 @@ import { SimpleMemberDto } from '../../../members/dto/simple-member.dto';
 import { SimpleGroupDto } from '../../../management/groups/dto/simple-group.dto';
 import { SimpleOfficerDto } from '../../../management/officers/dto/simple-officer.dto';
 import { LowAttendanceMemberDto } from '../../../home/dto/low-attendance-member.dto';
+import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 
 @Injectable()
 export class WorshipEnrollmentDomainService
@@ -201,6 +208,19 @@ export class WorshipEnrollmentDomainService
     return repository.increment({ id: enrollment.id }, 'presentCount', 1);
   }
 
+  async incrementPresentCounts(
+    worshipAttendanceModels: WorshipAttendanceModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const enrollmentIds = worshipAttendanceModels.map(
+      (attendance) => attendance.worshipEnrollmentId,
+    );
+
+    return repository.increment({ id: In(enrollmentIds) }, 'presentCount', 1);
+  }
+
   async decrementPresentCount(
     enrollment: WorshipEnrollmentModel,
     qr: QueryRunner,
@@ -226,6 +246,19 @@ export class WorshipEnrollmentDomainService
     const repository = this.getRepository(qr);
 
     return repository.decrement({ id: enrollment.id }, 'absentCount', 1);
+  }
+
+  async decrementAbsentCounts(
+    worshipAttendances: WorshipAttendanceModel[],
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const enrollmentIds = worshipAttendances.map(
+      (attendance) => attendance.worshipEnrollmentId,
+    );
+
+    return repository.decrement({ id: In(enrollmentIds) }, 'absentCount', 1);
   }
 
   async findLowAttendanceEnrollments(

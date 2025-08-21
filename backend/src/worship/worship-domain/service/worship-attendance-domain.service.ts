@@ -38,6 +38,7 @@ import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetMemberWorshipAttendancesDto } from '../../../members/dto/request/worship/get-member-worship-attendances.dto';
+import { session } from 'passport';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -748,5 +749,65 @@ export class WorshipAttendanceDomainService
       nextCursor,
       hasMore,
     };
+  }
+
+  findAbsentAttendances(
+    session: WorshipSessionModel,
+    groupIds: number[] | undefined,
+    qr: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        worshipSessionId: session.id,
+        attendanceStatus: AttendanceStatus.ABSENT,
+        worshipEnrollment: groupIds && {
+          member: {
+            groupId: In(groupIds),
+          },
+        },
+      },
+    });
+  }
+
+  findUnknownAttendances(
+    session: WorshipSessionModel,
+    groupIds: number[] | undefined,
+    qr: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        worshipSessionId: session.id,
+        attendanceStatus: AttendanceStatus.UNKNOWN,
+        worshipEnrollment: groupIds && {
+          member: {
+            groupId: In(groupIds),
+          },
+        },
+      },
+    });
+  }
+
+  async updateAllAttended(
+    updateTargetIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      { id: In(updateTargetIds) },
+      { attendanceStatus: AttendanceStatus.PRESENT },
+    );
+
+    if (result.affected !== updateTargetIds.length) {
+      throw new InternalServerErrorException(
+        WorshipAttendanceException.UPDATE_ERROR,
+      );
+    }
+
+    return result;
   }
 }
