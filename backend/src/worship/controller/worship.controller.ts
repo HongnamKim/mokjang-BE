@@ -150,7 +150,7 @@ export class WorshipController {
       worship,
       defaultTargetGroupIds,
       permissionScopeGroupIds,
-      dto.groupId,
+      dto,
     );
   }
 }

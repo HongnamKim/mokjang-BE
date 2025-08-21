@@ -87,15 +87,17 @@ export interface IWorshipAttendanceDomainService {
     unknownCount: number;
   }>;
 
-  getAttendanceStatsByWorship(
+  getOverallAttendanceStats(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
-  ): Promise<number>;
+  ): Promise<{ overallRate: number; attendanceCheckRate: number }>;
 
-  getMovingAverageAttendance(
+  getAttendanceStatsByPeriod(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
-  ): Promise<{ last4Weeks: number; last12Weeks: number }>;
+    from: Date,
+    to: Date | undefined,
+  ): Promise<{ rate: number; attendanceCheckRate: number }>;
 
   getStatisticsByMemberAndPeriod(
     member: MemberModel,

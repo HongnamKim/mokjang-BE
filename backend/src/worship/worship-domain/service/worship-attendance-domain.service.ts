@@ -33,9 +33,6 @@ import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance
 import { WorshipAttendanceOrder } from '../../const/worship-attendance-order.enum';
 import { WorshipModel } from '../../entity/worship.entity';
 import { AttendanceStatus } from '../../const/attendance-status.enum';
-import { TIME_ZONE } from '../../../common/const/time-zone.const';
-import { subWeeks } from 'date-fns';
-import { getRecentSessionDate } from '../../utils/worship-utils';
 import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendance/get-worship-attendance-list.dto';
 import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort-column.enum';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
@@ -538,10 +535,10 @@ export class WorshipAttendanceDomainService
     };
   }
 
-  async getAttendanceStatsByWorship(
+  async getOverallAttendanceStats(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
-  ): Promise<number> {
+  ): Promise<{ overallRate: number; attendanceCheckRate: number }> {
     const repository = this.getRepository();
 
     const query = repository
@@ -576,63 +573,50 @@ export class WorshipAttendanceDomainService
 
     const presentCount = parseInt(result.presentcount) || 0;
     const absentCount = parseInt(result.absentcount) || 0;
+    const unknownCount = parseInt(result.unknowncount) || 0;
 
+    const totalCount = presentCount + absentCount + unknownCount;
     const totalChecked = presentCount + absentCount;
 
-    return totalChecked > 0 ? (presentCount / totalChecked) * 100 : 0;
+    return {
+      overallRate: totalChecked > 0 ? (presentCount / totalChecked) * 100 : 0,
+      attendanceCheckRate:
+        totalCount > 0 ? (totalChecked / totalCount) * 100 : 0,
+    };
   }
 
-  async getMovingAverageAttendance(
+  async getAttendanceStatsByPeriod(
     worship: WorshipModel,
     requestGroupIds: number[] | undefined,
-  ): Promise<{
-    last4Weeks: number;
-    last12Weeks: number;
-  }> {
+    from: Date,
+    to: Date | undefined,
+  ): Promise<{ rate: number; attendanceCheckRate: number }> {
     const repository = this.getRepository();
 
-    const lastWorshipDate = getRecentSessionDate(worship, TIME_ZONE.SEOUL);
-    const fourWeeksAgo = subWeeks(lastWorshipDate, 4);
-    const twelveWeeksAgo = subWeeks(lastWorshipDate, 12);
+    // const lastWorshipDate = getRecentSessionDate(worship, TIME_ZONE.SEOUL);
+    // const fourWeeksAgo = subWeeks(lastWorshipDate, 4);
+    // const twelveWeeksAgo = subWeeks(lastWorshipDate, 12);
 
-    /*const nowKst = toZonedTime(new Date(), TIME_ZONE.SEOUL);
-    const currentDayOfWeek = getDay(nowKst);
-
-    const worshipDay = worship.worshipDay;
-    let daysToLastWorship = currentDayOfWeek - worshipDay;
-
-    // 이미 지난 예배
-    if (daysToLastWorship < 0) {
-      daysToLastWorship += 7;
-    } else if (daysToLastWorship === 0) {
-      // 예배 당일
-      daysToLastWorship = 0;
-    }
-
-    // 최근 예배일 (한국 시간 기준)
-    const lastWorshipDateKst = subDays(startOfDay(nowKst), daysToLastWorship);
-
-    const fourWeeksAgoKst = subWeeks(lastWorshipDateKst, 4);
-    const twelveWeeksAgoKst = subWeeks(lastWorshipDateKst, 12);
-
-    const now = new Date();
-    const fourWeeksAgo = fromZonedTime(fourWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 4 * 7 * 24 * 60 * 60 * 1000);
-    const twelveWeeksAgo = fromZonedTime(twelveWeeksAgoKst, TIME_ZONE.SEOUL); //new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000);*/
-
-    const statsQuery = (weeksAgo: Date) => {
+    const statsQuery = (from: Date, to?: Date) => {
       const query = repository
         .createQueryBuilder('attendance')
         .innerJoin('attendance.worshipSession', 'session')
         .where('session.worshipId = :worshipId', { worshipId: worship.id })
-        .andWhere('session.sessionDate >= :weeksAgo', { weeksAgo })
+        .andWhere('session.sessionDate >= :from', { from })
         .select([
           'SUM(CASE WHEN attendance.attendanceStatus = :present THEN 1 ELSE 0 END) as presentCount',
           'SUM(CASE WHEN attendance.attendanceStatus = :absent THEN 1 ELSE 0 END) as absentCount',
+          'SUM(CASE WHEN attendance.attendanceStatus = :unknown THEN 1 ELSE 0 END) as unknownCount',
         ])
         .setParameters({
           present: AttendanceStatus.PRESENT,
           absent: AttendanceStatus.ABSENT,
+          unknown: AttendanceStatus.UNKNOWN,
         });
+
+      if (to) {
+        query.andWhere('session.sessionDate <= :to', { to });
+      }
 
       if (requestGroupIds) {
         query
@@ -646,25 +630,22 @@ export class WorshipAttendanceDomainService
       return query;
     };
 
-    const last4WeeksStatsQuery = statsQuery(fourWeeksAgo);
-    const last12WeeksStatsQuery = statsQuery(twelveWeeksAgo);
+    const customStatsQuery = statsQuery(from, to);
 
-    const [last4WeeksStats, last12WeeksStats] = await Promise.all([
-      last4WeeksStatsQuery.getRawOne(),
-      last12WeeksStatsQuery.getRawOne(),
-    ]);
+    const customStats = await customStatsQuery.getRawOne();
 
-    const calc = (stats: any) => {
-      const present = parseInt(stats.presentcount) || 0;
-      const absent = parseInt(stats.absentcount) || 0;
-      const total = present + absent;
-
-      return total > 0 ? (present / total) * 100 : 0;
+    const result = {
+      presentCount: +customStats.presentcount,
+      absentCount: +customStats.absentcount,
+      unknownCount: +customStats.unknowncount,
     };
 
+    const totalCheck = result.presentCount + result.absentCount;
+    const totalCount = totalCheck + result.unknownCount;
+
     return {
-      last4Weeks: calc(last4WeeksStats),
-      last12Weeks: calc(last12WeeksStats),
+      rate: totalCheck > 0 ? (result.presentCount / totalCheck) * 100 : 0,
+      attendanceCheckRate: totalCount > 0 ? (totalCheck / totalCount) * 100 : 0,
     };
   }
 

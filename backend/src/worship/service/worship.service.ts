@@ -47,6 +47,12 @@ import {
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
 import { GetWorshipStatsResponseDto } from '../dto/response/worship/get-worship-stats-response.dto';
 import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { GetWorshipStatsDto } from '../dto/request/worship/get-worship-stats.dto';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import {
+  getFromDate,
+  getToDate,
+} from '../../member-history/history-date.utils';
 
 @Injectable()
 export class WorshipService {
@@ -321,104 +327,54 @@ export class WorshipService {
     return { worshipCount };
   }
 
-  /*private async getDefaultGroupIds(church: ChurchModel, worship: WorshipModel) {
-    if (!worship.worshipTargetGroups) {
-      throw new InternalServerErrorException('WorshipTargetGroup Join Error');
-    }
-
-    const rootTargetGroupIds = worship.worshipTargetGroups.map(
-      (targetGroup) => targetGroup.groupId,
-    );
-
-    if (rootTargetGroupIds.length === 0) {
-      return undefined;
-    }
-
-    return (
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        rootTargetGroupIds,
-      )
-    ).map((group) => group.id);
-  }*/
-
   async getWorshipStatistics(
     church: ChurchModel,
     worship: WorshipModel,
     defaultWorshipTargetGroupIds: number[] | undefined,
     permissionScopeGroupIds: number[] | undefined,
-    groupId?: number,
+    dto: GetWorshipStatsDto,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
       church,
       defaultWorshipTargetGroupIds,
-      groupId,
+      dto.groupId,
     );
 
     const intersectionGroupIds = getIntersectionGroupIds(
-      //defaultWorshipTargetGroupIds,
       requestGroupIds,
       permissionScopeGroupIds,
     );
 
-    const [totalSessions, overallRate, movingAverages] = await Promise.all([
-      // Session Count
-      this.worshipSessionDomainService.countByWorship(worship),
-      // 전체 출석률
-      this.worshipAttendanceDomainService.getAttendanceStatsByWorship(
+    dto.utcFrom = getFromDate(dto.from, TIME_ZONE.SEOUL);
+    dto.utcTo = getToDate(dto.to, TIME_ZONE.SEOUL);
+
+    // Session Count
+    //const totalSessions = await this.worshipSessionDomainService.countByWorship(worship),
+
+    const [worshipStats, customStats] = await Promise.all([
+      // 전체 기간 출석률
+      this.worshipAttendanceDomainService.getOverallAttendanceStats(
         worship,
         //requestGroupIds,
         intersectionGroupIds,
       ),
-      // 이동평균
-      this.worshipAttendanceDomainService.getMovingAverageAttendance(
+      // 선택기간 출석률
+      this.worshipAttendanceDomainService.getAttendanceStatsByPeriod(
         worship,
-        //requestGroupIds,
         intersectionGroupIds,
+        dto.utcFrom,
+        dto.utcTo,
       ),
     ]);
 
-    const trend = this.calculateTrendRates(
-      overallRate,
-      movingAverages.last12Weeks,
-      movingAverages.last4Weeks,
-    );
-
     return new GetWorshipStatsResponseDto(
       worship.id,
-      totalSessions,
+      Math.round(worshipStats.attendanceCheckRate * 100) / 100,
       {
-        overall: Math.round(overallRate * 100) / 100,
-        last4Weeks: Math.round(movingAverages.last4Weeks * 100) / 100,
-        last12Weeks: Math.round(movingAverages.last12Weeks * 100) / 100,
+        overall: Math.round(worshipStats.overallRate * 100) / 100,
+        period: Math.round(customStats.rate * 100) / 100,
       },
-      trend,
     );
-  }
-
-  private calculateTrendRates(
-    overall: number,
-    week12: number,
-    week4: number,
-  ): {
-    longTerm: number; // 전체 → 12주 변화율
-    shortTerm: number; // 12주 → 4주 변화율
-    overall: number; // 전체 → 4주 변화율
-  } {
-    // 장기 변화율: (12주 - 전체) / 전체 × 100
-    const longTerm = overall > 0 ? ((week12 - overall) / overall) * 100 : 0;
-
-    // 단기 변화율: (4주 - 12주) / 12주 × 100
-    const shortTerm = week12 > 0 ? ((week4 - week12) / week12) * 100 : 0;
-
-    // 전체 변화율: (4주 - 전체) / 전체 × 100
-    const overallChange = overall > 0 ? ((week4 - overall) / overall) * 100 : 0;
-
-    return {
-      longTerm: Math.round(longTerm * 100) / 100,
-      shortTerm: Math.round(shortTerm * 100) / 100,
-      overall: Math.round(overallChange * 100) / 100,
-    };
   }
 
   private async getRequestGroupIds(
@@ -437,11 +393,6 @@ export class WorshipService {
       // 조회 대상 groupId 가 없을 경우
       // 예배 대상 그룹
       return defaultTargetGroupIds;
-      //await this.getDefaultGroupIds(church, worship);
-
-      /*return defaultTargetGroupIds
-        ? Array.from(defaultTargetGroupIds)
-        : undefined;*/
     }
   }
 }

@@ -68,4 +68,11 @@ export interface IWorshipSessionDomainService {
   ): Promise<number[]>;
 
   countByWorship(worship: WorshipModel): Promise<number>;
+
+  findSessionCheckStatus(
+    worship: WorshipModel,
+    intersectionGroupIds: number[] | undefined,
+    from: Date,
+    to: Date,
+  ): Promise<any>;
 }

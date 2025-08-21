@@ -10,7 +10,7 @@ export class WorshipAttendanceModel extends BaseModel {
   @Column()
   worshipSessionId: number;
 
-  @ManyToOne(() => WorshipSessionModel)
+  @ManyToOne(() => WorshipSessionModel, (session) => session.worshipAttendances)
   @JoinColumn({ name: 'worshipSessionId' })
   worshipSession: WorshipSessionModel;
 
