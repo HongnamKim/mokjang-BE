@@ -40,6 +40,7 @@ import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendanc
 import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort-column.enum';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { GetMemberWorshipAttendancesDto } from '../../../members/dto/request/worship/get-member-worship-attendances.dto';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -204,6 +205,8 @@ export class WorshipAttendanceDomainService
 
   private getSortColumnPath(sortBy: WorshipAttendanceSortColumn) {
     switch (sortBy) {
+      case WorshipAttendanceSortColumn.SESSION_DATE:
+        return 'attendance.sessionDate';
       case WorshipAttendanceSortColumn.ATTENDANCE_STATUS:
         return 'attendance.attendanceStatus';
       case WorshipAttendanceSortColumn.GROUP_NAME:
@@ -225,6 +228,9 @@ export class WorshipAttendanceDomainService
         break;
       case WorshipAttendanceSortColumn.GROUP_NAME:
         value = attendance.worshipEnrollment.member.group?.name || null;
+        break;
+      case WorshipAttendanceSortColumn.SESSION_DATE:
+        value = attendance.sessionDate;
         break;
       default:
         value = attendance.attendanceStatus;
@@ -699,6 +705,67 @@ export class WorshipAttendanceDomainService
       absentCount: +result.absentcount || 0,
       unknownCount: +result.unknowncount || 0,
       totalSessions: +result.totalsessions || 0,
+    };
+  }
+
+  async findMemberWorshipAttendances(
+    member: MemberModel,
+    worship: WorshipModel,
+    dto: GetMemberWorshipAttendancesDto,
+  ) {
+    const repository = this.getRepository();
+
+    const query = repository
+      .createQueryBuilder('attendance')
+      .select([
+        'attendance.id',
+        'attendance.attendanceStatus',
+        'attendance.note',
+        'attendance.sessionDate',
+      ])
+      .innerJoin(
+        'attendance.worshipEnrollment',
+        'enrollment',
+        'enrollment.memberId = :memberId AND enrollment.worshipId = :worshipId',
+        { memberId: member.id, worshipId: worship.id },
+      )
+      .where('attendance.sessionDate BETWEEN :from AND :to', {
+        from: dto.utcFrom,
+        to: dto.utcTo,
+      })
+      .leftJoin('attendance.worshipSession', 'session')
+      .addSelect(['session.id', 'session.title'])
+      .orderBy('attendance.sessionDate', dto.sortDirection)
+      .addOrderBy('attendance.id', dto.sortDirection);
+
+    if (dto.cursor) {
+      this.applyCursorPagination(
+        query,
+        dto.cursor,
+        WorshipAttendanceSortColumn.SESSION_DATE,
+        dto.sortDirection,
+      );
+    }
+
+    const items = await query.limit(dto.limit + 1).getMany();
+
+    const hasMore = items.length > dto.limit;
+    if (hasMore) {
+      items.pop();
+    }
+
+    const nextCursor =
+      items.length > 0 && hasMore
+        ? this.encodeCursor(
+            items[items.length - 1],
+            WorshipAttendanceSortColumn.SESSION_DATE,
+          )
+        : undefined;
+
+    return {
+      items,
+      nextCursor,
+      hasMore,
     };
   }
 }
