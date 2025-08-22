@@ -335,6 +335,7 @@ export class WorshipAttendanceDomainService
               worshipEnrollmentId: true,
               attendanceStatus: true,
               sessionDate: true,
+              note: true,
             },
             take: 14 * enrollmentIds.length,
           })
@@ -350,6 +351,7 @@ export class WorshipAttendanceDomainService
               worshipEnrollmentId: true,
               attendanceStatus: true,
               sessionDate: true,
+              note: true,
             },
             take: 14 * enrollmentIds.length,
           });
