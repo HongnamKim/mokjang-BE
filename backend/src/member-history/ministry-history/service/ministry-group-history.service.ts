@@ -18,6 +18,8 @@ import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { convertHistoryDate } from '../../history-date.utils';
 import { DeleteMinistryGroupHistoryResponseDto } from '../dto/response/group/delete-ministry-group-history-response.dto';
 import { PatchMinistryGroupHistoryResponseDto } from '../dto/response/group/patch-ministry-group-history-response.dto';
+import { GetMinistryGroupHistoryListDto } from '../dto/request/group/get-ministry-group-history-list.dto';
+import { CurrentMinistryGroupHistoryPaginationResponseDto } from '../dto/response/group/current-ministry-group-history-pagination-response.dto';
 
 @Injectable()
 export class MinistryGroupHistoryService {
@@ -127,6 +129,32 @@ export class MinistryGroupHistoryService {
       new Date(),
       targetHistory.id,
       true,
+    );
+  }
+
+  async getCurrentMinistryGroupHistories(
+    churchId: number,
+    memberId: number,
+    query: GetMinistryGroupHistoryListDto,
+  ) {
+    const church =
+      await this.churchesDomainService.findChurchModelById(churchId);
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+    );
+
+    const result =
+      await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistoryList(
+        member,
+        query,
+      );
+
+    return new CurrentMinistryGroupHistoryPaginationResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
     );
   }
 }

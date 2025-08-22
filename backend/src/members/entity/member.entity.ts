@@ -9,30 +9,29 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
-import { GenderEnum } from '../const/enum/gender.enum';
-import { BaptismEnum } from '../const/enum/baptism.enum';
+import { Gender } from '../const/enum/gender.enum';
+import { Baptism } from '../const/enum/baptism.enum';
 import { FamilyRelationModel } from '../../family-relation/entity/family-relation.entity';
-import { MarriageOptions } from '../member-domain/const/marriage-options.const';
+import { Marriage } from '../const/enum/marriage.enum';
 import { Exclude } from 'class-transformer';
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { MinistryModel } from '../../management/ministries/entity/ministry.entity';
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
-import { EducationEnrollmentModel } from '../../management/educations/entity/education-enrollment.entity';
-import { EducationTermModel } from '../../management/educations/entity/education-term.entity';
 import { GroupModel } from '../../management/groups/entity/group.entity';
 import { RequestInfoModel } from '../../request-info/entity/request-info.entity';
 import { MinistryHistoryModel } from '../../member-history/ministry-history/entity/child/ministry-history.entity';
 import { OfficerHistoryModel } from '../../member-history/officer-history/entity/officer-history.entity';
 import { GroupHistoryModel } from '../../member-history/group-history/entity/group-history.entity';
-import { VisitationDetailModel } from '../../visitation/entity/visitation-detail.entity';
 import { VisitationMetaModel } from '../../visitation/entity/visitation-meta.entity';
 import { TaskModel } from '../../task/entity/task.entity';
-import { EducationSessionModel } from '../../management/educations/entity/education-session.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GroupRole } from '../../management/groups/const/group-role.enum';
 import { MinistryGroupModel } from '../../management/ministries/entity/ministry-group.entity';
 import { MinistryGroupHistoryModel } from '../../member-history/ministry-history/entity/ministry-group-history.entity';
+import { EducationEnrollmentModel } from '../../educations/education-enrollment/entity/education-enrollment.entity';
+import { EducationTermModel } from '../../educations/education-term/entity/education-term.entity';
+import { EducationSessionModel } from '../../educations/education-session/entity/education-session.entity';
 
 @Entity()
 export class MemberModel extends BaseModel {
@@ -81,9 +80,10 @@ export class MemberModel extends BaseModel {
   birthdayMMDD: string;
 
   @Index()
-  @Column({ enum: GenderEnum, nullable: true, comment: '성별' })
-  gender: GenderEnum;
+  @Column({ enum: Gender, nullable: true, comment: '성별' })
+  gender: Gender;
 
+  @Index()
   @Column({ length: 50, nullable: true, comment: '도로명 주소' })
   address: string;
 
@@ -110,8 +110,8 @@ export class MemberModel extends BaseModel {
   school: string;
 
   @Index()
-  @Column({ enum: MarriageOptions, nullable: true, comment: '결혼 정보' })
-  marriage: MarriageOptions;
+  @Column({ enum: Marriage, nullable: true, comment: '결혼 정보' })
+  marriage: Marriage;
 
   @Column({ nullable: true, comment: '세부 결혼 정보' })
   marriageDetail: string;
@@ -133,16 +133,16 @@ export class MemberModel extends BaseModel {
   @OneToMany(() => MemberModel, (member) => member.guidedBy)
   guiding: MemberModel[];
 
-  @Column({ length: 30, nullable: true, comment: '이전교회 이름' })
-  previousChurch: string;
+  /*@Column({ length: 30, nullable: true, comment: '이전교회 이름' })
+  previousChurch: string;*/
 
   @Index()
   @Column({
-    enum: BaptismEnum,
-    default: BaptismEnum.default,
+    enum: Baptism,
+    default: Baptism.NONE,
     comment: '신급',
   })
-  baptism: BaptismEnum;
+  baptism: Baptism;
 
   @ManyToMany(
     () => MinistryGroupModel,
@@ -179,12 +179,6 @@ export class MemberModel extends BaseModel {
   @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
 
-  @Column({ type: 'timestamptz', nullable: true, comment: '임직일' })
-  officerStartDate: Date | null;
-
-  @Column({ type: 'varchar', nullable: true, comment: '임직교회' })
-  officerStartChurch: string | null;
-
   @OneToMany(
     () => OfficerHistoryModel,
     (officerHistory) => officerHistory.member,
@@ -195,7 +189,7 @@ export class MemberModel extends BaseModel {
     () => EducationEnrollmentModel,
     (educationEnrollment) => educationEnrollment.member,
   )
-  educations: EducationEnrollmentModel[];
+  educationEnrollments: EducationEnrollmentModel[];
 
   @OneToMany(() => EducationTermModel, (term) => term.inCharge)
   inChargeEducationTerm: EducationTermModel[];
@@ -242,11 +236,11 @@ export class MemberModel extends BaseModel {
   visitationMetas: VisitationMetaModel[];
 
   // 나의 심방 세부 내용
-  @OneToMany(
+  /*@OneToMany(
     () => VisitationDetailModel,
     (visitingDetail) => visitingDetail.member,
   )
-  visitationDetails: VisitationDetailModel[];
+  visitationDetails: VisitationDetailModel[];*/
 
   // --------------- 심방 -------------------
 

@@ -11,17 +11,18 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { GenderEnum } from '../../const/enum/gender.enum';
-import { BaptismEnum } from '../../const/enum/baptism.enum';
+import { Gender } from '../../const/enum/gender.enum';
+import { Baptism } from '../../const/enum/baptism.enum';
 import { GetMemberOrderEnum } from '../../const/enum/get-member-order.enum';
 import {
   TransformNumberArray,
   TransformStringArray,
 } from '../../../common/decorator/transformer/transform-array';
-import { MarriageOptions } from '../../member-domain/const/marriage-options.const';
+import { Marriage } from '../../const/enum/marriage.enum';
 import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
 import { RemoveSpaces } from '../../../common/decorator/transformer/remove-spaces';
-import { EducationEnrollmentStatus } from '../../../management/educations/const/education-status.enum';
+
+import { EducationEnrollmentStatus } from '../../../educations/education-enrollment/const/education-enrollment-status.enum';
 
 export class GetMemberDto {
   @ApiProperty({
@@ -60,12 +61,12 @@ export class GetMemberDto {
   @ApiProperty({
     name: 'orderDirection',
     description: '정렬 오름차순 / 내림차순',
-    default: 'asc',
+    default: 'ASC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC';
+  orderDirection: 'ASC' | 'DESC' = 'ASC';
 
   @ApiProperty({
     required: false,
@@ -213,14 +214,14 @@ export class GetMemberDto {
 
   @ApiProperty({
     description: '결혼 여부',
-    enum: MarriageOptions,
+    enum: Marriage,
     isArray: true,
     required: false,
   })
   @TransformStringArray()
-  @IsEnum(MarriageOptions, { each: true })
+  @IsEnum(Marriage, { each: true })
   @IsOptional()
-  marriage?: MarriageOptions[];
+  marriage?: Marriage[];
 
   @ApiProperty({
     name: 'birthAfter',
@@ -242,14 +243,14 @@ export class GetMemberDto {
 
   @ApiProperty({
     description: '성별',
-    enum: GenderEnum,
+    enum: Gender,
     isArray: true,
     required: false,
   })
   @TransformStringArray()
-  @IsEnum(GenderEnum, { each: true })
+  @IsEnum(Gender, { each: true })
   @IsOptional()
-  gender?: GenderEnum[];
+  gender?: Gender[];
 
   @ApiProperty({
     name: 'school',
@@ -368,12 +369,12 @@ export class GetMemberDto {
   @ApiProperty({
     name: 'baptism',
     description: '신급',
-    enum: BaptismEnum,
+    enum: Baptism,
     isArray: true,
     required: false,
   })
   @TransformStringArray()
-  @IsEnum(BaptismEnum, { each: true })
+  @IsEnum(Baptism, { each: true })
   @IsOptional()
-  baptism?: BaptismEnum[];
+  baptism?: Baptism[];
 }

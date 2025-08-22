@@ -97,3 +97,19 @@ export function getHistoryStartDate(timeZone: TIME_ZONE) {
 export function getHistoryEndDate(timeZone: TIME_ZONE) {
   return fromZonedTime(endOfDay(toZonedTime(new Date(), timeZone)), timeZone);
 }
+
+export function getFromDate(date: string, timeZone: TIME_ZONE) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new BadRequestException('YYYY-MM-DD 형식이 아님');
+  }
+
+  return fromZonedTime(startOfDay(date), timeZone);
+}
+
+export function getToDate(date: string, timeZone: TIME_ZONE) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new BadRequestException('YYYY-MM-DD 형식이 아님');
+  }
+
+  return fromZonedTime(endOfDay(date), timeZone);
+}

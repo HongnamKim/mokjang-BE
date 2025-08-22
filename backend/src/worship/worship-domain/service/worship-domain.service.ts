@@ -21,6 +21,8 @@ import { WorshipDomainPaginationResultDto } from '../dto/worship-domain-paginati
 import { WorshipException } from '../../exception/worship.exception';
 import { CreateWorshipDto } from '../../dto/request/worship/create-worship.dto';
 import { UpdateWorshipDto } from '../../dto/request/worship/update-worship.dto';
+import * as console from 'node:console';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
 export class WorshipDomainService implements IWorshipDomainService {
@@ -230,5 +232,38 @@ export class WorshipDomainService implements IWorshipDomainService {
     }
 
     return result;
+  }
+
+  async findAvailableWorships(
+    member: MemberModel,
+    targetGroupIds: number[] | undefined,
+  ): Promise<WorshipModel[]> {
+    const repository = this.getRepository();
+
+    const query = repository
+      .createQueryBuilder('worship')
+      .leftJoin('worship.worshipTargetGroups', 'target')
+      .innerJoin(
+        'worship.worshipEnrollments',
+        'enrollment',
+        'enrollment.memberId = :memberId',
+        { memberId: member.id },
+      )
+      .select(['worship.id', 'worship.title', 'worship.worshipDay'])
+      .orderBy('worship.worshipDay', 'ASC')
+      .addOrderBy('worship.id', 'ASC');
+
+    if (targetGroupIds && targetGroupIds.length > 0) {
+      query.andWhere(
+        '(target.groupId IN (:...groupIds) OR target.id IS NULL)',
+        {
+          groupIds: targetGroupIds,
+        },
+      );
+    } else {
+      query.andWhere('target.id IS NULL');
+    }
+
+    return query.getMany();
   }
 }

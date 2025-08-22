@@ -6,7 +6,7 @@ export class ScheduleReportDto {
   constructor(
     public readonly id: number,
     public readonly type: ScheduleType,
-    public readonly inCharge: MemberModel,
+    public readonly inCharge: MemberModel | null,
     public readonly schedule: ScheduleDto,
   ) {}
 }

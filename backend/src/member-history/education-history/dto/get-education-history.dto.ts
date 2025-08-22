@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsIn, IsNumber, IsOptional, Min } from 'class-validator';
-import { EducationEnrollmentStatus } from '../../../management/educations/const/education-status.enum';
+
+import { EducationEnrollmentStatus } from '../../../educations/education-enrollment/const/education-enrollment-status.enum';
 
 export class GetEducationHistoryDto {
   @ApiProperty({
@@ -25,12 +26,12 @@ export class GetEducationHistoryDto {
 
   @ApiProperty({
     description: '정렬 오름차순 / 내림차순',
-    default: 'desc',
+    default: 'DESC',
     required: false,
   })
-  @IsIn(['asc', 'desc', 'ASC', 'DESC'])
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
-  orderDirection: 'asc' | 'desc' | 'ASC' | 'DESC' = 'desc';
+  orderDirection: 'ASC' | 'DESC' = 'DESC';
 
   @ApiProperty({
     description: '교육 상태',

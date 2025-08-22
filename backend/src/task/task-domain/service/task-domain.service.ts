@@ -322,22 +322,22 @@ export class TaskDomainService implements ITaskDomainService {
       taskType: parentTask ? TaskType.subTask : TaskType.parent,
       title: dto.title,
       status: dto.status,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: dto.utcStartDate, //dto.startDate,
+      endDate: dto.utcEndDate, //dto.endDate,
       content: dto.content,
     });
   }
 
   private assertValidTaskDate(targetTask: TaskModel, dto: UpdateTaskDto) {
     // 시작 날짜 변경 시
-    if (dto.startDate && !dto.endDate) {
-      if (dto.startDate > targetTask.endDate) {
+    if (dto.utcStartDate && !dto.utcEndDate) {
+      if (dto.utcStartDate > targetTask.endDate) {
         throw new ConflictException(TaskException.INVALID_START_DATE);
       }
     }
     // 종료 날짜 변경 시
-    else if (!dto.startDate && dto.endDate) {
-      if (targetTask.startDate > dto.endDate) {
+    else if (!dto.utcStartDate && dto.utcEndDate) {
+      if (targetTask.startDate > dto.utcEndDate) {
         throw new ConflictException(TaskException.INVALID_END_DATE);
       }
     } else {
@@ -384,8 +384,8 @@ export class TaskDomainService implements ITaskDomainService {
         parentTaskId: newParentTask ? newParentTask.id : undefined,
         title: dto.title,
         status: dto.status,
-        startDate: dto.startDate,
-        endDate: dto.endDate,
+        startDate: dto.utcStartDate,
+        endDate: dto.utcEndDate,
         content: dto.content,
       },
     );

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import {
   ChildGroup,
-  GroupModelWithParentGroups,
   IGroupsDomainService,
   ParentGroup,
 } from '../interface/groups-domain.service.interface';
@@ -206,6 +205,12 @@ export class GroupsDomainService implements IGroupsDomainService {
       }
     }
 
+    rootGroupIds.forEach((rootGroupId) => {
+      if (!groupMap.get(rootGroupId)) {
+        throw new NotFoundException(GroupException.NOT_FOUND);
+      }
+    });
+
     const visited = new Set<number>();
     const resultIds: number[] = [];
     const queue = [...rootGroupIds];
@@ -257,13 +262,25 @@ export class GroupsDomainService implements IGroupsDomainService {
     church: ChurchModel,
     groupId: number,
     qr?: QueryRunner,
-  ): Promise<GroupModelWithParentGroups> {
+  ): Promise<ParentGroup[]> {
     const group = await this.findGroupById(church, groupId, qr);
 
-    return {
-      ...group,
-      parentGroups: await this.findParentGroups(church, group, qr),
-    };
+    const parentGroups = await this.findParentGroups(church, group, qr);
+
+    const lastParentGroup =
+      parentGroups.length > 0
+        ? parentGroups[parentGroups.length - 1]
+        : undefined;
+
+    return [
+      ...parentGroups,
+      {
+        id: group.id,
+        name: group.name,
+        parentGroupId: group.parentGroupId,
+        depth: lastParentGroup ? lastParentGroup.depth + 1 : 1,
+      },
+    ];
   }
 
   async findParentGroups(

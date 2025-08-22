@@ -31,7 +31,7 @@ import { OfficerWriteGuard } from '../guard/officer-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
-import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 
@@ -67,7 +67,7 @@ export class OfficersController {
   @OfficerWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshOfficerCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.officersService.refreshOfficerCount(church, qr);

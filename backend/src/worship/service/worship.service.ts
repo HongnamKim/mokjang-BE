@@ -45,6 +45,14 @@ import {
   IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
   IWorshipAttendanceDomainService,
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
+import { GetWorshipStatsResponseDto } from '../dto/response/worship/get-worship-stats-response.dto';
+import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { GetWorshipStatsDto } from '../dto/request/worship/get-worship-stats.dto';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import {
+  getFromDate,
+  getToDate,
+} from '../../member-history/history-date.utils';
 
 @Injectable()
 export class WorshipService {
@@ -68,13 +76,7 @@ export class WorshipService {
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
-  async findWorships(
-    church: ChurchModel /*churchId: number*/,
-    dto: GetWorshipsDto,
-  ) {
-    /*const church =
-      await this.churchesDomainService.findChurchModelById(churchId);*/
-
+  async findWorships(church: ChurchModel, dto: GetWorshipsDto) {
     const { data, totalCount } = await this.worshipDomainService.findWorships(
       church,
       dto,
@@ -89,12 +91,11 @@ export class WorshipService {
     );
   }
 
-  async findWorshipById(churchId: number, worshipId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async findWorshipById(
+    church: ChurchModel,
+    worshipId: number,
+    qr?: QueryRunner,
+  ) {
     const worship = await this.worshipDomainService.findWorshipById(
       church,
       worshipId,
@@ -156,15 +157,15 @@ export class WorshipService {
   }
 
   async patchWorshipById(
-    churchId: number,
+    church: ChurchModel,
     worshipId: number,
     dto: UpdateWorshipDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
 
     const targetWorship = await this.worshipDomainService.findWorshipModelById(
       church,
@@ -201,12 +202,12 @@ export class WorshipService {
   }
 
   async deleteWorshipById(
-    churchId: number,
+    //churchId: number,
+    church: ChurchModel,
     worshipId: number,
     qr: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+    //const church = await this.churchesDomainService.findChurchModelById(churchId);
 
     const targetWorship = await this.worshipDomainService.findWorshipModelById(
       church,
@@ -324,5 +325,74 @@ export class WorshipService {
     );
 
     return { worshipCount };
+  }
+
+  async getWorshipStatistics(
+    church: ChurchModel,
+    worship: WorshipModel,
+    defaultWorshipTargetGroupIds: number[] | undefined,
+    permissionScopeGroupIds: number[] | undefined,
+    dto: GetWorshipStatsDto,
+  ) {
+    const requestGroupIds = await this.getRequestGroupIds(
+      church,
+      defaultWorshipTargetGroupIds,
+      dto.groupId,
+    );
+
+    const intersectionGroupIds = getIntersectionGroupIds(
+      requestGroupIds,
+      permissionScopeGroupIds,
+    );
+
+    dto.utcFrom = getFromDate(dto.from, TIME_ZONE.SEOUL);
+    dto.utcTo = getToDate(dto.to, TIME_ZONE.SEOUL);
+
+    // Session Count
+    //const totalSessions = await this.worshipSessionDomainService.countByWorship(worship),
+
+    const [worshipStats, customStats] = await Promise.all([
+      // 전체 기간 출석률
+      this.worshipAttendanceDomainService.getOverallAttendanceStats(
+        worship,
+        //requestGroupIds,
+        intersectionGroupIds,
+      ),
+      // 선택기간 출석률
+      this.worshipAttendanceDomainService.getAttendanceStatsByPeriod(
+        worship,
+        intersectionGroupIds,
+        dto.utcFrom,
+        dto.utcTo,
+      ),
+    ]);
+
+    return new GetWorshipStatsResponseDto(
+      worship.id,
+      Math.round(worshipStats.attendanceCheckRate * 100) / 100,
+      {
+        overall: Math.round(worshipStats.overallRate * 100) / 100,
+        period: Math.round(customStats.rate * 100) / 100,
+      },
+    );
+  }
+
+  private async getRequestGroupIds(
+    church: ChurchModel,
+    defaultTargetGroupIds: number[] | undefined,
+    groupId?: number,
+  ) {
+    // 조회 대상 groupId 가 있는 경우
+    if (groupId) {
+      return (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
+          groupId,
+        ])
+      ).map((group) => group.id);
+    } else {
+      // 조회 대상 groupId 가 없을 경우
+      // 예배 대상 그룹
+      return defaultTargetGroupIds;
+    }
   }
 }

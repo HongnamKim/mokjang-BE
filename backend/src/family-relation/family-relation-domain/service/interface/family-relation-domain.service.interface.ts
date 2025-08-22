@@ -1,6 +1,8 @@
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { FamilyRelationModel } from '../../../entity/family-relation.entity';
+import { GetFamilyRelationListDto } from '../../../dto/get-family-relation-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../../common/dto/domain-cursor-pagination-result.dto';
 
 export const IFAMILY_RELATION_DOMAIN_SERVICE = Symbol(
   'IFAMILY_RELATION_DOMAIN_SERVICE',
@@ -9,8 +11,15 @@ export const IFAMILY_RELATION_DOMAIN_SERVICE = Symbol(
 export interface IFamilyRelationDomainService {
   findFamilyRelations(
     member: MemberModel,
+    dto: GetFamilyRelationListDto,
     qr?: QueryRunner,
-  ): Promise<FamilyRelationModel[]>;
+  ): Promise<DomainCursorPaginationResultDto<FamilyRelationModel>>;
+
+  findFamilyRelationById(
+    meId: number,
+    familyId: number,
+    qr?: QueryRunner,
+  ): Promise<FamilyRelationModel>;
 
   findFamilyRelationModelById(
     meId: number,
@@ -30,12 +39,12 @@ export interface IFamilyRelationDomainService {
     familyRelation: FamilyRelationModel,
     relation: string,
     qr?: QueryRunner,
-  ): Promise<FamilyRelationModel>;
+  ): Promise<UpdateResult>;
 
   deleteFamilyRelation(
     familyRelation: FamilyRelationModel,
     qr?: QueryRunner,
-  ): Promise<string>;
+  ): Promise<UpdateResult>;
 
   createFamilyRelation(
     me: MemberModel,

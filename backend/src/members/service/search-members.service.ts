@@ -284,7 +284,7 @@ export class SearchMembersService implements ISearchMembersService {
       groupId: dto.group && In(dto.group),
       officerId: dto.officer && In(dto.officer),
       ministries: dto.ministries && { id: In(dto.ministries) },
-      educations: dto.educations && {
+      educationEnrollments: dto.educations && {
         educationTerm: {
           educationId: In(dto.educations),
         },

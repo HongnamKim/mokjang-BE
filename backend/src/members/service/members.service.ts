@@ -43,6 +43,29 @@ import {
   IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
   IWorshipEnrollmentDomainService,
 } from '../../worship/worship-domain/interface/worship-enrollment-domain.service.interface';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { getHistoryStartDate } from '../../member-history/history-date.utils';
+import { GetMemberListDto } from '../dto/list/get-member-list.dto';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import {
+  IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE,
+  IMinistryGroupHistoryDomainService,
+} from '../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
+import { MemberCursorPaginationResponseDto } from '../dto/response/member-cursor-pagination-response.dto';
+import { GetSimpleMemberListDto } from '../dto/list/get-simple-member-list.dto';
+import { GetAvailableWorshipResponseDto } from '../dto/response/worship/get-available-worship-response.dto';
+import { GetMemberWorshipStatisticsDto } from '../dto/request/worship/get-member-worship-statistics.dto';
+import {
+  IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
+  IWorshipAttendanceDomainService,
+} from '../../worship/worship-domain/interface/worship-attendance-domain.service.interface';
+import { GetMemberWorshipStatisticsResponseDto } from '../dto/response/worship/get-member-worship-statistics-response.dto';
+import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-member-worship-attendances.dto';
+import { GetMemberWorshipAttendancesResponseDto } from '../dto/response/worship/get-member-worship-attendances-response.dto';
 
 @Injectable()
 export class MembersService {
@@ -61,9 +84,16 @@ export class MembersService {
     private readonly worshipDomainService: IWorshipDomainService,
     @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
     private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
+    @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
+
+    @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
+    private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
 
     @Inject(IMEMBER_FILTER_SERVICE)
     private readonly memberFilterService: IMemberFilterService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
   async getMembers(
@@ -96,14 +126,19 @@ export class MembersService {
       qr,
     );
 
-    const filteredMember = await this.memberFilterService.filterMembers(
+    const possibleGroupIds = await this.memberFilterService.getScopeGroupIds(
       church,
       requestManager,
+      qr,
+    );
+
+    const filteredMember = this.memberFilterService.filterMembers(
+      requestManager,
       data,
+      possibleGroupIds,
     );
 
     return new MemberPaginationResponseDto(
-      //data,
       filteredMember,
       totalCount,
       data.length,
@@ -129,10 +164,23 @@ export class MembersService {
       qr,
     );
 
-    const filteredMember = await this.memberFilterService.filterMember(
+    member.ministryGroupHistory = (
+      await this.ministryGroupHistoryDomainService.findCurrentMinistryGroupHistoryList(
+        member,
+        { sortDirection: 'DESC', limit: 3 },
+      )
+    ).items;
+
+    const scopeGroupIds = await this.memberFilterService.getScopeGroupIds(
       church,
       requestManager,
+      qr,
+    );
+
+    const filteredMember = this.memberFilterService.filterMember(
+      requestManager,
       member,
+      scopeGroupIds,
     );
 
     return new GetMemberResponseDto(filteredMember);
@@ -147,6 +195,14 @@ export class MembersService {
     // 교회의 교인 수 증가
     await this.churchesDomainService.incrementMemberCount(church, qr);
     church.memberCount++;
+
+    dto.utcRegisteredAt = dto.registeredAt
+      ? fromZonedTime(dto.registeredAt, TIME_ZONE.SEOUL)
+      : getHistoryStartDate(TIME_ZONE.SEOUL);
+
+    dto.utcBirth = dto.birth
+      ? fromZonedTime(dto.birth, TIME_ZONE.SEOUL)
+      : undefined;
 
     const newMember = await this.membersDomainService.createMember(
       church,
@@ -185,22 +241,18 @@ export class MembersService {
   }
 
   async updateMember(
-    //churchId: number,
-    //memberId: number,
     church: ChurchModel,
     targetMember: MemberModel,
     dto: UpdateMemberDto,
     qr?: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const targetMember = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );*/
+    dto.utcRegisteredAt = dto.registeredAt
+      ? fromZonedTime(dto.registeredAt, TIME_ZONE.SEOUL)
+      : undefined;
+
+    dto.utcBirth = dto.birth
+      ? fromZonedTime(dto.birth, TIME_ZONE.SEOUL)
+      : undefined;
 
     const updatedMember = await this.membersDomainService.updateMember(
       church,
@@ -215,22 +267,10 @@ export class MembersService {
   // 교인 soft delete
   // 교육 등록도 soft delete
   async softDeleteMember(
-    //churchId: number,
     church: ChurchModel,
-    //memberId: number,
     targetMember: MemberModel,
     qr: QueryRunner,
-  ): Promise<DeleteMemberResponseDto> {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const targetMember = await this.membersDomainService.findMemberModelById(
-      church,
-      memberId,
-      qr,
-    );*/
-
+  ) {
     // 교인 삭제
     await this.membersDomainService.deleteMember(church, targetMember, qr);
 
@@ -259,15 +299,158 @@ export class MembersService {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const { data, totalCount } =
-      await this.membersDomainService.findSimpleMembers(church, dto);
+    const data = await this.membersDomainService.findSimpleMembers(church, dto);
 
-    return new SimpleMembersPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
+    return new SimpleMembersPaginationResponseDto(data);
+  }
+
+  async getSimpleMemberList(
+    church: ChurchModel,
+    query: GetSimpleMemberListDto,
+  ) {
+    const result = await this.membersDomainService.findSimpleMemberList(
+      church,
+      query,
+    );
+
+    return new MemberCursorPaginationResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
+    );
+  }
+
+  async getMemberList(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    dto: GetMemberListDto,
+  ) {
+    const result = await this.membersDomainService.getMemberListWithPagination(
+      church,
+      dto,
+    );
+
+    const possibleGroupIds = await this.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMembers = this.memberFilterService.filterMembers(
+      requestManager,
+      result.items,
+      possibleGroupIds,
+    );
+
+    return new MemberCursorPaginationResponseDto(
+      filteredMembers,
+      filteredMembers.length,
+      result.nextCursor,
+      result.hasMore,
+    );
+  }
+
+  private async getScopeGroupIds(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+  ) {
+    const permissionScopeIds = requestManager.permissionScopes.map(
+      (scope) => scope.group.id,
+    );
+
+    const possibleGroups =
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        permissionScopeIds,
+      );
+
+    return possibleGroups.map((group) => group.id);
+  }
+
+  async getAvailableWorship(church: ChurchModel, memberId: number) {
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+    );
+
+    const groupIds = member.groupId
+      ? (
+          await this.groupsDomainService.findGroupByIdWithParents(
+            church,
+            member.groupId,
+          )
+        ).map((group) => group.id)
+      : undefined;
+
+    const availableWorships =
+      await this.worshipDomainService.findAvailableWorships(member, groupIds);
+
+    return new GetAvailableWorshipResponseDto(availableWorships);
+  }
+
+  async getMemberWorshipStatistics(
+    church: ChurchModel,
+    memberId: number,
+    dto: GetMemberWorshipStatisticsDto,
+  ) {
+    const [member, worship] = await Promise.all([
+      // 교인 조회
+      this.membersDomainService.findMemberModelById(church, memberId),
+      // 예배 조회
+      this.worshipDomainService.findWorshipModelById(church, dto.worshipId),
+    ]);
+
+    const worshipStats =
+      await this.worshipAttendanceDomainService.getStatisticsByMemberAndPeriod(
+        member,
+        worship,
+        dto.utcFrom,
+        dto.utcTo,
+      );
+
+    return new GetMemberWorshipStatisticsResponseDto({
+      attendanceRate: this.calculateRate(
+        worshipStats.presentCount,
+        worshipStats.presentCount + worshipStats.absentCount,
+      ),
+      presentCount: worshipStats.presentCount,
+      absentCount: worshipStats.absentCount,
+      unknownCount: worshipStats.unknownCount,
+      totalSessions: worshipStats.totalSessions,
+      checkRate: this.calculateRate(
+        worshipStats.presentCount + worshipStats.absentCount,
+        worshipStats.totalSessions,
+      ),
+    });
+  }
+
+  private calculateRate(numerator: number, denominator: number) {
+    if (denominator === 0) return 0;
+    return Math.round((numerator / denominator) * 1000) / 10;
+  }
+
+  async getMemberWorshipAttendances(
+    church: ChurchModel,
+    memberId: number,
+    dto: GetMemberWorshipAttendancesDto,
+  ) {
+    const [member, worship] = await Promise.all([
+      this.membersDomainService.findMemberModelById(church, memberId),
+      this.worshipDomainService.findWorshipModelById(church, dto.worshipId),
+    ]);
+
+    const result =
+      await this.worshipAttendanceDomainService.findMemberWorshipAttendances(
+        member,
+        worship,
+        dto,
+      );
+
+    return new GetMemberWorshipAttendancesResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
     );
   }
 }

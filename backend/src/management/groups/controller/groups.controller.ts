@@ -35,7 +35,7 @@ import { GroupWriteGuard } from '../guard/group-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
-import { PermissionChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
 import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
@@ -72,7 +72,7 @@ export class GroupsController {
   @GroupWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshGroupCount(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.groupsService.refreshGroupCount(church, qr);
@@ -114,7 +114,7 @@ export class GroupsController {
   @GroupWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   patchGroupLeader(
-    @PermissionChurch() church: ChurchModel,
+    @RequestChurch() church: ChurchModel,
     @Param('groupId', ParseIntPipe) groupId: number,
     @Body() dto: UpdateGroupLeaderDto,
     @QueryRunner() qr: QR,

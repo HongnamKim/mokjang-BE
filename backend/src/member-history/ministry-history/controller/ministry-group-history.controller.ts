@@ -17,6 +17,7 @@ import {
   ApiGetMinistryGroupHistories,
   ApiPatchMinistryGroupHistory,
 } from '../swagger/ministry-group-history.swagger';
+import { GetMinistryGroupHistoryListDto } from '../dto/request/group/get-ministry-group-history-list.dto';
 
 @ApiTags('Churches:Members:Histories:Ministries')
 @Controller()
@@ -36,6 +37,19 @@ export class MinistryGroupHistoryController {
       churchId,
       memberId,
       dto,
+    );
+  }
+
+  @Get('current')
+  getCurrentMinistryGroupHistories(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('memberId', ParseIntPipe) memberId: number,
+    @Query() query: GetMinistryGroupHistoryListDto,
+  ) {
+    return this.ministryGroupHistoryService.getCurrentMinistryGroupHistories(
+      churchId,
+      memberId,
+      query,
     );
   }
 

@@ -16,12 +16,12 @@ import { TaskPaginationResultDto } from '../dto/response/task-pagination-result.
 import { UpdateTaskDto } from '../dto/request/update-task.dto';
 import { PatchTaskResponseDto } from '../dto/response/patch-task-response.dto';
 import { DeleteTaskResponseDto } from '../dto/response/delete-task-response.dto';
-import { AddTaskReportReceiverDto } from '../../report/dto/task-report/request/add-task-report-receiver.dto';
+import { AddTaskReportReceiverDto } from '../../report/task-report/dto/request/add-task-report-receiver.dto';
 import {
   ITASK_REPORT_DOMAIN_SERVICE,
   ITaskReportDomainService,
-} from '../../report/report-domain/interface/task-report-domain.service.interface';
-import { DeleteTaskReportReceiverDto } from '../../report/dto/task-report/request/delete-task-report-receiver.dto';
+} from '../../report/task-report/task-report-domain/interface/task-report-domain.service.interface';
+import { DeleteTaskReportReceiverDto } from '../../report/task-report/dto/request/delete-task-report-receiver.dto';
 import {
   ChurchModel,
   ManagementCountType,
@@ -33,6 +33,8 @@ import {
 import { GetSubTaskResponseDto } from '../dto/response/get-sub-task-response.dto';
 import { TaskModel } from '../entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
 
 @Injectable()
 export class TaskService {
@@ -88,7 +90,6 @@ export class TaskService {
 
   async postTask(
     churchId: number,
-    //creatorUserId: number,
     creatorManager: ChurchUserModel,
     dto: CreateTaskDto,
     qr: QueryRunner,
@@ -97,12 +98,6 @@ export class TaskService {
       churchId,
       qr,
     );
-
-    /*const creator = await this.managerDomainService.findManagerByUserId(
-      church,
-      creatorUserId,
-      qr,
-    );*/
 
     const inCharge = dto.inChargeId
       ? await this.managerDomainService.findManagerByMemberId(
@@ -121,9 +116,11 @@ export class TaskService {
         )
       : null;
 
+    dto.utcStartDate = fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
+    dto.utcEndDate = fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
+
     const newTask = await this.taskDomainService.createTask(
       church,
-      //creator,
       creatorManager,
       parentTask,
       inCharge,
@@ -182,6 +179,13 @@ export class TaskService {
           qr,
         )
       : null;
+
+    dto.utcStartDate = dto.startDate
+      ? fromZonedTime(dto.startDate, TIME_ZONE.SEOUL)
+      : undefined;
+    dto.utcEndDate = dto.endDate
+      ? fromZonedTime(dto.endDate, TIME_ZONE.SEOUL)
+      : undefined;
 
     await this.taskDomainService.updateTask(
       targetTask,

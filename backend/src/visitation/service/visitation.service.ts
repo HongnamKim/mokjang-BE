@@ -31,7 +31,7 @@ import { MemberModel } from '../../members/entity/member.entity';
 import {
   IVISITATION_REPORT_DOMAIN_SERVICE,
   IVisitationReportDomainService,
-} from '../../report/report-domain/interface/visitation-report-domain.service.interface';
+} from '../../report/visitation-report/visitation-report-domain/interface/visitation-report-domain.service.interface';
 import { VisitationPaginationResultDto } from '../dto/response/visitation-pagination-result.dto';
 import { VisitationDetailService } from './visitation-detail.service';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
@@ -43,6 +43,8 @@ import { GetVisitationResponseDto } from '../dto/response/get-visitation-respons
 import { PostVisitationResponseDto } from '../dto/response/post-visitation-response.dto';
 import { PatchVisitationResponseDto } from '../dto/response/patch-visitation-response.dto';
 import { DeleteVisitationResponseDto } from '../dto/response/delete-visitation-response.dto';
+import { fromZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
 
 @Injectable()
 export class VisitationService {
@@ -69,16 +71,10 @@ export class VisitationService {
     const church =
       await this.churchesDomainService.findChurchModelById(churchId);
 
-    const { visitations, totalCount } =
+    const visitations =
       await this.visitationMetaDomainService.paginateVisitations(church, dto);
 
-    return new VisitationPaginationResultDto(
-      visitations,
-      totalCount,
-      visitations.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new VisitationPaginationResultDto(visitations);
   }
 
   async getVisitationById(
@@ -100,7 +96,6 @@ export class VisitationService {
   }
 
   async createVisitation(
-    //creatorId: number,
     creatorManager: ChurchUserModel,
     churchId: number,
     dto: CreateVisitationDto,
@@ -111,19 +106,13 @@ export class VisitationService {
       qr,
     );
 
-    /*const creator = await this.managerDomainService.findManagerByUserId(
-      church,
-      creatorId,
-      qr,
-    );*/
-
     const inCharge = await this.managerDomainService.findManagerByMemberId(
       church,
       dto.inChargeId,
       qr,
     );
 
-    const memberIds = dto.visitationDetails.map((detail) => detail.memberId);
+    const memberIds = dto.memberIds; //dto.visitationDetails.map((detail) => detail.memberId);
 
     const members = await this.membersDomainService.findMembersById(
       church,
@@ -131,11 +120,16 @@ export class VisitationService {
       qr,
     );
 
+    const startDate = fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
+    const endDate = fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
+
     const visitationMeta = await this.createVisitationMeta(
       church,
       creatorManager,
       inCharge,
       members,
+      startDate,
+      endDate,
       dto,
       qr,
     );
@@ -172,6 +166,8 @@ export class VisitationService {
    * @param creator 심방 생성 교인
    * @param inCharge 심방 진행자
    * @param members 심방 대상자 (교인 엔티티 배열)
+   * @param startDate 심방 시작 시간
+   * @param endDate 심방 종료 시간
    * @param dto 심방 생성 DTO
    * @param qr 트랜잭션을 위한 QueryRunner
    * @private
@@ -181,6 +177,8 @@ export class VisitationService {
     creator: ChurchUserModel,
     inCharge: ChurchUserModel,
     members: MemberModel[],
+    startDate: Date,
+    endDate: Date,
     dto: CreateVisitationDto,
     qr: QueryRunner,
   ) {
@@ -190,8 +188,8 @@ export class VisitationService {
       status: dto.status,
       visitationMethod: dto.visitationMethod,
       title: dto.title,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate, //: dto.startDate,
+      endDate, //: dto.endDate,
       visitationType:
         members.length > 1 ? VisitationType.GROUP : VisitationType.SINGLE,
     };
@@ -248,12 +246,12 @@ export class VisitationService {
           : VisitationType.SINGLE;
 
       // 변경된 대상자에 맞게 심방 디테일 생성/삭제
-      await this.visitationDetailService.handleUpdateVisitationMembers(
+      /*await this.visitationDetailService.handleUpdateVisitationMembers(
         church,
         targetMetaData,
         dto.memberIds,
         qr,
-      );
+      );*/
 
       // 심방 메타 데이터의 대상자 수정
       await this.visitationMetaDomainService.updateVisitationMember(
@@ -264,8 +262,12 @@ export class VisitationService {
     }
 
     const updateVisitationMetaDto: UpdateVisitationMetaDto = {
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: dto.startDate
+        ? fromZonedTime(dto.startDate, TIME_ZONE.SEOUL)
+        : undefined,
+      endDate: dto.endDate
+        ? fromZonedTime(dto.endDate, TIME_ZONE.SEOUL)
+        : undefined,
       visitationMethod: dto.visitationMethod,
       visitationType,
       status: dto.status,

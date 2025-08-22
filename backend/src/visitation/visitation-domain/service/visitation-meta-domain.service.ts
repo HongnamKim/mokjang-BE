@@ -27,6 +27,8 @@ import { VisitationException } from '../../const/exception/visitation.exception'
 import { UpdateVisitationMetaDto } from '../../dto/internal/meta/update-visitation-meta.dto';
 import { GetVisitationDto } from '../../dto/request/get-visitation.dto';
 import {
+  VisitationListRelationOptions,
+  VisitationListSelectOptions,
   VisitationRelationOptions,
   VisitationSelectOptions,
 } from '../../const/visitation-find-options.const';
@@ -72,6 +74,7 @@ export class VisitationMetaDomainService
       visitationType: dto.visitationType && In(dto.visitationType),
       title: dto.title && ILike(`%${dto.title}%`),
       inChargeId: dto.inChargeId,
+      members: dto.memberId ? { id: dto.memberId } : undefined,
     };
   }
 
@@ -88,30 +91,20 @@ export class VisitationMetaDomainService
   async paginateVisitations(
     church: ChurchModel,
     dto: GetVisitationDto,
-  ): Promise<{ visitations: VisitationMetaModel[]; totalCount: number }> {
+  ): Promise<VisitationMetaModel[]> {
     const repository = this.getVisitationMetaRepository();
 
-    const [visitations, totalCount] = await Promise.all([
-      repository.find({
-        where: {
-          churchId: church.id,
-          ...this.parseWhereOptions(dto),
-        },
-        relations: VisitationRelationOptions,
-        select: VisitationSelectOptions,
-        order: { [dto.order]: dto.orderDirection },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      repository.count({
-        where: {
-          churchId: church.id,
-          ...this.parseWhereOptions(dto),
-        },
-      }),
-    ]);
-
-    return { visitations, totalCount };
+    return repository.find({
+      where: {
+        churchId: church.id,
+        ...this.parseWhereOptions(dto),
+      },
+      relations: VisitationListRelationOptions,
+      select: VisitationListSelectOptions,
+      order: { [dto.order]: dto.orderDirection, id: dto.orderDirection },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
   }
 
   async findVisitationMetaById(
@@ -128,6 +121,11 @@ export class VisitationMetaDomainService
       },
       relations: VisitationRelationOptions,
       select: VisitationSelectOptions,
+      order: {
+        members: {
+          id: 'ASC',
+        },
+      },
     });
 
     if (!visitation) {

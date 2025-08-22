@@ -9,7 +9,7 @@ import { ChurchEventService } from './service/church-event.service';
 import { ChurchEventController } from './controller/church-event.controller';
 import { CalendarEducationService } from './service/calendar-education.service';
 import { CalendarEducationController } from './controller/calendar-education.controller';
-import { EducationDomainModule } from '../management/educations/service/education-domain/education-domain.module';
+import { EducationDomainModule } from '../educations/education-domain/education-domain.module';
 
 @Module({
   imports: [

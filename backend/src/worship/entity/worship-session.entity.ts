@@ -1,7 +1,15 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { BaseModel } from '../../common/entity/base.entity';
 import { WorshipModel } from './worship.entity';
 import { MemberModel } from '../../members/entity/member.entity';
+import { WorshipAttendanceModel } from './worship-attendance.entity';
 
 @Entity()
 export class WorshipSessionModel extends BaseModel {
@@ -30,9 +38,15 @@ export class WorshipSessionModel extends BaseModel {
   description: string;
 
   @Column({ nullable: true })
-  inChargeId: number;
+  inChargeId: number | null;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { nullable: true })
   @JoinColumn({ name: 'inChargeId' })
-  inCharge: MemberModel;
+  inCharge: MemberModel | null;
+
+  @OneToMany(
+    () => WorshipAttendanceModel,
+    (attendance) => attendance.worshipSession,
+  )
+  worshipAttendances: WorshipAttendanceModel[];
 }

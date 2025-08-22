@@ -13,6 +13,7 @@ import {
   IsNull,
   QueryRunner,
   Repository,
+  SelectQueryBuilder,
 } from 'typeorm';
 import { MinistryGroupModel } from '../../../../management/ministries/entity/ministry-group.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
@@ -22,6 +23,8 @@ import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 import { HistoryUpdateDate } from '../../../history-date.utils';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { GetMinistryGroupHistoryListDto } from '../../dto/request/group/get-ministry-group-history-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../../common/dto/domain-cursor-pagination-result.dto';
 
 @Injectable()
 export class MinistryGroupHistoryDomainService
@@ -60,6 +63,136 @@ export class MinistryGroupHistoryDomainService
         id: dto.orderDirection,
       },
     });
+  }
+
+  async findCurrentMinistryGroupHistoryList(
+    member: MemberModel,
+    dto: GetMinistryGroupHistoryListDto,
+  ): Promise<any> {
+    const repository = this.getRepository();
+
+    const query = repository
+      .createQueryBuilder('ministryGroupHistory')
+      .where('ministryGroupHistory.memberId = :memberId', {
+        memberId: member.id,
+      })
+      .andWhere('ministryGroupHistory.endDate IS NULL')
+      .select(['ministryGroupHistory.id'])
+      .orderBy('ministryGroupHistory.startDate', dto.sortDirection)
+      .addOrderBy('ministryGroupHistory.id', 'ASC');
+
+    if (dto.cursor) {
+      this.applyCursorPagination(query, dto.cursor, dto.sortDirection);
+    }
+
+    const items = await query.limit(dto.limit + 1).getMany();
+
+    const hasMore = items.length > dto.limit;
+    if (hasMore) {
+      items.pop();
+    }
+
+    if (items.length > 0) {
+      const itemIds = items.map((item) => item.id);
+
+      const itemsWithRelations = await repository
+        .createQueryBuilder('ministryGroupHistory')
+        .whereInIds(itemIds)
+        .select([
+          'ministryGroupHistory.id',
+          'ministryGroupHistory.startDate',
+          'ministryGroupHistory.ministryGroupId',
+        ])
+        .leftJoin('ministryGroupHistory.ministryGroup', 'ministryGroup')
+        .addSelect(['ministryGroup.id', 'ministryGroup.name'])
+        .leftJoin(
+          'ministryGroupHistory.ministryGroupDetailHistory',
+          'detailHistory',
+          'detailHistory.endDate IS NULL',
+        )
+        .addSelect([
+          'detailHistory.id',
+          'detailHistory.startDate',
+          'detailHistory.role',
+          'detailHistory.type',
+        ])
+        .leftJoin('detailHistory.ministry', 'ministry')
+        .addSelect(['ministry.id', 'ministry.name'])
+        .getMany();
+
+      const sortedItems = items.map((item) => {
+        const itemWithRelation = itemsWithRelations.find(
+          (ir) => ir.id === item.id,
+        );
+
+        if (itemWithRelation) {
+          return itemWithRelation;
+        } else {
+          throw new NotFoundException('NOT FOUND');
+        }
+      });
+
+      const nextCursor = hasMore
+        ? this.encodeCursor(sortedItems[sortedItems.length - 1])
+        : undefined;
+
+      return new DomainCursorPaginationResultDto(
+        sortedItems,
+        nextCursor,
+        hasMore,
+      );
+    }
+
+    return new DomainCursorPaginationResultDto(items, undefined, hasMore);
+  }
+
+  private applyCursorPagination(
+    query: SelectQueryBuilder<MinistryGroupHistoryModel>,
+    cursor: string,
+    sortDirection: 'ASC' | 'DESC',
+  ) {
+    const decodedCursor = this.decodeCursor(cursor);
+
+    if (!decodedCursor) return;
+
+    const { id, value } = decodedCursor;
+
+    const operator = sortDirection === 'ASC' ? '>' : '<';
+
+    /*query.andWhere(
+      `(ministryGroupHistory.startDate, ministryGroupHistory.id) ${operator} (:value, :id)`,
+      { value, id },
+    );*/
+
+    if (sortDirection === 'ASC') {
+      query.andWhere(
+        `(ministryGroupHistory.startDate > :value OR (ministryGroupHistory.startDate = :value AND ministryGroupHistory.id > :id))`,
+        { value, id },
+      );
+    } else {
+      query.andWhere(
+        `(ministryGroupHistory.startDate < :value OR (ministryGroupHistory.startDate = :value AND ministryGroupHistory.id > :id))`,
+        { value, id },
+      );
+    }
+  }
+
+  private encodeCursor(ministryGroupHistory: MinistryGroupHistoryModel) {
+    const cursorData = {
+      id: ministryGroupHistory.id,
+      value: ministryGroupHistory.startDate,
+    };
+
+    return Buffer.from(JSON.stringify(cursorData)).toString('base64');
+  }
+
+  private decodeCursor(cursor: string) {
+    try {
+      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
   }
 
   async findCurrentMinistryGroupHistory(

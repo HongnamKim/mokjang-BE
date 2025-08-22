@@ -1,4 +1,4 @@
-import { ValidationOptions } from 'joi';
+/*import { ValidationOptions } from 'joi';
 import {
   registerDecorator,
   ValidationArguments,
@@ -39,4 +39,4 @@ export function VisitationDetailValidator(
       validator: VisitationDetailConstraint,
     });
   };
-}
+}*/
