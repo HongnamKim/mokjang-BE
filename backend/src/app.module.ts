@@ -134,8 +134,8 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: configService.get<string>('DB_TYPE') as 'postgres',
-        //url: configService.get<string>('DB_HOST') as string,
-        host: configService.get<string>('DB_HOST'),
+        url: configService.get<string>('DB_HOST') as string,
+        //host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
@@ -198,7 +198,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
           // 교회 일정표/이벤트
           ChurchEventModel,
         ],
-        synchronize: true,
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
