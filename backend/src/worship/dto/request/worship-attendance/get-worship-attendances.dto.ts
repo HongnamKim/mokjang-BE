@@ -1,19 +1,19 @@
 import { BaseOffsetPaginationRequestDto } from '../../../../common/dto/request/base-offset-pagination-request.dto';
-import { WorshipAttendanceOrderEnum } from '../../../const/worship-attendance-order.enum';
+import { WorshipAttendanceOrder } from '../../../const/worship-attendance-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNumber, Min } from 'class-validator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 
-export class GetWorshipAttendancesDto extends BaseOffsetPaginationRequestDto<WorshipAttendanceOrderEnum> {
+export class GetWorshipAttendancesDto extends BaseOffsetPaginationRequestDto<WorshipAttendanceOrder> {
   @ApiProperty({
     description: '정렬 조건',
-    enum: WorshipAttendanceOrderEnum,
-    default: WorshipAttendanceOrderEnum.ID,
+    enum: WorshipAttendanceOrder,
+    default: WorshipAttendanceOrder.ID,
     required: false,
   })
   @IsOptionalNotNull()
-  @IsEnum(WorshipAttendanceOrderEnum)
-  order: WorshipAttendanceOrderEnum = WorshipAttendanceOrderEnum.ID;
+  @IsEnum(WorshipAttendanceOrder)
+  order: WorshipAttendanceOrder = WorshipAttendanceOrder.ID;
 
   @ApiProperty({
     description: '교인 그룹 ID',

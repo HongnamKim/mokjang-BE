@@ -57,6 +57,15 @@ import {
 } from '../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-history-domain.service.interface';
 import { MemberCursorPaginationResponseDto } from '../dto/response/member-cursor-pagination-response.dto';
 import { GetSimpleMemberListDto } from '../dto/list/get-simple-member-list.dto';
+import { GetAvailableWorshipResponseDto } from '../dto/response/worship/get-available-worship-response.dto';
+import { GetMemberWorshipStatisticsDto } from '../dto/request/worship/get-member-worship-statistics.dto';
+import {
+  IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
+  IWorshipAttendanceDomainService,
+} from '../../worship/worship-domain/interface/worship-attendance-domain.service.interface';
+import { GetMemberWorshipStatisticsResponseDto } from '../dto/response/worship/get-member-worship-statistics-response.dto';
+import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-member-worship-attendances.dto';
+import { GetMemberWorshipAttendancesResponseDto } from '../dto/response/worship/get-member-worship-attendances-response.dto';
 
 @Injectable()
 export class MembersService {
@@ -75,6 +84,8 @@ export class MembersService {
     private readonly worshipDomainService: IWorshipDomainService,
     @Inject(IWORSHIP_ENROLLMENT_DOMAIN_SERVICE)
     private readonly worshipEnrollmentDomainService: IWorshipEnrollmentDomainService,
+    @Inject(IWORSHIP_ATTENDANCE_DOMAIN_SERVICE)
+    private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
 
     @Inject(IMINISTRY_GROUP_HISTORY_DOMAIN_SERVICE)
     private readonly ministryGroupHistoryDomainService: IMinistryGroupHistoryDomainService,
@@ -354,5 +365,92 @@ export class MembersService {
       );
 
     return possibleGroups.map((group) => group.id);
+  }
+
+  async getAvailableWorship(church: ChurchModel, memberId: number) {
+    const member = await this.membersDomainService.findMemberModelById(
+      church,
+      memberId,
+    );
+
+    const groupIds = member.groupId
+      ? (
+          await this.groupsDomainService.findGroupByIdWithParents(
+            church,
+            member.groupId,
+          )
+        ).map((group) => group.id)
+      : undefined;
+
+    const availableWorships =
+      await this.worshipDomainService.findAvailableWorships(member, groupIds);
+
+    return new GetAvailableWorshipResponseDto(availableWorships);
+  }
+
+  async getMemberWorshipStatistics(
+    church: ChurchModel,
+    memberId: number,
+    dto: GetMemberWorshipStatisticsDto,
+  ) {
+    const [member, worship] = await Promise.all([
+      // 교인 조회
+      this.membersDomainService.findMemberModelById(church, memberId),
+      // 예배 조회
+      this.worshipDomainService.findWorshipModelById(church, dto.worshipId),
+    ]);
+
+    const worshipStats =
+      await this.worshipAttendanceDomainService.getStatisticsByMemberAndPeriod(
+        member,
+        worship,
+        dto.utcFrom,
+        dto.utcTo,
+      );
+
+    return new GetMemberWorshipStatisticsResponseDto({
+      attendanceRate: this.calculateRate(
+        worshipStats.presentCount,
+        worshipStats.presentCount + worshipStats.absentCount,
+      ),
+      presentCount: worshipStats.presentCount,
+      absentCount: worshipStats.absentCount,
+      unknownCount: worshipStats.unknownCount,
+      totalSessions: worshipStats.totalSessions,
+      checkRate: this.calculateRate(
+        worshipStats.presentCount + worshipStats.absentCount,
+        worshipStats.totalSessions,
+      ),
+    });
+  }
+
+  private calculateRate(numerator: number, denominator: number) {
+    if (denominator === 0) return 0;
+    return Math.round((numerator / denominator) * 1000) / 10;
+  }
+
+  async getMemberWorshipAttendances(
+    church: ChurchModel,
+    memberId: number,
+    dto: GetMemberWorshipAttendancesDto,
+  ) {
+    const [member, worship] = await Promise.all([
+      this.membersDomainService.findMemberModelById(church, memberId),
+      this.worshipDomainService.findWorshipModelById(church, dto.worshipId),
+    ]);
+
+    const result =
+      await this.worshipAttendanceDomainService.findMemberWorshipAttendances(
+        member,
+        worship,
+        dto,
+      );
+
+    return new GetMemberWorshipAttendancesResponseDto(
+      result.items,
+      result.items.length,
+      result.nextCursor,
+      result.hasMore,
+    );
   }
 }

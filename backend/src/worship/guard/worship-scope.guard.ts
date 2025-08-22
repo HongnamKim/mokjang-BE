@@ -29,7 +29,7 @@ import { CustomRequest } from '../../common/custom-request';
  * 필터링 요청한 그룹이 요청자의 권한 범위 내에 속하는지 검사
  */
 @Injectable()
-export class WorshipReadScopeGuard implements CanActivate {
+export class WorshipScopeGuard implements CanActivate {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,

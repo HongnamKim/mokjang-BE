@@ -1,5 +1,6 @@
 // --------------------Worship Constraints----------------------
 export const MAX_WORSHIP_TITLE = 50;
+export const MAX_WORSHIP_DESCRIPTION = 500;
 // -------------------------------------------------------------
 
 // ------------------Worship Session Constraints -------------------
@@ -10,5 +11,5 @@ export const MAX_WORSHIP_SESSION_NOTE_LENGTH = 500;
 // -----------------------------------------------------------------
 
 // -------------------Worship Attendance Constraints-------------------
-export const MAX_WORSHIP_ATTENDANCE_NOTE_LENGTH = 120;
+export const MAX_WORSHIP_ATTENDANCE_NOTE_LENGTH = 30;
 // --------------------------------------------------------------------

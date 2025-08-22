@@ -60,7 +60,7 @@ export class WorshipGroupFilterGuard implements CanActivate {
         church,
         worshipId,
         undefined,
-        { worshipTargetGroups: { group: true } },
+        { worshipTargetGroups: true },
       );
 
       req.worship = worship;
@@ -75,19 +75,18 @@ export class WorshipGroupFilterGuard implements CanActivate {
     const church = await this.getRequestChurch(req);
 
     const worship = await this.getRequestWorship(req, church);
+    req.worship = worship;
 
     // 조회 요청 그룹 ID
     const requestGroupId = parseInt(req.query.groupId as string);
 
-    // 필터링할 그룹이 없을 경우 통과
-    if (!requestGroupId) return true;
-
-    const worshipTargetGroups = worship.worshipTargetGroups.map(
-      (targetGroup) => targetGroup.group,
+    const rootTargetGroupIds = worship.worshipTargetGroups.map(
+      (targetGroup) => targetGroup.groupId,
     );
 
     // 대상 그룹이 전체인 예배
-    if (worshipTargetGroups.length === 0) {
+    if (rootTargetGroupIds.length === 0) {
+      req.worshipTargetGroupIds = undefined;
       return true;
     }
 
@@ -95,9 +94,16 @@ export class WorshipGroupFilterGuard implements CanActivate {
     const allowedGroupIds = (
       await this.groupsDomainService.findGroupAndDescendantsByIds(
         church,
-        worshipTargetGroups.map((group) => group.id),
+        rootTargetGroupIds,
       )
     ).map((group) => group.id);
+
+    req.worshipTargetGroupIds = allowedGroupIds;
+
+    // 필터링할 그룹이 없을 경우 통과
+    if (!requestGroupId) {
+      return true;
+    }
 
     // 요청 그룹이 대상 그룹에 포함되지 않은 경우 ForbiddenException
     if (!allowedGroupIds.includes(requestGroupId)) {

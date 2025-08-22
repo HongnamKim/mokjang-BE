@@ -10,10 +10,15 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
-import { MAX_WORSHIP_TITLE } from '../../../constraints/worship.constraints';
+import {
+  IsBasicText,
+  IsNoSpecialChar,
+} from '../../../../common/decorator/validator/is-no-special-char.validator';
+import {
+  MAX_WORSHIP_DESCRIPTION,
+  MAX_WORSHIP_TITLE,
+} from '../../../constraints/worship.constraints';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
-import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
 import { Transform } from 'class-transformer';
 
 @SanitizeDto()
@@ -39,7 +44,8 @@ export class CreateWorshipDto extends PickType(WorshipModel, [
   })
   @IsOptionalNotNull()
   @IsString()
-  @PlainTextMaxLength(500)
+  @IsBasicText('description')
+  @MaxLength(MAX_WORSHIP_DESCRIPTION)
   override description: string;
 
   @ApiProperty({
@@ -57,7 +63,7 @@ export class CreateWorshipDto extends PickType(WorshipModel, [
     minimum: 1,
   })
   @IsNumber()
-  @Min(0)
+  @Min(1)
   override repeatPeriod: number;
 
   @ApiProperty({

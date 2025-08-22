@@ -3,20 +3,20 @@ import { QueryRunner, UpdateResult } from 'typeorm';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
-import { WorshipEnrollmentDomainPaginationResultDto } from '../dto/worship-enrollment-domain-pagination-result.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
+import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 
 export const IWORSHIP_ENROLLMENT_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ENROLLMENT_DOMAIN',
 );
 
 export interface IWorshipEnrollmentDomainService {
-  findEnrollments(
+  /*findEnrollments(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
     groupIds?: number[],
     qr?: QueryRunner,
-  ): Promise<WorshipEnrollmentDomainPaginationResultDto>;
+  ): Promise<WorshipEnrollmentDomainPaginationResultDto>;*/
 
   findEnrollmentsByQueryBuilder(
     worship: WorshipModel,
@@ -86,4 +86,14 @@ export interface IWorshipEnrollmentDomainService {
     presentCount: number,
     absentCount: number,
   ): Promise<UpdateResult>;*/
+
+  incrementPresentCounts(
+    worshipAttendanceModels: WorshipAttendanceModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementAbsentCounts(
+    worshipAttendance: WorshipAttendanceModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

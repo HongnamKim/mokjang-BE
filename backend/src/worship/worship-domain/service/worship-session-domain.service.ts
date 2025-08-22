@@ -28,9 +28,11 @@ import { MemberException } from '../../../members/exception/member.exception';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { TaskException } from '../../../task/const/exception-message/task.exception';
 import {
+  MemberSimpleSelect,
   MemberSummarizedRelation,
-  MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
+import { session } from 'passport';
+import { AttendanceStatus } from '../../const/attendance-status.enum';
 
 @Injectable()
 export class WorshipSessionDomainService
@@ -106,7 +108,7 @@ export class WorshipSessionDomainService
     return true;
   }
 
-  async findOrCreateWorshipSessionByDate(
+  async findOrCreateWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
@@ -122,6 +124,12 @@ export class WorshipSessionDomainService
         worshipId: worship.id,
         sessionDate,
       },
+      relations: {
+        inCharge: MemberSummarizedRelation,
+      },
+      select: {
+        inCharge: MemberSimpleSelect,
+      },
     });
 
     if (existSession) {
@@ -136,7 +144,7 @@ export class WorshipSessionDomainService
     return { ...createdSession, isCreated: true };
   }
 
-  async findOrCreateRecentWorshipSession(
+  /*async findOrCreateRecentWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
@@ -160,7 +168,7 @@ export class WorshipSessionDomainService
     });
 
     return { ...createdSession, isCreated: true };
-  }
+  }*/
 
   private assertValidInChargeMember(inChargeMember: ChurchUserModel | null) {
     if (!inChargeMember) {
@@ -223,7 +231,7 @@ export class WorshipSessionDomainService
         inCharge: MemberSummarizedRelation,
       },
       select: {
-        inCharge: MemberSummarizedSelect,
+        inCharge: MemberSimpleSelect,
       },
     });
 
@@ -264,9 +272,6 @@ export class WorshipSessionDomainService
     qr: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
-
-    /*dto.sessionDate &&
-      (await this.assertValidNewSession(worship, dto.sessionDate, repository));*/
 
     this.assertValidInChargeMember(inCharge);
 
@@ -323,5 +328,55 @@ export class WorshipSessionDomainService
     });
 
     return deletedSessionIds;
+  }
+
+  async countByWorship(worship: WorshipModel): Promise<number> {
+    const repository = this.getRepository();
+
+    return repository.count({
+      where: {
+        worshipId: worship.id,
+      },
+    });
+  }
+
+  async findSessionCheckStatus(
+    worship: WorshipModel,
+    intersectionGroupIds: number[] | undefined,
+    from: Date,
+    to: Date,
+  ): Promise<any> {
+    const repository = this.getRepository();
+
+    const query = repository
+      .createQueryBuilder('session')
+      .leftJoin('session.worshipAttendances', 'attendance')
+      .leftJoin('attendance.worshipEnrollment', 'enrollment')
+      .leftJoin('enrollment.member', 'member')
+      .where('session.worshipId = :worshipId', { worshipId: worship.id })
+      .andWhere('session.sessionDate BETWEEN :from AND :to', { from, to })
+      .select([
+        'session.id as id',
+        'session.sessionDate as sessionDate',
+        'SUM(CASE WHEN attendance.attendanceStatus = :unknown THEN 1 ELSE 0 END) as unknown',
+      ])
+      .setParameter('unknown', AttendanceStatus.UNKNOWN);
+
+    if (intersectionGroupIds && intersectionGroupIds.length > 0) {
+      query.andWhere('member.groupId IN (:...groupIds)', {
+        groupIds: intersectionGroupIds,
+      });
+    }
+
+    const results = await query
+      .groupBy('session.id')
+      .orderBy('session.sessionDate', 'ASC')
+      .getRawMany();
+
+    return results.map((result) => ({
+      id: result.id,
+      sessionDate: result.sessiondate,
+      completeAttendanceCheck: !+result.unknown,
+    }));
   }
 }

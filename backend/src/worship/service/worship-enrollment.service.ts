@@ -169,18 +169,6 @@ export class WorshipEnrollmentService {
       (enrollment: WorshipEnrollmentModel) => enrollment.id,
     );
 
-    /*if (dto.fromSessionDate && !dto.toSessionDate) {
-      dto.toSessionDate = new Date(
-        dto.fromSessionDate.getTime() + 100 * 24 * 60 * 60 * 1000,
-      );
-    }
-
-    if (!dto.fromSessionDate && dto.toSessionDate) {
-      dto.fromSessionDate = new Date(
-        dto.toSessionDate.getTime() - 100 * 24 * 60 * 60 * 1000,
-      );
-    }*/
-
     const attendances =
       await this.worshipAttendanceDomainService.joinAttendance(
         enrollmentIds,

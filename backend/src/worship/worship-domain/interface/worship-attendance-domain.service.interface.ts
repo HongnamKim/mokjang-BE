@@ -5,12 +5,24 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
+import { WorshipModel } from '../../entity/worship.entity';
+import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendance/get-worship-attendance-list.dto';
+import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { GetMemberWorshipAttendancesDto } from '../../../members/dto/request/worship/get-member-worship-attendances.dto';
 
 export const IWORSHIP_ATTENDANCE_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ATTENDANCE_DOMAIN_SERVICE',
 );
 
 export interface IWorshipAttendanceDomainService {
+  findAttendanceList(
+    session: WorshipSessionModel,
+    dto: GetWorshipAttendanceListDto,
+    groupIds: number[] | undefined,
+    qr?: QueryRunner,
+  ): Promise<DomainCursorPaginationResultDto<WorshipAttendanceModel>>;
+
   findAttendances(
     session: WorshipSessionModel,
     dto: GetWorshipAttendancesDto,
@@ -65,8 +77,55 @@ export interface IWorshipAttendanceDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  /*countPresentAndAbsent(enrollment: WorshipEnrollmentModel): Promise<{
+  getAttendanceStatsBySession(
+    worshipSession: WorshipSessionModel,
+    requestGroupIds: number[] | undefined,
+    qr?: QueryRunner,
+  ): Promise<{
     presentCount: number;
     absentCount: number;
-  }>;*/
+    unknownCount: number;
+  }>;
+
+  getOverallAttendanceStats(
+    worship: WorshipModel,
+    requestGroupIds: number[] | undefined,
+  ): Promise<{ overallRate: number; attendanceCheckRate: number }>;
+
+  getAttendanceStatsByPeriod(
+    worship: WorshipModel,
+    requestGroupIds: number[] | undefined,
+    from: Date,
+    to: Date | undefined,
+  ): Promise<{ rate: number; attendanceCheckRate: number }>;
+
+  getStatisticsByMemberAndPeriod(
+    member: MemberModel,
+    worship: WorshipModel,
+    utcFrom: Date,
+    utcTo: Date,
+  ): any;
+
+  findMemberWorshipAttendances(
+    member: MemberModel,
+    worship: WorshipModel,
+    dto: GetMemberWorshipAttendancesDto,
+  ): Promise<DomainCursorPaginationResultDto<WorshipAttendanceModel>>;
+
+  findUnknownAttendances(
+    session: WorshipSessionModel,
+    groupIds: number[] | undefined,
+    qr: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]>;
+
+  findAbsentAttendances(
+    session: WorshipSessionModel,
+    groupIds: number[] | undefined,
+    qr: QueryRunner,
+  ): Promise<WorshipAttendanceModel[]>;
+
+  updateAllAttended(
+    updateTargetIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }
