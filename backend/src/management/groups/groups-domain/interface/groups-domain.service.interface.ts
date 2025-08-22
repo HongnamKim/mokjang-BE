@@ -64,7 +64,7 @@ export interface IGroupsDomainService {
     church: ChurchModel,
     groupId: number,
     qr?: QueryRunner,
-  ): Promise<GroupModelWithParentGroups>;
+  ): Promise<ParentGroup[]>;
 
   createGroup(
     church: ChurchModel,

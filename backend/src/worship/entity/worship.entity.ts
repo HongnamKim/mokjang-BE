@@ -9,6 +9,7 @@ import {
 import { BaseModel } from '../../common/entity/base.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipTargetGroupModel } from './worship-target-group.entity';
+import { WorshipEnrollmentModel } from './worship-enrollment.entity';
 
 @Entity()
 export class WorshipModel extends BaseModel {
@@ -37,4 +38,10 @@ export class WorshipModel extends BaseModel {
     (worshipTargetGroup) => worshipTargetGroup.worship,
   )
   worshipTargetGroups: WorshipTargetGroupModel[];
+
+  @OneToMany(
+    () => WorshipEnrollmentModel,
+    (worshipEnrollment) => worshipEnrollment.worship,
+  )
+  worshipEnrollments: WorshipEnrollmentModel[];
 }

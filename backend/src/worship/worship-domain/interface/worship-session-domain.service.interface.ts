@@ -25,17 +25,17 @@ export interface IWorshipSessionDomainService {
     qr?: QueryRunner,
   ): Promise<WorshipSessionModel>;
 
-  findOrCreateWorshipSessionByDate(
+  findOrCreateWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
   ): Promise<WorshipSessionModel & { isCreated: boolean }>;
 
-  findOrCreateRecentWorshipSession(
+  /*findOrCreateRecentWorshipSession(
     worship: WorshipModel,
     sessionDate: Date,
     qr: QueryRunner,
-  ): Promise<WorshipSessionModel & { isCreated: boolean }>;
+  ): Promise<WorshipSessionModel & { isCreated: boolean }>;*/
 
   findWorshipSessionById(
     worship: WorshipModel,
@@ -66,4 +66,13 @@ export interface IWorshipSessionDomainService {
     worship: WorshipModel,
     qr: QueryRunner,
   ): Promise<number[]>;
+
+  countByWorship(worship: WorshipModel): Promise<number>;
+
+  findSessionCheckStatus(
+    worship: WorshipModel,
+    intersectionGroupIds: number[] | undefined,
+    from: Date,
+    to: Date,
+  ): Promise<any>;
 }

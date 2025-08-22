@@ -1,7 +1,4 @@
-export enum WorshipAttendanceOrder {
-  //CREATED_AT = 'createdAt',
-  ID = 'id',
-  UPDATED_AT = 'updatedAt',
+export enum WorshipAttendanceSortColumn {
   ATTENDANCE_STATUS = 'attendanceStatus',
   NAME = 'name',
   GROUP_NAME = 'groupName',
