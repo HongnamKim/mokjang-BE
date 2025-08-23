@@ -74,6 +74,8 @@ import { EducationTermModel } from './educations/education-term/entity/education
 import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
 import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
+import { SubscriptionModel } from './subscription/entity/subscription.entity';
+import { SubscriptionModule } from './subscription/subscription.module';
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
@@ -134,13 +136,15 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: configService.get<string>('DB_TYPE') as 'postgres',
-        url: configService.get<string>('DB_HOST') as string,
-        //host: configService.get<string>('DB_HOST'),
+        //url: configService.get<string>('DB_HOST') as string,
+        host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [
+          // 구독 관련
+          SubscriptionModel,
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
@@ -198,7 +202,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
           // 교회 일정표/이벤트
           ChurchEventModel,
         ],
-        synchronize: false,
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),
@@ -213,6 +217,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
     MyPageModule,
     ReportModule,
     UserModule,
+    SubscriptionModule,
     ChurchesModule,
     ChurchJoinModule,
     ChurchUserModule,
