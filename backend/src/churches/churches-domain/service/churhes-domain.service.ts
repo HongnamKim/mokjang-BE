@@ -22,6 +22,7 @@ import { RequestLimitValidationType } from '../../../request-info/types/request-
 import { ChurchException } from '../../const/exception/church.exception';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -62,6 +63,20 @@ export class ChurchesDomainService implements IChurchesDomainService {
       ...dto,
       ownerUserId: ownerUser.id,
       joinCode: await this.generateUniqueChurchCode(churchRepository),
+    });
+  }
+
+  createTrialChurch(
+    user: UserModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel> {
+    const repository = this.getChurchRepository(qr);
+
+    return repository.save({
+      subscriptionId: subscription.id,
+      name: '체험교회',
+      ownerUserId: user.id,
     });
   }
 
@@ -114,7 +129,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
         id,
       },
       relations: {
-        //users: true,
+        subscription: true,
       },
     });
 

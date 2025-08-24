@@ -8,6 +8,7 @@ import { ChurchUserDomainModule } from '../church-user/church-user-domain/church
 import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 import { ChurchPermissionService } from './service/church-permission.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { SubscriptionDomainModule } from '../subscription/subscription-domain/subscription-domain.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     ManagerDomainModule,
     MembersDomainModule,
     ChurchUserDomainModule,
+    SubscriptionDomainModule,
   ],
   controllers: [ChurchesController],
   providers: [

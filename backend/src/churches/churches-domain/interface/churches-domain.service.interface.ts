@@ -5,6 +5,7 @@ import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
 
 export const ICHURCHES_DOMAIN_SERVICE = Symbol('ICHURCHES_DOMAIN_SERVICE');
 
@@ -31,6 +32,12 @@ export interface IChurchesDomainService {
     dto: CreateChurchDto,
     ownerUser: UserModel,
     qr?: QueryRunner,
+  ): Promise<ChurchModel>;
+
+  createTrialChurch(
+    user: UserModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
   ): Promise<ChurchModel>;
 
   updateChurch(church: ChurchModel, dto: UpdateChurchDto): Promise<ChurchModel>;
