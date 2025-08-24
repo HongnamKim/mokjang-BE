@@ -1,13 +1,5 @@
 import { BaseModel } from '../../common/entity/base.entity';
-import {
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-} from 'typeorm';
-import { ChurchModel } from '../../churches/entity/church.entity';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
 import { SubscriptionPlan } from '../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../const/subscription-status.enum';
@@ -15,13 +7,13 @@ import { BillingCycle } from '../const/billing-cycle.enum';
 
 @Entity()
 export class SubscriptionModel extends BaseModel {
-  @Column({ nullable: true })
+  /*@Column({ nullable: true })
   @Index()
   churchId: number | null;
 
   @OneToOne(() => ChurchModel, { nullable: true })
   @JoinColumn({ name: 'churchId' })
-  church: ChurchModel;
+  church: ChurchModel;*/
 
   @Column()
   @Index()

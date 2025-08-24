@@ -56,10 +56,19 @@ export class ChurchesController {
     return this.churchesService.createChurch(accessPayload, dto, qr);
   }
 
+  @Post('trial')
+  @UseGuards(AccessTokenGuard)
+  @UseInterceptors(TransactionInterceptor)
+  postTrialChurch(
+    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.churchesService.createTrialChurch(accessPayload.id, qr);
+  }
+
   @ApiGetChurchById()
   @Get(':churchId')
   @ChurchReadGuard()
-  @UseGuards(AccessTokenGuard)
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getChurchById(@Param('churchId', ParseIntPipe) churchId: number) {
     return this.churchesService.getChurchById(churchId);

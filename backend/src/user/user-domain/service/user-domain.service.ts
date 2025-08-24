@@ -1,11 +1,12 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../../entity/user.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { IUserDomainService } from '../interface/user-domain.service.interface';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -187,5 +188,23 @@ export class UserDomainService implements IUserDomainService {
       ),
       userRepository.update({ id: newMainAdmin.id }, { role: UserRole.OWNER }),
     ]);
+  }
+
+  async startFreeTrial(
+    user: UserModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getUserRepository(qr);
+
+    const result = await repository.update(
+      { id: user.id },
+      { hasUsedFreeTrial: true },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(UserException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 }
