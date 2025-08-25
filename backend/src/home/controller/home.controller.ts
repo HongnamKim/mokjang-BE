@@ -15,7 +15,7 @@ import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto'
 import {
   ApiGetLowWorshipAttendanceMembers,
   ApiGetMyInChargedSchedules,
-  ApiGetMyInChargeScheduleStatus,
+  ApiGetScheduleStatus,
   ApiGetMyScheduleReports,
   ApiGetNewMemberDetail,
   ApiGetNewMemberSummary,
@@ -25,6 +25,7 @@ import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../dto/request/get-low-worship-attendance-members.dto';
+import { GetScheduleStatusDto } from '../dto/request/get-schedule-status.dto';
 
 @Controller()
 export class HomeController {
@@ -64,14 +65,23 @@ export class HomeController {
     return this.homeService.getMyInChargedSchedules(pm, dto);
   }
 
-  @ApiGetMyInChargeScheduleStatus()
+  @ApiGetScheduleStatus()
   @Get('schedules/status')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
-  getMyInChargeScheduleStatus(
-    @Query() dto: GetMyInChargedSchedulesDto,
+  getScheduleStatus(
+    @Query() dto: GetScheduleStatusDto,
+    @RequestChurch() requestChurch: ChurchModel,
     @RequestManager() requestMember: ChurchUserModel,
   ) {
-    return this.homeService.getMyInChargeScheduleStatus(requestMember, dto);
+    if ((dto.from && !dto.to) || (!dto.from && dto.to)) {
+      throw new BadRequestException('from, to 에러');
+    }
+
+    return this.homeService.getMyInChargeScheduleStatus(
+      requestChurch,
+      requestMember,
+      dto,
+    );
   }
 
   @ApiGetMyScheduleReports()
@@ -86,7 +96,6 @@ export class HomeController {
     }
 
     return this.homeService.getMyReports(pm, dto);
-    //return this.homeService.getMyScheduleReports(pm, dto);
   }
 
   @ApiGetLowWorshipAttendanceMembers()

@@ -8,6 +8,7 @@ import { UpdateTaskDto } from '../../dto/request/update-task.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MyScheduleStatusCountDto } from '../../dto/my-schedule-status-count.dto';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 export const ITASK_DOMAIN_SERVICE = Symbol('ITASK_DOMAIN_SERVICE');
 
@@ -72,8 +73,10 @@ export interface ITaskDomainService {
   ): Promise<TaskModel[]>;
 
   countMyTaskStatus(
+    church: ChurchModel,
     me: MemberModel,
     from: Date,
     to: Date,
+    option: ScheduleStatusOption,
   ): Promise<MyScheduleStatusCountDto>;
 }
