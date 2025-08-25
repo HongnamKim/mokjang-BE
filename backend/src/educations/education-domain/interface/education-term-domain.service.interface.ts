@@ -14,6 +14,7 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',
@@ -122,8 +123,10 @@ export interface IEducationTermDomainService {
   ): Promise<EducationTermModel[]>;
 
   countMyEducationTermStatus(
+    church: ChurchModel,
     me: MemberModel,
     from: Date,
     to: Date,
+    option: ScheduleStatusOption,
   ): Promise<MyScheduleStatusCountDto>;
 }

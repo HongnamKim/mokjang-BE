@@ -48,6 +48,7 @@ import { EducationReportType } from '../../../report/education-report/const/educ
 import { EducationReportSummarizedSelectQB } from '../../../report/education-report/const/education-session-find-options.const';
 import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -588,17 +589,22 @@ export class EducationTermDomainService implements IEducationTermDomainService {
   }
 
   async countMyEducationTermStatus(
+    church: ChurchModel,
     me: MemberModel,
     from: Date,
     to: Date,
+    option: ScheduleStatusOption,
   ): Promise<MyScheduleStatusCountDto> {
     const repository = this.getEducationTermsRepository();
 
     const query = repository
       .createQueryBuilder('educationTerm')
-      .innerJoin('educationTerm.inCharge', 'inCharge', 'inCharge.id = :id', {
-        id: me.id,
-      })
+      .innerJoin(
+        'educationTerm.education',
+        'education',
+        'education.churchId = :churchId',
+        { churchId: church.id },
+      )
       .where(
         'educationTerm.startDate <= :to AND educationTerm.endDate >= :from',
         { from, to },
@@ -615,6 +621,12 @@ export class EducationTermDomainService implements IEducationTermDomainService {
         done: EducationTermStatus.DONE,
         pending: EducationTermStatus.PENDING,
       });
+
+    if (option === ScheduleStatusOption.MEMBER) {
+      query.andWhere('educationTerm.inChargeId = :inChargeId', {
+        inChargeId: me.id,
+      });
+    }
 
     const result = await query.getRawOne();
 

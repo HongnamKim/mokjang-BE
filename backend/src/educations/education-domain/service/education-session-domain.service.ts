@@ -34,6 +34,7 @@ import { EducationSessionException } from '../../education-session/exception/edu
 import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
 import { session } from 'passport';
 import { EducationSessionStatus } from '../../education-session/const/education-session-status.enum';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 export class EducationSessionDomainService
   implements IEducationSessionDomainService
@@ -541,17 +542,23 @@ export class EducationSessionDomainService
   }
 
   async countMyEducationSessionStatus(
+    church: ChurchModel,
     me: MemberModel,
     from: Date,
     to: Date,
+    option: ScheduleStatusOption,
   ): Promise<MyScheduleStatusCountDto> {
     const repository = this.getEducationSessionsRepository();
 
     const query = repository
       .createQueryBuilder('educationSession')
-      .innerJoin('educationSession.inCharge', 'inCharge', 'inCharge.id = :id', {
-        id: me.id,
-      })
+      .innerJoin('educationSession.educationTerm', 'educationTerm')
+      .innerJoin(
+        'educationTerm.education',
+        'education',
+        'education.churchId = :churchId',
+        { churchId: church.id },
+      )
       .where(
         'educationSession.startDate <= :to AND educationSession.endDate >= :from',
         {
@@ -571,6 +578,12 @@ export class EducationSessionDomainService
         done: EducationSessionStatus.DONE,
         pending: EducationSessionStatus.PENDING,
       });
+
+    if (option === ScheduleStatusOption.MEMBER) {
+      query.andWhere('educationSession.inChargeId = :inChargeId', {
+        inChargeId: me.id,
+      });
+    }
 
     const result = await query.getRawOne();
 

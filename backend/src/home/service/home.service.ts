@@ -87,6 +87,7 @@ import {
   IEducationTermDomainService,
 } from '../../educations/education-domain/interface/education-term-domain.service.interface';
 import { EducationTermModel } from '../../educations/education-term/entity/education-term.entity';
+import { GetScheduleStatusDto } from '../dto/request/get-schedule-status.dto';
 
 @Injectable()
 export class HomeService {
@@ -272,8 +273,9 @@ export class HomeService {
   }
 
   async getMyInChargeScheduleStatus(
+    church: ChurchModel,
     requestMember: ChurchUserModel,
-    dto: GetMyInChargedSchedulesDto,
+    dto: GetScheduleStatusDto,
   ) {
     const me = requestMember.member;
 
@@ -290,20 +292,36 @@ export class HomeService {
     const [task, visitation, educationTerm, educationSession] =
       await Promise.all([
         // Task
-        this.taskDomainService.countMyTaskStatus(me, from, to),
-        // Visitation
-        this.visitationMetaDomainService.countMyVisitationStatus(me, from, to),
-        // Education Term
-        this.educationTermDomainService.countMyEducationTermStatus(
+        this.taskDomainService.countMyTaskStatus(
+          church,
           me,
           from,
           to,
+          dto.option,
+        ),
+        // Visitation
+        this.visitationMetaDomainService.countMyVisitationStatus(
+          church,
+          me,
+          from,
+          to,
+          dto.option,
+        ),
+        // Education Term
+        this.educationTermDomainService.countMyEducationTermStatus(
+          church,
+          me,
+          from,
+          to,
+          dto.option,
         ),
         // Education Session
         this.educationSessionDomainService.countMyEducationSessionStatus(
+          church,
           me,
           from,
           to,
+          dto.option,
         ),
       ]);
 

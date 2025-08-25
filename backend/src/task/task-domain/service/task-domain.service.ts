@@ -45,6 +45,7 @@ import {
 import { MemberModel } from '../../../members/entity/member.entity';
 import { TaskStatus } from '../../const/task-status.enum';
 import { MyScheduleStatusCountDto } from '../../dto/my-schedule-status-count.dto';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 @Injectable()
 export class TaskDomainService implements ITaskDomainService {
@@ -448,15 +449,19 @@ export class TaskDomainService implements ITaskDomainService {
     });
   }
 
-  async countMyTaskStatus(me: MemberModel, from: Date, to: Date) {
+  async countMyTaskStatus(
+    church: ChurchModel,
+    me: MemberModel,
+    from: Date,
+    to: Date,
+    option: ScheduleStatusOption,
+  ) {
     const repository = this.getTaskRepository();
 
     const query = repository
       .createQueryBuilder('task')
-      .innerJoin('task.inCharge', 'inCharge', 'inCharge.id = :id', {
-        id: me.id,
-      })
-      .where('task.startDate <= :to AND task.endDate >= :from', { from, to })
+      .where('task.churchId = :churchId', { churchId: church.id })
+      .andWhere('task.startDate <= :to AND task.endDate >= :from', { from, to })
       .select([
         'SUM(CASE WHEN task.status = :reserve THEN 1 ELSE 0 END) as reserve_count',
         'SUM(CASE WHEN task.status = :inProgress THEN 1 ELSE 0 END) as inprogress_count',
@@ -469,6 +474,10 @@ export class TaskDomainService implements ITaskDomainService {
         done: TaskStatus.DONE,
         pending: TaskStatus.PENDING,
       });
+
+    if (option === ScheduleStatusOption.MEMBER) {
+      query.andWhere('task.inChargeId = :inChargeId', { inChargeId: me.id });
+    }
 
     const result = await query.getRawOne();
 

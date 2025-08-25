@@ -38,6 +38,7 @@ import { ChurchUserModel } from '../../../church-user/entity/church-user.entity'
 import { ManagerException } from '../../../manager/exception/manager.exception';
 import { VisitationStatus } from '../../const/visitation-status.enum';
 import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -314,15 +315,19 @@ export class VisitationMetaDomainService
     });
   }
 
-  async countMyVisitationStatus(me: MemberModel, from: Date, to: Date) {
+  async countMyVisitationStatus(
+    church: ChurchModel,
+    me: MemberModel,
+    from: Date,
+    to: Date,
+    option: ScheduleStatusOption,
+  ) {
     const repository = this.getVisitationMetaRepository();
 
     const query = repository
       .createQueryBuilder('visitation')
-      .innerJoin('visitation.inCharge', 'inCharge', 'inCharge.id = :id', {
-        id: me.id,
-      })
-      .where('visitation.startDate <= :to AND visitation.endDate >= :from', {
+      .where('visitation.churchId = :churchId', { churchId: church.id })
+      .andWhere('visitation.startDate <= :to AND visitation.endDate >= :from', {
         from,
         to,
       })
@@ -338,6 +343,12 @@ export class VisitationMetaDomainService
         done: VisitationStatus.DONE,
         pending: VisitationStatus.PENDING,
       });
+
+    if (option === ScheduleStatusOption.MEMBER) {
+      query.andWhere('visitation.inChargeId = :inChargeId', {
+        inChargeId: me.id,
+      });
+    }
 
     const result = await query.getRawOne();
 
