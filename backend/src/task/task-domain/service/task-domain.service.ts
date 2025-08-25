@@ -473,10 +473,10 @@ export class TaskDomainService implements ITaskDomainService {
     const result = await query.getRawOne();
 
     return new MyScheduleStatusCountDto(
-      parseInt(result.reserve_count),
-      parseInt(result.inprogress_count),
-      parseInt(result.done_count),
-      parseInt(result.pending_count),
+      parseInt(result.reserve_count) || 0,
+      parseInt(result.inprogress_count) || 0,
+      parseInt(result.done_count) || 0,
+      parseInt(result.pending_count) || 0,
     );
   }
 }
