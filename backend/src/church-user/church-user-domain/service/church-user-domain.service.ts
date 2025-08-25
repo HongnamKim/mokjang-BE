@@ -9,6 +9,7 @@ import { IChurchUserDomainService } from './interface/church-user-domain.service
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../../../user/entity/user.entity';
 import {
+  DeleteResult,
   FindOptionsOrder,
   ILike,
   IsNull,
@@ -285,5 +286,14 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     }
 
     return result;
+  }
+
+  deleteChurchUserCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getChurchUserRepository(qr);
+
+    return repository.delete({ churchId: church.id });
   }
 }

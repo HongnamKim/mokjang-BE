@@ -10,7 +10,6 @@ import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './user/entity/user.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
 import { ChurchesModule } from './churches/churches.module';
 
@@ -76,6 +75,8 @@ import { SessionAttendanceModel } from './educations/session-attendance/entity/s
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
 import { SubscriptionModel } from './subscription/entity/subscription.entity';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { DummyDataModule } from './dummy-data/dummy-data.module';
+
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
@@ -213,6 +214,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
       }),
       inject: [ConfigService],
     }),
+    DummyDataModule,
     AuthModule,
     MyPageModule,
     ReportModule,
@@ -246,7 +248,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
-    DummyDataService,
+    //DummyDataService,
   ],
 })
 export class AppModule {}

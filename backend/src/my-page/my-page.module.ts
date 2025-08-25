@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
-import { MyPageController } from './dto/controller/my-page.controller';
-import { MyPageService } from './dto/service/my-page.service';
+import { MyPageController } from './controller/my-page.controller';
+import { MyPageService } from './service/my-page.service';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 
 @Module({

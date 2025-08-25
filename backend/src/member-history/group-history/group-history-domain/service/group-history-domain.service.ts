@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupHistoryModel } from '../../entity/group-history.entity';
 import {
+  DeleteResult,
   FindOptionsRelations,
   In,
   IsNull,
@@ -23,6 +24,7 @@ import { HistoryUpdateDate } from '../../../history-date.utils';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
+import { ChurchModel } from '../../../../churches/entity/church.entity';
 
 @Injectable()
 export class GroupHistoryDomainService implements IGroupHistoryDomainService {
@@ -340,5 +342,27 @@ export class GroupHistoryDomainService implements IGroupHistoryDomainService {
     }
 
     return result;
+  }
+
+  async deleteDummyGroupHistoriesCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getGroupHistoryRepository(qr);
+
+    const deleteTargets = await repository.find({
+      where: {
+        member: {
+          churchId: church.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return repository.delete({
+      id: In(deleteTargets.map((t) => t.id)),
+    });
   }
 }

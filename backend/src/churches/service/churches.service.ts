@@ -27,10 +27,12 @@ import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
 } from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
+import { ChurchModel } from '../entity/church.entity';
 import {
   ISUBSCRIPTION_DOMAIN_SERVICE,
   ISubscriptionDomainService,
 } from '../../subscription/subscription-domain/interface/subscription-domain.service.interface';
+import { GetChurchSubscriptionDto } from '../dto/response/get-church-subscription.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -59,33 +61,6 @@ export class ChurchesService {
     return {
       ...church,
     };
-  }
-
-  async createTrialChurch(userId: number, qr: QueryRunner) {
-    const user = await this.userDomainService.findUserModelById(userId, qr);
-
-    if (user.role !== UserRole.NONE) {
-      throw new ConflictException(
-        '소속된 교회가 있는 사용자는 무료체험을 진행할 수 없습니다.',
-      );
-    }
-
-    const subscription =
-      await this.subscriptionDomainService.findTrialSubscription(user, qr);
-
-    const newTrialChurch = await this.churchesDomainService.createTrialChurch(
-      user,
-      subscription,
-      qr,
-    );
-
-    const ownerMember = await this.membersDomainService.createMember(
-      newTrialChurch,
-      { name: user.name, mobilePhone: user.mobilePhone },
-      qr,
-    );
-
-    await this.churchesDomainService.incrementMemberCount(newTrialChurch, qr);
   }
 
   async createChurch(
@@ -260,5 +235,12 @@ export class ChurchesService {
     };
 
     return this.churchesDomainService.updateChurch(church, updateChurchDto);
+  }
+
+  async getChurchSubscription(church: ChurchModel) {
+    const subscription =
+      await this.subscriptionDomainService.findCurrentSubscription(church);
+
+    return new GetChurchSubscriptionDto(subscription);
   }
 }

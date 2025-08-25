@@ -3,8 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MemberModel } from '../entity/member.entity';
 import { IMEMBERS_DOMAIN_SERVICE } from './interface/members-domain.service.interface';
 import { MembersDomainService } from './service/members-domain.service';
-import { IDUMMY_MEMBERS_DOMAIN_SERVICE } from './interface/dummy-members-domain.service.interface';
-import { DummyMembersDomainService } from './service/dummy-members-domain.service';
 import { IMINISTRY_MEMBERS_DOMAIN_SERVICE } from './interface/ministry-members-domain.service.interface';
 import { MinistryMembersDomainService } from './service/ministry-members-domain.service';
 import { IOFFICER_MEMBERS_DOMAIN_SERVICE } from './interface/officer-members-domain.service.interface';
@@ -20,10 +18,6 @@ import { EducationMembersDomainService } from './service/education-members-domai
     {
       provide: IMEMBERS_DOMAIN_SERVICE,
       useClass: MembersDomainService,
-    },
-    {
-      provide: IDUMMY_MEMBERS_DOMAIN_SERVICE,
-      useClass: DummyMembersDomainService,
     },
     {
       provide: IMINISTRY_MEMBERS_DOMAIN_SERVICE,
@@ -44,7 +38,6 @@ import { EducationMembersDomainService } from './service/education-members-domai
   ],
   exports: [
     IMEMBERS_DOMAIN_SERVICE,
-    IDUMMY_MEMBERS_DOMAIN_SERVICE,
     IMINISTRY_MEMBERS_DOMAIN_SERVICE,
     IOFFICER_MEMBERS_DOMAIN_SERVICE,
     IGROUP_MEMBERS_DOMAIN_SERVICE,

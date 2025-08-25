@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
-} from '../../../user/user-domain/interface/user-domain.service.interface';
-import { GetMeResponseDto } from '../response/get-me-response.dto';
+} from '../../user/user-domain/interface/user-domain.service.interface';
+import { GetMeResponseDto } from '../dto/response/get-me-response.dto';
 
 @Injectable()
 export class MyPageService {

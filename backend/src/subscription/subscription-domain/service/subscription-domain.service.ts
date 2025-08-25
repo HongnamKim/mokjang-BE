@@ -17,6 +17,7 @@ import {
 import { SubscriptionPlan } from '../../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../../const/subscription-status.enum';
 import { addDays } from 'date-fns';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class SubscriptionDomainService implements ISubscriptionDomainService {
@@ -96,6 +97,26 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     return subscription;
   }
 
+  async findActivatedSubscription(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository(qr);
+
+    const subscription = await repository.findOne({
+      where: {
+        userId: user.id,
+        status: SubscriptionStatus.ACTIVE,
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('활성화된 구독 정보를 찾을 수 없습니다.');
+    }
+
+    return subscription;
+  }
+
   async activateSubscription(
     subscription: SubscriptionModel,
     qr: QueryRunner,
@@ -116,5 +137,47 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     }
 
     return result;
+  }
+
+  async deactivateSubscription(
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: subscription.id,
+      },
+      {
+        status: SubscriptionStatus.PENDING,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException('구독 정보 업데이트 실패');
+    }
+
+    return result;
+  }
+
+  async findCurrentSubscription(
+    church: ChurchModel,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository();
+
+    const subscription = await repository.findOne({
+      where: {
+        church: {
+          id: church.id,
+        },
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('현재 구독 정보를 찾을 수 없습니다.');
+    }
+
+    return subscription;
   }
 }

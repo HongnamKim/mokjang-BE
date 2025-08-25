@@ -1,9 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { MyPageService } from '../service/my-page.service';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { Token } from '../../../auth/decorator/jwt.decorator';
-import { AuthType } from '../../../auth/const/enum/auth-type.enum';
-import { JwtAccessPayload } from '../../../auth/type/jwt';
+import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { Token } from '../../auth/decorator/jwt.decorator';
+import { AuthType } from '../../auth/const/enum/auth-type.enum';
+import { JwtAccessPayload } from '../../auth/type/jwt';
 
 @Controller()
 export class MyPageController {
