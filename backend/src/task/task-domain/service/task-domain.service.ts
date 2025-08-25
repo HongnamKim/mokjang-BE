@@ -43,6 +43,8 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { TaskStatus } from '../../const/task-status.enum';
+import { MyScheduleStatusCountDto } from '../../dto/my-schedule-status-count.dto';
 
 @Injectable()
 export class TaskDomainService implements ITaskDomainService {
@@ -426,7 +428,6 @@ export class TaskDomainService implements ITaskDomainService {
 
   async findMyTasks(
     inCharge: MemberModel,
-    //dto: GetMyInChargedSchedulesDto,
     from: Date,
     to: Date,
   ): Promise<TaskModel[]> {
@@ -439,12 +440,43 @@ export class TaskDomainService implements ITaskDomainService {
         endDate: MoreThanOrEqual(from),
       },
       order: {
-        //[dto.order]: dto.orderDirection,
         endDate: 'ASC',
       },
       select: { ...TasksFindOptionsSelect },
       take: 50, //dto.take,
       //skip: dto.take * (dto.page - 1),
     });
+  }
+
+  async countMyTaskStatus(me: MemberModel, from: Date, to: Date) {
+    const repository = this.getTaskRepository();
+
+    const query = repository
+      .createQueryBuilder('task')
+      .innerJoin('task.inCharge', 'inCharge', 'inCharge.id = :id', {
+        id: me.id,
+      })
+      .where('task.startDate <= :to AND task.endDate >= :from', { from, to })
+      .select([
+        'SUM(CASE WHEN task.status = :reserve THEN 1 ELSE 0 END) as reserve_count',
+        'SUM(CASE WHEN task.status = :inProgress THEN 1 ELSE 0 END) as inprogress_count',
+        'SUM(CASE WHEN task.status = :done THEN 1 ELSE 0 END) as done_count',
+        'SUM(CASE WHEN task.status = :pending THEN 1 ELSE 0 END) as pending_count',
+      ])
+      .setParameters({
+        reserve: TaskStatus.RESERVE,
+        inProgress: TaskStatus.IN_PROGRESS,
+        done: TaskStatus.DONE,
+        pending: TaskStatus.PENDING,
+      });
+
+    const result = await query.getRawOne();
+
+    return new MyScheduleStatusCountDto(
+      parseInt(result.reserve_count),
+      parseInt(result.inprogress_count),
+      parseInt(result.done_count),
+      parseInt(result.pending_count),
+    );
   }
 }

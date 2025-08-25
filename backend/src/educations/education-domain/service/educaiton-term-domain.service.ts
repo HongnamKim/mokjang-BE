@@ -17,6 +17,8 @@ import {
   FindOptionsSelect,
   ILike,
   In,
+  LessThanOrEqual,
+  MoreThanOrEqual,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -44,6 +46,8 @@ import {
 } from '../../education-term/const/education-term-find-options.const';
 import { EducationReportType } from '../../../report/education-report/const/education-report-type.enum';
 import { EducationReportSummarizedSelectQB } from '../../../report/education-report/const/education-session-find-options.const';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
 export class EducationTermDomainService implements IEducationTermDomainService {
@@ -552,5 +556,73 @@ export class EducationTermDomainService implements IEducationTermDomainService {
     }
 
     return result;
+  }
+
+  findMyEducationTerms(
+    me: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationTermModel[]> {
+    const repository = this.getEducationTermsRepository();
+
+    return repository.find({
+      where: {
+        inChargeId: me.id,
+        startDate: LessThanOrEqual(to),
+        endDate: MoreThanOrEqual(from),
+      },
+      order: {
+        endDate: 'ASC',
+      },
+      select: {
+        id: true,
+        term: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        educationId: true,
+        educationName: true,
+      },
+      take: 50,
+    });
+  }
+
+  async countMyEducationTermStatus(
+    me: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<MyScheduleStatusCountDto> {
+    const repository = this.getEducationTermsRepository();
+
+    const query = repository
+      .createQueryBuilder('educationTerm')
+      .innerJoin('educationTerm.inCharge', 'inCharge', 'inCharge.id = :id', {
+        id: me.id,
+      })
+      .where(
+        'educationTerm.startDate <= :to AND educationTerm.endDate >= :from',
+        { from, to },
+      )
+      .select([
+        'SUM(CASE WHEN educationTerm.status = :reserve THEN 1 ELSE 0 END) as reserve_count',
+        'SUM(CASE WHEN educationTerm.status = :inProgress THEN 1 ELSE 0 END) as inprogress_count',
+        'SUM(CASE WHEN educationTerm.status = :done THEN 1 ELSE 0 END) as done_count',
+        'SUM(CASE WHEN educationTerm.status = :pending THEN 1 ELSE 0 END) as pending_count',
+      ])
+      .setParameters({
+        reserve: EducationTermStatus.RESERVE,
+        inProgress: EducationTermStatus.IN_PROGRESS,
+        done: EducationTermStatus.DONE,
+        pending: EducationTermStatus.PENDING,
+      });
+
+    const result = await query.getRawOne();
+
+    return new MyScheduleStatusCountDto(
+      parseInt(result.reserve_count),
+      parseInt(result.inprogress_count),
+      parseInt(result.done_count),
+      parseInt(result.pending_count),
+    );
   }
 }

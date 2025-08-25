@@ -36,6 +36,8 @@ import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/exception/member.exception';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
+import { VisitationStatus } from '../../const/visitation-status.enum';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -310,5 +312,40 @@ export class VisitationMetaDomainService
       },
       take: 50,
     });
+  }
+
+  async countMyVisitationStatus(me: MemberModel, from: Date, to: Date) {
+    const repository = this.getVisitationMetaRepository();
+
+    const query = repository
+      .createQueryBuilder('visitation')
+      .innerJoin('visitation.inCharge', 'inCharge', 'inCharge.id = :id', {
+        id: me.id,
+      })
+      .where('visitation.startDate <= :to AND visitation.endDate >= :from', {
+        from,
+        to,
+      })
+      .select([
+        'SUM(CASE WHEN visitation.status = :reserve THEN 1 ELSE 0 END) as reserve_count',
+        'SUM(CASE WHEN visitation.status = :inProgress THEN 1 ELSE 0 END) as inprogress_count',
+        'SUM(CASE WHEN visitation.status = :done THEN 1 ELSE 0 END) as done_count',
+        'SUM(CASE WHEN visitation.status = :pending THEN 1 ELSE 0 END) as pending_count',
+      ])
+      .setParameters({
+        reserve: VisitationStatus.RESERVE,
+        inProgress: VisitationStatus.IN_PROGRESS,
+        done: VisitationStatus.DONE,
+        pending: VisitationStatus.PENDING,
+      });
+
+    const result = await query.getRawOne();
+
+    return new MyScheduleStatusCountDto(
+      parseInt(result.reserve_count),
+      parseInt(result.inprogress_count),
+      parseInt(result.done_count),
+      parseInt(result.pending_count),
+    );
   }
 }
