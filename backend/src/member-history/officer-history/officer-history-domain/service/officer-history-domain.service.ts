@@ -1,6 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { OfficerHistoryModel } from '../../entity/officer-history.entity';
 import {
+  DeleteResult,
   FindOptionsRelations,
   In,
   IsNull,
@@ -305,5 +306,27 @@ export class OfficerHistoryDomainService
     }
 
     return result;
+  }
+
+  async deleteDummyOfficerHistoriesCascade(
+    trialChurch: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getOfficerHistoryRepository(qr);
+
+    const deleteTargets = await repository.find({
+      where: {
+        member: {
+          churchId: trialChurch.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return repository.delete({
+      id: In(deleteTargets.map((target) => target.id)),
+    });
   }
 }

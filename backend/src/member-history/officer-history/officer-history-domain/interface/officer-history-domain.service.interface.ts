@@ -1,7 +1,12 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GetOfficerHistoryDto } from '../../dto/request/get-officer-history.dto';
-import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
+import {
+  DeleteResult,
+  FindOptionsRelations,
+  QueryRunner,
+  UpdateResult,
+} from 'typeorm';
 import { OfficerHistoryModel } from '../../entity/officer-history.entity';
 import { OfficerModel } from '../../../../management/officers/entity/officer.entity';
 import { HistoryUpdateDate } from '../../../history-date.utils';
@@ -61,4 +66,9 @@ export interface IOfficerHistoryDomainService {
     officerHistory: OfficerHistoryModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  deleteDummyOfficerHistoriesCascade(
+    trialChurch: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult>;
 }

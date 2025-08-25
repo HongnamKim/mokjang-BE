@@ -1,44 +1,51 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { IDummyMembersDomainService } from '../interface/dummy-members-domain.service.interface';
+import { CreateMemberDto } from '../../../members/dto/request/create-member.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { QueryRunner, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 import {
   bucheonDistricts,
   bucheonRoads,
-  churchNames,
   familyNames,
   firstNameParts,
   incheonDistricts,
   incheonRoads,
   occupations,
-} from './const/dummy-data/dummy-member.const';
-import { Gender } from './members/const/enum/gender.enum';
-import { Marriage } from './members/const/enum/marriage.enum';
-import { Baptism } from './members/const/enum/baptism.enum';
-import {
-  IDUMMY_MEMBERS_DOMAIN_SERVICE,
-  IDummyMembersDomainService,
-} from './members/member-domain/interface/dummy-members-domain.service.interface';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from './churches/churches-domain/interface/churches-domain.service.interface';
+} from '../../../const/dummy-data/dummy-member.const';
+import { Gender } from '../../../members/const/enum/gender.enum';
+import { Marriage } from '../../../members/const/enum/marriage.enum';
+import { Baptism } from '../../../members/const/enum/baptism.enum';
 
 @Injectable()
-export class DummyDataService {
+export class DummyMembersDomainService implements IDummyMembersDomainService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
-    @Inject(IDUMMY_MEMBERS_DOMAIN_SERVICE)
-    private readonly dummyMembersDomainService: IDummyMembersDomainService,
+    @InjectRepository(MemberModel)
+    private readonly membersRepository: Repository<MemberModel>,
   ) {}
 
-  async createRandomMembers(churchId: number, count: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+  private getMembersRepository(qr?: QueryRunner) {
+    return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
+  }
 
-    const members = Array.from({ length: count }, () => {
+  private createDummyMemberModel(
+    dto: CreateMemberDto & { churchId: number },
+  ): MemberModel {
+    const membersRepository = this.getMembersRepository();
+
+    return membersRepository.create({
+      ...dto,
+      birth: dto.utcBirth,
+      registeredAt: dto.utcRegisteredAt,
+      birthdayMMDD: dto.utcBirth?.toISOString().slice(5, 10),
+    });
+  }
+
+  createDummyMembers(church: ChurchModel, count: number, qr?: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const dummyMembers = Array.from({ length: count }, () => {
       const registeredAt = this.getRandomDate(2010, 2024);
       const name = this.getRandomName();
       const mobilePhone = this.getRandomMobilePhone();
@@ -55,7 +62,7 @@ export class DummyDataService {
       const vehicleNumber = this.generateRandomVehicleNumbers();
       //const previousChurch = this.generatePreviousChurchName();
 
-      return this.dummyMembersDomainService.createDummyMemberModel({
+      return this.createDummyMemberModel({
         churchId: church.id,
         utcRegisteredAt: registeredAt,
         name,
@@ -69,21 +76,16 @@ export class DummyDataService {
         marriage,
         baptism,
         vehicleNumber,
-        //previousChurch,
       });
     });
 
-    try {
-      const result =
-        await this.dummyMembersDomainService.createDummyMembers(members);
-      await this.churchesDomainService.dummyMemberCount(church, count);
+    return membersRepository.save(dummyMembers);
+  }
 
-      return result;
-    } catch (e) {
-      throw new InternalServerErrorException(
-        '더미 데이터 생성 중 문제가 발생했습니다.',
-      );
-    }
+  deleteDummyMembersCascade(church: ChurchModel, qr: QueryRunner) {
+    const repository = this.getMembersRepository(qr);
+
+    return repository.delete({ churchId: church.id });
   }
 
   private getRandomDate(startYear: number, endYear: number): Date {
@@ -200,13 +202,4 @@ export class DummyDataService {
 
     return Array.from(numbers);
   }
-
-  /*private generatePreviousChurchName(): string | undefined {
-    // 85% 확률로 null 반환
-    if (Math.random() > 0.15) {
-      return undefined;
-    }
-
-    return churchNames[Math.floor(Math.random() * churchNames.length)];
-  }*/
 }

@@ -31,11 +31,14 @@ import { SubscriptionModel } from '../../subscription/entity/subscription.entity
 export class ChurchModel extends BaseModel {
   @Column({ nullable: true })
   @Index()
-  subscriptionId: number;
+  subscriptionId: number | null;
 
   @OneToOne(() => SubscriptionModel, { nullable: true })
   @JoinColumn({ name: 'subscriptionId' })
   subscription: SubscriptionModel;
+
+  @Column({ default: false })
+  isFreeTrial: boolean;
 
   @Column()
   name: string;
