@@ -39,6 +39,12 @@ export const ApiGetMyInChargedSchedules = () =>
     }),
   );
 
+export const ApiGetMyInChargeScheduleStatus = () =>
+  applyDecorators(
+    ApiParam({ name: 'churchId' }),
+    ApiOperation({ summary: '내가 담당한 일정의 상태값 조회' }),
+  );
+
 export const ApiGetMyScheduleReports = () =>
   applyDecorators(
     ApiParam({ name: 'churchId' }),

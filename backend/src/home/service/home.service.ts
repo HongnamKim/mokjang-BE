@@ -82,6 +82,11 @@ import {
   IReportDomainService,
 } from '../../report/report-domain/interface/report-domain.service.interface';
 import { GetMySchedulesResponseDto } from '../dto/response/get-my-schedules-response.dto';
+import {
+  IEDUCATION_TERM_DOMAIN_SERVICE,
+  IEducationTermDomainService,
+} from '../../educations/education-domain/interface/education-term-domain.service.interface';
+import { EducationTermModel } from '../../educations/education-term/entity/education-term.entity';
 
 @Injectable()
 export class HomeService {
@@ -95,6 +100,8 @@ export class HomeService {
     private readonly visitationMetaDomainService: IVisitationMetaDomainService,
     @Inject(IEDUCATION_SESSION_DOMAIN_SERVICE)
     private readonly educationSessionDomainService: IEducationSessionDomainService,
+    @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
+    private readonly educationTermDomainService: IEducationTermDomainService,
 
     @Inject(IREPORT_DOMAIN_SERVICE)
     private readonly reportDomainService: IReportDomainService,
@@ -184,6 +191,7 @@ export class HomeService {
   }
 
   private getScheduleRange(range: WidgetRange) {
+    // 주간
     if (range === 'weekly') {
       const now = new Date();
       const start = fromZonedTime(
@@ -198,6 +206,7 @@ export class HomeService {
       };
     }
 
+    // 월간
     const now = new Date();
     const start = fromZonedTime(startOfMonth(startOfDay(now)), TIME_ZONE.SEOUL);
     const end = fromZonedTime(endOfMonth(endOfDay(now)), TIME_ZONE.SEOUL);
@@ -230,7 +239,9 @@ export class HomeService {
     );
   }
 
-  private createEducationSchedule(educationSession: EducationSessionModel) {
+  private createEducationSessionSchedule(
+    educationSession: EducationSessionModel,
+  ) {
     return new ScheduleDto(
       educationSession.id,
       ScheduleType.EDUCATION_SESSION,
@@ -240,7 +251,74 @@ export class HomeService {
       educationSession.status,
       educationSession.educationTerm.id,
       educationSession.educationTerm.educationId,
+      educationSession.educationTerm.educationName,
+      educationSession.educationTerm.term,
     );
+  }
+
+  private createEducationTermSchedule(educationTerm: EducationTermModel) {
+    return new ScheduleDto(
+      educationTerm.id,
+      ScheduleType.EDUCATION_TERM,
+      undefined,
+      educationTerm.startDate,
+      educationTerm.endDate,
+      educationTerm.status,
+      educationTerm.id,
+      educationTerm.educationId,
+      educationTerm.educationName,
+      educationTerm.term,
+    );
+  }
+
+  async getMyInChargeScheduleStatus(
+    requestMember: ChurchUserModel,
+    dto: GetMyInChargedSchedulesDto,
+  ) {
+    const me = requestMember.member;
+
+    const defaultRange = this.getScheduleRange(dto.range);
+
+    const [from, to] =
+      dto.from && dto.to
+        ? [
+            fromZonedTime(startOfDay(dto.from), TIME_ZONE.SEOUL),
+            fromZonedTime(endOfDay(dto.to), TIME_ZONE.SEOUL),
+          ]
+        : [defaultRange.from, defaultRange.to];
+
+    const [task, visitation, educationTerm, educationSession] =
+      await Promise.all([
+        // Task
+        this.taskDomainService.countMyTaskStatus(me, from, to),
+        // Visitation
+        this.visitationMetaDomainService.countMyVisitationStatus(me, from, to),
+        // Education Term
+        this.educationTermDomainService.countMyEducationTermStatus(
+          me,
+          from,
+          to,
+        ),
+        // Education Session
+        this.educationSessionDomainService.countMyEducationSessionStatus(
+          me,
+          from,
+          to,
+        ),
+      ]);
+
+    return {
+      range: dto.range,
+      from,
+      to,
+      data: {
+        task,
+        visitation,
+        educationTerm,
+        educationSession,
+      },
+      timestamp: new Date(),
+    };
   }
 
   async getMyInChargedSchedules(
@@ -259,29 +337,38 @@ export class HomeService {
           ]
         : [defaultRange.from, defaultRange.to];
 
-    const tasks = await this.taskDomainService.findMyTasks(me, from, to);
-    const scheduleTasks = tasks.map((task) => this.createTaskSchedule(task));
+    const [tasks, visitations, educationSession, educationTerm] =
+      await Promise.all([
+        // Task
+        this.taskDomainService.findMyTasks(me, from, to),
+        // Visitation
+        this.visitationMetaDomainService.findMyVisitations(me, from, to),
+        // Education Session
+        this.educationSessionDomainService.findMyEducationSessions(
+          me,
+          from,
+          to,
+        ),
+        // Education Term
+        this.educationTermDomainService.findMyEducationTerms(me, from, to),
+      ]);
 
-    const visitations =
-      await this.visitationMetaDomainService.findMyVisitations(me, from, to);
+    const scheduleTasks = tasks.map((task) => this.createTaskSchedule(task));
     const scheduleVisitations = visitations.map((visitation) =>
       this.createVisitationSchedule(visitation),
     );
-
-    const educations =
-      await this.educationSessionDomainService.findMyEducationSessions(
-        me,
-        from,
-        to,
-      );
-    const scheduleEducations = educations.map((educationSession) =>
-      this.createEducationSchedule(educationSession),
+    const scheduleEducations = educationSession.map((educationSession) =>
+      this.createEducationSessionSchedule(educationSession),
+    );
+    const scheduleEducationTerms = educationTerm.map((educationTerm) =>
+      this.createEducationTermSchedule(educationTerm),
     );
 
     const schedules = [
       ...scheduleTasks,
       ...scheduleEducations,
       ...scheduleVisitations,
+      ...scheduleEducationTerms,
     ];
 
     schedules.sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
@@ -352,7 +439,7 @@ export class HomeService {
           educationReport.id,
           ScheduleType.EDUCATION_SESSION,
           educationReport.educationSession.inCharge,
-          this.createEducationSchedule(educationReport.educationSession),
+          this.createEducationSessionSchedule(educationReport.educationSession),
         );
       } else {
         throw new InternalServerErrorException('교육 회차 누락 에러');

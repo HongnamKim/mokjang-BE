@@ -12,6 +12,8 @@ import { UpdateEducationTermDto } from '../../education-term/dto/request/update-
 import { GetInProgressEducationTermDto } from '../../education-term/dto/request/get-in-progress-education-term.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
 
 export const IEDUCATION_TERM_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_TERM_DOMAIN_SERVICE',
@@ -112,4 +114,16 @@ export interface IEducationTermDomainService {
     dto: GetInProgressEducationTermDto,
     qr?: QueryRunner,
   ): Promise<EducationTermModel[]>;
+
+  findMyEducationTerms(
+    me: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationTermModel[]>;
+
+  countMyEducationTermStatus(
+    me: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<MyScheduleStatusCountDto>;
 }

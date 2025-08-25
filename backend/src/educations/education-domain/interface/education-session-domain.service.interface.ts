@@ -8,6 +8,7 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetEducationSessionForCalendarDto } from '../../../calendar/dto/request/education/get-education-session-for-calendar.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
 
 export const IEDUCATION_SESSION_DOMAIN_SERVICE = Symbol(
   'IEDUCATION_SESSION_DOMAIN_SERVICE',
@@ -92,12 +93,6 @@ export interface IEducationSessionDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  findMyEducationSessions(
-    inCharge: MemberModel,
-    from: Date,
-    to: Date,
-  ): Promise<EducationSessionModel[]>;
-
   incrementAttendancesCount(
     educationSession: EducationSessionModel,
     count: number,
@@ -109,4 +104,16 @@ export interface IEducationSessionDomainService {
     count: number,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findMyEducationSessions(
+    inCharge: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationSessionModel[]>;
+
+  countMyEducationSessionStatus(
+    me: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<MyScheduleStatusCountDto>;
 }

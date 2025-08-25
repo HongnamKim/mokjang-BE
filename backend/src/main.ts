@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // CORS 설정
   app.enableCors({
-    origin: 'https://mokjang-pied.vercel.app',
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

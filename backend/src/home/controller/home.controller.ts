@@ -15,6 +15,7 @@ import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto'
 import {
   ApiGetLowWorshipAttendanceMembers,
   ApiGetMyInChargedSchedules,
+  ApiGetMyInChargeScheduleStatus,
   ApiGetMyScheduleReports,
   ApiGetNewMemberDetail,
   ApiGetNewMemberSummary,
@@ -61,6 +62,16 @@ export class HomeController {
     }
 
     return this.homeService.getMyInChargedSchedules(pm, dto);
+  }
+
+  @ApiGetMyInChargeScheduleStatus()
+  @Get('schedules/status')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  getMyInChargeScheduleStatus(
+    @Query() dto: GetMyInChargedSchedulesDto,
+    @RequestManager() requestMember: ChurchUserModel,
+  ) {
+    return this.homeService.getMyInChargeScheduleStatus(requestMember, dto);
   }
 
   @ApiGetMyScheduleReports()
