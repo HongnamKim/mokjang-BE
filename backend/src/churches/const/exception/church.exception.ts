@@ -9,6 +9,7 @@ export const ChurchException = {
   SAME_MAIN_ADMIN: '동일한 교회 최고 관리자입니다.',
   INVALID_NEW_OWNER:
     '관리자 권한의 교인에게만 교회 소유자 권한을 넘길 수 있습니다.',
+  NOT_FOUND_TRIAL_CHURCH: '무료 체험 중인 교회를 찾을 수 없습니다.',
 };
 
 export const ChurchAuthException = {

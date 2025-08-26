@@ -2,6 +2,7 @@ import { BaseModel } from '../../common/entity/base.entity';
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   OneToMany,
   OneToOne,
@@ -23,10 +24,22 @@ import { TaskModel } from '../../task/entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { WorshipModel } from '../../worship/entity/worship.entity';
 import { EducationModel } from '../../educations/education/entity/education.entity';
+import { SubscriptionModel } from '../../subscription/entity/subscription.entity';
 
 @Entity()
 @Unique(['joinCode'])
 export class ChurchModel extends BaseModel {
+  @Column({ nullable: true })
+  @Index()
+  subscriptionId: number | null;
+
+  @OneToOne(() => SubscriptionModel, { nullable: true })
+  @JoinColumn({ name: 'subscriptionId' })
+  subscription: SubscriptionModel;
+
+  @Column({ default: false })
+  isFreeTrial: boolean;
+
   @Column()
   name: string;
 

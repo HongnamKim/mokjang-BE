@@ -27,6 +27,12 @@ import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
 } from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
+import { ChurchModel } from '../entity/church.entity';
+import {
+  ISUBSCRIPTION_DOMAIN_SERVICE,
+  ISubscriptionDomainService,
+} from '../../subscription/subscription-domain/interface/subscription-domain.service.interface';
+import { GetChurchSubscriptionDto } from '../dto/response/get-church-subscription.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -40,6 +46,9 @@ export class ChurchesService {
     private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+
+    @Inject(ISUBSCRIPTION_DOMAIN_SERVICE)
+    private readonly subscriptionDomainService: ISubscriptionDomainService,
   ) {}
 
   findAllChurches() {
@@ -226,5 +235,12 @@ export class ChurchesService {
     };
 
     return this.churchesDomainService.updateChurch(church, updateChurchDto);
+  }
+
+  async getChurchSubscription(church: ChurchModel) {
+    const subscription =
+      await this.subscriptionDomainService.findCurrentSubscription(church);
+
+    return new GetChurchSubscriptionDto(subscription);
   }
 }

@@ -7,6 +7,7 @@ import {
 import { IChurchesDomainService } from '../interface/churches-domain.service.interface';
 import { CreateChurchDto } from '../../dto/create-church.dto';
 import {
+  DeleteResult,
   FindOptionsRelations,
   IsNull,
   QueryFailedError,
@@ -22,6 +23,7 @@ import { RequestLimitValidationType } from '../../../request-info/types/request-
 import { ChurchException } from '../../const/exception/church.exception';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -65,7 +67,22 @@ export class ChurchesDomainService implements IChurchesDomainService {
     });
   }
 
-  async generateUniqueChurchCode(
+  createTrialChurch(
+    user: UserModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel> {
+    const repository = this.getChurchRepository(qr);
+
+    return repository.save({
+      subscriptionId: subscription.id,
+      name: `${user.name}님의 체험교회`,
+      ownerUserId: user.id,
+      isFreeTrial: true,
+    });
+  }
+
+  private async generateUniqueChurchCode(
     churchRepo: Repository<ChurchModel>,
   ): Promise<string> {
     let code: string;
@@ -94,6 +111,15 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
     const churchRepository = this.getChurchRepository(qr);
 
+    await churchRepository.update(
+      {
+        id: church.id,
+      },
+      {
+        subscriptionId: null,
+      },
+    );
+
     const result = await churchRepository.softDelete({
       id: church.id,
       deletedAt: IsNull(),
@@ -106,6 +132,15 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return `churchId: ${church.id} deleted`;
   }
 
+  deleteChurchCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getChurchRepository(qr);
+
+    return repository.delete({ id: church.id });
+  }
+
   async findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository(qr);
 
@@ -114,7 +149,16 @@ export class ChurchesDomainService implements IChurchesDomainService {
         id,
       },
       relations: {
-        //users: true,
+        subscription: true,
+      },
+      select: {
+        subscription: {
+          status: true,
+          currentPeriodStart: true,
+          currentPeriodEnd: true,
+          isFreeTrial: true,
+          trialEndsAt: true,
+        },
       },
     });
 
@@ -428,5 +472,27 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return result;
+  }
+
+  async findTrialChurchByUserId(
+    user: UserModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel> {
+    const repository = this.getChurchRepository(qr);
+
+    const church = await repository.findOne({
+      where: {
+        ownerUserId: user.id,
+        subscription: {
+          isFreeTrial: true,
+        },
+      },
+    });
+
+    if (!church) {
+      throw new NotFoundException(ChurchException.NOT_FOUND_TRIAL_CHURCH);
+    }
+
+    return church;
   }
 }

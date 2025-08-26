@@ -38,4 +38,6 @@ export interface IUserDomainService {
     newMainAdmin: UserModel,
     qr: QueryRunner,
   ): Promise<void>;
+
+  startFreeTrial(user: UserModel, qr: QueryRunner): Promise<UpdateResult>;
 }

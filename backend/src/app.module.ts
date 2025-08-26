@@ -10,7 +10,6 @@ import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './user/entity/user.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
 import { ChurchesModule } from './churches/churches.module';
 
@@ -74,6 +73,10 @@ import { EducationTermModel } from './educations/education-term/entity/education
 import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
 import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
+import { SubscriptionModel } from './subscription/entity/subscription.entity';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { DummyDataModule } from './dummy-data/dummy-data.module';
+
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
@@ -141,6 +144,8 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [
+          // 구독 관련
+          SubscriptionModel,
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
@@ -209,10 +214,12 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
       }),
       inject: [ConfigService],
     }),
+    DummyDataModule,
     AuthModule,
     MyPageModule,
     ReportModule,
     UserModule,
+    SubscriptionModule,
     ChurchesModule,
     ChurchJoinModule,
     ChurchUserModule,
@@ -241,7 +248,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
-    DummyDataService,
+    //DummyDataService,
   ],
 })
 export class AppModule {}
