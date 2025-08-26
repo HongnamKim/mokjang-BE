@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDate,
   IsDateString,
   IsEnum,
   IsNumber,
@@ -11,9 +10,6 @@ import {
 } from 'class-validator';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
-import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
-import { TransformStartDate } from '../../../../member-history/decorator/transform-start-date.decorator';
-import { TransformEndDate } from '../../../../member-history/decorator/transform-end-date.decorator';
 import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
 import { EducationTermStatus } from '../../const/education-term-status.enum';
 import { EducationTermConstraints } from '../../const/education-term.constraints';

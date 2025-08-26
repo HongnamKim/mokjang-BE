@@ -9,7 +9,6 @@ import { CreateChurchDto } from '../../dto/create-church.dto';
 import {
   DeleteResult,
   FindOptionsRelations,
-  IsNull,
   QueryFailedError,
   QueryRunner,
   Repository,
@@ -111,19 +110,10 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
     const churchRepository = this.getChurchRepository(qr);
 
-    await churchRepository.update(
-      {
-        id: church.id,
-      },
-      {
-        subscriptionId: null,
-      },
+    const result = await churchRepository.update(
+      { id: church.id },
+      { joinCode: null, subscriptionId: null, deletedAt: new Date() },
     );
-
-    const result = await churchRepository.softDelete({
-      id: church.id,
-      deletedAt: IsNull(),
-    });
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(ChurchException.DELETE_ERROR);

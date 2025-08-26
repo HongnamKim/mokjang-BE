@@ -13,8 +13,6 @@ import { WorshipDomainModule } from './worship-domain/worship-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
-import { WorshipPermissionService } from './service/worship-permission.service';
 
 @Module({
   imports: [
@@ -38,10 +36,6 @@ import { WorshipPermissionService } from './service/worship-permission.service';
     WorshipAttendanceService,
     WorshipEnrollmentService,
     WorshipSessionService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: WorshipPermissionService,
-    },
   ],
 })
 export class WorshipModule {}

@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
@@ -20,8 +19,6 @@ import { TransactionInterceptor } from '../../../common/interceptor/transaction.
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { GetMinistryGroupDto } from '../dto/ministry-group/request/get-ministry-group.dto';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateMinistryGroupStructureDto } from '../dto/ministry-group/request/update-ministry-group-structure.dto';
 import {
   ApiPatchMinistryGroupLeader,
@@ -33,6 +30,7 @@ import { RequestChurch } from '../../../permission/decorator/permission-church.d
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
 import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
+import { MinistryReadGuard } from '../guard/ministry-read.guard';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -40,7 +38,7 @@ export class MinistryGroupsController {
   constructor(private readonly ministryGroupService: MinistryGroupService) {}
 
   @Get()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @MinistryReadGuard()
   getMinistryGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetMinistryGroupDto,

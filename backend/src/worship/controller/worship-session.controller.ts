@@ -48,6 +48,7 @@ import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
 import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
 import { GetWorshipSessionCheckStatusDto } from '../dto/request/worship-session/get-worship-session-check-status.dto';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 
 @ApiTags('Worships:Sessions')
 @Controller(':worshipId/sessions')
@@ -91,6 +92,7 @@ export class WorshipSessionController {
   @Get('check-status')
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,
@@ -121,6 +123,7 @@ export class WorshipSessionController {
   @Get(':sessionId/statistics')
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,

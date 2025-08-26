@@ -45,12 +45,14 @@ export class ChurchesController {
     private readonly trialChurchesService: TrialChurchesService,
   ) {}
 
+  // 전체 교회 조회
   @ApiGetAllChurches()
   @Get()
   getAllChurches() {
     return this.churchesService.findAllChurches();
   }
 
+  // 교회 생성
   @ApiPostChurch()
   @Post()
   @UseGuards(AccessTokenGuard)
@@ -92,6 +94,7 @@ export class ChurchesController {
     return this.trialChurchesService.endTrialChurch(accessPayload.id, qr);
   }
 
+  // 교회 단건 조회
   @ApiGetChurchById()
   @Get(':churchId')
   @ChurchReadGuard()
@@ -100,6 +103,7 @@ export class ChurchesController {
     return this.churchesService.getChurchById(churchId);
   }
 
+  // 교회 수정
   @ApiPatchChurch()
   @ChurchWriteGuard()
   @Patch(':churchId')
@@ -110,6 +114,7 @@ export class ChurchesController {
     return this.churchesService.updateChurch(churchId, dto);
   }
 
+  // 교회 삭제
   @ApiDeleteChurch()
   @ChurchWriteGuard()
   @Delete(':churchId')

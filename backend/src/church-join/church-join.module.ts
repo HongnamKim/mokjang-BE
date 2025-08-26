@@ -6,8 +6,7 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { ChurchJoinDomainModule } from './church-join-domain/church-join-domain.module';
 import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
-import { ChurchJoinPermissionService } from './service/church-join-permission.service';
+
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 
 @Module({
@@ -20,12 +19,6 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     MembersDomainModule,
   ],
   controllers: [ChurchJoinController],
-  providers: [
-    ChurchJoinService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: ChurchJoinPermissionService,
-    },
-  ],
+  providers: [ChurchJoinService],
 })
 export class ChurchJoinModule {}
