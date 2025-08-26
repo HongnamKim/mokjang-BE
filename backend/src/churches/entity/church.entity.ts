@@ -9,7 +9,6 @@ import {
   Unique,
 } from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
-import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
 
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
@@ -46,8 +45,12 @@ export class ChurchModel extends BaseModel {
   @Column({ nullable: true })
   identifyNumber: string;
 
-  @Column({ nullable: true, length: 20 })
-  joinCode: string;
+  @Index()
+  @Column({ type: 'varchar', nullable: true, length: 20, unique: true })
+  joinCode: string | null;
+
+  @Column({ nullable: true })
+  pastor: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -61,12 +64,10 @@ export class ChurchModel extends BaseModel {
   @Column({ nullable: true })
   detailAddress: string;
 
-  @Column({ enum: MemberSize, nullable: true })
-  memberSize: MemberSize;
-
   @Column({ default: 0 })
   memberCount: number;
 
+  @Index()
   @Column({ nullable: true })
   ownerUserId: number;
 

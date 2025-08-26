@@ -4,8 +4,6 @@ import { GroupsService } from './service/groups.service';
 import { GroupsController } from './controller/groups.controller';
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { RouterModule } from '@nestjs/core';
-import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
-import { ManagementPermissionService } from '../management-permission.service';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { GroupHistoryDomainModule } from '../../member-history/group-history/group-history-domain/group-history-domain.module';
@@ -27,14 +25,7 @@ import { GroupMembersService } from './service/group-members.service';
     ManagerDomainModule,
   ],
   controllers: [GroupsController, GroupMembersController],
-  providers: [
-    GroupsService,
-    GroupMembersService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: ManagementPermissionService,
-    },
-  ],
+  providers: [GroupsService, GroupMembersService],
   exports: [],
 })
 export class GroupsModule {}

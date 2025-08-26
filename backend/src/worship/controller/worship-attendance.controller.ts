@@ -36,6 +36,7 @@ import { ApiGetWorshipAttendance } from '../swagger/worship-attendance.swagger';
 import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/get-worship-attendance-list.dto';
 import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
 import { UpdateWorshipAllAttendedDto } from '../dto/request/worship-attendance/update-worship-all-attended.dto';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 
 @ApiTags('Worships:Attendance')
 @Controller(':worshipId/sessions/:sessionId/attendances')
@@ -48,6 +49,7 @@ export class WorshipAttendanceController {
   @Get()
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,
@@ -80,6 +82,7 @@ export class WorshipAttendanceController {
   @Get('v2')
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,
@@ -128,6 +131,7 @@ export class WorshipAttendanceController {
   @Patch('all-attended')
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,

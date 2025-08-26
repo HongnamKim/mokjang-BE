@@ -13,7 +13,7 @@ import {
   incheonDistricts,
   incheonRoads,
   occupations,
-} from '../../../const/dummy-data/dummy-member.const';
+} from '../../const/dummy-member.const';
 import { Gender } from '../../../members/const/enum/gender.enum';
 import { Marriage } from '../../../members/const/enum/marriage.enum';
 import { Baptism } from '../../../members/const/enum/baptism.enum';

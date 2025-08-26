@@ -6,8 +6,6 @@ import { ChurchUserDomainModule } from './church-user-domain/church-user-domain.
 import { RouterModule } from '@nestjs/core';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
-import { ChurchUserPermissionService } from './service/church-user-permission.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 
 /**
@@ -25,12 +23,6 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     ManagerDomainModule,
   ],
   controllers: [ChurchUserController],
-  providers: [
-    ChurchUserService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: ChurchUserPermissionService,
-    },
-  ],
+  providers: [ChurchUserService],
 })
 export class ChurchUserModule {}

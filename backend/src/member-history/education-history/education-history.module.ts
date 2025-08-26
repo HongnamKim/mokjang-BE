@@ -5,8 +5,6 @@ import { GroupsDomainModule } from '../../management/groups/groups-domain/groups
 import { ChurchesDomainModule } from '../../churches/churches-domain/churches-domain.module';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
 import { EducationHistoryService } from './service/education-history.service';
-import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
-import { HistoryPermissionService } from '../guard/history-permission.service';
 import { IMEMBER_FILTER_SERVICE } from '../../members/service/interface/member-filter.service.interface';
 import { MemberFilterService } from '../../members/service/member-filter.service';
 import { EducationHistoryController } from './controller/education-history.controller';
@@ -29,10 +27,6 @@ import { EducationHistoryDomainModule } from './education-history-domain/educati
   ],
   providers: [
     EducationHistoryService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: HistoryPermissionService,
-    },
     {
       provide: IMEMBER_FILTER_SERVICE,
       useClass: MemberFilterService,

@@ -27,6 +27,7 @@ import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 
 @ApiTags('Worships:Enrollments')
 @Controller(':worshipId/enrollments')
@@ -39,6 +40,7 @@ export class WorshipEnrollmentController {
   //@WorshipReadGuard()
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,

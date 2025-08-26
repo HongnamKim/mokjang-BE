@@ -17,6 +17,8 @@ import {
 } from '../swagger/group-history.swagger';
 import { GetGroupHistoryDto } from '../dto/request/get-group-history.dto';
 import { UpdateGroupHistoryDto } from '../dto/request/update-group-history.dto';
+import { HistoryReadGuard } from '../../guard/history-read.guard';
+import { HistoryWriteGuard } from '../../guard/history-write.guard';
 
 @ApiTags('Churches:Members:Groups')
 @Controller('groups:groupHistoryId/details')
@@ -26,6 +28,7 @@ export class GroupDetailHistoryController {
   ) {}
 
   @ApiGetGroupDetailHistory()
+  @HistoryReadGuard()
   @Get()
   getGroupDetailHistories(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -42,6 +45,7 @@ export class GroupDetailHistoryController {
   }
 
   @ApiPatchGroupDetailHistory()
+  @HistoryWriteGuard()
   @Patch(':detailHistoryId')
   patchGroupDetailHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -60,6 +64,7 @@ export class GroupDetailHistoryController {
   }
 
   @ApiDeleteGroupDetailHistory()
+  @HistoryWriteGuard()
   @Delete(':detailHistoryId')
   deleteGroupDetailHistory(
     @Param('churchId', ParseIntPipe) churchId: number,

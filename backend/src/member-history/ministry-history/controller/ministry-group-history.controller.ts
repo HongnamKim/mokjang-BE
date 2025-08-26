@@ -18,6 +18,8 @@ import {
   ApiPatchMinistryGroupHistory,
 } from '../swagger/ministry-group-history.swagger';
 import { GetMinistryGroupHistoryListDto } from '../dto/request/group/get-ministry-group-history-list.dto';
+import { HistoryReadGuard } from '../../guard/history-read.guard';
+import { HistoryWriteGuard } from '../../guard/history-write.guard';
 
 @ApiTags('Churches:Members:Histories:Ministries')
 @Controller()
@@ -28,6 +30,7 @@ export class MinistryGroupHistoryController {
 
   @ApiGetMinistryGroupHistories()
   @Get()
+  @HistoryReadGuard()
   getMinistryGroupHistories(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -41,6 +44,7 @@ export class MinistryGroupHistoryController {
   }
 
   @Get('current')
+  @HistoryReadGuard()
   getCurrentMinistryGroupHistories(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -55,6 +59,7 @@ export class MinistryGroupHistoryController {
 
   @ApiPatchMinistryGroupHistory()
   @Patch(':ministryGroupHistoryId')
+  @HistoryWriteGuard()
   patchMinistryGroupHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
@@ -71,6 +76,7 @@ export class MinistryGroupHistoryController {
   }
 
   @ApiDeleteMinistryGroupHistory()
+  @HistoryWriteGuard()
   @Delete(':ministryGroupHistoryId')
   deleteMinistryGroupHistory(
     @Param('churchId', ParseIntPipe) churchId: number,
