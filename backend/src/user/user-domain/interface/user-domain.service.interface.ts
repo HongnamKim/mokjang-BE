@@ -40,4 +40,9 @@ export interface IUserDomainService {
   ): Promise<void>;
 
   startFreeTrial(user: UserModel, qr: QueryRunner): Promise<UpdateResult>;
+
+  expireTrials(
+    expiredUserIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../../entity/user.entity';
-import { QueryRunner, Repository, UpdateResult } from 'typeorm';
+import { In, QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { IUserDomainService } from '../interface/user-domain.service.interface';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -203,6 +203,24 @@ export class UserDomainService implements IUserDomainService {
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(UserException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async expireTrials(
+    expiredUserIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getUserRepository(qr);
+
+    const result = await repository.update(
+      { id: In(expiredUserIds) },
+      { role: UserRole.NONE },
+    );
+
+    if (result.affected !== expiredUserIds.length) {
+      throw new InternalServerErrorException(UserException.EXPIRE_TRIAL_ERROR);
     }
 
     return result;

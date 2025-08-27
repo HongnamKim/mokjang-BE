@@ -11,9 +11,16 @@ export class VisitationDetailModel extends BaseModel {
   @ManyToOne(
     () => VisitationMetaModel,
     (visitingMeta) => visitingMeta.visitationDetails,
+    { onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'visitationMetaId' })
   visitationMeta: VisitationMetaModel;
+
+  @Column({ default: '' })
+  visitationContent: string;
+
+  @Column({ default: '' })
+  visitationPray: string;
 
   /*@Index()
   @Column()
@@ -22,10 +29,4 @@ export class VisitationDetailModel extends BaseModel {
   @ManyToOne(() => MemberModel, (member) => member.visitationDetails)
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;*/
-
-  @Column({ default: '' })
-  visitationContent: string;
-
-  @Column({ default: '' })
-  visitationPray: string;
 }

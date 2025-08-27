@@ -31,7 +31,7 @@ async function bootstrap() {
     new XssSanitizerPipe(),
   );
 
-  app.useGlobalFilters(new TypeOrmExceptionFilter());
+  //app.useGlobalFilters(new TypeOrmExceptionFilter());
 
   app.useGlobalGuards(new GetHandlerGuard());
 

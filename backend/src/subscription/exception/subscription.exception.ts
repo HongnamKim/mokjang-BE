@@ -5,4 +5,5 @@ export const SubscriptionException = {
   EXPIRE_SUBSCRIPTION: '구독 기간이 만료되었습니다. 구독을 갱신해주세요.',
 
   FAIL_LOAD_SUBSCRIPTION: '구독 정보 누락',
+  EXPIRE_SUBSCRIPTION_ERROR: '구독 만료 처리 중 에러 발생',
 };

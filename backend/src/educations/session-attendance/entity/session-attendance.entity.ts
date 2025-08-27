@@ -13,6 +13,7 @@ export class SessionAttendanceModel extends BaseModel {
   @ManyToOne(
     () => EducationSessionModel,
     (educationSession) => educationSession.sessionAttendances,
+    { onDelete: 'CASCADE' },
   )
   educationSession: EducationSessionModel;
 
@@ -23,6 +24,7 @@ export class SessionAttendanceModel extends BaseModel {
   @ManyToOne(
     () => EducationEnrollmentModel,
     (enrollment) => enrollment.sessionAttendance,
+    { onDelete: 'CASCADE' },
   )
   educationEnrollment: EducationEnrollmentModel;
 

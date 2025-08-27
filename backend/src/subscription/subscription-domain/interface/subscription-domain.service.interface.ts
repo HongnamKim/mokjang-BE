@@ -36,4 +36,11 @@ export interface ISubscriptionDomainService {
   ): Promise<UpdateResult>;
 
   findCurrentSubscription(church: ChurchModel): Promise<SubscriptionModel>;
+
+  findExpiredTrials(qr: QueryRunner): Promise<SubscriptionModel[]>;
+
+  expireTrialSubscriptions(
+    expiredTrials: SubscriptionModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

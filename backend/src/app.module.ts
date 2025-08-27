@@ -12,7 +12,6 @@ import { UserModel } from './user/entity/user.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { UserModule } from './user/user.module';
 import { ChurchesModule } from './churches/churches.module';
-
 import { OfficerModel } from './management/officers/entity/officer.entity';
 import { MinistryModel } from './management/ministries/entity/ministry.entity';
 import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
@@ -76,6 +75,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
 import { SubscriptionModel } from './subscription/entity/subscription.entity';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { DummyDataModule } from './dummy-data/dummy-data.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
@@ -214,6 +214,7 @@ import { DummyDataModule } from './dummy-data/dummy-data.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     DummyDataModule,
     AuthModule,
     MyPageModule,

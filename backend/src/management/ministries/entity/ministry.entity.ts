@@ -28,7 +28,9 @@ export class MinistryModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.ministries)
+  @ManyToOne(() => ChurchModel, (church) => church.ministries, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
@@ -39,6 +41,7 @@ export class MinistryModel extends BaseModel {
   @ManyToOne(
     () => MinistryGroupModel,
     (ministryGroup) => ministryGroup.ministries,
+    { onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'ministryGroupId' })
   ministryGroup: MinistryGroupModel;
@@ -50,7 +53,7 @@ export class MinistryModel extends BaseModel {
     () => MinistryHistoryModel,
     (ministryHistory) => ministryHistory.ministry,
   )
-  ministryHistory: MinistryModel[];
+  ministryHistory: MinistryHistoryModel[];
 }
 
 export const MinistryModelColumns = {

@@ -15,14 +15,16 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Entity()
 export class SubscriptionModel extends BaseModel {
-  @OneToOne(() => ChurchModel, (church) => church.subscription)
+  @OneToOne(() => ChurchModel, (church) => church.subscription, {
+    nullable: true,
+  })
   church: ChurchModel;
 
   @Column()
   @Index()
   userId: number;
 
-  @ManyToOne(() => UserModel)
+  @ManyToOne(() => UserModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: UserModel;
 
