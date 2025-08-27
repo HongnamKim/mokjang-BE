@@ -17,7 +17,7 @@ export class MinistryGroupHistoryModel extends BaseModel {
   @Column()
   memberId: number;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
@@ -25,7 +25,7 @@ export class MinistryGroupHistoryModel extends BaseModel {
   @Column({ nullable: true })
   ministryGroupId: number | null;
 
-  @ManyToOne(() => MinistryGroupModel)
+  @ManyToOne(() => MinistryGroupModel, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'ministryGroupId' })
   ministryGroup: MinistryGroupModel | null;
 

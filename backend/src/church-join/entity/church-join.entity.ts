@@ -10,14 +10,18 @@ export class ChurchJoinModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.joinRequests)
+  @ManyToOne(() => ChurchModel, (church) => church.joinRequests, {
+    onDelete: 'CASCADE',
+  })
   church: ChurchModel;
 
   @Index()
   @Column()
   userId: number;
 
-  @ManyToOne(() => UserModel, (user) => user.joinRequest)
+  @ManyToOne(() => UserModel, (user) => user.joinRequest, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'userId' })
   user: UserModel;
 

@@ -5,4 +5,5 @@ export const UserException = {
   CANNOT_CREATE_CHURCH: '소속된 교회가 있을 경우, 교회를 생성할 수 없습니다.',
   UPDATE_ERROR: '사용자 업데이트 도중 에러 발생',
   DELETE_ERROR: '사용자 삭제 도중 에러 발생',
+  EXPIRE_TRIAL_ERROR: '무료 체험 만료 처리 중 에러 발생',
 };

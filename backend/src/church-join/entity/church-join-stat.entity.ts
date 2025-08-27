@@ -9,7 +9,7 @@ export class ChurchJoinStatModel extends BaseModel {
   @Column()
   userId: number;
 
-  @ManyToOne(() => UserModel)
+  @ManyToOne(() => UserModel, { onDelete: 'CASCADE' })
   user: UserModel;
 
   @Index()

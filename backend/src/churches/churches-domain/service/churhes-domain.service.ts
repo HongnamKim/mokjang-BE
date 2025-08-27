@@ -9,6 +9,7 @@ import { CreateChurchDto } from '../../dto/create-church.dto';
 import {
   DeleteResult,
   FindOptionsRelations,
+  In,
   QueryFailedError,
   QueryRunner,
   Repository,
@@ -484,5 +485,24 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return church;
+  }
+
+  async cleanupExpiredTrials(
+    expiredChurches: ChurchModel[],
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.delete({
+      id: In(expiredChurches.map((c) => c.id)),
+    });
+
+    if (result.affected !== expiredChurches.length) {
+      throw new InternalServerErrorException(
+        ChurchException.EXPIRE_TRIAL_ERROR,
+      );
+    }
+
+    return result;
   }
 }

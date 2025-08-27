@@ -21,7 +21,7 @@ export class ChurchUserModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel)
+  @ManyToOne(() => ChurchModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
@@ -29,7 +29,7 @@ export class ChurchUserModel extends BaseModel {
   @Column()
   userId: number;
 
-  @ManyToOne(() => UserModel)
+  @ManyToOne(() => UserModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: UserModel;
 
@@ -37,7 +37,9 @@ export class ChurchUserModel extends BaseModel {
   @Column({ nullable: true })
   memberId: number | null;
 
-  @OneToOne(() => MemberModel, (member) => member.churchUser)
+  @OneToOne(() => MemberModel, (member) => member.churchUser, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
@@ -48,7 +50,7 @@ export class ChurchUserModel extends BaseModel {
   @Column({ nullable: true })
   permissionTemplateId: number | null;
 
-  @ManyToOne(() => PermissionTemplateModel)
+  @ManyToOne(() => PermissionTemplateModel, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'permissionTemplateId' })
   permissionTemplate: PermissionTemplateModel;
 

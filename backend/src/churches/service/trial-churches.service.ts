@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { QueryRunner } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { ChurchUserRole, UserRole } from '../../user/const/user-role.enum';
 import { PostChurchResponseDto } from '../dto/response/post-church-response.dto';
 import { ChurchModel, ManagementCountType } from '../entity/church.entity';
@@ -59,6 +59,8 @@ import {
 @Injectable()
 export class TrialChurchesService {
   constructor(
+    private readonly dataSource: DataSource,
+
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(ICHURCH_USER_DOMAIN_SERVICE)

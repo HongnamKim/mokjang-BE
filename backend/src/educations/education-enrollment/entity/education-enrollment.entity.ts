@@ -11,14 +11,18 @@ export class EducationEnrollmentModel extends BaseModel {
   @Column({ comment: '교육 대상자 ID' })
   memberId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.educationEnrollments)
+  @ManyToOne(() => MemberModel, (member) => member.educationEnrollments, {
+    onDelete: 'CASCADE',
+  })
   member: MemberModel;
 
   @Index()
   @Column({ comment: '교육 기수 ID' })
   educationTermId: number;
 
-  @ManyToOne(() => EducationTermModel, (term) => term.educationEnrollments)
+  @ManyToOne(() => EducationTermModel, (term) => term.educationEnrollments, {
+    onDelete: 'CASCADE',
+  })
   educationTerm: EducationTermModel;
 
   @Index()

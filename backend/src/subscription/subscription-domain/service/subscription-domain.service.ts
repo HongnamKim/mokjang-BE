@@ -8,6 +8,8 @@ import { UserModel } from '../../../user/entity/user.entity';
 import { SubscriptionModel } from '../../entity/subscription.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  In,
+  LessThan,
   LessThanOrEqual,
   MoreThanOrEqual,
   QueryRunner,
@@ -18,6 +20,7 @@ import { SubscriptionPlan } from '../../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../../const/subscription-status.enum';
 import { addDays } from 'date-fns';
 import { ChurchModel } from '../../../churches/entity/church.entity';
+import { SubscriptionException } from '../../exception/subscription.exception';
 
 @Injectable()
 export class SubscriptionDomainService implements ISubscriptionDomainService {
@@ -179,5 +182,47 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     }
 
     return subscription;
+  }
+
+  findExpiredTrials(qr: QueryRunner): Promise<SubscriptionModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        isFreeTrial: true,
+        trialEndsAt: LessThan(new Date()),
+        status: SubscriptionStatus.ACTIVE,
+      },
+      relations: {
+        church: true,
+      },
+      select: {
+        church: {
+          id: true,
+        },
+      },
+    });
+  }
+
+  async expireTrialSubscriptions(
+    expiredTrials: SubscriptionModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      { id: In(expiredTrials.map((t) => t.id)) },
+      {
+        status: SubscriptionStatus.EXPIRED,
+      },
+    );
+
+    if (result.affected !== expiredTrials.length) {
+      throw new InternalServerErrorException(
+        SubscriptionException.EXPIRE_SUBSCRIPTION_ERROR,
+      );
+    }
+
+    return result;
   }
 }

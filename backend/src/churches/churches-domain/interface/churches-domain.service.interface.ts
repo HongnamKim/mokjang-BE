@@ -119,4 +119,9 @@ export interface IChurchesDomainService {
     user: UserModel,
     qr: QueryRunner,
   ): Promise<ChurchModel>;
+
+  cleanupExpiredTrials(
+    expiredChurches: ChurchModel[],
+    qr: QueryRunner,
+  ): Promise<DeleteResult>;
 }

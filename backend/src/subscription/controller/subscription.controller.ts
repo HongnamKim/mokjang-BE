@@ -1,4 +1,10 @@
-import { Controller, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Post,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { SubscriptionService } from '../service/subscription.service';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { Token } from '../../auth/decorator/jwt.decorator';
@@ -25,5 +31,11 @@ export class SubscriptionController {
   @Post('subscribe')
   startSubscription(@Token(AuthType.ACCESS) accessToken: JwtPayload) {
     return accessToken;
+  }
+
+  @Delete('cleanup/expired-trials')
+  @UseInterceptors(TransactionInterceptor)
+  cleanupExpiredTrials(@QueryRunner() qr: QR) {
+    return this.subscriptionService.cleanupExpiredTrialsManual(qr);
   }
 }

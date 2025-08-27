@@ -18,7 +18,7 @@ export class EducationReportModel extends ReportModel {
   @Column()
   educationId: number;
 
-  @ManyToOne(() => EducationModel)
+  @ManyToOne(() => EducationModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'educationId' })
   education: EducationModel;
 
@@ -26,7 +26,11 @@ export class EducationReportModel extends ReportModel {
   @Column()
   educationTermId: number;
 
-  @ManyToOne(() => EducationTermModel, (educationTerm) => educationTerm.reports)
+  @ManyToOne(
+    () => EducationTermModel,
+    (educationTerm) => educationTerm.reports,
+    { onDelete: 'CASCADE' },
+  )
   @JoinColumn({ name: 'educationTermId' })
   educationTerm: EducationTermModel;
 
@@ -36,6 +40,7 @@ export class EducationReportModel extends ReportModel {
 
   @ManyToOne(() => EducationSessionModel, (session) => session.reports, {
     nullable: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'educationSessionId' })
   educationSession?: EducationSessionModel;
