@@ -17,16 +17,20 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 export class SubscriptionModel extends BaseModel {
   @OneToOne(() => ChurchModel, (church) => church.subscription, {
     nullable: true,
+    onDelete: 'SET NULL',
   })
-  church: ChurchModel;
+  church: ChurchModel | null;
 
-  @Column()
+  @Column({ default: true })
+  isCurrent: boolean;
+
   @Index()
-  userId: number;
+  @Column({ nullable: true })
+  userId: number | null;
 
-  @ManyToOne(() => UserModel, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserModel, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'userId' })
-  user: UserModel;
+  user: UserModel | null;
 
   @Column()
   currentPlan: SubscriptionPlan;
@@ -43,8 +47,8 @@ export class SubscriptionModel extends BaseModel {
   @Column({ nullable: true })
   billingCycle: BillingCycle;
 
-  @Column({ nullable: true })
-  nextBillingDate: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  nextBillingDate: Date | null;
 
   @Column({ nullable: true })
   amount: number;
@@ -55,21 +59,24 @@ export class SubscriptionModel extends BaseModel {
   @Column({ default: false })
   isFreeTrial: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   trialEndsAt: Date;
 
   @Column()
   maxMembers: number;
+
+  @Column({ type: 'varchar', comment: '정기 결제 빌키', nullable: true })
+  bid: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  canceledAt: Date;
+
+  @Column({ nullable: true })
+  cancellationReason: string;
 
   @Column({ nullable: true })
   paymentMethodId: string; // PG사 결제수단 ID
 
   @Column({ nullable: true })
   customerId: string; // PG사 고객 ID
-
-  @Column({ nullable: true })
-  canceledAt: Date;
-
-  @Column({ nullable: true })
-  cancellationReason: string;
 }

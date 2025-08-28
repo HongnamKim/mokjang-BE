@@ -32,7 +32,9 @@ export class ChurchModel extends BaseModel {
   @Index()
   subscriptionId: number | null;
 
-  @OneToOne(() => SubscriptionModel, { nullable: true })
+  @OneToOne(() => SubscriptionModel, (subscription) => subscription.church, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'subscriptionId' })
   subscription: SubscriptionModel;
 

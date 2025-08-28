@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -8,6 +9,7 @@ import { UserModel } from '../../../user/entity/user.entity';
 import { SubscriptionModel } from '../../entity/subscription.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  FindOptionsRelations,
   In,
   LessThan,
   LessThanOrEqual,
@@ -18,9 +20,12 @@ import {
 } from 'typeorm';
 import { SubscriptionPlan } from '../../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../../const/subscription-status.enum';
-import { addDays } from 'date-fns';
+import { addDays, addMonths, subHours } from 'date-fns';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { SubscriptionException } from '../../exception/subscription.exception';
+import { SubscribePlanDto } from '../../dto/request/subscribe-plan.dto';
+import { PlanAmount } from '../../const/plan-amount.enum';
+import { PlanMemberSize } from '../../const/plan-member-size.enum';
 
 @Injectable()
 export class SubscriptionDomainService implements ISubscriptionDomainService {
@@ -31,6 +36,18 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
 
   private getRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(SubscriptionModel) : this.repository;
+  }
+
+  private getSubscribeDates() {
+    const currentPeriodStart = new Date();
+    const currentPeriodEnd = addMonths(currentPeriodStart, 1);
+    const nextBillingDate = subHours(currentPeriodEnd, 2);
+
+    return {
+      currentPeriodStart,
+      currentPeriodEnd,
+      nextBillingDate,
+    };
   }
 
   createFreeTrial(
@@ -49,6 +66,65 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
       trialEndsAt: addDays(new Date(), 14),
       maxMembers: 50,
     });
+  }
+
+  async subscribePlan(
+    user: UserModel,
+    dto: SubscribePlanDto,
+    billKey: string,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository();
+
+    // 보류 중 or 활성 상태 구독 정보가 있는지 체크
+    const existSubscription = await repository.findOne({
+      where: {
+        userId: user.id,
+        status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING]),
+      },
+    });
+
+    if (existSubscription) {
+      throw new ConflictException(SubscriptionException.ALREADY_EXIST);
+    }
+
+    const { currentPeriodStart, currentPeriodEnd, nextBillingDate } =
+      this.getSubscribeDates();
+
+    return repository.save({
+      userId: user.id,
+      currentPlan: dto.plan,
+      status: SubscriptionStatus.PENDING,
+      currentPeriodStart,
+      currentPeriodEnd,
+      billingCycle: dto.billingCycle,
+      nextBillingDate,
+      amount: PlanAmount[dto.plan],
+      autoRenew: true,
+      isFreeTrial: false,
+      maxMembers: PlanMemberSize[dto.plan],
+      bid: billKey,
+    });
+  }
+
+  async findSubscriptionByStatus(
+    user: UserModel,
+    status: SubscriptionStatus,
+    qr?: QueryRunner,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository(qr);
+
+    const subscription = await repository.findOne({
+      where: {
+        userId: user.id,
+        status,
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(SubscriptionException.NOT_FOUND);
+    }
+
+    return subscription;
   }
 
   async findTrialSubscription(
@@ -174,6 +250,7 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
         church: {
           id: church.id,
         },
+        isCurrent: true,
       },
     });
 
@@ -213,7 +290,7 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     const result = await repository.update(
       { id: In(expiredTrials.map((t) => t.id)) },
       {
-        status: SubscriptionStatus.EXPIRED,
+        status: SubscriptionStatus.FAILED,
       },
     );
 
@@ -224,5 +301,58 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     }
 
     return result;
+  }
+
+  async findCurrentUserSubscription(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository(qr);
+
+    const subscription = await repository.findOne({
+      where: {
+        userId: user.id,
+        status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING]),
+      },
+      relations: {
+        church: true,
+      },
+      select: {
+        church: {
+          id: true,
+          name: true,
+          memberCount: true,
+        },
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException();
+    }
+
+    return subscription;
+  }
+
+  async findSubscriptionModelById(
+    user: UserModel,
+    subscriptionId: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<SubscriptionModel>,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository(qr);
+
+    const subscription = await repository.findOne({
+      where: {
+        userId: user.id,
+        id: subscriptionId,
+      },
+      relations: relationOptions,
+    });
+
+    if (!subscription) {
+      throw new NotFoundException();
+    }
+
+    return subscription;
   }
 }

@@ -29,8 +29,11 @@ export class ChurchOwnerGuard implements CanActivate {
     }
 
     const churchId = parseInt(req.params.churchId);
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      req.queryRunner,
+      { subscription: true },
+    );
 
     req.church = church;
 

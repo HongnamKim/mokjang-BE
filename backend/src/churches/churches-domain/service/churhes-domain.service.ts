@@ -39,7 +39,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async findAllChurches(): Promise<ChurchModel[]> {
     const churchRepository = this.getChurchRepository();
 
-    return churchRepository.find();
+    return churchRepository.find({ relations: { subscription: true } });
   }
 
   async createChurch(
@@ -147,6 +147,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
           status: true,
           currentPeriodStart: true,
           currentPeriodEnd: true,
+          nextBillingDate: true,
           isFreeTrial: true,
           trialEndsAt: true,
         },
@@ -230,6 +231,29 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return this.findChurchById(church.id);
+  }
+
+  async updateSubscription(
+    church: ChurchModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: church.id,
+      },
+      {
+        subscriptionId: subscription.id,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   async updateChurchJoinCode(
@@ -474,9 +498,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     const church = await repository.findOne({
       where: {
         ownerUserId: user.id,
-        subscription: {
-          isFreeTrial: true,
-        },
+        isFreeTrial: true,
       },
     });
 

@@ -5,6 +5,9 @@ import { SubscriptionService } from './service/subscription.service';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { SubscriptionDomainModule } from './subscription-domain/subscription-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
+import { TestSubscriptionService } from './service/test-subscription.service';
+import { TestSubscriptionController } from './controller/test-subscription.controller';
+import { PgService } from './service/pg.service';
 
 @Module({
   imports: [
@@ -13,7 +16,7 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
     ChurchesDomainModule,
     SubscriptionDomainModule,
   ],
-  controllers: [SubscriptionController],
-  providers: [SubscriptionService],
+  controllers: [TestSubscriptionController, SubscriptionController],
+  providers: [SubscriptionService, PgService, TestSubscriptionService],
 })
 export class SubscriptionModule {}
