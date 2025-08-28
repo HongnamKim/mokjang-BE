@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SubscriptionModel } from '../entity/subscription.entity';
 import { ISUBSCRIPTION_DOMAIN_SERVICE } from './interface/subscription-domain.service.interface';
 import { SubscriptionDomainService } from './service/subscription-domain.service';
+import { ITEST_SUBSCRIPTION_DOMAIN_SERVICE } from './interface/test-subscription-domain.service.interface';
+import { TestSubscriptionDomainService } from './service/test-subscription-domain.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SubscriptionModel])],
@@ -11,7 +13,11 @@ import { SubscriptionDomainService } from './service/subscription-domain.service
       provide: ISUBSCRIPTION_DOMAIN_SERVICE,
       useClass: SubscriptionDomainService,
     },
+    {
+      provide: ITEST_SUBSCRIPTION_DOMAIN_SERVICE,
+      useClass: TestSubscriptionDomainService,
+    },
   ],
-  exports: [ISUBSCRIPTION_DOMAIN_SERVICE],
+  exports: [ISUBSCRIPTION_DOMAIN_SERVICE, ITEST_SUBSCRIPTION_DOMAIN_SERVICE],
 })
 export class SubscriptionDomainModule {}

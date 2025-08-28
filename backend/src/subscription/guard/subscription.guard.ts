@@ -26,9 +26,11 @@ export class SubscriptionGuard implements CanActivate {
     }
     const churchId = parseInt(req.params.churchId);
 
-    return this.churchesDomainService.findChurchModelById(churchId, undefined, {
-      subscription: true,
-    });
+    return this.churchesDomainService.findChurchModelById(
+      churchId,
+      req.queryRunner,
+      { subscription: true },
+    );
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

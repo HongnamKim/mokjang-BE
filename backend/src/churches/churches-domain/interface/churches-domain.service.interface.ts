@@ -47,6 +47,12 @@ export interface IChurchesDomainService {
 
   updateChurch(church: ChurchModel, dto: UpdateChurchDto): Promise<ChurchModel>;
 
+  updateSubscription(
+    church: ChurchModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
   deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string>;
 
   deleteChurchCascade(

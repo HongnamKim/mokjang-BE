@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { MinistryModel } from './entity/ministry.entity';
 import { MinistriesController } from './controller/ministries.controller';
 import { MinistryGroupsController } from './controller/ministry-groups.controller';
 import { MinistryService } from './service/ministry.service';
@@ -24,7 +22,6 @@ import { MinistryHistoryDomainModule } from '../../member-history/ministry-histo
         module: MinistriesModule,
       },
     ]),
-    TypeOrmModule.forFeature([MinistryModel]),
     ChurchesDomainModule,
     ManagerDomainModule,
     MinistriesDomainModule,
