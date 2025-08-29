@@ -76,6 +76,7 @@ import { SubscriptionModel } from './subscription/entity/subscription.entity';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { DummyDataModule } from './dummy-data/dummy-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { OrderModel } from './subscription/entity/order.entity';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
@@ -146,6 +147,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         entities: [
           // 구독 관련
           SubscriptionModel,
+          OrderModel,
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,

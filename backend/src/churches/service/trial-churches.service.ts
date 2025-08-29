@@ -55,6 +55,7 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
+import { SubscriptionStatus } from '../../subscription/const/subscription-status.enum';
 
 @Injectable()
 export class TrialChurchesService {
@@ -110,7 +111,11 @@ export class TrialChurchesService {
     );
 
     // 무료 체험 활성화
-    await this.subscriptionDomainService.activateSubscription(subscription, qr);
+    await this.subscriptionDomainService.updateSubscriptionStatus(
+      subscription,
+      SubscriptionStatus.ACTIVE,
+      qr,
+    );
 
     const ownerMember = await this.membersDomainService.createMember(
       newTrialChurch,
@@ -191,10 +196,15 @@ export class TrialChurchesService {
     await this.userDomainService.updateUser(user, { role: UserRole.NONE }, qr);
 
     const subscription =
-      await this.subscriptionDomainService.findActivatedSubscription(user, qr);
+      await this.subscriptionDomainService.findSubscriptionModelByStatus(
+        user,
+        SubscriptionStatus.ACTIVE,
+        qr,
+      );
 
-    await this.subscriptionDomainService.deactivateSubscription(
+    await this.subscriptionDomainService.updateSubscriptionStatus(
       subscription,
+      SubscriptionStatus.PENDING,
       qr,
     );
 

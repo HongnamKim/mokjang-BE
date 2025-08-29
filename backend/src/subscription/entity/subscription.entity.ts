@@ -12,6 +12,7 @@ import { SubscriptionPlan } from '../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../const/subscription-status.enum';
 import { BillingCycle } from '../const/billing-cycle.enum';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class SubscriptionModel extends BaseModel {
@@ -21,9 +22,6 @@ export class SubscriptionModel extends BaseModel {
   })
   church: ChurchModel | null;
 
-  @Column({ default: true })
-  isCurrent: boolean;
-
   @Index()
   @Column({ nullable: true })
   userId: number | null;
@@ -31,6 +29,9 @@ export class SubscriptionModel extends BaseModel {
   @ManyToOne(() => UserModel, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'userId' })
   user: UserModel | null;
+
+  @Column({ default: true })
+  isCurrent: boolean;
 
   @Column()
   currentPlan: SubscriptionPlan;
@@ -66,6 +67,7 @@ export class SubscriptionModel extends BaseModel {
   maxMembers: number;
 
   @Column({ type: 'varchar', comment: '정기 결제 빌키', nullable: true })
+  @Exclude({ toPlainOnly: true })
   bid: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })

@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { CreateChurchDto } from '../dto/create-church.dto';
-import { JwtAccessPayload } from '../../auth/type/jwt';
 import { UpdateChurchDto } from '../dto/update-church.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
@@ -33,6 +32,8 @@ import {
   ISubscriptionDomainService,
 } from '../../subscription/subscription-domain/interface/subscription-domain.service.interface';
 import { GetChurchSubscriptionDto } from '../dto/response/get-church-subscription.dto';
+import { UserModel } from '../../user/entity/user.entity';
+import { SubscriptionStatus } from '../../subscription/const/subscription-status.enum';
 
 @Injectable()
 export class ChurchesService {
@@ -64,24 +65,31 @@ export class ChurchesService {
   }
 
   async createChurch(
-    accessPayload: JwtAccessPayload,
+    ownerUser: UserModel,
     dto: CreateChurchDto,
     qr: QueryRunner,
   ) {
-    const ownerUser = await this.userDomainService.findUserModelById(
-      accessPayload.id,
-      qr,
-    );
-
     if (ownerUser.role !== UserRole.NONE) {
       throw new ConflictException(
         '소속된 교회가 있는 사용자는 교회를 생성할 수 없습니다.',
       );
     }
 
+    const subscription =
+      await this.subscriptionDomainService.findAbleToCreateChurchSubscription(
+        ownerUser,
+        qr,
+      );
+    /*await this.subscriptionDomainService.findSubscriptionModelByStatus(
+        ownerUser,
+        SubscriptionStatus.PENDING,
+        qr,
+      );*/
+
     const newChurch = await this.churchesDomainService.createChurch(
       dto,
       ownerUser,
+      subscription,
       qr,
     );
 
@@ -136,8 +144,36 @@ export class ChurchesService {
     return this.churchesDomainService.findChurchModelById(churchId, qr);
   }
 
-  async deleteChurchById(id: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(id, qr);
+  // TODO 구독 상태에 따른 교회 삭제 후 처리 로직 필요
+  async deleteChurchById(id: number, qr: QueryRunner) {
+    const church = await this.churchesDomainService.findChurchModelById(
+      id,
+      qr,
+      { subscription: true },
+    );
+
+    const subscription = church.subscription;
+
+    if (
+      subscription &&
+      subscription.status !== SubscriptionStatus.CANCELED &&
+      subscription.status !== SubscriptionStatus.EXPIRED
+    ) {
+      await this.subscriptionDomainService.updateSubscriptionStatus(
+        church.subscription,
+        SubscriptionStatus.PENDING,
+        qr,
+      );
+    }
+
+    const ownerUser = await this.userDomainService.findUserModelById(
+      church.ownerUserId,
+    );
+    await this.userDomainService.updateUser(
+      ownerUser,
+      { role: UserRole.NONE },
+      qr,
+    );
 
     return this.churchesDomainService.deleteChurch(church, qr);
   }
@@ -239,7 +275,7 @@ export class ChurchesService {
 
   async getChurchSubscription(church: ChurchModel) {
     const subscription =
-      await this.subscriptionDomainService.findCurrentSubscription(church);
+      await this.subscriptionDomainService.findSubscriptionByChurch(church);
 
     return new GetChurchSubscriptionDto(subscription);
   }
