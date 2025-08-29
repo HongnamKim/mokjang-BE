@@ -1,4 +1,10 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
@@ -7,22 +13,23 @@ import {
   ISUBSCRIPTION_DOMAIN_SERVICE,
   ISubscriptionDomainService,
 } from '../subscription-domain/interface/subscription-domain.service.interface';
-import { DataSource, QueryRunner } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { UserRole } from '../../user/const/user-role.enum';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
-import { ChurchModel } from '../../churches/entity/church.entity';
 import { UserModel } from '../../user/entity/user.entity';
 import { SubscribePlanDto } from '../dto/request/subscribe-plan.dto';
 import { PgService } from './pg.service';
 import { PostSubscribePlanResponseDto } from '../dto/response/post-subscribe-plan-response.dto';
+import { UpdatePaymentMethodDto } from '../dto/request/update-payment-method.dto';
+import { OrderException } from '../exception/order.exception';
+import { SubscriptionStatus } from '../const/subscription-status.enum';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class SubscriptionService {
   constructor(
-    private readonly dataSource: DataSource,
     private readonly pgService: PgService,
 
     @Inject(IUSER_DOMAIN_SERVICE)
@@ -34,7 +41,7 @@ export class SubscriptionService {
   ) {}
 
   async getCurrentSubscription(user: UserModel) {
-    return this.subscriptionDomainService.findCurrentUserSubscription(user);
+    return this.subscriptionDomainService.findSubscriptionByUser(user);
   }
 
   async startFreeTrial(user: UserModel, qr: QueryRunner) {
@@ -56,7 +63,7 @@ export class SubscriptionService {
     return trialSubscription;
   }
 
-  async subscribePlan(user: UserModel, dto: SubscribePlanDto) {
+  async subscribePlan(user: UserModel, dto: SubscribePlanDto, qr: QueryRunner) {
     const billKey = await this.pgService.registerBillKey(
       dto.encData,
       dto.isTest,
@@ -66,49 +73,132 @@ export class SubscriptionService {
       user,
       dto,
       billKey,
+      qr,
     );
+
+    // 구독 첫 결제 요청
+    try {
+      // await this.orderService.payment(newPlan, user, paymentDto...)
+    } catch {
+      throw new BadGatewayException(OrderException.FAIL_PAYMENT);
+    }
+
+    // 기존 교회가 있을 경우
+    if (user.role === UserRole.OWNER) {
+      const oldChurch =
+        await this.churchesDomainService.findChurchModelByOwner(user);
+
+      if (oldChurch.memberCount > newPlan.maxMembers) {
+        throw new ConflictException(
+          '기존 교회 인원 수가 새로운 구독 조건에 맞지 않습니다.',
+        );
+      }
+
+      await this.churchesDomainService.updateSubscription(
+        oldChurch,
+        newPlan,
+        qr,
+      );
+
+      await this.subscriptionDomainService.updateSubscriptionStatus(
+        newPlan,
+        SubscriptionStatus.ACTIVE,
+        qr,
+      );
+    }
 
     return new PostSubscribePlanResponseDto(newPlan);
   }
 
-  async cleanupExpiredTrialsManual(qr: QueryRunner) {
-    const expiredTrials =
-      await this.subscriptionDomainService.findExpiredTrials(qr);
+  async retryPurchase(user: UserModel, qr: QueryRunner) {
+    const subscription =
+      await this.subscriptionDomainService.findSubscriptionModelByStatus(
+        user,
+        SubscriptionStatus.FAILED,
+        qr,
+        { church: true },
+      );
 
-    const expiredUserIds = expiredTrials
-      .filter((trial) => trial.userId)
-      .map((trial) => trial.userId) as number[];
+    try {
+      // 결제 시도 | 반환값: 결제 내역
+      // const order = await this.orderService.payment(subscription, user, paymentDto ...)
 
-    await this.userDomainService.expireTrials(expiredUserIds, qr);
+      const status = subscription.church
+        ? SubscriptionStatus.ACTIVE
+        : SubscriptionStatus.PENDING;
 
-    const expiredChurches = expiredTrials
-      .filter((trial) => trial.church)
-      .map((trial) => trial.church) as ChurchModel[];
+      await this.subscriptionDomainService.updateSubscriptionStatus(
+        subscription,
+        status,
+        qr,
+      );
 
-    await this.churchesDomainService.cleanupExpiredTrials(expiredChurches, qr);
+      return;
+    } catch {
+      throw new BadGatewayException(OrderException.FAIL_PAYMENT);
+    }
+  }
 
-    await this.subscriptionDomainService.expireTrialSubscriptions(
-      expiredTrials,
+  async updatePaymentMethod(
+    user: UserModel,
+    dto: UpdatePaymentMethodDto,
+    qr: QueryRunner,
+  ) {
+    const subscription =
+      await this.subscriptionDomainService.findSubscriptionByUser(user, qr);
+
+    if (subscription.bid) {
+      await this.pgService.expireBillKey(subscription.bid);
+    }
+
+    const newBid = await this.pgService.registerBillKey(dto, dto.isTest);
+
+    await this.subscriptionDomainService.updateBillKey(
+      subscription,
+      newBid,
       qr,
     );
 
-    return { expiredCount: expiredTrials.length, timestamp: new Date() };
+    return subscription;
   }
 
-  //@Cron()
-  async cleanupExpiredTrialsAuto() {
-    const qr = this.dataSource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
+  async cancelSubscription(user: UserModel, qr: QueryRunner) {
+    const subscription =
+      await this.subscriptionDomainService.findSubscriptionByUser(user, qr);
 
-    try {
-      await this.cleanupExpiredTrialsManual(qr);
-
-      await qr.commitTransaction();
-    } catch {
-      await qr.rollbackTransaction();
-    } finally {
-      await qr.release();
+    if (subscription.status === SubscriptionStatus.CANCELED) {
+      return subscription;
     }
+
+    const canceledDate = new Date();
+
+    await this.subscriptionDomainService.cancelSubscription(
+      subscription,
+      canceledDate,
+      qr,
+    );
+
+    subscription.status = SubscriptionStatus.CANCELED;
+    subscription.canceledAt = canceledDate;
+    subscription.nextBillingDate = null;
+    subscription.autoRenew = false;
+
+    return subscription;
+  }
+
+  async expireSubscription(user: UserModel, qr: QueryRunner) {
+    const canceledSubscription =
+      await this.subscriptionDomainService.findSubscriptionModelByStatus(
+        user,
+        SubscriptionStatus.CANCELED,
+        qr,
+      );
+
+    await this.subscriptionDomainService.expireSubscriptionForTest(
+      canceledSubscription,
+      qr,
+    );
+
+    return 'expired';
   }
 }

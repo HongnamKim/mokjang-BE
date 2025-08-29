@@ -12,50 +12,30 @@ export const ISUBSCRIPTION_DOMAIN_SERVICE = Symbol(
 export interface ISubscriptionDomainService {
   createFreeTrial(user: UserModel, qr: QueryRunner): Promise<SubscriptionModel>;
 
-  findSubscriptionByStatus(
+  findSubscriptionModelByStatus(
     user: UserModel,
     status: SubscriptionStatus,
     qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<SubscriptionModel>,
   ): Promise<SubscriptionModel>;
 
-  findTrialSubscription(
+  findAbleToCreateChurchSubscription(
+    ownerUser: UserModel,
+    qr: QueryRunner,
+  ): Promise<SubscriptionModel>;
+
+  findSubscriptionByChurch(church: ChurchModel): Promise<SubscriptionModel>;
+
+  findSubscriptionByUser(
     user: UserModel,
     qr?: QueryRunner,
   ): Promise<SubscriptionModel>;
 
-  findPendingSubscription(
-    user: UserModel,
-    qr?: QueryRunner,
-  ): Promise<SubscriptionModel>;
-
-  activateSubscription(
+  updateSubscriptionStatus(
     subscription: SubscriptionModel,
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;
-
-  findActivatedSubscription(
-    user: UserModel,
+    status: SubscriptionStatus,
     qr?: QueryRunner,
-  ): Promise<SubscriptionModel>;
-
-  deactivateSubscription(
-    subscription: SubscriptionModel,
-    qr: QueryRunner,
   ): Promise<UpdateResult>;
-
-  findCurrentSubscription(church: ChurchModel): Promise<SubscriptionModel>;
-
-  findExpiredTrials(qr: QueryRunner): Promise<SubscriptionModel[]>;
-
-  expireTrialSubscriptions(
-    expiredTrials: SubscriptionModel[],
-    qr: QueryRunner,
-  ): Promise<UpdateResult>;
-
-  findCurrentUserSubscription(
-    user: UserModel,
-    qr?: QueryRunner,
-  ): Promise<SubscriptionModel>;
 
   findSubscriptionModelById(
     user: UserModel,
@@ -68,5 +48,37 @@ export interface ISubscriptionDomainService {
     user: UserModel,
     dto: SubscribePlanDto,
     billKey: string,
+    qr?: QueryRunner,
   ): Promise<SubscriptionModel>;
+
+  updateBillKey(
+    subscription: SubscriptionModel,
+    newBid: string,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  cancelSubscription(
+    subscription: SubscriptionModel,
+    canceledDate: Date,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  expireSubscriptionForTest(
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  // ---------- 무료 체험 관련 ----------
+
+  findTrialSubscription(
+    user: UserModel,
+    qr?: QueryRunner,
+  ): Promise<SubscriptionModel>;
+
+  findExpiredTrials(qr: QueryRunner): Promise<SubscriptionModel[]>;
+
+  expireTrialSubscriptions(
+    expiredTrials: SubscriptionModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

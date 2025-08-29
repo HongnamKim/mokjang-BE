@@ -31,11 +31,18 @@ export interface IChurchesDomainService {
     relationOptions?: FindOptionsRelations<ChurchModel>,
   ): Promise<ChurchModel>;
 
+  findChurchModelByOwner(
+    ownerUser: UserModel,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel>;
+
   isExistChurch(id: number, qr?: QueryRunner): Promise<boolean>;
 
   createChurch(
     dto: CreateChurchDto,
     ownerUser: UserModel,
+    subscription: SubscriptionModel,
     qr?: QueryRunner,
   ): Promise<ChurchModel>;
 

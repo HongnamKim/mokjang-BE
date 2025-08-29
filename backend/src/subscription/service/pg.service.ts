@@ -12,9 +12,13 @@ export class PgService {
       .join('&');
 
     if (isTest) {
-      return '23DSFHFD381294';
+      return Date.now().toString();
     }
 
     throw new InternalServerErrorException('아직 PG API 연결 안함');
+  }
+
+  async expireBillKey(billKey: string) {
+    return 'expired';
   }
 }

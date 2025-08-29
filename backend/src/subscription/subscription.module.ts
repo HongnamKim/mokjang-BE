@@ -8,6 +8,7 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { TestSubscriptionService } from './service/test-subscription.service';
 import { TestSubscriptionController } from './controller/test-subscription.controller';
 import { PgService } from './service/pg.service';
+import { SubscriptionCronService } from './service/subscription-cron.service';
 
 @Module({
   imports: [
@@ -17,6 +18,11 @@ import { PgService } from './service/pg.service';
     SubscriptionDomainModule,
   ],
   controllers: [TestSubscriptionController, SubscriptionController],
-  providers: [SubscriptionService, PgService, TestSubscriptionService],
+  providers: [
+    SubscriptionService,
+    SubscriptionCronService,
+    PgService,
+    TestSubscriptionService,
+  ],
 })
 export class SubscriptionModule {}

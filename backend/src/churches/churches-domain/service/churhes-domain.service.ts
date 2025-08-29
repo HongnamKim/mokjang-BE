@@ -24,6 +24,7 @@ import { ChurchException } from '../../const/exception/church.exception';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
+import { SubscriptionStatus } from '../../../subscription/const/subscription-status.enum';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -45,6 +46,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async createChurch(
     dto: CreateChurchDto,
     ownerUser: UserModel,
+    subscription: SubscriptionModel,
     qr: QueryRunner,
   ): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository(qr);
@@ -62,6 +64,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
 
     return churchRepository.save({
       ...dto,
+      subscriptionId: subscription.id,
       ownerUserId: ownerUser.id,
       joinCode: await this.generateUniqueChurchCode(churchRepository),
     });
@@ -72,6 +75,10 @@ export class ChurchesDomainService implements IChurchesDomainService {
     subscription: SubscriptionModel,
     qr: QueryRunner,
   ): Promise<ChurchModel> {
+    if (subscription.status !== SubscriptionStatus.PENDING) {
+      throw new ConflictException();
+    }
+
     const repository = this.getChurchRepository(qr);
 
     return repository.save({
@@ -108,12 +115,18 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return code;
   }
 
+  // TODO 교회 삭제 시 소유자 relation 해제
   async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
     const churchRepository = this.getChurchRepository(qr);
 
     const result = await churchRepository.update(
       { id: church.id },
-      { joinCode: null, subscriptionId: null, deletedAt: new Date() },
+      {
+        joinCode: null,
+        subscriptionId: null,
+        deletedAt: new Date(),
+        //ownerUserId: null,
+      },
     );
 
     if (result.affected === 0) {
@@ -203,6 +216,27 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return church;
   }
 
+  async findChurchModelByOwner(
+    ownerUser: UserModel,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel> {
+    const repository = this.getChurchRepository(qr);
+
+    const church = await repository.findOne({
+      where: {
+        ownerUserId: ownerUser.id,
+      },
+      relations: relationOptions,
+    });
+
+    if (!church) {
+      throw new NotFoundException(ChurchException.NOT_FOUND);
+    }
+
+    return church;
+  }
+
   async isExistChurch(id: number, qr?: QueryRunner): Promise<boolean> {
     const churchRepository = this.getChurchRepository(qr);
 
@@ -239,6 +273,10 @@ export class ChurchesDomainService implements IChurchesDomainService {
     qr: QueryRunner,
   ) {
     const repository = this.getChurchRepository(qr);
+
+    if (church.memberCount > subscription.maxMembers) {
+      throw new ConflictException();
+    }
 
     const result = await repository.update(
       {

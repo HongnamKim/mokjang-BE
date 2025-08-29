@@ -42,6 +42,8 @@ export class ChurchManagerGuard implements CanActivate {
       { subscription: true },
     );
 
+    console.log(church);
+
     req.requestManager =
       await this.managerDomainService.findManagerForPermissionCheck(
         church,

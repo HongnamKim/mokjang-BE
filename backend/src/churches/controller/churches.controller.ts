@@ -37,6 +37,9 @@ import { TrialChurchesService } from '../service/trial-churches.service';
 import { ChurchOwnerGuard } from '../../permission/guard/church-owner.guard';
 import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../entity/church.entity';
+import { UserGuard } from '../../user/guard/user.guard';
+import { User } from '../../user/decorator/user.decorator';
+import { UserModel } from '../../user/entity/user.entity';
 
 @Controller('churches')
 export class ChurchesController {
@@ -55,14 +58,15 @@ export class ChurchesController {
   // 교회 생성
   @ApiPostChurch()
   @Post()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, UserGuard)
   @UseInterceptors(TransactionInterceptor)
   postChurch(
-    @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
+    @User() user: UserModel,
     @Body() dto: CreateChurchDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.createChurch(accessPayload, dto, qr);
+    return this.churchesService.createChurch(user, dto, qr);
   }
 
   @ApiOperation({
@@ -117,9 +121,13 @@ export class ChurchesController {
   // 교회 삭제
   @ApiDeleteChurch()
   @ChurchWriteGuard()
+  @UseInterceptors(TransactionInterceptor)
   @Delete(':churchId')
-  deleteChurch(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.churchesService.deleteChurchById(churchId);
+  deleteChurch(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.churchesService.deleteChurchById(churchId, qr);
   }
 
   @ApiOperation({
