@@ -6,11 +6,9 @@ import {
   Patch,
   Post,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { SubscriptionService } from '../service/subscription.service';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { ApiOperation } from '@nestjs/swagger';
@@ -20,6 +18,7 @@ import { User } from '../../user/decorator/user.decorator';
 import { UserModel } from '../../user/entity/user.entity';
 import { UpdatePaymentMethodDto } from '../dto/request/update-payment-method.dto';
 import { SubscriptionCronService } from '../service/subscription-cron.service';
+import { UseTransaction } from '../../common/decorator/use-transaction.decorator';
 
 @Controller()
 export class SubscriptionController {
@@ -44,7 +43,7 @@ export class SubscriptionController {
   })
   @Post('trial')
   @UseGuards(AccessTokenGuard, UserGuard)
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   startFreeTrial(@User() user: UserModel, @QueryRunner() qr: QR) {
     return this.subscriptionService.startFreeTrial(user, qr);
   }
@@ -53,11 +52,12 @@ export class SubscriptionController {
     summary: '구독 신청',
     description:
       '<p>구독을 생성합니다.</p>' +
+      '<p>라프텔의 경우 CANCELED 일 때 새롭게 신청 불가능, 기존 구독을 복구만 가능 (플랜 변경도 불가능)</p>' +
       '<p>계정의 구독이 CANCELED 일 때 어떻게 해야 함?? Exception(거부) or 생성하고 기존 교회에 연결?</p>' +
       '<p>기존 소유한 교회가 있을 경우 해당 교회와 연결합니다.</p>',
   })
   @Post('subscribe')
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   subscribePlan(
     @User() user: UserModel,
@@ -68,11 +68,22 @@ export class SubscriptionController {
   }
 
   @ApiOperation({
+    summary: '취소된 구독 복구',
+    description: '취소된 구독을 복구합니다.',
+  })
+  @Post('restore')
+  @UseTransaction()
+  @UseGuards(AccessTokenGuard, UserGuard)
+  restoreSubscription(@User() user: UserModel, @QueryRunner() qr: QR) {
+    return this.subscriptionService.restoreSubscription(user, qr);
+  }
+
+  @ApiOperation({
     summary: '결제 수동 재시도',
     description: '현재 구독의 status 가 FAILED 일떄만 사용 가능합니다.',
   })
-  @UseInterceptors(TransactionInterceptor)
   @Post('retry')
+  @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   retryPurchase(@User() user: UserModel, @QueryRunner() qr: QR) {
     return this.subscriptionService.retryPurchase(user, qr);
@@ -85,7 +96,7 @@ export class SubscriptionController {
   })
   @Patch('payment-method')
   @UseGuards(AccessTokenGuard, UserGuard)
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   updatePaymentMethod(
     @User() user: UserModel,
     @Body() dto: UpdatePaymentMethodDto,
@@ -110,7 +121,7 @@ export class SubscriptionController {
       '<p>구독 취소합니다. 남은 기간동안 ACTIVE 와 동일한 권리를 갖습니다.</p>',
   })
   @Delete('cancel')
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   cancelPlan(@User() user: UserModel, @QueryRunner() qr: QR) {
     return this.subscriptionService.cancelSubscription(user, qr);
@@ -123,7 +134,7 @@ export class SubscriptionController {
       '<p>만료된 상황을 테스트하기 위한 엔드포인트입니다.</p>',
   })
   @Delete('expire')
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   expirePlan(@User() user: UserModel, @QueryRunner() qr: QR) {
     return this.subscriptionService.expireSubscription(user, qr);
@@ -131,7 +142,7 @@ export class SubscriptionController {
 
   @ApiOperation({ summary: '만료된 무료 체험 데이터 삭제' })
   @Delete('cleanup/manual/expired-trials')
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   cleanupExpiredTrials(@QueryRunner() qr: QR) {
     return this.subscriptionCronService.cleanupExpiredTrialsManual(qr);
   }

@@ -31,12 +31,6 @@ export interface ISubscriptionDomainService {
     qr?: QueryRunner,
   ): Promise<SubscriptionModel>;
 
-  updateSubscriptionStatus(
-    subscription: SubscriptionModel,
-    status: SubscriptionStatus,
-    qr?: QueryRunner,
-  ): Promise<UpdateResult>;
-
   findSubscriptionModelById(
     user: UserModel,
     subscriptionId: number,
@@ -51,10 +45,22 @@ export interface ISubscriptionDomainService {
     qr?: QueryRunner,
   ): Promise<SubscriptionModel>;
 
+  restoreSubscription(
+    canceledSubscription: SubscriptionModel,
+    restoreStatus: SubscriptionStatus,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
   updateBillKey(
     subscription: SubscriptionModel,
     newBid: string,
     qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updateSubscriptionStatus(
+    subscription: SubscriptionModel,
+    status: SubscriptionStatus,
+    qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
   cancelSubscription(

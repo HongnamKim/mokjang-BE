@@ -82,15 +82,19 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     const existSubscription = await repository.findOne({
       where: {
         userId: user.id,
-        status: In([
+        status: Not(SubscriptionStatus.EXPIRED) /*In([
           SubscriptionStatus.ACTIVE,
           SubscriptionStatus.PENDING,
           SubscriptionStatus.FAILED,
-        ]),
+        ]),*/,
       },
     });
 
     if (existSubscription) {
+      if (existSubscription.status === SubscriptionStatus.CANCELED) {
+        throw new ConflictException('최소 처리된 구독 정보 있음. 복구 필요');
+      }
+
       throw new ConflictException(SubscriptionException.ALREADY_EXIST);
     }
 
@@ -131,6 +135,34 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     if (result.affected === 0) {
       throw new InternalServerErrorException(
         SubscriptionException.BILL_KEY_UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
+  async restoreSubscription(
+    subscription: SubscriptionModel,
+    restoreStatus: SubscriptionStatus,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: subscription.id,
+      },
+      {
+        status: restoreStatus,
+        canceledAt: null,
+        autoRenew: true,
+        nextBillingDate: subHours(subscription.currentPeriodEnd, 2),
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        SubscriptionException.FAIL_RESTORE_SUBSCRIPTION,
       );
     }
 
