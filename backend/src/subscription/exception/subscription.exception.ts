@@ -19,6 +19,7 @@ export const SubscriptionException = {
   UNAVAILABLE_PLAN: '신청할 수 없는 구독 플랜입니다.',
   ALREADY_EXIST: '현재 진행 중인 구독이 존재합니다.',
   FAIL_CANCEL_SUBSCRIPTION: '구독 취소 실패. 잠시후 다시 시도해주세요.',
+  FAIL_RESTORE_SUBSCRIPTION: '구독 재활성화 실패',
 
   // 테스트 상황 에러
   FAIL_EXPIRE_SUBSCRIPTION: '구독 강제 만료 실패',

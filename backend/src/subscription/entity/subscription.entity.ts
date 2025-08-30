@@ -71,7 +71,7 @@ export class SubscriptionModel extends BaseModel {
   bid: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  canceledAt: Date;
+  canceledAt: Date | null;
 
   @Column({ nullable: true })
   cancellationReason: string;

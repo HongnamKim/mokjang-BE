@@ -110,6 +110,26 @@ export class SubscriptionService {
     return new PostSubscribePlanResponseDto(newPlan);
   }
 
+  async restoreSubscription(user: UserModel, qr: QueryRunner) {
+    const canceledSubscription =
+      await this.subscriptionDomainService.findSubscriptionModelByStatus(
+        user,
+        SubscriptionStatus.CANCELED,
+        qr,
+        { church: true },
+      );
+
+    const restoreStatus = canceledSubscription.church
+      ? SubscriptionStatus.ACTIVE
+      : SubscriptionStatus.PENDING;
+
+    await this.subscriptionDomainService.restoreSubscription(
+      canceledSubscription,
+      restoreStatus,
+      qr,
+    );
+  }
+
   async retryPurchase(user: UserModel, qr: QueryRunner) {
     const subscription =
       await this.subscriptionDomainService.findSubscriptionModelByStatus(
