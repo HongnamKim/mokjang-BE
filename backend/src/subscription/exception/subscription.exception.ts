@@ -5,6 +5,8 @@ import {
 
 export const SubscriptionException = {
   INACTIVE_SUBSCRIPTION: '구독이 활성 상태가 아닙니다.',
+  FAILED_NOT_FOUND: '결제 실패 상태의 구독이 없습니다.',
+  PAYMENT_SUCCESS_UPDATE_ERROR: '결제 상태 업데이트 도중 에러 발생',
 
   NOT_FOUND: (status?: SubscriptionStatus) =>
     `${status ? SubscriptionStatusName[status] + ' 상태의 ' : ''}구독 정보를 찾을 수 없습니다.`,

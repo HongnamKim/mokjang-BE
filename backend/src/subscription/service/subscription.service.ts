@@ -132,24 +132,18 @@ export class SubscriptionService {
 
   async retryPurchase(user: UserModel, qr: QueryRunner) {
     const subscription =
-      await this.subscriptionDomainService.findSubscriptionModelByStatus(
+      await this.subscriptionDomainService.findFailedSubscriptionModel(
         user,
-        SubscriptionStatus.FAILED,
         qr,
-        { church: true },
       );
 
     try {
       // 결제 시도 | 반환값: 결제 내역
       // const order = await this.orderService.payment(subscription, user, paymentDto ...)
 
-      const status = subscription.church
-        ? SubscriptionStatus.ACTIVE
-        : SubscriptionStatus.PENDING;
-
-      await this.subscriptionDomainService.updateSubscriptionStatus(
+      await this.subscriptionDomainService.updatePaymentSuccess(
         subscription,
-        status,
+        true,
         qr,
       );
 

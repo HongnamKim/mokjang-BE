@@ -145,6 +145,7 @@ export class ChurchesService {
   }
 
   // TODO 구독 상태에 따른 교회 삭제 후 처리 로직 필요
+  // TODO 삭제 시 가입된 관리자들 처리 로직 필요
   async deleteChurchById(id: number, qr: QueryRunner) {
     const church = await this.churchesDomainService.findChurchModelById(
       id,
@@ -169,6 +170,7 @@ export class ChurchesService {
     const ownerUser = await this.userDomainService.findUserModelById(
       church.ownerUserId,
     );
+
     await this.userDomainService.updateUser(
       ownerUser,
       { role: UserRole.NONE },
