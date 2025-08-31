@@ -169,6 +169,31 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     return result;
   }
 
+  async updatePaymentSuccess(
+    subscription: SubscriptionModel,
+    value: boolean,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: subscription.id,
+      },
+      {
+        paymentSuccess: value,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(
+        SubscriptionException.PAYMENT_SUCCESS_UPDATE_ERROR,
+      );
+    }
+
+    return result;
+  }
+
   async cancelSubscription(
     subscription: SubscriptionModel,
     canceledDate: Date,
@@ -218,6 +243,29 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
     }
 
     return subscription;
+  }
+
+  async findFailedSubscriptionModel(
+    user: UserModel,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<SubscriptionModel>,
+  ): Promise<SubscriptionModel> {
+    const repository = this.getRepository(qr);
+
+    const failedSubscription = await repository.findOne({
+      where: {
+        userId: user.id,
+        status: Not(SubscriptionStatus.EXPIRED),
+        paymentSuccess: false,
+      },
+      relations: relationOptions,
+    });
+
+    if (!failedSubscription) {
+      throw new NotFoundException(SubscriptionException.FAILED_NOT_FOUND);
+    }
+
+    return failedSubscription;
   }
 
   async findAbleToCreateChurchSubscription(

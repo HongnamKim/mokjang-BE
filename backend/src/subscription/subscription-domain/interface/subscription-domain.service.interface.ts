@@ -19,6 +19,12 @@ export interface ISubscriptionDomainService {
     relationOptions?: FindOptionsRelations<SubscriptionModel>,
   ): Promise<SubscriptionModel>;
 
+  findFailedSubscriptionModel(
+    user: UserModel,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<SubscriptionModel>,
+  ): Promise<SubscriptionModel>;
+
   findAbleToCreateChurchSubscription(
     ownerUser: UserModel,
     qr: QueryRunner,
@@ -49,6 +55,12 @@ export interface ISubscriptionDomainService {
     canceledSubscription: SubscriptionModel,
     restoreStatus: SubscriptionStatus,
     qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updatePaymentSuccess(
+    subscription: SubscriptionModel,
+    value: boolean,
+    qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
   updateBillKey(

@@ -51,6 +51,9 @@ export class SubscriptionModel extends BaseModel {
   @Column({ type: 'timestamptz', nullable: true })
   nextBillingDate: Date | null;
 
+  @Column({ default: false })
+  paymentSuccess: boolean;
+
   @Column({ nullable: true })
   amount: number;
 
