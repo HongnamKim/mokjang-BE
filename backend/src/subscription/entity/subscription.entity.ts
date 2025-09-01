@@ -12,7 +12,6 @@ import { SubscriptionPlan } from '../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../const/subscription-status.enum';
 import { BillingCycle } from '../const/billing-cycle.enum';
 import { ChurchModel } from '../../churches/entity/church.entity';
-import { Exclude } from 'class-transformer';
 
 @Entity()
 export class SubscriptionModel extends BaseModel {
@@ -69,19 +68,9 @@ export class SubscriptionModel extends BaseModel {
   @Column()
   maxMembers: number;
 
-  @Column({ type: 'varchar', comment: '정기 결제 빌키', nullable: true })
-  @Exclude({ toPlainOnly: true })
-  bid: string | null;
-
   @Column({ type: 'timestamptz', nullable: true })
   canceledAt: Date | null;
 
   @Column({ nullable: true })
   cancellationReason: string;
-
-  @Column({ nullable: true })
-  paymentMethodId: string; // PG사 결제수단 ID
-
-  @Column({ nullable: true })
-  customerId: string; // PG사 고객 ID
 }

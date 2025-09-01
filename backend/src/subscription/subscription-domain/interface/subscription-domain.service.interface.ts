@@ -30,7 +30,10 @@ export interface ISubscriptionDomainService {
     qr: QueryRunner,
   ): Promise<SubscriptionModel>;
 
-  findSubscriptionByChurch(church: ChurchModel): Promise<SubscriptionModel>;
+  findSubscriptionByChurch(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<SubscriptionModel>;
 
   findSubscriptionByUser(
     user: UserModel,
@@ -47,7 +50,6 @@ export interface ISubscriptionDomainService {
   subscribePlan(
     user: UserModel,
     dto: SubscribePlanDto,
-    billKey: string,
     qr?: QueryRunner,
   ): Promise<SubscriptionModel>;
 
@@ -63,11 +65,11 @@ export interface ISubscriptionDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
-  updateBillKey(
+  /*updateBillKey(
     subscription: SubscriptionModel,
     newBid: string,
     qr: QueryRunner,
-  ): Promise<UpdateResult>;
+  ): Promise<UpdateResult>;*/
 
   updateSubscriptionStatus(
     subscription: SubscriptionModel,

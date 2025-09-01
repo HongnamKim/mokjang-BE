@@ -19,13 +19,16 @@ import { UserModel } from '../../user/entity/user.entity';
 import { SubscribePlanDto } from '../dto/request/subscribe-plan.dto';
 import { PgService } from './pg.service';
 import { PostSubscribePlanResponseDto } from '../dto/response/post-subscribe-plan-response.dto';
-import { UpdatePaymentMethodDto } from '../dto/request/update-payment-method.dto';
 import { OrderException } from '../exception/order.exception';
 import { SubscriptionStatus } from '../const/subscription-status.enum';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IPAYMENT_METHOD_DOMAIN_SERVICE,
+  IPaymentMethodDomainService,
+} from '../../payment-method/payment-method-domain/interface/payment-method-domain.service.interface';
 
 @Injectable()
 export class SubscriptionService {
@@ -36,6 +39,8 @@ export class SubscriptionService {
     private readonly userDomainService: IUserDomainService,
     @Inject(ISUBSCRIPTION_DOMAIN_SERVICE)
     private readonly subscriptionDomainService: ISubscriptionDomainService,
+    @Inject(IPAYMENT_METHOD_DOMAIN_SERVICE)
+    private readonly paymentMethodDomainService: IPaymentMethodDomainService,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
   ) {}
@@ -64,24 +69,14 @@ export class SubscriptionService {
   }
 
   async subscribePlan(user: UserModel, dto: SubscribePlanDto, qr: QueryRunner) {
-    const billKey = await this.pgService.registerBillKey(
-      dto.encData,
-      dto.isTest,
-    );
+    const paymentMethod =
+      await this.paymentMethodDomainService.findUserPaymentMethod(user, qr);
 
     const newPlan = await this.subscriptionDomainService.subscribePlan(
       user,
       dto,
-      billKey,
       qr,
     );
-
-    // 구독 첫 결제 요청
-    try {
-      // await this.orderService.payment(newPlan, user, paymentDto...)
-    } catch {
-      throw new BadGatewayException(OrderException.FAIL_PAYMENT);
-    }
 
     // 기존 교회가 있을 경우
     if (user.role === UserRole.OWNER) {
@@ -105,6 +100,16 @@ export class SubscriptionService {
         SubscriptionStatus.ACTIVE,
         qr,
       );
+    }
+
+    // 구독 첫 결제 요청
+    try {
+      // await this.orderService.payment(newPlan, user, paymentDto...)
+      const paymentResult = await this.pgService.pay(paymentMethod, newPlan);
+      // 결제 결과
+      console.log(paymentResult);
+    } catch {
+      throw new BadGatewayException(OrderException.FAIL_PAYMENT);
     }
 
     return new PostSubscribePlanResponseDto(newPlan);
@@ -137,43 +142,33 @@ export class SubscriptionService {
         qr,
       );
 
+    if (subscription.status === SubscriptionStatus.CANCELED) {
+      throw new ConflictException(
+        '취소 처리된 구독에 결재를 재시도할 수 없습니다. 복구 후에 다시 시도해주세요.',
+      );
+    }
+
+    const paymentMethod =
+      await this.paymentMethodDomainService.findUserPaymentMethod(user, qr);
+
+    await this.subscriptionDomainService.updatePaymentSuccess(
+      subscription,
+      true,
+      qr,
+    );
+
     try {
       // 결제 시도 | 반환값: 결제 내역
       // const order = await this.orderService.payment(subscription, user, paymentDto ...)
-
-      await this.subscriptionDomainService.updatePaymentSuccess(
+      const paymentResult = await this.pgService.pay(
+        paymentMethod,
         subscription,
-        true,
-        qr,
       );
 
       return;
     } catch {
       throw new BadGatewayException(OrderException.FAIL_PAYMENT);
     }
-  }
-
-  async updatePaymentMethod(
-    user: UserModel,
-    dto: UpdatePaymentMethodDto,
-    qr: QueryRunner,
-  ) {
-    const subscription =
-      await this.subscriptionDomainService.findSubscriptionByUser(user, qr);
-
-    if (subscription.bid) {
-      await this.pgService.expireBillKey(subscription.bid);
-    }
-
-    const newBid = await this.pgService.registerBillKey(dto, dto.isTest);
-
-    await this.subscriptionDomainService.updateBillKey(
-      subscription,
-      newBid,
-      qr,
-    );
-
-    return subscription;
   }
 
   async cancelSubscription(user: UserModel, qr: QueryRunner) {

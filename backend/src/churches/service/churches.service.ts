@@ -146,14 +146,21 @@ export class ChurchesService {
 
   // TODO 구독 상태에 따른 교회 삭제 후 처리 로직 필요
   // TODO 삭제 시 가입된 관리자들 처리 로직 필요
-  async deleteChurchById(id: number, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
+  async deleteChurchById(
+    //id: number,
+    church: ChurchModel,
+    user: UserModel,
+    qr: QueryRunner,
+  ) {
+    /*const church = await this.churchesDomainService.findChurchModelById(
       id,
       qr,
       { subscription: true },
-    );
+    );*/
 
-    const subscription = church.subscription;
+    //const subscription = church.subscription;
+    const subscription =
+      await this.subscriptionDomainService.findSubscriptionByChurch(church, qr);
 
     if (
       subscription &&
@@ -167,12 +174,13 @@ export class ChurchesService {
       );
     }
 
-    const ownerUser = await this.userDomainService.findUserModelById(
+    /*const ownerUser = await this.userDomainService.findUserModelById(
       church.ownerUserId,
-    );
+    );*/
 
     await this.userDomainService.updateUser(
-      ownerUser,
+      //ownerUser,
+      user,
       { role: UserRole.NONE },
       qr,
     );
@@ -189,6 +197,10 @@ export class ChurchesService {
       churchId,
       qr,
     );
+
+    if (!church.ownerUserId) {
+      throw new ConflictException('교회 소유자 누락');
+    }
 
     const oldOwnerUser = await this.userDomainService.findUserModelById(
       church.ownerUserId,

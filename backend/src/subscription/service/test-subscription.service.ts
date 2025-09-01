@@ -31,6 +31,10 @@ export class TestSubscriptionService {
     ).filter((church) => church.ownerUserId && !church.subscription);
 
     for (const church of churches) {
+      if (!church.ownerUserId) {
+        continue;
+      }
+
       const owner = await this.userDomainService.findUserModelById(
         church.ownerUserId,
       );

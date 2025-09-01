@@ -55,7 +55,7 @@ export class SubscriptionGuard implements CanActivate {
         throw new ForbiddenException(SubscriptionException.EXPIRE_FREE_TRIAL);
       }
     } else {
-      if (subscription.currentPeriodEnd < now) {
+      if (subscription.currentPeriodEnd < now || !subscription.paymentSuccess) {
         throw new ForbiddenException(SubscriptionException.EXPIRE_SUBSCRIPTION);
       }
     }

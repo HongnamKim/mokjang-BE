@@ -18,7 +18,6 @@ import {
 import { ChurchModel, ManagementCountType } from '../../entity/church.entity';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 import { ChurchException } from '../../const/exception/church.exception';
 import { UserModel } from '../../../user/entity/user.entity';
@@ -125,7 +124,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
         joinCode: null,
         subscriptionId: null,
         deletedAt: new Date(),
-        //ownerUserId: null,
+        ownerUserId: null,
       },
     );
 
@@ -360,7 +359,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return result;
   }
 
-  async getChurchOwnerIds(
+  /*async getChurchOwnerIds(
     churchId: number,
     qr?: QueryRunner,
   ): Promise<number[]> {
@@ -377,9 +376,9 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return [church.ownerUserId];
-  }
+  }*/
 
-  async getChurchManagerIds(
+  /*async getChurchManagerIds(
     churchId: number,
     qr?: QueryRunner,
   ): Promise<number[]> {
@@ -405,7 +404,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
           user.role === ChurchUserRole.OWNER,
       )
       .map((manager) => manager.id);
-  }
+  }*/
 
   async incrementMemberCount(
     church: ChurchModel,

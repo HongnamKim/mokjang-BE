@@ -1,15 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean } from 'class-validator';
-import { EncData } from './subscribe-plan.dto';
+import { IsString, Length } from 'class-validator';
 
-export class UpdatePaymentMethodDto extends EncData {
-  @ApiProperty({
-    description: '테스트 환경 여부',
-    default: true,
-  })
-  @IsBoolean()
-  isTest: boolean = true;
-  /*
+export class EncData {
   @ApiProperty({
     description: '카드번호, 숫자만 입력',
     example: '1234123412341234',
@@ -48,5 +40,5 @@ export class UpdatePaymentMethodDto extends EncData {
   })
   @IsString()
   @Length(2, 2)
-  cardPw: string;*/
+  cardPw: string;
 }

@@ -6,6 +6,7 @@ import { ChurchJoinModel } from '../../church-join/entity/church-join.entity';
 import { Exclude } from 'class-transformer';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { SubscriptionModel } from '../../subscription/entity/subscription.entity';
+import { PaymentMethodModel } from '../../payment-method/entity/payment-method.entity';
 
 @Entity()
 export class UserModel extends BaseModel {
@@ -47,6 +48,9 @@ export class UserModel extends BaseModel {
   // 구독 이력
   @OneToMany(() => SubscriptionModel, (subscription) => subscription.user)
   subscriptions: SubscriptionModel[];
+
+  @OneToMany(() => PaymentMethodModel, (paymentMethod) => paymentMethod.user)
+  paymentMethods: PaymentMethodModel[];
 
   @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.user)
   churchUser: ChurchUserModel[];
