@@ -124,10 +124,12 @@ export class ChurchesController {
   @UseInterceptors(TransactionInterceptor)
   @Delete(':churchId')
   deleteChurch(
+    @User() user: UserModel,
+    @RequestChurch() church: ChurchModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.deleteChurchById(churchId, qr);
+    return this.churchesService.deleteChurchById(church, user, qr);
   }
 
   @ApiOperation({

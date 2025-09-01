@@ -77,6 +77,8 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { DummyDataModule } from './dummy-data/dummy-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OrderModel } from './subscription/entity/order.entity';
+import { PaymentMethodModel } from './payment-method/entity/payment-method.entity';
+import { PaymentMethodModule } from './payment-method/payment-method.module';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
@@ -148,6 +150,7 @@ import { OrderModel } from './subscription/entity/order.entity';
           // 구독 관련
           SubscriptionModel,
           OrderModel,
+          PaymentMethodModel,
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
@@ -222,6 +225,7 @@ import { OrderModel } from './subscription/entity/order.entity';
     MyPageModule,
     ReportModule,
     UserModule,
+    PaymentMethodModule,
     SubscriptionModule,
     ChurchesModule,
     ChurchJoinModule,

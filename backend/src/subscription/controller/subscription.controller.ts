@@ -16,7 +16,6 @@ import { SubscribePlanDto } from '../dto/request/subscribe-plan.dto';
 import { UserGuard } from '../../user/guard/user.guard';
 import { User } from '../../user/decorator/user.decorator';
 import { UserModel } from '../../user/entity/user.entity';
-import { UpdatePaymentMethodDto } from '../dto/request/update-payment-method.dto';
 import { SubscriptionCronService } from '../service/subscription-cron.service';
 import { UseTransaction } from '../../common/decorator/use-transaction.decorator';
 
@@ -52,8 +51,7 @@ export class SubscriptionController {
     summary: '구독 신청',
     description:
       '<p>구독을 생성합니다.</p>' +
-      '<p>라프텔의 경우 CANCELED 일 때 새롭게 신청 불가능, 기존 구독을 복구만 가능 (플랜 변경도 불가능)</p>' +
-      '<p>계정의 구독이 CANCELED 일 때 어떻게 해야 함?? Exception(거부) or 생성하고 기존 교회에 연결?</p>' +
+      '<p>CANCELED 일 때 새롭게 신청 불가능, 기존 구독을 복구만 가능 (플랜 변경도 불가능)</p>' +
       '<p>기존 소유한 교회가 있을 경우 해당 교회와 연결합니다.</p>',
   })
   @Post('subscribe')
@@ -87,22 +85,6 @@ export class SubscriptionController {
   @UseGuards(AccessTokenGuard, UserGuard)
   retryPurchase(@User() user: UserModel, @QueryRunner() qr: QR) {
     return this.subscriptionService.retryPurchase(user, qr);
-  }
-
-  @ApiOperation({
-    summary: '결제 수단 변경',
-    description:
-      '기존 Bill Key 를 삭제하고 새로 발급 받아 구독 정보를 업데이트',
-  })
-  @Patch('payment-method')
-  @UseGuards(AccessTokenGuard, UserGuard)
-  @UseTransaction()
-  updatePaymentMethod(
-    @User() user: UserModel,
-    @Body() dto: UpdatePaymentMethodDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.subscriptionService.updatePaymentMethod(user, dto, qr);
   }
 
   @ApiOperation({ summary: '구독 플랜 업그레이드 (미구현)' })

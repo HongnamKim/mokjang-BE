@@ -75,9 +75,9 @@ export interface IChurchesDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  getChurchManagerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
+  //getChurchManagerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
 
-  getChurchOwnerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
+  //getChurchOwnerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
 
   updateChurchJoinCode(
     church: ChurchModel,

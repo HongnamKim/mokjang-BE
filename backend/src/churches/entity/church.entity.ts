@@ -71,11 +71,11 @@ export class ChurchModel extends BaseModel {
 
   @Index()
   @Column({ nullable: true })
-  ownerUserId: number;
+  ownerUserId: number | null;
 
-  @OneToOne(() => UserModel, (user) => user.ownedChurch)
+  @OneToOne(() => UserModel, (user) => user.ownedChurch, { nullable: true })
   @JoinColumn({ name: 'ownerUserId' })
-  ownerUser: UserModel;
+  ownerUser: UserModel | null;
 
   @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.church)
   churchUsers: ChurchUserModel[];

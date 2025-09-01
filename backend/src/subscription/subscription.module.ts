@@ -9,6 +9,7 @@ import { TestSubscriptionService } from './service/test-subscription.service';
 import { TestSubscriptionController } from './controller/test-subscription.controller';
 import { PgService } from './service/pg.service';
 import { SubscriptionCronService } from './service/subscription-cron.service';
+import { PaymentMethodDomainModule } from '../payment-method/payment-method-domain/payment-method-domain.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SubscriptionCronService } from './service/subscription-cron.service';
     UserDomainModule,
     ChurchesDomainModule,
     SubscriptionDomainModule,
+    PaymentMethodDomainModule,
   ],
   controllers: [TestSubscriptionController, SubscriptionController],
   providers: [
