@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -61,7 +62,6 @@ export class ChurchesController {
   @UseGuards(AccessTokenGuard, UserGuard)
   @UseInterceptors(TransactionInterceptor)
   postChurch(
-    //@Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @User() user: UserModel,
     @Body() dto: CreateChurchDto,
     @QueryRunner() qr: QR,
@@ -70,6 +70,7 @@ export class ChurchesController {
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '무료 체험 시작',
     description:
       '<p>더미 교인 30명 생성</p>' +
@@ -82,6 +83,7 @@ export class ChurchesController {
     @Token(AuthType.ACCESS) accessPayload: JwtAccessPayload,
     @QueryRunner() qr: QR,
   ) {
+    throw new GoneException();
     return this.trialChurchesService.startTrialChurch(accessPayload.id, qr);
   }
 

@@ -1,3 +1,4 @@
+/*
 import { Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import {
@@ -56,3 +57,4 @@ export class TestSubscriptionService {
     return churches;
   }
 }
+*/

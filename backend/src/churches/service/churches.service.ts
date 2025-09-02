@@ -76,13 +76,9 @@ export class ChurchesService {
     }
 
     const subscription =
-      await this.subscriptionDomainService.findAbleToCreateChurchSubscription(
+      await this.subscriptionDomainService.findTrialSubscription(ownerUser, qr);
+    /*await this.subscriptionDomainService.findAbleToCreateChurchSubscription(
         ownerUser,
-        qr,
-      );
-    /*await this.subscriptionDomainService.findSubscriptionModelByStatus(
-        ownerUser,
-        SubscriptionStatus.PENDING,
         qr,
       );*/
 
@@ -90,6 +86,13 @@ export class ChurchesService {
       dto,
       ownerUser,
       subscription,
+      qr,
+    );
+
+    // 구독 정보 활성화
+    await this.subscriptionDomainService.updateSubscriptionStatus(
+      subscription,
+      SubscriptionStatus.ACTIVE,
       qr,
     );
 
@@ -116,8 +119,6 @@ export class ChurchesService {
       },
       qr,
     );
-
-    // TODO 교회 생성 시 기본 PermissionPreset 생성
 
     return newChurch;
   }

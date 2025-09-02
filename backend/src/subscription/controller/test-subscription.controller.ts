@@ -1,3 +1,4 @@
+/*
 import { Controller, Post, UseInterceptors } from '@nestjs/common';
 import { TestSubscriptionService } from '../service/test-subscription.service';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
@@ -20,3 +21,4 @@ export class TestSubscriptionController {
     return this.testSubscriptionService.initTestPlan(qr);
   }
 }
+*/

@@ -21,7 +21,7 @@ import {
 } from 'typeorm';
 import { SubscriptionPlan } from '../../const/subscription-plan.enum';
 import { SubscriptionStatus } from '../../const/subscription-status.enum';
-import { addDays, addMonths, addYears, subHours, subMonths } from 'date-fns';
+import { addMonths, addYears, subHours, subMonths } from 'date-fns';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { SubscriptionException } from '../../exception/subscription.exception';
 import { SubscribePlanDto } from '../../dto/request/subscribe-plan.dto';
@@ -61,16 +61,18 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
   ): Promise<SubscriptionModel> {
     const repository = this.getRepository(qr);
 
+    const now = new Date();
+
     return repository.save({
       userId: user.id,
       isCurrent: true,
       currentPlan: SubscriptionPlan.FREE_TRIAL,
       status: SubscriptionStatus.PENDING,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: addDays(new Date(), 14),
+      currentPeriodStart: now,
+      currentPeriodEnd: addYears(now, 100),
       isFreeTrial: true,
-      trialEndsAt: addDays(new Date(), 14),
-      maxMembers: 50,
+      maxMembers: PlanMemberSize[SubscriptionPlan.FREE_TRIAL],
+      paymentSuccess: true,
     });
   }
 
@@ -289,7 +291,7 @@ export class SubscriptionDomainService implements ISubscriptionDomainService {
         isFreeTrial: true,
         currentPeriodStart: LessThanOrEqual(now),
         currentPeriodEnd: MoreThanOrEqual(now),
-        trialEndsAt: MoreThanOrEqual(now),
+        //trialEndsAt: MoreThanOrEqual(now),
       },
     });
 
