@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  GoneException,
   Patch,
   Post,
   UseGuards,
@@ -48,6 +49,7 @@ export class SubscriptionController {
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '구독 신청',
     description:
       '<p>구독을 생성합니다.</p>' +
@@ -62,10 +64,12 @@ export class SubscriptionController {
     @Body() dto: SubscribePlanDto,
     @QueryRunner() qr: QR,
   ) {
+    throw new GoneException();
     return this.subscriptionService.subscribePlan(user, dto, qr);
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '취소된 구독 복구',
     description: '취소된 구독을 복구합니다.',
   })
@@ -73,10 +77,12 @@ export class SubscriptionController {
   @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   restoreSubscription(@User() user: UserModel, @QueryRunner() qr: QR) {
+    throw new GoneException();
     return this.subscriptionService.restoreSubscription(user, qr);
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '결제 수동 재시도',
     description: '현재 구독의 status 가 FAILED 일떄만 사용 가능합니다.',
   })
@@ -84,20 +90,29 @@ export class SubscriptionController {
   @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   retryPurchase(@User() user: UserModel, @QueryRunner() qr: QR) {
+    throw new GoneException();
     return this.subscriptionService.retryPurchase(user, qr);
   }
 
-  @ApiOperation({ summary: '구독 플랜 업그레이드 (미구현)' })
+  @ApiOperation({ deprecated: true, summary: '구독 플랜 업그레이드 (미구현)' })
   @Patch('upgrade')
   @UseGuards(AccessTokenGuard, UserGuard)
-  upgradePlan(@User() user: UserModel) {}
-
-  @ApiOperation({ summary: '구독 플랜 다운그레이드 (미구현)' })
-  @Patch('downgrade')
-  @UseGuards(AccessTokenGuard, UserGuard)
-  downgradePlan(@User() user: UserModel) {}
+  upgradePlan(@User() user: UserModel) {
+    throw new GoneException();
+  }
 
   @ApiOperation({
+    deprecated: true,
+    summary: '구독 플랜 다운그레이드 (미구현)',
+  })
+  @Patch('downgrade')
+  @UseGuards(AccessTokenGuard, UserGuard)
+  downgradePlan(@User() user: UserModel) {
+    throw new GoneException();
+  }
+
+  @ApiOperation({
+    deprecated: true,
     summary: '구독 플랜 취소',
     description:
       '<p>구독 취소합니다. 남은 기간동안 ACTIVE 와 동일한 권리를 갖습니다.</p>',
@@ -106,10 +121,12 @@ export class SubscriptionController {
   @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   cancelPlan(@User() user: UserModel, @QueryRunner() qr: QR) {
+    throw new GoneException();
     return this.subscriptionService.cancelSubscription(user, qr);
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '구독 즉시 만료 (개발용)',
     description:
       '<p>취소된 구독의 만료 날짜를 현재로 수정 후 status 를 EXPIRED 로 변경합니다.</p>' +
@@ -119,6 +136,7 @@ export class SubscriptionController {
   @UseTransaction()
   @UseGuards(AccessTokenGuard, UserGuard)
   expirePlan(@User() user: UserModel, @QueryRunner() qr: QR) {
+    throw new GoneException();
     return this.subscriptionService.expireSubscription(user, qr);
   }
 

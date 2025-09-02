@@ -8,7 +8,9 @@ export class PaymentMethodModel extends BaseModel {
   @Index()
   userId: number;
 
-  @ManyToOne(() => UserModel, (user) => user.paymentMethods)
+  @ManyToOne(() => UserModel, (user) => user.paymentMethods, {
+    onDelete: 'CASCADE',
+  })
   user: UserModel;
 
   @Column({ default: 1 })

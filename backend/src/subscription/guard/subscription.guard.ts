@@ -11,6 +11,7 @@ import {
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import { CustomRequest } from '../../common/custom-request';
 import { SubscriptionException } from '../exception/subscription.exception';
+import { SubscriptionStatus } from '../const/subscription-status.enum';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
@@ -45,20 +46,23 @@ export class SubscriptionGuard implements CanActivate {
       );
     }
 
-    /*if (subscription.status !== SubscriptionStatus.ACTIVE) {
-      throw new ForbiddenException(SubscriptionException.INACTIVE_SUBSCRIPTION);
-    }*/
+    if (subscription.status === SubscriptionStatus.EXPIRED) {
+      throw new ForbiddenException(SubscriptionException.EXPIRE_SUBSCRIPTION);
+    }
+
     const now = new Date();
 
-    if (church.isFreeTrial) {
+    if (subscription.currentPeriodEnd < now || !subscription.paymentSuccess) {
+      throw new ForbiddenException(SubscriptionException.EXPIRE_SUBSCRIPTION);
+    }
+
+    /*if (church.isFreeTrial) {
       if (subscription.trialEndsAt < now) {
         throw new ForbiddenException(SubscriptionException.EXPIRE_FREE_TRIAL);
       }
     } else {
-      if (subscription.currentPeriodEnd < now || !subscription.paymentSuccess) {
-        throw new ForbiddenException(SubscriptionException.EXPIRE_SUBSCRIPTION);
-      }
-    }
+
+    }*/
 
     req.church = church;
 

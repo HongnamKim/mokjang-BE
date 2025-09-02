@@ -76,9 +76,10 @@ import { SubscriptionModel } from './subscription/entity/subscription.entity';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { DummyDataModule } from './dummy-data/dummy-data.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { OrderModel } from './subscription/entity/order.entity';
+import { OrderModel } from './order/entity/order.entity';
 import { PaymentMethodModel } from './payment-method/entity/payment-method.entity';
 import { PaymentMethodModule } from './payment-method/payment-method.module';
+import { OrderModule } from './order/order.module';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
@@ -227,6 +228,7 @@ import { PaymentMethodModule } from './payment-method/payment-method.module';
     UserModule,
     PaymentMethodModule,
     SubscriptionModule,
+    OrderModule,
     ChurchesModule,
     ChurchJoinModule,
     ChurchUserModule,

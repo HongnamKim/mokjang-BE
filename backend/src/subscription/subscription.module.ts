@@ -5,11 +5,8 @@ import { SubscriptionService } from './service/subscription.service';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { SubscriptionDomainModule } from './subscription-domain/subscription-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
-import { TestSubscriptionService } from './service/test-subscription.service';
-import { TestSubscriptionController } from './controller/test-subscription.controller';
-import { PgService } from './service/pg.service';
-import { SubscriptionCronService } from './service/subscription-cron.service';
 import { PaymentMethodDomainModule } from '../payment-method/payment-method-domain/payment-method-domain.module';
+import { SubscriptionCronService } from './service/subscription-cron.service';
 
 @Module({
   imports: [
@@ -19,12 +16,12 @@ import { PaymentMethodDomainModule } from '../payment-method/payment-method-doma
     SubscriptionDomainModule,
     PaymentMethodDomainModule,
   ],
-  controllers: [TestSubscriptionController, SubscriptionController],
+  controllers: [SubscriptionController],
   providers: [
     SubscriptionService,
     SubscriptionCronService,
-    PgService,
-    TestSubscriptionService,
+    //PgService,
+    //TestSubscriptionService,
   ],
 })
 export class SubscriptionModule {}

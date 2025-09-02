@@ -7,6 +7,7 @@ import { Exclude } from 'class-transformer';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { SubscriptionModel } from '../../subscription/entity/subscription.entity';
 import { PaymentMethodModel } from '../../payment-method/entity/payment-method.entity';
+import { OrderModel } from '../../order/entity/order.entity';
 
 @Entity()
 export class UserModel extends BaseModel {
@@ -51,6 +52,9 @@ export class UserModel extends BaseModel {
 
   @OneToMany(() => PaymentMethodModel, (paymentMethod) => paymentMethod.user)
   paymentMethods: PaymentMethodModel[];
+
+  @OneToMany(() => OrderModel, (order) => order.user)
+  orders: OrderModel[];
 
   @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.user)
   churchUser: ChurchUserModel[];

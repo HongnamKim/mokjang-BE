@@ -17,9 +17,8 @@ import { QueryRunner } from 'typeorm';
 import { UserRole } from '../../user/const/user-role.enum';
 import { UserModel } from '../../user/entity/user.entity';
 import { SubscribePlanDto } from '../dto/request/subscribe-plan.dto';
-import { PgService } from './pg.service';
 import { PostSubscribePlanResponseDto } from '../dto/response/post-subscribe-plan-response.dto';
-import { OrderException } from '../exception/order.exception';
+import { OrderException } from '../../order/exception/order.exception';
 import { SubscriptionStatus } from '../const/subscription-status.enum';
 import {
   ICHURCHES_DOMAIN_SERVICE,
@@ -33,7 +32,7 @@ import {
 @Injectable()
 export class SubscriptionService {
   constructor(
-    private readonly pgService: PgService,
+    //private readonly pgService: PgService,
 
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
@@ -105,9 +104,9 @@ export class SubscriptionService {
     // 구독 첫 결제 요청
     try {
       // await this.orderService.payment(newPlan, user, paymentDto...)
-      const paymentResult = await this.pgService.pay(paymentMethod, newPlan);
+      //const paymentResult = await this.pgService.pay(paymentMethod, newPlan);
       // 결제 결과
-      console.log(paymentResult);
+      //console.log(paymentResult);
     } catch {
       throw new BadGatewayException(OrderException.FAIL_PAYMENT);
     }
@@ -160,10 +159,7 @@ export class SubscriptionService {
     try {
       // 결제 시도 | 반환값: 결제 내역
       // const order = await this.orderService.payment(subscription, user, paymentDto ...)
-      const paymentResult = await this.pgService.pay(
-        paymentMethod,
-        subscription,
-      );
+      //const paymentResult = await this.pgService.pay(paymentMethod,subscription,);
 
       return;
     } catch {
