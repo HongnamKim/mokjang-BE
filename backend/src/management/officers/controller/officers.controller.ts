@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -28,12 +27,11 @@ import {
 } from '../const/swagger/officers.swagger';
 import { GetOfficersDto } from '../dto/request/get-officers.dto';
 import { OfficerWriteGuard } from '../guard/officer-write.guard';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateOfficerStructureDto } from '../dto/request/update-officer-structure.dto';
 import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
+import { OfficerReadGuard } from '../guard/officer-read.guard';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -41,7 +39,7 @@ export class OfficersController {
   constructor(private readonly officersService: OfficersService) {}
 
   @ApiGetOfficers()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @OfficerReadGuard()
   @Get()
   getOfficers(
     @Param('churchId', ParseIntPipe) churchId: number,

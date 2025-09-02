@@ -7,8 +7,6 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { PermissionDomainModule } from '../permission/permission-domain/permission-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
-import { ManagerPermissionService } from './service/manager-permission.service';
 
 @Module({
   imports: [
@@ -22,9 +20,6 @@ import { ManagerPermissionService } from './service/manager-permission.service';
     GroupsDomainModule,
   ],
   controllers: [ManagerController],
-  providers: [
-    ManagerService,
-    { provide: IDOMAIN_PERMISSION_SERVICE, useClass: ManagerPermissionService },
-  ],
+  providers: [ManagerService],
 })
 export class ManagerModule {}

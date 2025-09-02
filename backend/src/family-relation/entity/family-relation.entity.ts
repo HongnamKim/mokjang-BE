@@ -8,7 +8,9 @@ export class FamilyRelationModel extends BaseModel {
   @Column()
   meId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.family)
+  @ManyToOne(() => MemberModel, (member) => member.family, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'meId' })
   me: MemberModel;
 
@@ -16,7 +18,9 @@ export class FamilyRelationModel extends BaseModel {
   @Column()
   familyMemberId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.counterFamily)
+  @ManyToOne(() => MemberModel, (member) => member.counterFamily, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'familyMemberId' })
   familyMember: MemberModel;
 

@@ -7,8 +7,9 @@ import {
 import { IChurchesDomainService } from '../interface/churches-domain.service.interface';
 import { CreateChurchDto } from '../../dto/create-church.dto';
 import {
+  DeleteResult,
   FindOptionsRelations,
-  IsNull,
+  In,
   QueryFailedError,
   QueryRunner,
   Repository,
@@ -17,11 +18,12 @@ import {
 import { ChurchModel, ManagementCountType } from '../../entity/church.entity';
 import { UpdateChurchDto } from '../../dto/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 import { ChurchException } from '../../const/exception/church.exception';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
+import { SubscriptionStatus } from '../../../subscription/const/subscription-status.enum';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -37,12 +39,13 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async findAllChurches(): Promise<ChurchModel[]> {
     const churchRepository = this.getChurchRepository();
 
-    return churchRepository.find();
+    return churchRepository.find({ relations: { subscription: true } });
   }
 
   async createChurch(
     dto: CreateChurchDto,
     ownerUser: UserModel,
+    subscription: SubscriptionModel,
     qr: QueryRunner,
   ): Promise<ChurchModel> {
     const churchRepository = this.getChurchRepository(qr);
@@ -60,12 +63,32 @@ export class ChurchesDomainService implements IChurchesDomainService {
 
     return churchRepository.save({
       ...dto,
+      subscriptionId: subscription.id,
       ownerUserId: ownerUser.id,
       joinCode: await this.generateUniqueChurchCode(churchRepository),
     });
   }
 
-  async generateUniqueChurchCode(
+  createTrialChurch(
+    user: UserModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel> {
+    if (subscription.status !== SubscriptionStatus.PENDING) {
+      throw new ConflictException();
+    }
+
+    const repository = this.getChurchRepository(qr);
+
+    return repository.save({
+      subscriptionId: subscription.id,
+      name: `${user.name}님의 체험교회`,
+      ownerUserId: user.id,
+      isFreeTrial: true,
+    });
+  }
+
+  private async generateUniqueChurchCode(
     churchRepo: Repository<ChurchModel>,
   ): Promise<string> {
     let code: string;
@@ -91,19 +114,34 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return code;
   }
 
+  // TODO 교회 삭제 시 소유자 relation 해제
   async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
     const churchRepository = this.getChurchRepository(qr);
 
-    const result = await churchRepository.softDelete({
-      id: church.id,
-      deletedAt: IsNull(),
-    });
+    const result = await churchRepository.update(
+      { id: church.id },
+      {
+        joinCode: null,
+        subscriptionId: null,
+        deletedAt: new Date(),
+        ownerUserId: null,
+      },
+    );
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(ChurchException.DELETE_ERROR);
     }
 
     return `churchId: ${church.id} deleted`;
+  }
+
+  deleteChurchCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getChurchRepository(qr);
+
+    return repository.delete({ id: church.id });
   }
 
   async findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel> {
@@ -114,7 +152,17 @@ export class ChurchesDomainService implements IChurchesDomainService {
         id,
       },
       relations: {
-        //users: true,
+        subscription: true,
+      },
+      select: {
+        subscription: {
+          status: true,
+          currentPeriodStart: true,
+          currentPeriodEnd: true,
+          nextBillingDate: true,
+          isFreeTrial: true,
+          trialEndsAt: true,
+        },
       },
     });
 
@@ -167,6 +215,27 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return church;
   }
 
+  async findChurchModelByOwner(
+    ownerUser: UserModel,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel> {
+    const repository = this.getChurchRepository(qr);
+
+    const church = await repository.findOne({
+      where: {
+        ownerUserId: ownerUser.id,
+      },
+      relations: relationOptions,
+    });
+
+    if (!church) {
+      throw new NotFoundException(ChurchException.NOT_FOUND);
+    }
+
+    return church;
+  }
+
   async isExistChurch(id: number, qr?: QueryRunner): Promise<boolean> {
     const churchRepository = this.getChurchRepository(qr);
 
@@ -195,6 +264,33 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return this.findChurchById(church.id);
+  }
+
+  async updateSubscription(
+    church: ChurchModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ) {
+    const repository = this.getChurchRepository(qr);
+
+    if (church.memberCount > subscription.maxMembers) {
+      throw new ConflictException();
+    }
+
+    const result = await repository.update(
+      {
+        id: church.id,
+      },
+      {
+        subscriptionId: subscription.id,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   async updateChurchJoinCode(
@@ -263,7 +359,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return result;
   }
 
-  async getChurchOwnerIds(
+  /*async getChurchOwnerIds(
     churchId: number,
     qr?: QueryRunner,
   ): Promise<number[]> {
@@ -280,9 +376,9 @@ export class ChurchesDomainService implements IChurchesDomainService {
     }
 
     return [church.ownerUserId];
-  }
+  }*/
 
-  async getChurchManagerIds(
+  /*async getChurchManagerIds(
     churchId: number,
     qr?: QueryRunner,
   ): Promise<number[]> {
@@ -308,7 +404,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
           user.role === ChurchUserRole.OWNER,
       )
       .map((manager) => manager.id);
-  }
+  }*/
 
   async incrementMemberCount(
     church: ChurchModel,
@@ -425,6 +521,45 @@ export class ChurchesDomainService implements IChurchesDomainService {
 
     if (result.affected === 0) {
       throw new InternalServerErrorException(ChurchException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async findTrialChurchByUserId(
+    user: UserModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel> {
+    const repository = this.getChurchRepository(qr);
+
+    const church = await repository.findOne({
+      where: {
+        ownerUserId: user.id,
+        isFreeTrial: true,
+      },
+    });
+
+    if (!church) {
+      throw new NotFoundException(ChurchException.NOT_FOUND_TRIAL_CHURCH);
+    }
+
+    return church;
+  }
+
+  async cleanupExpiredTrials(
+    expiredChurches: ChurchModel[],
+    qr: QueryRunner,
+  ): Promise<DeleteResult> {
+    const repository = this.getChurchRepository(qr);
+
+    const result = await repository.delete({
+      id: In(expiredChurches.map((c) => c.id)),
+    });
+
+    if (result.affected !== expiredChurches.length) {
+      throw new InternalServerErrorException(
+        ChurchException.EXPIRE_TRIAL_ERROR,
+      );
     }
 
     return result;

@@ -78,41 +78,4 @@ export class OfficerHistoryController {
       officerHistoryId,
     );
   }
-
-  /*@ApiPostMemberOfficer()
-  @Post()
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  postMemberOfficer(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: SetMemberOfficerDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.officerHistoryService.setMemberOfficer(
-      churchId,
-      memberId,
-      dto,
-      qr,
-    );
-  }
-
-  @ApiEndMemberOfficer()
-  //@Delete()
-  @Patch('end')
-  @HistoryWriteGuard()
-  @UseInterceptors(TransactionInterceptor)
-  endMemberOfficer(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() dto: EndMemberOfficeDto,
-    @QueryRunner() qr: QR,
-  ) {
-    return this.officerHistoryService.endMemberOfficer(
-      churchId,
-      memberId,
-      dto,
-      qr,
-    );
-  }*/
 }

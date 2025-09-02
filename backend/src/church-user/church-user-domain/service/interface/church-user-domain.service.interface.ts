@@ -1,5 +1,5 @@
 import { ChurchModel } from '../../../../churches/entity/church.entity';
-import { QueryRunner, UpdateResult } from 'typeorm';
+import { DeleteResult, QueryRunner, UpdateResult } from 'typeorm';
 import { UserModel } from '../../../../user/entity/user.entity';
 import { GetChurchUsersDto } from '../../../dto/request/get-church-users.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
@@ -67,4 +67,9 @@ export interface IChurchUserDomainService {
     churchUser: ChurchUserModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  deleteChurchUserCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult>;
 }

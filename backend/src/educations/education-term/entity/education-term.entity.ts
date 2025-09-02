@@ -11,7 +11,6 @@ import {
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationTermStatus } from '../const/education-term-status.enum';
 import { EducationReportModel } from '../../../report/education-report/entity/education-report.entity';
-//import { EducationTermReportModel } from '../../../report/education-report/entity/education-term-report.entity';
 
 @Entity()
 export class EducationTermModel extends BaseModel {
@@ -22,13 +21,15 @@ export class EducationTermModel extends BaseModel {
   @Column({ comment: '교육 이름' })
   educationName: string;
 
-  @ManyToOne(() => EducationModel, (education) => education.educationTerms)
+  @ManyToOne(() => EducationModel, (education) => education.educationTerms, {
+    onDelete: 'CASCADE',
+  })
   education!: EducationModel;
 
   @Column({ nullable: true })
-  creatorId: number;
+  creatorId: number | null;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { nullable: true, onDelete: 'SET NULL' })
   creator: MemberModel;
 
   @Column({ comment: '교육 기수' })
@@ -51,7 +52,9 @@ export class EducationTermModel extends BaseModel {
   @Column({ type: 'int', comment: '교육 진행자 ID', nullable: true })
   inChargeId!: number | null;
 
-  @ManyToOne(() => MemberModel, (member) => member.inChargeEducationTerm)
+  @ManyToOne(() => MemberModel, (member) => member.inChargeEducationTerm, {
+    onDelete: 'SET NULL',
+  })
   inCharge!: MemberModel;
 
   @OneToMany(() => EducationSessionModel, (session) => session.educationTerm)

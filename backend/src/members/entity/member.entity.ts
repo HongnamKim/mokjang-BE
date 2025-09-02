@@ -43,7 +43,9 @@ export class MemberModel extends BaseModel {
   @Exclude({ toPlainOnly: true })
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.members)
+  @ManyToOne(() => ChurchModel, (church) => church.members, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
@@ -125,16 +127,15 @@ export class MemberModel extends BaseModel {
   guidedById: number | null;
 
   // 나를 인도한 사람
-  @ManyToOne(() => MemberModel, (member) => member.guiding)
+  @ManyToOne(() => MemberModel, (member) => member.guiding, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'guidedById' })
   guidedBy: MemberModel;
 
   // 내가 인도한 사람
   @OneToMany(() => MemberModel, (member) => member.guidedBy)
   guiding: MemberModel[];
-
-  /*@Column({ length: 30, nullable: true, comment: '이전교회 이름' })
-  previousChurch: string;*/
 
   @Index()
   @Column({
@@ -175,7 +176,9 @@ export class MemberModel extends BaseModel {
   @Exclude({ toPlainOnly: true })
   officerId: number | null;
 
-  @ManyToOne(() => OfficerModel, (officer) => officer.members)
+  @ManyToOne(() => OfficerModel, (officer) => officer.members, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'officerId' })
   officer: OfficerModel;
 
@@ -202,7 +205,9 @@ export class MemberModel extends BaseModel {
   @Exclude({ toPlainOnly: true })
   groupId: number | null;
 
-  @ManyToOne(() => GroupModel, (group) => group.members)
+  @ManyToOne(() => GroupModel, (group) => group.members, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 
@@ -232,6 +237,7 @@ export class MemberModel extends BaseModel {
   @ManyToMany(
     () => VisitationMetaModel,
     (visitationMeta) => visitationMeta.members,
+    { onDelete: 'CASCADE' },
   )
   visitationMetas: VisitationMetaModel[];
 

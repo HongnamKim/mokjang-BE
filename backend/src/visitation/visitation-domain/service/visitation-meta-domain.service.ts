@@ -36,6 +36,9 @@ import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberException } from '../../../members/exception/member.exception';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
+import { VisitationStatus } from '../../const/visitation-status.enum';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 @Injectable()
 export class VisitationMetaDomainService
@@ -310,5 +313,50 @@ export class VisitationMetaDomainService
       },
       take: 50,
     });
+  }
+
+  async countMyVisitationStatus(
+    church: ChurchModel,
+    me: MemberModel,
+    from: Date,
+    to: Date,
+    option: ScheduleStatusOption,
+  ) {
+    const repository = this.getVisitationMetaRepository();
+
+    const query = repository
+      .createQueryBuilder('visitation')
+      .where('visitation.churchId = :churchId', { churchId: church.id })
+      .andWhere('visitation.startDate <= :to AND visitation.endDate >= :from', {
+        from,
+        to,
+      })
+      .select([
+        'SUM(CASE WHEN visitation.status = :reserve THEN 1 ELSE 0 END) as reserve_count',
+        'SUM(CASE WHEN visitation.status = :inProgress THEN 1 ELSE 0 END) as inprogress_count',
+        'SUM(CASE WHEN visitation.status = :done THEN 1 ELSE 0 END) as done_count',
+        'SUM(CASE WHEN visitation.status = :pending THEN 1 ELSE 0 END) as pending_count',
+      ])
+      .setParameters({
+        reserve: VisitationStatus.RESERVE,
+        inProgress: VisitationStatus.IN_PROGRESS,
+        done: VisitationStatus.DONE,
+        pending: VisitationStatus.PENDING,
+      });
+
+    if (option === ScheduleStatusOption.MEMBER) {
+      query.andWhere('visitation.inChargeId = :inChargeId', {
+        inChargeId: me.id,
+      });
+    }
+
+    const result = await query.getRawOne();
+
+    return new MyScheduleStatusCountDto(
+      parseInt(result.reserve_count) || 0,
+      parseInt(result.inprogress_count) || 0,
+      parseInt(result.done_count) || 0,
+      parseInt(result.pending_count) || 0,
+    );
   }
 }

@@ -12,7 +12,9 @@ export class MinistryHistoryModel extends MinistryGroupDetailHistoryModel {
   })
   ministryId: number | null;
 
-  @ManyToOne(() => MinistryModel, (ministry) => ministry.ministryHistory)
+  @ManyToOne(() => MinistryModel, (ministry) => ministry.ministryHistory, {
+    onDelete: 'SET NULL',
+  })
   ministry: MinistryModel | null;
 
   @Column({ comment: '사역 종료일 시점의 사역 이름', nullable: true })

@@ -5,6 +5,8 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { VisitationMetaModel } from '../../entity/visitation-meta.entity';
 import { GetVisitationDto } from '../../dto/request/get-visitation.dto';
 import { UpdateVisitationMetaDto } from '../../dto/internal/meta/update-visitation-meta.dto';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 export const IVISITATION_META_DOMAIN_SERVICE = Symbol(
   'IVISITATION_META_DOMAIN_SERVICE',
@@ -60,4 +62,12 @@ export interface IVisitationMetaDomainService {
     from: Date,
     to: Date,
   ): Promise<VisitationMetaModel[]>;
+
+  countMyVisitationStatus(
+    church: ChurchModel,
+    me: MemberModel,
+    from: Date,
+    to: Date,
+    option: ScheduleStatusOption,
+  ): Promise<MyScheduleStatusCountDto>;
 }

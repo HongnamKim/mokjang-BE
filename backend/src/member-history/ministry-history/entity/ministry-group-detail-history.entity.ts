@@ -17,14 +17,14 @@ export class MinistryGroupDetailHistoryModel extends BaseModel {
   @Column()
   memberId: number;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'CASCADE' })
   member: MemberModel;
 
   @Index()
   @Column()
   ministryGroupHistoryId: number;
 
-  @ManyToOne(() => MinistryGroupHistoryModel)
+  @ManyToOne(() => MinistryGroupHistoryModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'ministryGroupHistoryId' })
   ministryGroupHistory: MinistryGroupHistoryModel;
 

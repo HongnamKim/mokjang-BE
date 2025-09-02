@@ -23,7 +23,9 @@ export class VisitationMetaModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.visitations)
+  @ManyToOne(() => ChurchModel, (church) => church.visitations, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
@@ -61,21 +63,29 @@ export class VisitationMetaModel extends BaseModel {
 
   @Index()
   @Column({ comment: '심방 진행자 ID', nullable: true })
-  inChargeId: number;
+  inChargeId: number | null;
 
-  @ManyToOne(() => MemberModel, (member) => member.inChargingVisitations)
+  @ManyToOne(() => MemberModel, (member) => member.inChargingVisitations, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'inChargeId' })
   inCharge: MemberModel;
 
   @Index()
-  @Column({ comment: '심방 생성자 ID' })
-  creatorId: number;
+  @Column({ comment: '심방 생성자 ID', nullable: true })
+  creatorId: number | null;
 
-  @ManyToOne(() => MemberModel, (member) => member.createdVisitations)
+  @ManyToOne(() => MemberModel, (member) => member.createdVisitations, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'creatorId' })
   creator: MemberModel;
 
-  @ManyToMany(() => MemberModel, (member) => member.visitationMetas)
+  @ManyToMany(() => MemberModel, (member) => member.visitationMetas, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   members: MemberModel[];
 

@@ -1,0 +1,205 @@
+import { IDummyMembersDomainService } from '../interface/dummy-members-domain.service.interface';
+import { CreateMemberDto } from '../../../members/dto/request/create-member.dto';
+import { MemberModel } from '../../../members/entity/member.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { QueryRunner, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import {
+  bucheonDistricts,
+  bucheonRoads,
+  familyNames,
+  firstNameParts,
+  incheonDistricts,
+  incheonRoads,
+  occupations,
+} from '../../const/dummy-member.const';
+import { Gender } from '../../../members/const/enum/gender.enum';
+import { Marriage } from '../../../members/const/enum/marriage.enum';
+import { Baptism } from '../../../members/const/enum/baptism.enum';
+
+@Injectable()
+export class DummyMembersDomainService implements IDummyMembersDomainService {
+  constructor(
+    @InjectRepository(MemberModel)
+    private readonly membersRepository: Repository<MemberModel>,
+  ) {}
+
+  private getMembersRepository(qr?: QueryRunner) {
+    return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
+  }
+
+  private createDummyMemberModel(
+    dto: CreateMemberDto & { churchId: number },
+  ): MemberModel {
+    const membersRepository = this.getMembersRepository();
+
+    return membersRepository.create({
+      ...dto,
+      birth: dto.utcBirth,
+      registeredAt: dto.utcRegisteredAt,
+      birthdayMMDD: dto.utcBirth?.toISOString().slice(5, 10),
+    });
+  }
+
+  createDummyMembers(church: ChurchModel, count: number, qr?: QueryRunner) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const dummyMembers = Array.from({ length: count }, () => {
+      const registeredAt = this.getRandomDate(2010, 2024);
+      const name = this.getRandomName();
+      const mobilePhone = this.getRandomMobilePhone();
+      const birth = this.getRandomDate(1960, 2010);
+      const isLunar =
+        birth < new Date('1970-01-01') ? Math.random() < 0.3 : false;
+      const gender = this.getRandomGender();
+      const address = this.generateRandomAddress();
+      const detailAddress = this.generateDetailAddress();
+      const occupation =
+        Math.random() > 0.1 ? this.generateRandomOccupation() : undefined;
+      const marriage = this.generateRandomMarriage();
+      const baptism = this.generateRandomBaptism();
+      const vehicleNumber = this.generateRandomVehicleNumbers();
+      //const previousChurch = this.generatePreviousChurchName();
+
+      return this.createDummyMemberModel({
+        churchId: church.id,
+        utcRegisteredAt: registeredAt,
+        name,
+        mobilePhone,
+        isLunar,
+        utcBirth: birth,
+        gender,
+        address,
+        detailAddress,
+        occupation,
+        marriage,
+        baptism,
+        vehicleNumber,
+      });
+    });
+
+    return membersRepository.save(dummyMembers);
+  }
+
+  deleteDummyMembersCascade(church: ChurchModel, qr: QueryRunner) {
+    const repository = this.getMembersRepository(qr);
+
+    return repository.delete({ churchId: church.id });
+  }
+
+  private getRandomDate(startYear: number, endYear: number): Date {
+    const start = new Date(startYear.toString()).getTime();
+    const end = new Date(`${endYear}-12-31`).getTime();
+
+    const randomTimeStamp = Math.random() * (end - start) + start;
+
+    return new Date(randomTimeStamp);
+  }
+
+  private getRandomName() {
+    const familyName =
+      familyNames[Math.floor(Math.random() * familyNames.length)];
+    const firstName1 =
+      firstNameParts[Math.floor(Math.random() * firstNameParts.length)];
+    const firstName2 =
+      firstNameParts[Math.floor(Math.random() * firstNameParts.length)];
+
+    return `${familyName}${firstName1}${firstName2}`;
+  }
+
+  private getRandomMobilePhone() {
+    const prefix = '010';
+
+    const middle = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
+
+    const last = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
+
+    return `${prefix}${middle}${last}`;
+  }
+
+  private getRandomGender() {
+    const num = Math.random();
+
+    return num > 0.5 ? Gender.MALE : Gender.FEMALE;
+  }
+
+  private generateRandomAddress(): string {
+    // 도시 선택 (인천 또는 부천)
+    const isIncheon = Math.random() > 0.7; // 70% 확률로 부천
+
+    if (isIncheon) {
+      const district =
+        incheonDistricts[Math.floor(Math.random() * incheonDistricts.length)];
+      const road =
+        incheonRoads[Math.floor(Math.random() * incheonRoads.length)];
+      const buildingNumber = Math.floor(Math.random() * 500) + 1;
+
+      return `인천 ${district} ${road} ${buildingNumber}`;
+    } else {
+      const district =
+        bucheonDistricts[Math.floor(Math.random() * bucheonDistricts.length)];
+      const road =
+        bucheonRoads[Math.floor(Math.random() * bucheonRoads.length)];
+      const buildingNumber = Math.floor(Math.random() * 300) + 1;
+
+      return `경기 부천시 ${district} ${road} ${buildingNumber}`;
+    }
+  }
+
+  private generateDetailAddress(): string {
+    const dong = Math.floor(Math.random() * 1500) + 1;
+    const ho = Math.floor(Math.random() * 1500) + 1;
+
+    return `${dong}동 ${ho}호`;
+  }
+
+  private generateRandomOccupation(): string {
+    return occupations[Math.floor(Math.random() * occupations.length)];
+  }
+
+  private generateRandomMarriage() {
+    return Math.random() > 0.6 ? Marriage.MARRIED : Marriage.SINGLE;
+  }
+
+  private generateRandomBaptism() {
+    const baptisms = [
+      Baptism.BAPTIZED,
+      Baptism.IMMERSION_BAPTISM,
+      Baptism.INFANT_BAPTISM,
+      Baptism.CONFIRMATION,
+      Baptism.CATECHUMENATE,
+      Baptism.NONE,
+    ];
+
+    return baptisms[Math.floor(Math.random() * baptisms.length)];
+  }
+
+  private generateRandomVehicleNumbers(
+    min: number = 1,
+    max: number = 3,
+  ): string[] {
+    // 배열 길이 랜덤 생성 (1~3)
+    const length = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    // 중복되지 않는 차량번호 생성
+    const numbers = new Set<string>();
+
+    if (Math.random() > 0.5) {
+      return Array.from(numbers);
+    }
+
+    while (numbers.size < length) {
+      const number = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, '0');
+      numbers.add(number);
+    }
+
+    return Array.from(numbers);
+  }
+}

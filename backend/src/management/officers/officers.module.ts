@@ -5,8 +5,6 @@ import { ChurchesDomainModule } from '../../churches/churches-domain/churches-do
 import { OfficersDomainModule } from './officer-domain/officers-domain.module';
 import { RouterModule } from '@nestjs/core';
 import { ManagerDomainModule } from '../../manager/manager-domain/manager-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../../permission/service/domain-permission.service.interface';
-import { ManagementPermissionService } from '../management-permission.service';
 import { OfficersMembersController } from './controller/officers-members.controller';
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { OfficerMembersService } from './service/officer-members.service';
@@ -28,14 +26,7 @@ import { OfficerHistoryDomainModule } from '../../member-history/officer-history
     OfficerHistoryDomainModule,
   ],
   controllers: [OfficersController, OfficersMembersController],
-  providers: [
-    OfficersService,
-    OfficerMembersService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: ManagementPermissionService,
-    },
-  ],
+  providers: [OfficersService, OfficerMembersService],
   exports: [],
 })
 export class OfficersModule {}

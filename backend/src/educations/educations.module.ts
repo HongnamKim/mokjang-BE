@@ -12,12 +12,10 @@ import { SessionAttendanceService } from './session-attendance/service/session-a
 import { RouterModule } from '@nestjs/core';
 import { MemberEducationEventHandler } from './education-enrollment/service/member-education-event-handler.service';
 import { EducationDomainModule } from './education-domain/education-domain.module';
-import { EducationPermissionService } from './guard/education-permission.service';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 import { EducationReportDomainModule } from '../report/education-report/education-report-domain/education-report-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
 
 @Module({
   imports: [
@@ -50,10 +48,6 @@ import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permiss
     EducationEnrollmentService,
     EducationTermService,
     SessionAttendanceService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: EducationPermissionService,
-    },
   ],
   exports: [],
 })

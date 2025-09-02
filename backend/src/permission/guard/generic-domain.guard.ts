@@ -2,7 +2,6 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  Inject,
   Injectable,
   InternalServerErrorException,
   mixin,
@@ -10,11 +9,9 @@ import {
 } from '@nestjs/common';
 import { DomainType } from '../const/domain-type.enum';
 import { DomainAction } from '../const/domain-action.enum';
-import {
-  IDomainPermissionService,
-  IDOMAIN_PERMISSION_SERVICE,
-} from '../service/domain-permission.service.interface';
 import { CustomRequest } from '../../common/custom-request';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { ChurchUserRole } from '../../user/const/user-role.enum';
 
 export function createDomainGuard(
   domainType: DomainType,
@@ -23,10 +20,32 @@ export function createDomainGuard(
 ): Type<CanActivate> {
   @Injectable()
   class GenericDomainGuard implements CanActivate {
-    constructor(
-      @Inject(IDOMAIN_PERMISSION_SERVICE)
-      private readonly permissionService: IDomainPermissionService,
-    ) {}
+    constructor() {}
+
+    private checkPermission(
+      domainType: DomainType,
+      domainAction: DomainAction,
+      requestManager: ChurchUserModel,
+    ) {
+      if (requestManager.role === ChurchUserRole.OWNER) return true;
+
+      if (!requestManager.isPermissionActive) {
+        return false;
+      }
+
+      const permissionTemplate = requestManager.permissionTemplate;
+
+      for (const permissionUnit of permissionTemplate.permissionUnits) {
+        if (
+          permissionUnit.domain === domainType &&
+          permissionUnit.action === domainAction
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const req: CustomRequest = context.switchToHttp().getRequest();
@@ -37,13 +56,17 @@ export function createDomainGuard(
         throw new InternalServerErrorException('JWT 처리 과정 누락');
       }
 
-      const churchId = parseInt(req.params.churchId);
-      const requestUserId = token.id;
+      const church = req.church;
+      const requestManager = req.requestManager;
 
-      const hasPermission = await this.permissionService.hasPermission(
-        churchId,
-        requestUserId,
+      if (!church || !requestManager) {
+        throw new InternalServerErrorException('관리자 검증 누락');
+      }
+
+      const hasPermission = this.checkPermission(
+        domainType,
         domainAction,
+        requestManager,
       );
 
       if (!hasPermission) {
@@ -53,9 +76,6 @@ export function createDomainGuard(
           `${domainNameForMessage} 기능에 대한 ${actionText} 권한이 없습니다.`,
         );
       }
-
-      req.requestManager = hasPermission.requestManager;
-      req.church = hasPermission.church;
 
       return true;
     }

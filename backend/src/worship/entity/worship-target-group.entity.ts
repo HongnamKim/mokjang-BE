@@ -9,7 +9,9 @@ export class WorshipTargetGroupModel extends BaseModel {
   @Column()
   worshipId: number;
 
-  @ManyToOne(() => WorshipModel)
+  @ManyToOne(() => WorshipModel, (worship) => worship.worshipTargetGroups, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'worshipId' })
   worship: WorshipModel;
 
@@ -17,7 +19,7 @@ export class WorshipTargetGroupModel extends BaseModel {
   @Column()
   groupId: number;
 
-  @ManyToOne(() => GroupModel)
+  @ManyToOne(() => GroupModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 }

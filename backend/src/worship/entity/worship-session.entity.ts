@@ -17,7 +17,7 @@ export class WorshipSessionModel extends BaseModel {
   @Column()
   worshipId: number;
 
-  @ManyToOne(() => WorshipModel)
+  @ManyToOne(() => WorshipModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'worshipId' })
   worship: WorshipModel;
 

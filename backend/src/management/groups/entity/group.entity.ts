@@ -17,7 +17,9 @@ export class GroupModel extends BaseModel {
   @Column({ type: 'int', nullable: true })
   parentGroupId: number | null;
 
-  @ManyToOne(() => GroupModel, (group) => group.childGroups)
+  @ManyToOne(() => GroupModel, (group) => group.childGroups, {
+    onDelete: 'CASCADE',
+  })
   parentGroup: GroupModel;
 
   @Column('int', { array: true, default: [] })
@@ -30,7 +32,9 @@ export class GroupModel extends BaseModel {
   @Index()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.groups)
+  @ManyToOne(() => ChurchModel, (church) => church.groups, {
+    onDelete: 'CASCADE',
+  })
   church: ChurchModel;
 
   @Column({ default: 0 })

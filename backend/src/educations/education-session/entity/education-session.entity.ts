@@ -12,7 +12,9 @@ export class EducationSessionModel extends BaseModel {
   @Column({ comment: '교육 기수 ID' })
   educationTermId: number;
 
-  @ManyToOne(() => EducationTermModel, (term) => term.educationSessions)
+  @ManyToOne(() => EducationTermModel, (term) => term.educationSessions, {
+    onDelete: 'CASCADE',
+  })
   educationTerm: EducationTermModel;
 
   @Column({ comment: '교육 회차' })
@@ -47,9 +49,12 @@ export class EducationSessionModel extends BaseModel {
   status: EducationSessionStatus;
 
   @Column({ nullable: true, comment: '회차 담당자 교인 ID' })
-  inChargeId: number;
+  inChargeId: number | null;
 
-  @ManyToOne(() => MemberModel, (member) => member.inChargeEducationSession)
+  @ManyToOne(() => MemberModel, (member) => member.inChargeEducationSession, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   inCharge: MemberModel;
 
   @OneToMany(
@@ -61,10 +66,10 @@ export class EducationSessionModel extends BaseModel {
   @Column({ default: 0 })
   attendancesCount: number;
 
-  @Column()
-  creatorId: number;
+  @Column({ nullable: true })
+  creatorId: number | null;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { nullable: true, onDelete: 'SET NULL' })
   creator: MemberModel;
 
   @OneToMany(() => EducationReportModel, (report) => report.educationSession)

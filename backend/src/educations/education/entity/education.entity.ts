@@ -37,13 +37,15 @@ export class EducationModel extends BaseModel {
   @Column({ comment: '교회 ID' })
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.educations)
+  @ManyToOne(() => ChurchModel, (church) => church.educations, {
+    onDelete: 'CASCADE',
+  })
   church: ChurchModel;
 
-  @Column()
-  creatorId: number;
+  @Column({ nullable: true })
+  creatorId: number | null;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'creatorId' })
   creator: MemberModel;
 

@@ -9,7 +9,7 @@ export abstract class ReportModel extends BaseModel {
   @Column()
   receiverId: number;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'CASCADE' })
   receiver: MemberModel;
 
   @Column({ type: 'timestamptz', default: new Date() })

@@ -15,7 +15,6 @@ import {
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
 import {
   BadRequestException,
-  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -30,9 +29,12 @@ import {
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
-import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { EducationSessionException } from '../../education-session/exception/education-session.exception';
+import { MyScheduleStatusCountDto } from '../../../task/dto/my-schedule-status-count.dto';
+import { session } from 'passport';
+import { EducationSessionStatus } from '../../education-session/const/education-session-status.enum';
+import { ScheduleStatusOption } from '../../../home/const/schedule-status-option.enum';
 
 export class EducationSessionDomainService
   implements IEducationSessionDomainService
@@ -456,43 +458,6 @@ export class EducationSessionDomainService
     );
   }
 
-  findMyEducationSessions(
-    inCharge: MemberModel,
-    from: Date,
-    to: Date,
-  ): Promise<EducationSessionModel[]> {
-    const repository = this.getEducationSessionsRepository();
-
-    return repository.find({
-      where: {
-        inChargeId: inCharge.id,
-        startDate: LessThanOrEqual(to),
-        endDate: MoreThanOrEqual(from),
-      },
-      order: {
-        endDate: 'ASC',
-      },
-      relations: {
-        educationTerm: true,
-      },
-      select: {
-        id: true,
-        createdAt: true,
-        updatedAt: true,
-        session: true,
-        title: true,
-        startDate: true,
-        endDate: true,
-        status: true,
-        educationTerm: {
-          id: true,
-          educationId: true,
-        },
-      },
-      take: 50,
-    });
-  }
-
   async incrementAttendancesCount(
     educationSession: EducationSessionModel,
     count: number,
@@ -535,5 +500,98 @@ export class EducationSessionDomainService
     }
 
     return result;
+  }
+
+  findMyEducationSessions(
+    inCharge: MemberModel,
+    from: Date,
+    to: Date,
+  ): Promise<EducationSessionModel[]> {
+    const repository = this.getEducationSessionsRepository();
+
+    return repository.find({
+      where: {
+        inChargeId: inCharge.id,
+        startDate: LessThanOrEqual(to),
+        endDate: MoreThanOrEqual(from),
+      },
+      order: {
+        endDate: 'ASC',
+      },
+      relations: {
+        educationTerm: true,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        session: true,
+        title: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        educationTerm: {
+          id: true,
+          educationId: true,
+          educationName: true,
+          term: true,
+        },
+      },
+      take: 50,
+    });
+  }
+
+  async countMyEducationSessionStatus(
+    church: ChurchModel,
+    me: MemberModel,
+    from: Date,
+    to: Date,
+    option: ScheduleStatusOption,
+  ): Promise<MyScheduleStatusCountDto> {
+    const repository = this.getEducationSessionsRepository();
+
+    const query = repository
+      .createQueryBuilder('educationSession')
+      .innerJoin('educationSession.educationTerm', 'educationTerm')
+      .innerJoin(
+        'educationTerm.education',
+        'education',
+        'education.churchId = :churchId',
+        { churchId: church.id },
+      )
+      .where(
+        'educationSession.startDate <= :to AND educationSession.endDate >= :from',
+        {
+          from,
+          to,
+        },
+      )
+      .select([
+        'SUM(CASE WHEN educationSession.status = :reserve THEN 1 ELSE 0 END) as reserve_count',
+        'SUM(CASE WHEN educationSession.status = :inProgress THEN 1 ELSE 0 END) as inprogress_count',
+        'SUM(CASE WHEN educationSession.status = :done THEN 1 ELSE 0 END) as done_count',
+        'SUM(CASE WHEN educationSession.status = :pending THEN 1 ELSE 0 END) as pending_count',
+      ])
+      .setParameters({
+        reserve: EducationSessionStatus.RESERVE,
+        inProgress: EducationSessionStatus.IN_PROGRESS,
+        done: EducationSessionStatus.DONE,
+        pending: EducationSessionStatus.PENDING,
+      });
+
+    if (option === ScheduleStatusOption.MEMBER) {
+      query.andWhere('educationSession.inChargeId = :inChargeId', {
+        inChargeId: me.id,
+      });
+    }
+
+    const result = await query.getRawOne();
+
+    return new MyScheduleStatusCountDto(
+      parseInt(result.reserve_count) || 0,
+      parseInt(result.inprogress_count) || 0,
+      parseInt(result.done_count) || 0,
+      parseInt(result.pending_count) || 0,
+    );
   }
 }

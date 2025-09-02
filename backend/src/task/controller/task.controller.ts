@@ -88,7 +88,6 @@ export class TaskController {
   }
 
   @ApiGetSubTasks()
-  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.READ))
   @TaskReadGuard()
   @Get(':taskId/sub-tasks')
   async getSubTasks(
@@ -99,7 +98,6 @@ export class TaskController {
   }
 
   @ApiPatchTask()
-  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
   @TaskWriteGuard()
   @Patch(':taskId')
   @UseInterceptors(TransactionInterceptor)
@@ -113,7 +111,6 @@ export class TaskController {
   }
 
   @ApiDeleteTask()
-  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
   @TaskWriteGuard()
   @Delete(':taskId')
   @UseInterceptors(TransactionInterceptor)
@@ -126,7 +123,6 @@ export class TaskController {
   }
 
   @ApiAddReportReceivers()
-  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
   @TaskWriteGuard()
   @Patch(':taskId/add-receivers')
   @UseInterceptors(TransactionInterceptor)
@@ -140,7 +136,6 @@ export class TaskController {
   }
 
   @ApiDeleteReportReceiver()
-  //@UseGuards(AccessTokenGuard, TaskGuard(DomainAction.WRITE))
   @TaskWriteGuard()
   @Patch(':taskId/delete-receivers')
   @UseInterceptors(TransactionInterceptor)

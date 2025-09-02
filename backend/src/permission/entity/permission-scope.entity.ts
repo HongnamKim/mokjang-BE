@@ -12,7 +12,11 @@ export class PermissionScopeModel extends BaseModel {
   @Column()
   churchUserId: number;
 
-  @ManyToOne(() => ChurchUserModel, (churchUser) => churchUser.permissionScopes)
+  @ManyToOne(
+    () => ChurchUserModel,
+    (churchUser) => churchUser.permissionScopes,
+    { onDelete: 'CASCADE' },
+  )
   @JoinColumn({ name: 'churchUserId' })
   churchUser: ChurchUserModel;
 
@@ -23,7 +27,7 @@ export class PermissionScopeModel extends BaseModel {
   @Column({ nullable: true })
   groupId: number;
 
-  @ManyToOne(() => GroupModel, { nullable: true })
+  @ManyToOne(() => GroupModel, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'groupId' })
   group: GroupModel;
 }

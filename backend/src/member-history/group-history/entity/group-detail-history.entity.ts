@@ -10,7 +10,7 @@ export class GroupDetailHistoryModel extends BaseModel {
   @Column()
   memberId: number;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
@@ -18,7 +18,7 @@ export class GroupDetailHistoryModel extends BaseModel {
   @Column()
   groupHistoryId: number;
 
-  @ManyToOne(() => GroupHistoryModel)
+  @ManyToOne(() => GroupHistoryModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'groupHistoryId' })
   groupHistory: GroupHistoryModel;
 

@@ -10,7 +10,11 @@ export class WorshipAttendanceModel extends BaseModel {
   @Column()
   worshipSessionId: number;
 
-  @ManyToOne(() => WorshipSessionModel, (session) => session.worshipAttendances)
+  @ManyToOne(
+    () => WorshipSessionModel,
+    (session) => session.worshipAttendances,
+    { onDelete: 'CASCADE' },
+  )
   @JoinColumn({ name: 'worshipSessionId' })
   worshipSession: WorshipSessionModel;
 
@@ -31,6 +35,7 @@ export class WorshipAttendanceModel extends BaseModel {
   @ManyToOne(
     () => WorshipEnrollmentModel,
     (enrollment) => enrollment.worshipAttendances,
+    { onDelete: 'CASCADE' },
   )
   @JoinColumn({ name: 'worshipEnrollmentId' })
   worshipEnrollment: WorshipEnrollmentModel;

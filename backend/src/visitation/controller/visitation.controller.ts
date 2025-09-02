@@ -68,7 +68,6 @@ export class VisitationController {
   @VisitationWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   refreshVisitationCount(
-    //@Param('churchId', ParseIntPipe) churchId: number,
     @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {

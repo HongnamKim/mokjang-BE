@@ -17,7 +17,9 @@ export class GroupHistoryModel extends BaseModel {
   @Column()
   memberId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.groupHistory)
+  @ManyToOne(() => MemberModel, (member) => member.groupHistory, {
+    onDelete: 'CASCADE',
+  })
   member: MemberModel;
 
   @Index()
@@ -28,7 +30,9 @@ export class GroupHistoryModel extends BaseModel {
   })
   groupId: number | null;
 
-  @ManyToOne(() => GroupModel, (group) => group.history)
+  @ManyToOne(() => GroupModel, (group) => group.history, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'groupId' })
   group: GroupModel | null;
 

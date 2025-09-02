@@ -5,9 +5,12 @@ import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { ChurchesDomainModule } from './churches-domain/churches-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
-import { ChurchPermissionService } from './service/church-permission.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { SubscriptionDomainModule } from '../subscription/subscription-domain/subscription-domain.module';
+import { DummyDataDomainModule } from '../dummy-data/dummy-data-domain/dummy-data-domain.module';
+import { OfficerHistoryDomainModule } from '../member-history/officer-history/officer-history-domain/officer-history-domain.module';
+import { GroupHistoryDomainModule } from '../member-history/group-history/group-history-domain/group-history-domain.module';
+import { TrialChurchesService } from './service/trial-churches.service';
 
 @Module({
   imports: [
@@ -16,11 +19,13 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     ManagerDomainModule,
     MembersDomainModule,
     ChurchUserDomainModule,
+    SubscriptionDomainModule,
+
+    DummyDataDomainModule,
+    OfficerHistoryDomainModule,
+    GroupHistoryDomainModule,
   ],
   controllers: [ChurchesController],
-  providers: [
-    ChurchesService,
-    { provide: IDOMAIN_PERMISSION_SERVICE, useClass: ChurchPermissionService },
-  ],
+  providers: [ChurchesService, TrialChurchesService],
 })
 export class ChurchesModule {}

@@ -5,6 +5,9 @@ import { UserRole } from '../const/user-role.enum';
 import { ChurchJoinModel } from '../../church-join/entity/church-join.entity';
 import { Exclude } from 'class-transformer';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { SubscriptionModel } from '../../subscription/entity/subscription.entity';
+import { PaymentMethodModel } from '../../payment-method/entity/payment-method.entity';
+import { OrderModel } from '../../order/entity/order.entity';
 
 @Entity()
 export class UserModel extends BaseModel {
@@ -38,6 +41,20 @@ export class UserModel extends BaseModel {
       '서비스 내의 role (owner: 교회 소유자, member: 교회 가입자, none: 소속X)',
   })
   role: UserRole;
+
+  // 무료 체험 여부
+  @Column({ default: false })
+  hasUsedFreeTrial: boolean;
+
+  // 구독 이력
+  @OneToMany(() => SubscriptionModel, (subscription) => subscription.user)
+  subscriptions: SubscriptionModel[];
+
+  @OneToMany(() => PaymentMethodModel, (paymentMethod) => paymentMethod.user)
+  paymentMethods: PaymentMethodModel[];
+
+  @OneToMany(() => OrderModel, (order) => order.user)
+  orders: OrderModel[];
 
   @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.user)
   churchUser: ChurchUserModel[];
