@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { catchError, Observable, tap } from 'rxjs';
 import { DataSource } from 'typeorm';
+import { CustomRequest } from '../custom-request';
 
 @Injectable()
 export class TransactionInterceptor implements NestInterceptor {
@@ -20,7 +21,7 @@ export class TransactionInterceptor implements NestInterceptor {
 
     await queryRunner.startTransaction();
 
-    const req = context.switchToHttp().getRequest();
+    const req: CustomRequest = context.switchToHttp().getRequest();
 
     req.queryRunner = queryRunner;
 

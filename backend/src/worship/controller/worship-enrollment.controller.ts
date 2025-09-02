@@ -27,6 +27,8 @@ import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
+import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
 
 @ApiTags('Worships:Enrollments')
 @Controller(':worshipId/enrollments')
@@ -39,6 +41,7 @@ export class WorshipEnrollmentController {
   //@WorshipReadGuard()
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,
@@ -54,12 +57,14 @@ export class WorshipEnrollmentController {
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
     @PermissionScopeGroups() permissionScopeGroupIds?: number[],
+    @WorshipTargetGroupIds() defaultTargetGroupIds?: number[],
   ) {
     return this.worshipEnrollmentService.getEnrollments(
       church,
       worship,
       dto,
       permissionScopeGroupIds,
+      defaultTargetGroupIds,
     );
   }
 

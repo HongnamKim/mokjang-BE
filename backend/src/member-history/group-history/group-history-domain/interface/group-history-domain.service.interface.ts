@@ -1,9 +1,15 @@
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GetGroupHistoryDto } from '../../dto/request/get-group-history.dto';
-import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
+import {
+  DeleteResult,
+  FindOptionsRelations,
+  QueryRunner,
+  UpdateResult,
+} from 'typeorm';
 import { GroupHistoryModel } from '../../entity/group-history.entity';
 import { GroupModel } from '../../../../management/groups/entity/group.entity';
 import { HistoryUpdateDate } from '../../../history-date.utils';
+import { ChurchModel } from '../../../../churches/entity/church.entity';
 
 export const IGROUP_HISTORY_DOMAIN_SERVICE = Symbol(
   'IGROUP_HISTORY_DOMAIN_SERVICE',
@@ -67,4 +73,9 @@ export interface IGroupHistoryDomainService {
     groupHistory: GroupHistoryModel,
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
+
+  deleteDummyGroupHistoriesCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult>;
 }

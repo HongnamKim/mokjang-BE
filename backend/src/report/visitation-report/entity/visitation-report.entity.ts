@@ -9,6 +9,8 @@ export class VisitationReportModel extends ReportModel {
   @Column()
   visitationId: number;
 
-  @ManyToOne(() => VisitationMetaModel, (visitation) => visitation.reports)
+  @ManyToOne(() => VisitationMetaModel, (visitation) => visitation.reports, {
+    onDelete: 'CASCADE',
+  })
   visitation: VisitationMetaModel;
 }

@@ -9,7 +9,9 @@ export class OfficerHistoryModel extends BaseModel {
   @Column({ comment: '교인 ID' })
   memberId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.officerHistory)
+  @ManyToOne(() => MemberModel, (member) => member.officerHistory, {
+    onDelete: 'CASCADE',
+  })
   member: MemberModel;
 
   @Index()
@@ -20,7 +22,9 @@ export class OfficerHistoryModel extends BaseModel {
   })
   officerId: number | null;
 
-  @ManyToOne(() => OfficerModel, (officer) => officer.history)
+  @ManyToOne(() => OfficerModel, (officer) => officer.history, {
+    onDelete: 'SET NULL',
+  })
   officer: OfficerModel | null;
 
   @Column({ comment: '직분 종료일 시점의 직분명', nullable: true })

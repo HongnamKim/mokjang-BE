@@ -3,8 +3,6 @@ import { RouterModule } from '@nestjs/core';
 import { HomeController } from './controller/home.controller';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
-import { IDOMAIN_PERMISSION_SERVICE } from '../permission/service/domain-permission.service.interface';
-import { HomePermissionService } from './service/home-permission.service';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { HomeService } from './service/home.service';
 import { TaskDomainModule } from '../task/task-domain/task-domain.module';
@@ -40,12 +38,6 @@ import { ReportDomainModule } from '../report/report-domain/report-domain.module
     GroupsDomainModule,
   ],
   controllers: [HomeController],
-  providers: [
-    HomeService,
-    {
-      provide: IDOMAIN_PERMISSION_SERVICE,
-      useClass: HomePermissionService,
-    },
-  ],
+  providers: [HomeService],
 })
 export class HomeModule {}

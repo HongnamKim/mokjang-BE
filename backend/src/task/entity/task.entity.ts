@@ -19,7 +19,9 @@ export class TaskModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.tasks)
+  @ManyToOne(() => ChurchModel, (church) => church.tasks, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
@@ -57,7 +59,9 @@ export class TaskModel extends BaseModel {
   @Column({ comment: '상위 업무 ID', nullable: true })
   parentTaskId: number | null;
 
-  @ManyToOne(() => TaskModel, (parentTask) => parentTask.subTasks)
+  @ManyToOne(() => TaskModel, (parentTask) => parentTask.subTasks, {
+    onDelete: 'CASCADE',
+  })
   parentTask: TaskModel;
 
   @Column({ default: '' })
@@ -67,15 +71,20 @@ export class TaskModel extends BaseModel {
   @Column({ comment: '담당자 ID', nullable: true })
   inChargeId: number;
 
-  @ManyToOne(() => MemberModel, (member) => member.assignedTask)
+  @ManyToOne(() => MemberModel, (member) => member.assignedTask, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'inChargeId' })
   inCharge: MemberModel;
 
   @Index()
-  @Column({ comment: '업무 생성자 ID' })
-  creatorId: number;
+  @Column({ comment: '업무 생성자 ID', nullable: true })
+  creatorId: number | null;
 
-  @ManyToOne(() => MemberModel, (member) => member.createdTask)
+  @ManyToOne(() => MemberModel, (member) => member.createdTask, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'creatorId' })
   creator: MemberModel;
 

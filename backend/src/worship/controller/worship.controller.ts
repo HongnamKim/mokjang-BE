@@ -128,6 +128,7 @@ export class WorshipController {
   @Get(':worshipId/statistics')
   @UseGuards(
     AccessTokenGuard,
+    ChurchManagerGuard,
     createDomainGuard(
       DomainType.WORSHIP,
       DomainName.WORSHIP,

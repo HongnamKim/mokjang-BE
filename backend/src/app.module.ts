@@ -10,10 +10,8 @@ import * as Joi from 'joi';
 import { TempUserModel } from './auth/entity/temp-user.entity';
 import { UserModel } from './user/entity/user.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { DummyDataService } from './dummy-data.service';
 import { UserModule } from './user/user.module';
 import { ChurchesModule } from './churches/churches.module';
-
 import { OfficerModel } from './management/officers/entity/officer.entity';
 import { MinistryModel } from './management/ministries/entity/ministry.entity';
 import { MinistryGroupModel } from './management/ministries/entity/ministry-group.entity';
@@ -74,6 +72,15 @@ import { EducationTermModel } from './educations/education-term/entity/education
 import { EducationSessionModel } from './educations/education-session/entity/education-session.entity';
 import { SessionAttendanceModel } from './educations/session-attendance/entity/session-attendance.entity';
 import { EducationEnrollmentModel } from './educations/education-enrollment/entity/education-enrollment.entity';
+import { SubscriptionModel } from './subscription/entity/subscription.entity';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { DummyDataModule } from './dummy-data/dummy-data.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { OrderModel } from './order/entity/order.entity';
+import { PaymentMethodModel } from './payment-method/entity/payment-method.entity';
+import { PaymentMethodModule } from './payment-method/payment-method.module';
+import { OrderModule } from './order/order.module';
+
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
@@ -141,6 +148,10 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [
+          // 구독 관련
+          SubscriptionModel,
+          OrderModel,
+          PaymentMethodModel,
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
@@ -209,10 +220,15 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
+    DummyDataModule,
     AuthModule,
     MyPageModule,
     ReportModule,
     UserModule,
+    PaymentMethodModule,
+    SubscriptionModule,
+    OrderModule,
     ChurchesModule,
     ChurchJoinModule,
     ChurchUserModule,
@@ -241,7 +257,7 @@ import { EducationEnrollmentModel } from './educations/education-enrollment/enti
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
-    DummyDataService,
+    //DummyDataService,
   ],
 })
 export class AppModule {}

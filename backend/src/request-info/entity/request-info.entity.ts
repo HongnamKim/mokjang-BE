@@ -20,7 +20,9 @@ export class RequestInfoModel extends BaseModel {
   @Exclude()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.requestInfos)
+  @ManyToOne(() => ChurchModel, (church) => church.requestInfos, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 
@@ -29,7 +31,9 @@ export class RequestInfoModel extends BaseModel {
   @Exclude()
   memberId: number;
 
-  @OneToOne(() => MemberModel, (member) => member.requestInfo)
+  @OneToOne(() => MemberModel, (member) => member.requestInfo, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 

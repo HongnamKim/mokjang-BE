@@ -10,7 +10,9 @@ export class OfficerModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.officers)
+  @ManyToOne(() => ChurchModel, (church) => church.officers, {
+    onDelete: 'CASCADE',
+  })
   church: ChurchModel;
 
   @Index()

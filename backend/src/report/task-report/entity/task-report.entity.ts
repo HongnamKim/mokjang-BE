@@ -9,7 +9,7 @@ export class TaskReportModel extends ReportModel {
   @Column()
   taskId: number;
 
-  @ManyToOne(() => TaskModel)
+  @ManyToOne(() => TaskModel, (task) => task.reports, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'taskId' })
   task: TaskModel;
 }

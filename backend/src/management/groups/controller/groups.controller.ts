@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -32,8 +31,6 @@ import {
 import { GetGroupDto } from '../dto/request/get-group.dto';
 import { GroupReadGuard } from '../guard/group-read.guard';
 import { GroupWriteGuard } from '../guard/group-write.guard';
-import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
 import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -47,7 +44,7 @@ export class GroupsController {
 
   @ApiGetGroups()
   @Get()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @GroupReadGuard()
   getGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetGroupDto,

@@ -6,19 +6,26 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import {
-  IDOMAIN_PERMISSION_SERVICE,
-  IDomainPermissionService,
-} from '../service/domain-permission.service.interface';
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { CustomRequest } from '../../common/custom-request';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class ChurchManagerGuard implements CanActivate {
   constructor(
-    @Inject(IDOMAIN_PERMISSION_SERVICE)
-    private readonly permissionService: IDomainPermissionService,
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
+    const req: CustomRequest = context.switchToHttp().getRequest();
 
     const token = req.tokenPayload;
 
@@ -29,13 +36,20 @@ export class ChurchManagerGuard implements CanActivate {
     const churchId = parseInt(req.params.churchId);
     const requestUserId = token.id;
 
-    const { requestManager, church } =
-      await this.permissionService.getRequestManagerOrThrow(
-        churchId,
-        requestUserId,
-      );
+    const church = await this.churchesDomainService.findChurchModelById(
+      churchId,
+      req.queryRunner,
+      { subscription: true },
+    );
 
-    req.requestManager = requestManager;
+    console.log(church);
+
+    req.requestManager =
+      await this.managerDomainService.findManagerForPermissionCheck(
+        church,
+        requestUserId,
+        req.queryRunner,
+      );
     req.church = church;
 
     return true;

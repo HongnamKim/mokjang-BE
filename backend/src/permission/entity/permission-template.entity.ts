@@ -17,7 +17,7 @@ export class PermissionTemplateModel extends BaseModel {
   @Column()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel)
+  @ManyToOne(() => ChurchModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'churchId' })
   church: ChurchModel;
 

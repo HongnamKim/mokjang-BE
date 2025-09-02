@@ -24,20 +24,12 @@ export const ApiPostChurch = () =>
         '<p>2. 중복 교회가 있는 경우 (고유번호와 교회 이름이 동일)</p>' +
         '<p><b>요청 프로퍼티</b></p>' +
         '<li>name: 교회 이름 (필수)</li>' +
-        '<li>identifyNumber: 교회 고유 번호 (필수)</li>' +
-        '<li>phone: 교회 전화번호 (필수)</li>' +
         '<li>denomination: 교단 (필수)</li>' +
+        '<li>identifyNumber: 교회 고유 번호 (필수)</li>' +
+        '<li>pastor: 담임목사명</li>' +
+        '<li>phone: 교회 전화번호 (필수)</li>' +
         '<li>address: 도로명 주소 (필수)</li>' +
-        '<li>detailAddress: 상세 주소 (선택)</li>' +
-        '<li>memberSize: 교회 교인 규모 (필수)' +
-        '<ul>xxl: 5,000명 이상</ul>' +
-        '<ul>xl: 1,000 ~ 5,000명</ul>' +
-        '<ul>500 ~ 1,000명</ul>' +
-        '<ul>300 ~ 500명</ul>' +
-        '<ul>100 ~ 300명</ul>' +
-        '<ul>50 ~ 100명' +
-        '</ul><ul>1 ~ 50명</ul>' +
-        '</li>',
+        '<li>detailAddress: 상세 주소 (선택)</li>',
     }),
   );
 
@@ -62,18 +54,10 @@ export const ApiPatchChurch = () =>
         '<h2>교회 정보를 수정합니다.</h2>' +
         '<p>AccessToken 필요, 메인관리자 권한만 수정 가능</p>' +
         '<p><b>요청 프로퍼티</b></p>' +
+        '<li>pastor: 담임목사명 (선택)</li>' +
         '<li>phone: 교회 전화번호 (선택)</li>' +
         '<li>address: 도로명 주소 (선택)</li>' +
-        '<li>detailAddress: 상세 주소 (선택)</li>' +
-        '<li>memberSize: 교회 교인 규모 (선택)' +
-        '<ul>xxl: 5,000명 이상</ul>' +
-        '<ul>xl: 1,000 ~ 5,000명</ul>' +
-        '<ul>500 ~ 1,000명</ul>' +
-        '<ul>300 ~ 500명</ul>' +
-        '<ul>100 ~ 300명</ul>' +
-        '<ul>50 ~ 100명' +
-        '</ul><ul>1 ~ 50명</ul>' +
-        '</li>',
+        '<li>detailAddress: 상세 주소 (선택)</li>',
     }),
   );
 

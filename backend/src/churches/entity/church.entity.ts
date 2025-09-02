@@ -2,13 +2,13 @@ import { BaseModel } from '../../common/entity/base.entity';
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   OneToMany,
   OneToOne,
   Unique,
 } from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
-import { MemberSize } from '../const/member-size.enum';
 import { GroupModel } from '../../management/groups/entity/group.entity';
 
 import { OfficerModel } from '../../management/officers/entity/officer.entity';
@@ -23,18 +23,36 @@ import { TaskModel } from '../../task/entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { WorshipModel } from '../../worship/entity/worship.entity';
 import { EducationModel } from '../../educations/education/entity/education.entity';
+import { SubscriptionModel } from '../../subscription/entity/subscription.entity';
 
 @Entity()
 @Unique(['joinCode'])
 export class ChurchModel extends BaseModel {
+  @Column({ nullable: true })
+  @Index()
+  subscriptionId: number | null;
+
+  @OneToOne(() => SubscriptionModel, (subscription) => subscription.church, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'subscriptionId' })
+  subscription: SubscriptionModel;
+
+  @Column({ default: false })
+  isFreeTrial: boolean;
+
   @Column()
   name: string;
 
   @Column({ nullable: true })
   identifyNumber: string;
 
-  @Column({ nullable: true, length: 20 })
-  joinCode: string;
+  @Index()
+  @Column({ type: 'varchar', nullable: true, length: 20, unique: true })
+  joinCode: string | null;
+
+  @Column({ nullable: true })
+  pastor: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -48,18 +66,16 @@ export class ChurchModel extends BaseModel {
   @Column({ nullable: true })
   detailAddress: string;
 
-  @Column({ enum: MemberSize, nullable: true })
-  memberSize: MemberSize;
-
   @Column({ default: 0 })
   memberCount: number;
 
+  @Index()
   @Column({ nullable: true })
-  ownerUserId: number;
+  ownerUserId: number | null;
 
-  @OneToOne(() => UserModel, (user) => user.ownedChurch)
+  @OneToOne(() => UserModel, (user) => user.ownedChurch, { nullable: true })
   @JoinColumn({ name: 'ownerUserId' })
-  ownerUser: UserModel;
+  ownerUser: UserModel | null;
 
   @OneToMany(() => ChurchUserModel, (churchUser) => churchUser.church)
   churchUsers: ChurchUserModel[];

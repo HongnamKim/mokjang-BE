@@ -1,12 +1,4 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
-import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { HomeService } from '../service/home.service';
@@ -15,10 +7,10 @@ import { GetNewMemberDetailDto } from '../dto/request/get-new-member-detail.dto'
 import {
   ApiGetLowWorshipAttendanceMembers,
   ApiGetMyInChargedSchedules,
-  ApiGetScheduleStatus,
   ApiGetMyScheduleReports,
   ApiGetNewMemberDetail,
   ApiGetNewMemberSummary,
+  ApiGetScheduleStatus,
 } from '../swagger/home.swagger';
 import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
@@ -26,13 +18,14 @@ import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-sch
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../dto/request/get-low-worship-attendance-members.dto';
 import { GetScheduleStatusDto } from '../dto/request/get-schedule-status.dto';
+import { HomeReadGuard } from '../guard/home-read.guard';
 
 @Controller()
 export class HomeController {
   constructor(private readonly homeService: HomeService) {}
 
   @ApiGetNewMemberSummary()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @HomeReadGuard()
   @Get('members/new/summary')
   getNewMemberSummary(
     @RequestChurch() church: ChurchModel,
@@ -42,7 +35,7 @@ export class HomeController {
   }
 
   @ApiGetNewMemberDetail()
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @HomeReadGuard()
   @Get('members/new/details')
   getNewMemberDetails(
     @RequestChurch() church: ChurchModel,
@@ -53,7 +46,7 @@ export class HomeController {
 
   @ApiGetMyInChargedSchedules()
   @Get('schedules')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @HomeReadGuard()
   getMyInChargedSchedules(
     @Query() dto: GetMyInChargedSchedulesDto,
     @RequestManager() pm: ChurchUserModel,
@@ -67,7 +60,7 @@ export class HomeController {
 
   @ApiGetScheduleStatus()
   @Get('schedules/status')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @HomeReadGuard()
   getScheduleStatus(
     @Query() dto: GetScheduleStatusDto,
     @RequestChurch() requestChurch: ChurchModel,
@@ -86,7 +79,7 @@ export class HomeController {
 
   @ApiGetMyScheduleReports()
   @Get('reports')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @HomeReadGuard()
   getMyScheduleReports(
     @RequestManager() pm: ChurchUserModel,
     @Query() dto: GetMyReportsDto,
@@ -100,7 +93,7 @@ export class HomeController {
 
   @ApiGetLowWorshipAttendanceMembers()
   @Get('worship-attendances')
-  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
+  @HomeReadGuard()
   getLowWorshipAttendanceMembers(
     @RequestChurch() church: ChurchModel,
     @RequestManager() pm: ChurchUserModel,

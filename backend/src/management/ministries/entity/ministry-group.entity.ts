@@ -30,6 +30,7 @@ export class MinistryGroupModel extends BaseModel {
   @ManyToOne(
     () => MinistryGroupModel,
     (ministryGroup) => ministryGroup.childMinistryGroups,
+    { onDelete: 'CASCADE' },
   )
   parentMinistryGroup: MinistryGroupModel;
 
@@ -46,7 +47,9 @@ export class MinistryGroupModel extends BaseModel {
   @Index()
   churchId: number;
 
-  @ManyToOne(() => ChurchModel, (church) => church.ministryGroups)
+  @ManyToOne(() => ChurchModel, (church) => church.ministryGroups, {
+    onDelete: 'CASCADE',
+  })
   church: ChurchModel;
 
   @ManyToMany(() => MemberModel, (member) => member.ministryGroups)
@@ -59,7 +62,7 @@ export class MinistryGroupModel extends BaseModel {
   @Column({ type: 'int', nullable: true })
   leaderMemberId: number | null;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'leaderMemberId' })
   leaderMember: MemberModel;
 

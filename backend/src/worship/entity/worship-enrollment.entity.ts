@@ -17,7 +17,9 @@ export class WorshipEnrollmentModel extends BaseModel {
   @Column()
   worshipId: number;
 
-  @ManyToOne(() => WorshipModel)
+  @ManyToOne(() => WorshipModel, (worship) => worship.worshipEnrollments, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'worshipId' })
   worship: WorshipModel;
 
@@ -25,7 +27,7 @@ export class WorshipEnrollmentModel extends BaseModel {
   @Column()
   memberId: number;
 
-  @ManyToOne(() => MemberModel)
+  @ManyToOne(() => MemberModel, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'memberId' })
   member: MemberModel;
 
