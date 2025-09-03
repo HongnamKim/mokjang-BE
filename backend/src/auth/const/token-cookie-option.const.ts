@@ -16,8 +16,8 @@ export const TOKEN_COOKIE_OPTIONS = (
 
   return {
     httpOnly: true,
-    secure: NODE_ENV !== 'development',
-    sameSite: NODE_ENV === 'development' ? undefined : 'none', //undefined,
+    secure: true, //NODE_ENV !== 'development',
+    sameSite: 'none', //NODE_ENV === 'development' ? undefined : 'none', //undefined,
     maxAge: isClearCookie ? undefined : maxAge,
   };
 };
