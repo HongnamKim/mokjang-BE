@@ -62,7 +62,7 @@ export class AuthController {
   private NODE_ENV = this.configService.getOrThrow(ENV_VARIABLE_KEY.NODE_ENV);
 
   @ApiTestAuth()
-  @Get('test/sign-in')
+  @Post('test/sign-in')
   @UseInterceptors(TransactionInterceptor)
   async loginTestAuth(
     @Query('provider') provider: string,
