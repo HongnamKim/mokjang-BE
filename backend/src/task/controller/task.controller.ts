@@ -104,10 +104,17 @@ export class TaskController {
   patchTask(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdateTaskDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.patchTask(churchId, taskId, dto, qr);
+    return this.taskService.patchTask(
+      requestManager,
+      churchId,
+      taskId,
+      dto,
+      qr,
+    );
   }
 
   @ApiDeleteTask()
@@ -117,9 +124,10 @@ export class TaskController {
   deleteTask(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.deleteTask(churchId, taskId, qr);
+    return this.taskService.deleteTask(requestManager, churchId, taskId, qr);
   }
 
   @ApiAddReportReceivers()
@@ -129,10 +137,17 @@ export class TaskController {
   addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: AddTaskReportReceiverDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.addTaskReportReceivers(churchId, taskId, dto, qr);
+    return this.taskService.addTaskReportReceivers(
+      churchId,
+      taskId,
+      requestManager,
+      dto,
+      qr,
+    );
   }
 
   @ApiDeleteReportReceiver()
@@ -142,12 +157,14 @@ export class TaskController {
   deleteReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: DeleteTaskReportReceiverDto,
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.deleteTaskReportReceivers(
       churchId,
       taskId,
+      requestManager,
       dto,
       qr,
     );

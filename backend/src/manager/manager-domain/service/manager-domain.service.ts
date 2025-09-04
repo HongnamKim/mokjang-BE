@@ -35,6 +35,7 @@ import {
   ManagersFindOptionsSelect,
 } from '../../const/manager-find-options.const';
 import {
+  MemberSimpleSelect,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
@@ -230,6 +231,28 @@ export class ManagerDomainService implements IManagerDomainService {
     }
 
     return churchUser;
+  }
+
+  async findManagersForNotification(
+    church: ChurchModel,
+    memberIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        memberId: In(memberIds),
+        role: ChurchUserManagers,
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSimpleSelect,
+      },
+    });
   }
 
   async findManagersByMemberIds(

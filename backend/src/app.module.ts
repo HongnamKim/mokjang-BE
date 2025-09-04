@@ -80,6 +80,8 @@ import { OrderModel } from './order/entity/order.entity';
 import { PaymentMethodModel } from './payment-method/entity/payment-method.entity';
 import { PaymentMethodModule } from './payment-method/payment-method.module';
 import { OrderModule } from './order/order.module';
+import { NotificationModule } from './notification/notification.module';
+import { NotificationModel } from './notification/entity/notification.entity';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
@@ -155,6 +157,8 @@ import { OrderModule } from './order/order.module';
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
+          // 알림 엔티티
+          NotificationModel,
           // 교회 관련 엔티티
           ChurchModel,
           // 교회 가입 엔티티
@@ -224,6 +228,7 @@ import { OrderModule } from './order/order.module';
     DummyDataModule,
     AuthModule,
     MyPageModule,
+    NotificationModule,
     ReportModule,
     UserModule,
     PaymentMethodModule,

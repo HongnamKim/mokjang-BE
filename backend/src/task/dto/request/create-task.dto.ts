@@ -50,10 +50,9 @@ export class CreateTaskDto extends PickType(TaskModel, [
   @ApiProperty({
     description: '업무 상태 (예약 / 진행중 / 완료 / 지연)',
     enum: TaskStatus,
-    default: TaskStatus.RESERVE,
   })
   @IsEnum(TaskStatus)
-  override status: TaskStatus = TaskStatus.RESERVE;
+  override status: TaskStatus;
 
   @ApiProperty({
     description: '업무 시작 일자 (yyyy-MM-ddTHH:MM:SS)',
