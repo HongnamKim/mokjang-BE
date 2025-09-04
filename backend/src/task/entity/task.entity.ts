@@ -32,7 +32,6 @@ export class TaskModel extends BaseModel {
   title: string;
 
   @Column({
-    enum: TaskStatus,
     default: TaskStatus.RESERVE,
   })
   status: TaskStatus;

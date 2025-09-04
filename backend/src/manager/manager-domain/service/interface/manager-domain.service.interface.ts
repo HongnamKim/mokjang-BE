@@ -72,6 +72,12 @@ export interface IManagerDomainService {
     relationOptions?: FindOptionsRelations<ChurchUserModel>,
   ): Promise<ChurchUserModel>;
 
+  findManagersForNotification(
+    church: ChurchModel,
+    memberIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]>;
+
   /**
    * receiver 로 지정된 교인의 권한 확인용
    * @param church

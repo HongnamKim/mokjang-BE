@@ -1,0 +1,73 @@
+import { NotificationDomain } from './const/notification-domain.enum';
+import { NotificationAction } from './const/notification-action.enum';
+import { ChurchUserModel } from '../church-user/entity/church-user.entity';
+
+export enum NotificationField {
+  STATUS = 'status',
+  IN_CHARGE = 'inCharge',
+  START_DATE = 'startDate',
+  END_DATE = 'endDate',
+  TITLE = 'title',
+}
+
+export class NotificationFields {
+  fields: NotificationField | string;
+  previous: any;
+  current: any;
+
+  constructor(fields: NotificationField | string, previous: any, current: any) {
+    this.fields = fields;
+    this.previous = previous;
+    this.current = current;
+  }
+}
+
+export abstract class NotificationSource {
+  id: number;
+  domain: NotificationDomain;
+
+  protected constructor(domain: NotificationDomain, id: number) {
+    this.id = id;
+    this.domain = domain;
+  }
+}
+
+export class NotificationSourceTask extends NotificationSource {
+  constructor(domain: NotificationDomain, id: number) {
+    super(domain, id);
+  }
+}
+
+export class NotificationEventDto {
+  actorName: string;
+
+  domain: NotificationDomain;
+
+  action: NotificationAction;
+
+  title: string;
+
+  source: NotificationSource | null;
+
+  notificationReceivers: ChurchUserModel[];
+
+  fields: NotificationFields[];
+
+  constructor(
+    actorName: string,
+    domain: NotificationDomain,
+    action: NotificationAction,
+    title: string,
+    source: NotificationSource | null,
+    notificationReceivers: ChurchUserModel[],
+    fields: NotificationFields[],
+  ) {
+    this.actorName = actorName;
+    this.domain = domain;
+    this.action = action;
+    this.title = title;
+    this.source = source;
+    this.notificationReceivers = notificationReceivers;
+    this.fields = fields;
+  }
+}
