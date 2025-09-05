@@ -15,12 +15,14 @@ import {
   IsNull,
   QueryRunner,
   Repository,
+  UpdateResult,
 } from 'typeorm';
 import { ChurchUserModel } from '../../entity/church-user.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { ChurchUserRole } from '../../../user/const/user-role.enum';
 import {
+  MemberSimpleSelect,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
@@ -113,6 +115,12 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
       where: {
         churchId: church.id,
         id: churchUserId,
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSimpleSelect,
       },
     });
 
@@ -235,6 +243,51 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     }
 
     return churchUser;
+  }
+
+  async updateLinkedMember(
+    targetChurchUser: ChurchUserModel,
+    targetMember: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchUserRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: targetChurchUser.id,
+      },
+      {
+        memberId: targetMember.id,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchUserException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async unlinkMember(
+    targetChurchUser: ChurchUserModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchUserRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: targetChurchUser.id,
+      },
+      {
+        memberId: null,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(ChurchUserException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   async updateChurchUserRole(

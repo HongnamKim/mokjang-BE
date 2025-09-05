@@ -21,7 +21,7 @@ import { RefreshTokenGuard, TemporalTokenGuard } from '../guard/jwt.guard';
 import { Token } from '../decorator/jwt.decorator';
 import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
-import { RegisterUserDto } from '../../user/dto/register-user.dto';
+import { RegisterUserDto } from '../../user/dto/request/register-user.dto';
 import { JwtRefreshPayload, JwtTemporalPayload } from '../type/jwt';
 import { TokenService } from '../service/token.service';
 import {

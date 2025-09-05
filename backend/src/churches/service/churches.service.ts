@@ -112,7 +112,7 @@ export class ChurchesService {
       qr,
     );
 
-    await this.userDomainService.updateUser(
+    await this.userDomainService.updateUserRole(
       ownerUser,
       {
         role: UserRole.OWNER,
@@ -179,7 +179,7 @@ export class ChurchesService {
       church.ownerUserId,
     );*/
 
-    await this.userDomainService.updateUser(
+    await this.userDomainService.updateUserRole(
       //ownerUser,
       user,
       { role: UserRole.NONE },
@@ -241,7 +241,7 @@ export class ChurchesService {
       qr,
     );
 
-    await this.userDomainService.updateUser(
+    await this.userDomainService.updateUserRole(
       oldOwnerUser,
       {
         role: UserRole.MEMBER,
@@ -249,7 +249,7 @@ export class ChurchesService {
       qr,
     );
 
-    await this.userDomainService.updateUser(
+    await this.userDomainService.updateUserRole(
       newOwnerUser,
       { role: UserRole.OWNER },
       qr,

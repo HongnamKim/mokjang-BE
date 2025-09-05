@@ -7,6 +7,7 @@ import { TaskService } from './service/task.service';
 import { TaskDomainModule } from './task-domain/task-domain.module';
 import { TaskReportDomainModule } from '../report/task-report/task-report-domain/task-report-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { TaskNotificationService } from './service/task-notification.service';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     TaskReportDomainModule,
   ],
   controllers: [TaskController],
-  providers: [TaskService],
+  providers: [TaskService, TaskNotificationService],
 })
 export class TaskModule {}

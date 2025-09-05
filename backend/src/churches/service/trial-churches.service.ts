@@ -152,7 +152,11 @@ export class TrialChurchesService {
       qr,
     );
 
-    await this.userDomainService.updateUser(user, { role: UserRole.OWNER }, qr);
+    await this.userDomainService.updateUserRole(
+      user,
+      { role: UserRole.OWNER },
+      qr,
+    );
 
     return new PostChurchResponseDto(newTrialChurch);
   }
@@ -193,7 +197,11 @@ export class TrialChurchesService {
       qr,
     );
 
-    await this.userDomainService.updateUser(user, { role: UserRole.NONE }, qr);
+    await this.userDomainService.updateUserRole(
+      user,
+      { role: UserRole.NONE },
+      qr,
+    );
 
     const subscription =
       await this.subscriptionDomainService.findSubscriptionModelByStatus(

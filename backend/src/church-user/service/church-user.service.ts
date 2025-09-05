@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
@@ -13,7 +13,6 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
-import { UpdateChurchUserRoleDto } from '../dto/request/update-church-user-role.dto';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
@@ -21,6 +20,9 @@ import {
 import { GetChurchUserResponseDto } from '../dto/response/get-church-user-response.dto';
 import { ChurchUserPaginationResponseDto } from '../dto/response/church-user-pagination-response.dto';
 import { PatchChurchUserResponseDto } from '../dto/response/patch-church-user-response.dto';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { LinkMemberDto } from '../dto/request/link-member.dto';
+import { MemberException } from '../../members/exception/member.exception';
 
 @Injectable()
 export class ChurchUserService {
@@ -58,7 +60,7 @@ export class ChurchUserService {
     );
   }
 
-  async getChurchUserByUserId(
+  async getChurchUserById(
     churchId: number,
     churchUserId: number,
     qr?: QueryRunner,
@@ -77,7 +79,61 @@ export class ChurchUserService {
     return new GetChurchUserResponseDto(churchUser);
   }
 
-  async patchChurchUserRole(
+  async changeMemberLink(
+    church: ChurchModel,
+    churchUserId: number,
+    dto: LinkMemberDto,
+  ) {
+    const targetChurchUser =
+      await this.churchUserDomainService.findChurchUserById(
+        church,
+        churchUserId,
+      );
+
+    const targetMember = await this.membersDomainService.findMemberModelById(
+      church,
+      dto.memberId,
+      undefined,
+      { churchUser: true },
+    );
+
+    if (targetMember.churchUser) {
+      throw new ConflictException(MemberException.ALREADY_LINKED);
+    }
+
+    await this.churchUserDomainService.updateLinkedMember(
+      targetChurchUser,
+      targetMember,
+    );
+
+    const updatedChurchUser =
+      await this.churchUserDomainService.findChurchUserById(
+        church,
+        targetChurchUser.id,
+      );
+
+    return new PatchChurchUserResponseDto(updatedChurchUser);
+  }
+
+  async unLinkMember(church: ChurchModel, churchUserId: number) {
+    const targetChurchUser =
+      await this.churchUserDomainService.findChurchUserById(
+        church,
+        churchUserId,
+      );
+
+    await this.churchUserDomainService.unlinkMember(targetChurchUser);
+
+    const updatedChurchUser =
+      await this.churchUserDomainService.findChurchUserById(
+        church,
+        targetChurchUser.id,
+      );
+
+    return new PatchChurchUserResponseDto(updatedChurchUser);
+  }
+
+  /*async patchChurchUserRole(
     churchId: number,
     churchUserId: number,
     dto: UpdateChurchUserRoleDto,
@@ -108,5 +164,5 @@ export class ChurchUserService {
       );
 
     return new PatchChurchUserResponseDto(updatedChurchUser);
-  }
+  }*/
 }

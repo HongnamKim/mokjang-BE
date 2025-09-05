@@ -34,8 +34,8 @@ import {
   IMinistryGroupDetailHistoryDomainService,
 } from '../../../member-history/ministry-history/ministry-history-domain/interface/ministry-group-detail-history-domain.service.interface';
 import {
-  getHistoryEndDate,
-  getHistoryStartDate,
+  getEndOfToday,
+  getStartOfToday,
 } from '../../../member-history/history-date.utils';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 
@@ -163,7 +163,7 @@ export class MinistryMemberService {
       const endMinistryVo = oldMinistry.map(
         (old) => new EndMinistryHistoryVo(member, old),
       );
-      const endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
+      const endDate = getEndOfToday(TIME_ZONE.SEOUL);
       await this.ministryGroupDetailHistoryDomainService.validateMinistryEndDates(
         endMinistryVo,
         endDate,
@@ -191,7 +191,7 @@ export class MinistryMemberService {
     );
     await this.ministryGroupDetailHistoryDomainService.startMinistryHistories(
       [startMinistryVo],
-      getHistoryStartDate(TIME_ZONE.SEOUL),
+      getStartOfToday(TIME_ZONE.SEOUL),
       qr,
     );
 
@@ -253,7 +253,7 @@ export class MinistryMemberService {
 
     // 사역 이력 종료
     const endMinistryVo = new EndMinistryHistoryVo(member, ministry);
-    const endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
+    const endDate = getEndOfToday(TIME_ZONE.SEOUL);
     await this.ministryGroupDetailHistoryDomainService.validateMinistryEndDates(
       [endMinistryVo],
       endDate,

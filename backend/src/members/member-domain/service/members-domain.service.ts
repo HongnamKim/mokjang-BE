@@ -1,6 +1,5 @@
 import { IMembersDomainService } from '../interface/members-domain.service.interface';
 import {
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -521,7 +520,7 @@ export class MembersDomainService implements IMembersDomainService {
   ) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const isExist = await this.isExistMemberByNameAndMobilePhone(
+    /*const isExist = await this.isExistMemberByNameAndMobilePhone(
       church,
       dto.name,
       dto.mobilePhone,
@@ -530,7 +529,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     if (isExist) {
       throw new ConflictException(MemberException.ALREADY_EXIST);
-    }
+    }*/
 
     if (dto.guidedById) {
       const isExistGuide = await this.isExistMemberById(

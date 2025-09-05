@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PermissionUnitModel } from '../../entity/permission-unit.entity';
 import { Repository } from 'typeorm';
@@ -11,6 +11,8 @@ export class PermissionUnitSeederService {
     @InjectRepository(PermissionUnitModel)
     private readonly unitRepo: Repository<PermissionUnitModel>,
   ) {}
+
+  private readonly logger = new Logger(PermissionUnitSeederService.name);
 
   async seed() {
     const domains = Object.values(DomainType);
@@ -37,7 +39,7 @@ export class PermissionUnitSeederService {
       }
     }
 
-    console.log(
+    this.logger.log(
       `[PermissionUnit] Seed complete Created: ${createCount}, Exists: ${existCount}`,
     );
   }
