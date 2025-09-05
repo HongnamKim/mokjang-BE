@@ -90,11 +90,11 @@ export function convertHistoryDate(
   return new HistoryUpdateDate(startDate, endDate);
 }
 
-export function getHistoryStartDate(timeZone: TIME_ZONE) {
+export function getStartOfToday(timeZone: TIME_ZONE) {
   return fromZonedTime(startOfDay(toZonedTime(new Date(), timeZone)), timeZone);
 }
 
-export function getHistoryEndDate(timeZone: TIME_ZONE) {
+export function getEndOfToday(timeZone: TIME_ZONE) {
   return fromZonedTime(endOfDay(toZonedTime(new Date(), timeZone)), timeZone);
 }
 

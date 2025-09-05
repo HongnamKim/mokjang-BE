@@ -57,6 +57,20 @@ export interface IChurchUserDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 
+  //linkMember(): Promise<UpdateResult>;
+  //unlinkMember(): Promise<UpdateResult>;
+
+  updateLinkedMember(
+    targetChurchUser: ChurchUserModel,
+    targetMember: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  unlinkMember(
+    targetChurchUser: ChurchUserModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
   updateChurchUserRole(
     churchUser: ChurchUserModel,
     role: ChurchUserRole,

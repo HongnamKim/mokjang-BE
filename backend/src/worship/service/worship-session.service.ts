@@ -129,8 +129,6 @@ export class WorshipSessionService {
       ? getToDate(dto.to, TIME_ZONE.SEOUL)
       : getRecentSessionDate(worship, TIME_ZONE.SEOUL);
 
-    console.log(from, to);
-
     if (differenceInWeeks(to, from) > 15) {
       throw new BadRequestException('지원하지 않는 기간 범위입니다.');
     }
@@ -377,7 +375,6 @@ export class WorshipSessionService {
       true,
     );
   }
-
 
   /**
    * @deprecated

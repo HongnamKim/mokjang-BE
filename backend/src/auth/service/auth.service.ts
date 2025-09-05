@@ -8,7 +8,7 @@ import { TokenService } from './token.service';
 import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
 import { ConfigService } from '@nestjs/config';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
-import { RegisterUserDto } from '../../user/dto/register-user.dto';
+import { RegisterUserDto } from '../../user/dto/request/register-user.dto';
 import {
   AuthException,
   SignInException,
@@ -132,7 +132,7 @@ export class AuthService {
 
     const code = Math.floor(Math.random() * 10 ** digit)
       .toString()
-      .padStart(6, '0');
+      .padStart(digit, '0');
 
     const updateTempUserDto: UpdateTempUserDto = {
       verificationCode: code,

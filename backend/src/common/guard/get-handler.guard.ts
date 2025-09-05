@@ -1,15 +1,22 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 
 @Injectable()
 export class GetHandlerGuard implements CanActivate {
+  private readonly logger = new Logger('HandlerGuard');
+
   canActivate(context: ExecutionContext): boolean {
     const targetHandler = context.getHandler().name;
 
     const targetClass = context.getClass().name;
 
-    console.log(`targetClass: ${targetClass}`);
-    console.log(`targetHandler: ${targetHandler}`);
-    console.log('-------------------------------------------------');
+    this.logger.log(
+      `targetClass: ${targetClass}, targetHandler: ${targetHandler}`,
+    );
 
     return true;
   }

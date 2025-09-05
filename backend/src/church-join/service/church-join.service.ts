@@ -171,7 +171,7 @@ export class ChurchJoinService {
       qr,
     );
 
-    await this.userDomainService.updateUser(
+    await this.userDomainService.updateUserRole(
       joinRequest.user,
       { role: UserRole.MANAGER },
       qr,

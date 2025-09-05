@@ -14,6 +14,9 @@ import { GetChurchUsersDto } from '../dto/request/get-church-users.dto';
 import { UpdateChurchUserRoleDto } from '../dto/request/update-church-user-role.dto';
 import { ChurchUserReadGuard } from '../guard/church-user-read.guard';
 import { ChurchUserWriteGuard } from '../guard/church-user-write.guard';
+import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { LinkMemberDto } from '../dto/request/link-member.dto';
 
 @ApiTags('Churches:Church-Users')
 @Controller('church-users')
@@ -41,7 +44,7 @@ export class ChurchUserController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
   ) {
-    return this.churchUserService.getChurchUserByUserId(churchId, churchUserId);
+    return this.churchUserService.getChurchUserById(churchId, churchUserId);
   }
 
   @ApiOperation({
@@ -72,8 +75,10 @@ export class ChurchUserController {
   linkMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @Body() dto: LinkMemberDto,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return '개발 전';
+    return this.churchUserService.changeMemberLink(church, churchUserId, dto);
   }
 
   @ApiOperation({
@@ -84,8 +89,23 @@ export class ChurchUserController {
   unlinkMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return '개발 전';
+    return this.churchUserService.unLinkMember(church, churchUserId);
+  }
+
+  @ApiOperation({
+    summary: '계정 - 교인 연결 수정',
+  })
+  @Patch(':churchUserId/change-member')
+  @ChurchUserWriteGuard()
+  changeMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @Body() dto: LinkMemberDto,
+    @RequestChurch() church: ChurchModel,
+  ) {
+    return this.churchUserService.changeMemberLink(church, churchUserId, dto);
   }
 
   @ApiOperation({
