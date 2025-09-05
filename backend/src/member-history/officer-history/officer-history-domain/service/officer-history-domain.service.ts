@@ -21,10 +21,7 @@ import { GetOfficerHistoryDto } from '../../dto/request/get-officer-history.dto'
 import { IOfficerHistoryDomainService } from '../interface/officer-history-domain.service.interface';
 import { OfficerModel } from '../../../../management/officers/entity/officer.entity';
 import { OfficerHistoryException } from '../../exception/officer-history.exception';
-import {
-  getHistoryEndDate,
-  HistoryUpdateDate,
-} from '../../../history-date.utils';
+import { getEndOfToday, HistoryUpdateDate } from '../../../history-date.utils';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
@@ -147,7 +144,7 @@ export class OfficerHistoryDomainService
 
       oldHistories.forEach((oldHistory) => {
         oldHistory.officerSnapShot = oldHistory.officer?.name as string;
-        oldHistory.endDate = getHistoryEndDate(TIME_ZONE.SEOUL);
+        oldHistory.endDate = getEndOfToday(TIME_ZONE.SEOUL);
         oldHistory.officerId = null;
         oldHistory.officer = null;
         oldHistory.endDate = endDate;

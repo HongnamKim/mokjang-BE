@@ -21,7 +21,6 @@ import { WorshipDomainPaginationResultDto } from '../dto/worship-domain-paginati
 import { WorshipException } from '../../exception/worship.exception';
 import { CreateWorshipDto } from '../../dto/request/worship/create-worship.dto';
 import { UpdateWorshipDto } from '../../dto/request/worship/update-worship.dto';
-import * as console from 'node:console';
 import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
@@ -226,8 +225,6 @@ export class WorshipDomainService implements IWorshipDomainService {
     const result = await repository.softDelete({ id: targetWorship.id });
 
     if (result.affected === 0) {
-      console.log(result);
-
       throw new InternalServerErrorException(WorshipException.DELETE_ERROR);
     }
 

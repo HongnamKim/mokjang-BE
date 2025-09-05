@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { UserRole } from '../const/user-role.enum';
+import { UserRole } from '../../const/user-role.enum';
 
-export class UpdateUserDto {
+export class UpdateUserRoleDto {
   /*@IsString()
   @IsOptional()
   name?: string;

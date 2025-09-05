@@ -45,7 +45,7 @@ import {
 } from '../../worship/worship-domain/interface/worship-enrollment-domain.service.interface';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
-import { getHistoryStartDate } from '../../member-history/history-date.utils';
+import { getStartOfToday } from '../../member-history/history-date.utils';
 import { GetMemberListDto } from '../dto/list/get-member-list.dto';
 import {
   IGROUPS_DOMAIN_SERVICE,
@@ -198,7 +198,7 @@ export class MembersService {
 
     dto.utcRegisteredAt = dto.registeredAt
       ? fromZonedTime(dto.registeredAt, TIME_ZONE.SEOUL)
-      : getHistoryStartDate(TIME_ZONE.SEOUL);
+      : getStartOfToday(TIME_ZONE.SEOUL);
 
     dto.utcBirth = dto.birth
       ? fromZonedTime(dto.birth, TIME_ZONE.SEOUL)

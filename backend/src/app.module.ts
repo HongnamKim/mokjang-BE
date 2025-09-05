@@ -82,6 +82,8 @@ import { PaymentMethodModule } from './payment-method/payment-method.module';
 import { OrderModule } from './order/order.module';
 import { NotificationModule } from './notification/notification.module';
 import { NotificationModel } from './notification/entity/notification.entity';
+import { MobileVerificationModel } from './mobile-verification/entity/mobile-verification.entity';
+import { MobileVerificationModule } from './mobile-verification/mobile-verification.module';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
@@ -157,6 +159,8 @@ import { NotificationModel } from './notification/entity/notification.entity';
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
+          // 번호 인증 관련 엔티티
+          MobileVerificationModel,
           // 알림 엔티티
           NotificationModel,
           // 교회 관련 엔티티
@@ -231,6 +235,7 @@ import { NotificationModel } from './notification/entity/notification.entity';
     NotificationModule,
     ReportModule,
     UserModule,
+    MobileVerificationModule,
     PaymentMethodModule,
     SubscriptionModule,
     OrderModule,

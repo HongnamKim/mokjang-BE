@@ -34,6 +34,7 @@ export function createDomainGuard(
       }
 
       const permissionTemplate = requestManager.permissionTemplate;
+      if (!permissionTemplate) return false;
 
       for (const permissionUnit of permissionTemplate.permissionUnits) {
         if (

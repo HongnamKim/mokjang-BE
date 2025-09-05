@@ -10,14 +10,16 @@ import { In, QueryRunner, Repository, UpdateResult } from 'typeorm';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { IUserDomainService } from '../interface/user-domain.service.interface';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { UpdateUserDto } from '../../dto/update-user.dto';
+import { UpdateUserRoleDto } from '../../dto/request/update-user-role.dto';
 import { UserRole } from '../../const/user-role.enum';
 import { UserException } from '../../const/exception/user.exception';
 import {
+  MemberSimpleSelectQB,
   MemberSummarizedGroupSelectQB,
   MemberSummarizedOfficerSelectQB,
   MemberSummarizedSelectQB,
 } from '../../../members/const/member-find-options.const';
+import { UpdateUserInfoDto } from '../../dto/request/update-user-info.dto';
 
 @Injectable()
 export class UserDomainService implements IUserDomainService {
@@ -40,6 +42,8 @@ export class UserDomainService implements IUserDomainService {
         'churchUser',
         'churchUser.leftAt IS NULL',
       )
+      .leftJoin('churchUser.member', 'member')
+      .addSelect(MemberSimpleSelectQB)
       .where('user.id = :id', { id: id })
       .getOne();
 
@@ -141,7 +145,11 @@ export class UserDomainService implements IUserDomainService {
     });
   }
 
-  async updateUser(user: UserModel, dto: UpdateUserDto, qr?: QueryRunner) {
+  async updateUserRole(
+    user: UserModel,
+    dto: UpdateUserRoleDto,
+    qr?: QueryRunner,
+  ) {
     const userRepository = this.getUserRepository(qr);
 
     return userRepository.update(
@@ -152,6 +160,48 @@ export class UserDomainService implements IUserDomainService {
         ...dto,
       },
     );
+  }
+
+  async updateUserInfo(
+    user: UserModel,
+    dto: UpdateUserInfoDto,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getUserRepository(qr);
+
+    const result = await repository.update(
+      {
+        id: user.id,
+      },
+      {
+        name: dto.name,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(UserException.UPDATE_ERROR);
+    }
+
+    return result;
+  }
+
+  async updateUserMobilePhone(
+    user: UserModel,
+    newMobilePhone: string,
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getUserRepository(qr);
+
+    const result = await repository.update(
+      { id: user.id },
+      { mobilePhone: newMobilePhone },
+    );
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(UserException.UPDATE_ERROR);
+    }
+
+    return result;
   }
 
   async findMainAdminUser(
