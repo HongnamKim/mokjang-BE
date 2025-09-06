@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserModel } from '../../entity/user.entity';
-import { In, QueryRunner, Repository, UpdateResult } from 'typeorm';
+import {
+  FindOptionsRelations,
+  In,
+  QueryRunner,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { IUserDomainService } from '../interface/user-domain.service.interface';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -32,7 +38,7 @@ export class UserDomainService implements IUserDomainService {
     return qr ? qr.manager.getRepository(UserModel) : this.userRepository;
   }
 
-  async findUserModelById(id: number, qr?: QueryRunner) {
+  async findUserWithChurchUserById(id: number, qr?: QueryRunner) {
     const userRepository = this.getUserRepository(qr);
 
     const user = await userRepository
@@ -102,6 +108,27 @@ export class UserDomainService implements IUserDomainService {
 
     if (!user) {
       throw new NotFoundException('유저 정보 없음');
+    }
+
+    return user;
+  }
+
+  async findUserModelById(
+    id: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<UserModel>,
+  ): Promise<UserModel> {
+    const repository = this.getUserRepository(qr);
+
+    const user = await repository.findOne({
+      where: {
+        id: id,
+      },
+      relations: relationOptions,
+    });
+
+    if (!user) {
+      throw new NotFoundException(UserException.NOT_FOUND);
     }
 
     return user;
@@ -271,6 +298,18 @@ export class UserDomainService implements IUserDomainService {
 
     if (result.affected !== expiredUserIds.length) {
       throw new InternalServerErrorException(UserException.EXPIRE_TRIAL_ERROR);
+    }
+
+    return result;
+  }
+
+  async deleteUser(user: UserModel, qr: QueryRunner): Promise<UpdateResult> {
+    const repository = this.getUserRepository(qr);
+
+    const result = await repository.softDelete({ id: user.id });
+
+    if (result.affected === 0) {
+      throw new InternalServerErrorException(UserException.DELETE_ERROR);
     }
 
     return result;

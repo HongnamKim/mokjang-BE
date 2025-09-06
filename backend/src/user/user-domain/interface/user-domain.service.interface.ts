@@ -1,4 +1,4 @@
-import { QueryRunner, UpdateResult } from 'typeorm';
+import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { UserModel } from '../../entity/user.entity';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { ChurchModel } from '../../../churches/entity/church.entity';
@@ -10,7 +10,13 @@ export const IUSER_DOMAIN_SERVICE = Symbol('IUserDomainService');
 export interface IUserDomainService {
   findUserById(userId: number, qr?: QueryRunner): Promise<UserModel>;
 
-  findUserModelById(id: number, qr?: QueryRunner): Promise<UserModel>;
+  findUserWithChurchUserById(id: number, qr?: QueryRunner): Promise<UserModel>;
+
+  findUserModelById(
+    id: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<UserModel>,
+  ): Promise<UserModel>;
 
   findUserModelByOAuth(
     provider: string,
@@ -60,4 +66,6 @@ export interface IUserDomainService {
     expiredUserIds: number[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  deleteUser(user: UserModel, qr: QueryRunner): Promise<UpdateResult>;
 }
