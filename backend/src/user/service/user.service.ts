@@ -42,11 +42,14 @@ export class UserService {
   ) {}
 
   async getUserById(id: number) {
-    return this.userDomainService.findUserModelById(id);
+    return this.userDomainService.findUserWithChurchUserById(id);
   }
 
   async getMyJoinRequest(userId: number, qr?: QueryRunner) {
-    const user = await this.userDomainService.findUserModelById(userId, qr);
+    const user = await this.userDomainService.findUserWithChurchUserById(
+      userId,
+      qr,
+    );
 
     return this.churchJoinRequestsDomainService.findMyChurchJoinRequest(
       user,
@@ -57,7 +60,9 @@ export class UserService {
   async updateUserInfo(user: UserModel, dto: UpdateUserInfoDto) {
     await this.userDomainService.updateUserInfo(user, dto);
 
-    const updatedUser = await this.userDomainService.findUserModelById(user.id);
+    const updatedUser = await this.userDomainService.findUserWithChurchUserById(
+      user.id,
+    );
 
     return new PatchUserResponseDto(updatedUser);
   }
@@ -108,7 +113,7 @@ export class UserService {
       qr,
     );
 
-    const updatedUser = await this.userDomainService.findUserModelById(
+    const updatedUser = await this.userDomainService.findUserWithChurchUserById(
       user.id,
       qr,
     );
@@ -117,7 +122,10 @@ export class UserService {
   }
 
   async cancelMyJoinRequest(userId: number, qr?: QueryRunner) {
-    const user = await this.userDomainService.findUserModelById(userId, qr);
+    const user = await this.userDomainService.findUserWithChurchUserById(
+      userId,
+      qr,
+    );
 
     const joinRequest =
       await this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
@@ -139,7 +147,8 @@ export class UserService {
   }
 
   async getMyPendingJoinRequest(userId: number) {
-    const user = await this.userDomainService.findUserModelById(userId);
+    const user =
+      await this.userDomainService.findUserWithChurchUserById(userId);
 
     return this.churchJoinRequestsDomainService.findMyPendingChurchJoinRequest(
       user,
@@ -156,6 +165,15 @@ export class UserService {
       { role: UserRole.NONE },
       qr,
     );
+
+    return {
+      success: true,
+      timestamp: new Date(),
+    };
+  }
+
+  async deleteUser(user: UserModel, qr: QueryRunner) {
+    await this.userDomainService.deleteUser(user, qr);
 
     return {
       success: true,

@@ -101,7 +101,7 @@ export class MobileVerificationDomainService
     }
 
     if (verification.expiresAt < new Date()) {
-      throw new ConflictException('유효 시간 초과');
+      throw new ConflictException(MobileVerificationException.EXPIRED_CODE);
     }
 
     if (verification.attemptCount >= 5) {
@@ -134,7 +134,7 @@ export class MobileVerificationDomainService
         },
       );
 
-      throw new ConflictException('인증 번호가 일치하지 않습니다.');
+      throw new ConflictException(MobileVerificationException.WRONG_CODE);
     }
   }
 

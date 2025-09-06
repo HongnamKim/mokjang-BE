@@ -203,10 +203,11 @@ export class ChurchesService {
       throw new ConflictException('교회 소유자 누락');
     }
 
-    const oldOwnerUser = await this.userDomainService.findUserModelById(
-      church.ownerUserId,
-      qr,
-    );
+    const oldOwnerUser =
+      await this.userDomainService.findUserWithChurchUserById(
+        church.ownerUserId,
+        qr,
+      );
 
     const oldOwnerChurchUser =
       await this.churchUserDomainService.findChurchUserByUser(
@@ -222,13 +223,14 @@ export class ChurchesService {
         qr,
       );
 
-    const newOwnerUser = await this.userDomainService.findUserModelById(
-      newOwnerChurchUser.userId,
-      qr,
-    );
+    const newOwnerUser =
+      await this.userDomainService.findUserWithChurchUserById(
+        newOwnerChurchUser.userId,
+        qr,
+      );
 
     if (oldOwnerChurchUser.userId === newOwnerChurchUser.userId) {
-      throw new BadRequestException(ChurchException.SAME_MAIN_ADMIN);
+      throw new BadRequestException(ChurchException.SAME_OWNER);
     }
 
     if (newOwnerChurchUser.role !== ChurchUserRole.MANAGER) {

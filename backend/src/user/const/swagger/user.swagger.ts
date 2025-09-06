@@ -15,6 +15,13 @@ export const ApiPatchUser = () =>
     }),
   );
 
+export const ApiDeleteUser = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '회원 탈퇴',
+    }),
+  );
+
 export const ApiGetMyJoinRequest = () =>
   applyDecorators(
     ApiOperation({

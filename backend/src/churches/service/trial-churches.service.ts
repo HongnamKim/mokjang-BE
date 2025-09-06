@@ -92,7 +92,10 @@ export class TrialChurchesService {
   ) {}
 
   async startTrialChurch(userId: number, qr: QueryRunner) {
-    const user = await this.userDomainService.findUserModelById(userId, qr);
+    const user = await this.userDomainService.findUserWithChurchUserById(
+      userId,
+      qr,
+    );
 
     if (user.role !== UserRole.NONE) {
       throw new ConflictException(
@@ -162,7 +165,10 @@ export class TrialChurchesService {
   }
 
   async endTrialChurch(userId: number, qr: QueryRunner) {
-    const user = await this.userDomainService.findUserModelById(userId, qr);
+    const user = await this.userDomainService.findUserWithChurchUserById(
+      userId,
+      qr,
+    );
 
     if (user.role !== UserRole.OWNER) {
       throw new ConflictException('운영 중인 교회가 없습니다.');

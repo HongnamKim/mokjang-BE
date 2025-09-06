@@ -22,7 +22,7 @@ export class UserGuard implements CanActivate {
 
     const userId = req.tokenPayload.id;
 
-    req.user = await this.userDomainService.findUserModelById(userId);
+    req.user = await this.userDomainService.findUserWithChurchUserById(userId);
 
     return true;
   }

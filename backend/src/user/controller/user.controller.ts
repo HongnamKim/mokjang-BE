@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
@@ -7,6 +15,7 @@ import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { JwtAccessPayload } from '../../auth/type/jwt';
 import {
   ApiCancelMyJoinRequest,
+  ApiDeleteUser,
   ApiGetMyJoinRequest,
   ApiGetMyPendingJoinRequest,
   ApiGetUser,
@@ -39,6 +48,14 @@ export class UserController {
   @UseGuards(AccessTokenGuard, UserGuard)
   patchUser(@User() user: UserModel, @Body() dto: UpdateUserInfoDto) {
     return this.userService.updateUserInfo(user, dto);
+  }
+
+  @ApiDeleteUser()
+  @Delete()
+  @UseGuards(AccessTokenGuard, UserGuard)
+  @UseTransaction()
+  deleteUser(@User() user: UserModel, @QueryRunner() qr: QR) {
+    return this.userService.deleteUser(user, qr);
   }
 
   @ApiOperation({ summary: '번호 수정을 위한 인증 요청' })

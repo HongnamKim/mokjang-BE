@@ -70,8 +70,6 @@ export class ChurchJoinRequestsDomainService
       user,
       status: ChurchJoinRequestStatusEnum.PENDING,
     });
-
-    //return this.findMyChurchJoinRequestById(user, newRequest.id, qr);
   }
 
   private parseCreatedAt(dto: GetJoinRequestDto) {
