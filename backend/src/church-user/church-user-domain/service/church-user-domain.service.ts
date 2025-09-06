@@ -151,7 +151,7 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     });
 
     if (!churchUser) {
-      throw new NotFoundException();
+      throw new NotFoundException(ChurchUserException.NOT_FOUND);
     }
 
     return churchUser;
