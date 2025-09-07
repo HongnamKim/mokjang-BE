@@ -45,6 +45,7 @@ import { PatchVisitationResponseDto } from '../dto/response/patch-visitation-res
 import { DeleteVisitationResponseDto } from '../dto/response/delete-visitation-response.dto';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { VisitationNotificationService } from './visitation-notification.service';
 
 @Injectable()
 export class VisitationService {
@@ -64,6 +65,7 @@ export class VisitationService {
     @Inject(IVISITATION_REPORT_DOMAIN_SERVICE)
     private readonly visitationReportDomainService: IVisitationReportDomainService,
 
+    private readonly visitationNotificationService: VisitationNotificationService,
     private readonly visitationDetailService: VisitationDetailService,
   ) {}
 
@@ -134,6 +136,12 @@ export class VisitationService {
       qr,
     );
 
+    this.visitationNotificationService.notifyPost(
+      visitationMeta,
+      creatorManager,
+      inCharge,
+    );
+
     await this.visitationDetailService.createVisitationDetails(
       visitationMeta,
       members,
@@ -145,6 +153,7 @@ export class VisitationService {
       await this.handleAddVisitationReport(
         church,
         visitationMeta,
+        creatorManager,
         dto.receiverIds,
         qr,
       );
@@ -292,20 +301,22 @@ export class VisitationService {
   }
 
   async deleteVisitation(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     visitationMetaDataId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
 
     const metaData =
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,
         visitationMetaDataId,
         qr,
+        { reports: true },
       );
 
     // 메타 데이터 삭제
@@ -317,8 +328,16 @@ export class VisitationService {
       qr,
     );
 
+    // 심방 보고 삭제
     await this.visitationReportDomainService.deleteVisitationReportCascade(
       metaData,
+      qr,
+    );
+
+    await this.visitationNotificationService.notifyDelete(
+      church,
+      metaData,
+      requestManager,
       qr,
     );
 
@@ -333,6 +352,7 @@ export class VisitationService {
   private async handleAddVisitationReport(
     church: ChurchModel,
     visitation: VisitationMetaModel,
+    requestManager: ChurchUserModel,
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
@@ -349,6 +369,12 @@ export class VisitationService {
       qr,
     );
 
+    this.visitationNotificationService.notifyReportAdded(
+      visitation,
+      requestManager,
+      newReceivers,
+    );
+
     return {
       visitationMetaId: visitation.id,
       addReceivers: newReceivers.map((newReceiver) => ({
@@ -360,16 +386,12 @@ export class VisitationService {
   }
 
   async addReportReceivers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     visitationId: number,
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const visitation =
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,
@@ -380,22 +402,19 @@ export class VisitationService {
     return this.handleAddVisitationReport(
       church,
       visitation,
+      requestManager,
       newReceiverIds,
       qr,
     );
   }
 
   async deleteReportReceivers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     visitationId: number,
     deleteReceiverIds: number[],
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const visitation =
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,
@@ -410,6 +429,19 @@ export class VisitationService {
         deleteReceiverIds,
         qr,
       );
+
+    const removedReceivers =
+      await this.managerDomainService.findManagersForNotification(
+        church,
+        deleteReceiverIds,
+        qr,
+      );
+
+    this.visitationNotificationService.notifyReportRemoved(
+      visitation,
+      requestManager,
+      removedReceivers,
+    );
 
     return {
       visitationMetaId: visitation.id,

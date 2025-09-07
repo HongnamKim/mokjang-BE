@@ -49,7 +49,7 @@ export class TaskNotificationService {
     inCharge: ChurchUserModel,
   ) {
     this.eventEmitter.emit(
-      'task.inCharge.added',
+      NotificationEvent.TASK_IN_CHARGE_ADDED,
       new NotificationEventDto(
         creatorManager.member.name ? creatorManager.member.name : '',
         NotificationDomain.TASK,

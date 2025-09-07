@@ -7,4 +7,9 @@ export enum NotificationEvent {
   TASK_STATUS_UPDATED = 'task.status.updated',
   TASK_META_UPDATED = 'task.meta.updated',
   TASK_DELETED = 'task.deleted',
+
+  VISITATION_IN_CHARGE_ADDED = 'visitation.inCharge.added',
+  VISITATION_REPORT_ADDED = 'visitation.report.added',
+  VISITATION_REPORT_REMOVED = 'visitation.report.removed',
+  VISITATION_DELETED = 'visitation.deleted',
 }
