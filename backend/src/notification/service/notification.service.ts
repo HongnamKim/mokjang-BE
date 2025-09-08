@@ -151,6 +151,15 @@ export class NotificationService {
   async handleVisitationInChargeAdded(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_CHANGED)
+  async handleVisitationInChargeChanged(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_REMOVED)
+  async handleVisitationInChargeRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
 
   @OnEvent(NotificationEvent.VISITATION_REPORT_ADDED, {
     async: true,
@@ -173,6 +182,19 @@ export class NotificationService {
     suppressErrors: true,
   })
   async handleVisitationDeleted(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_STATUS_UPDATED, {})
+  async handleVisitationStatusStatusChanged(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_META_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationMetaUpdated(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
 }

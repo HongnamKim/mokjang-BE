@@ -78,6 +78,12 @@ export interface IManagerDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserModel[]>;
 
+  findManagerForNotification(
+    church: ChurchModel,
+    memberId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel | null>;
+
   /**
    * receiver 로 지정된 교인의 권한 확인용
    * @param church

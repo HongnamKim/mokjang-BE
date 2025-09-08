@@ -97,11 +97,14 @@ export class VisitationController {
   patchVisitationMetaData(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationMetaDataId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.updateVisitationData(
-      churchId,
+      church,
+      requestManager,
       visitationMetaDataId,
       dto,
       qr,

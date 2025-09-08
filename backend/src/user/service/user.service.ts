@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { QueryRunner } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import {
   IUSER_DOMAIN_SERVICE,
   IUserDomainService,
@@ -29,6 +29,8 @@ import { VerifyUserMobilePhoneDto } from '../dto/request/verify-user-mobile-phon
 @Injectable()
 export class UserService {
   constructor(
+    private readonly dataSource: DataSource,
+
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
     @Inject(IMOBILE_VERIFICATION_DOMAIN_SERVICE)
@@ -97,28 +99,43 @@ export class UserService {
   async verifyMobilePhone(
     user: UserModel,
     dto: VerifyUserMobilePhoneDto,
-    qr: QueryRunner,
+    //qr: QueryRunner,
   ) {
-    const newMobilePhone =
-      await this.mobileVerificationDomainService.verifyMobileVerification(
+    let newMobilePhone: string;
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+    try {
+      newMobilePhone =
+        await this.mobileVerificationDomainService.verifyMobileVerification(
+          user,
+          VerificationType.UPDATE_MOBILE_PHONE,
+          dto.inputCode,
+          qr,
+        );
+
+      await this.userDomainService.updateUserMobilePhone(
         user,
-        VerificationType.UPDATE_MOBILE_PHONE,
-        dto.inputCode,
+        newMobilePhone,
         qr,
       );
 
-    await this.userDomainService.updateUserMobilePhone(
-      user,
-      newMobilePhone,
-      qr,
-    );
+      const updatedUser =
+        await this.userDomainService.findUserWithChurchUserById(user.id, qr);
 
-    const updatedUser = await this.userDomainService.findUserWithChurchUserById(
-      user.id,
-      qr,
-    );
+      await qr.commitTransaction();
+      await qr.release();
 
-    return new PatchUserResponseDto(updatedUser);
+      return new PatchUserResponseDto(updatedUser);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        await qr.commitTransaction();
+      } else {
+        await qr.rollbackTransaction();
+      }
+      await qr.release();
+      throw error;
+    }
   }
 
   async cancelMyJoinRequest(userId: number, qr?: QueryRunner) {

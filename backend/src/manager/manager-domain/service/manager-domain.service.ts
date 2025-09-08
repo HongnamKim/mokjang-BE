@@ -233,6 +233,28 @@ export class ManagerDomainService implements IManagerDomainService {
     return churchUser;
   }
 
+  async findManagerForNotification(
+    church: ChurchModel,
+    memberId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel | null> {
+    const repository = this.getRepository(qr);
+
+    return repository.findOne({
+      where: {
+        churchId: church.id,
+        memberId,
+        role: ChurchUserManagers,
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSimpleSelect,
+      },
+    });
+  }
+
   async findManagersForNotification(
     church: ChurchModel,
     memberIds: number[],

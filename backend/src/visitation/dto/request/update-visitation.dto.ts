@@ -64,21 +64,19 @@ export class UpdateVisitationDto {
     required: false,
   })
   @IsOptionalNotNull()
-  //@IsDate()
   @IsDateString({ strict: true })
   @IsDateTime('startDate')
-  startDate?: string; //Date;
+  startDate?: string;
 
   @ApiProperty({
     description: '심방 종료 날짜 (yyyy-MM-ddTHH:mm:ss)',
     required: false,
   })
   @IsOptionalNotNull()
-  //@IsDate()
   @IsDateString({ strict: true })
   @IsDateTime('endDate')
   @IsAfterDate('startDate')
-  endDate?: string; //Date;
+  endDate?: string;
 
   @ApiProperty({
     description: '심방 대상자 교인 ID',
