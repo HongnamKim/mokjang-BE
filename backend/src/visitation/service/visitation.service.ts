@@ -212,20 +212,18 @@ export class VisitationService {
   }
 
   async updateVisitationData(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     visitationMetaDataId: number,
     dto: UpdateVisitationDto,
     qr: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const targetMetaData =
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,
         visitationMetaDataId,
         qr,
-        { members: true },
+        { members: true, reports: true },
       );
 
     // 심방 진행자 변경 시
@@ -290,6 +288,43 @@ export class VisitationService {
       qr,
     );
 
+    if (dto.status) {
+      await this.visitationNotificationService.notifyStatusUpdate(
+        church,
+        requestManager,
+        targetMetaData,
+        dto.status,
+        qr,
+      );
+    }
+
+    if (dto.memberIds && dto.memberIds.length > 0) {
+      await this.visitationNotificationService.notifyMemberUpdate(
+        church,
+        targetMetaData,
+        requestManager,
+        qr,
+      );
+    }
+
+    if (newInstructor) {
+      await this.visitationNotificationService.notifyInChargeUpdate(
+        church,
+        requestManager,
+        targetMetaData,
+        newInstructor,
+        qr,
+      );
+    }
+
+    await this.visitationNotificationService.notifyDataUpdate(
+      church,
+      targetMetaData,
+      requestManager,
+      dto,
+      qr,
+    );
+
     const updatedVisitation =
       await this.visitationMetaDomainService.findVisitationMetaById(
         church,
@@ -306,11 +341,6 @@ export class VisitationService {
     visitationMetaDataId: number,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );*/
-
     const metaData =
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,

@@ -119,7 +119,7 @@ export class MobileVerificationDomainService
       await repository.update(
         { id: verification.id },
         {
-          attemptCount: () => 'attemptCount + 1',
+          attemptCount: verification.attemptCount + 1,
           isVerified: true,
         },
       );
@@ -130,7 +130,7 @@ export class MobileVerificationDomainService
       await repository.update(
         { id: verification.id },
         {
-          attemptCount: () => 'attemptCount + 1',
+          attemptCount: verification.attemptCount + 1,
         },
       );
 
