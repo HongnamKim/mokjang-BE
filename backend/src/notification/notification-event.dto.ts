@@ -38,6 +38,12 @@ export class NotificationSourceTask extends NotificationSource {
   }
 }
 
+export class NotificationSourceVisitation extends NotificationSource {
+  constructor(domain: NotificationDomain, id: number) {
+    super(domain, id);
+  }
+}
+
 export class NotificationEventDto {
   actorName: string;
 

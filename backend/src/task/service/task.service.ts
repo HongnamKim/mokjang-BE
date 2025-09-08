@@ -256,7 +256,7 @@ export class TaskService {
     // 업무 보고 삭제
     await this.taskReportDomainService.deleteTaskReportCascade(targetTask, qr);
 
-    this.taskNotificationService.notifyDelete(
+    await this.taskNotificationService.notifyDelete(
       church,
       targetTask,
       requestManager,

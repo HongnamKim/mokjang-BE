@@ -73,13 +73,11 @@ export class UserController {
   @ApiOperation({ summary: '인증 확인 및 번호 수정' })
   @Post('verification/verify')
   @UseGuards(AccessTokenGuard, UserGuard)
-  @UseTransaction()
   verifyMobileVerification(
     @User() user: UserModel,
     @Body() dto: VerifyUserMobilePhoneDto,
-    @QueryRunner() qr: QR,
   ) {
-    return this.userService.verifyMobilePhone(user, dto, qr);
+    return this.userService.verifyMobilePhone(user, dto);
   }
 
   @ApiGetMyJoinRequest()

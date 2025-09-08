@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   INOTIFICATION_DOMAIN_SERVICE,
   INotificationDomainService,
@@ -18,6 +18,8 @@ export class NotificationService {
     @Inject(INOTIFICATION_DOMAIN_SERVICE)
     private readonly notificationDomainService: INotificationDomainService,
   ) {}
+
+  private readonly logger = new Logger(NotificationService.name);
 
   async getNotifications(
     churchUser: ChurchUserModel,
@@ -73,7 +75,9 @@ export class NotificationService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Seoul' })
   async cleanUp() {
-    await this.notificationDomainService.cleanUp();
+    const result = await this.notificationDomainService.cleanUp();
+
+    this.logger.log(`${result.affected} 개 알림 삭제`);
   }
 
   @OnEvent(NotificationEvent.TASK_IN_CHARGE_ADDED, {
@@ -137,6 +141,60 @@ export class NotificationService {
     suppressErrors: true,
   })
   async handleTaskDeleted(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_ADDED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationInChargeAdded(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_CHANGED)
+  async handleVisitationInChargeChanged(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_REMOVED)
+  async handleVisitationInChargeRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_REPORT_ADDED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationReportAdded(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_REPORT_REMOVED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationReportRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_DELETED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationDeleted(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_STATUS_UPDATED, {})
+  async handleVisitationStatusStatusChanged(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.VISITATION_META_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationMetaUpdated(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
 }

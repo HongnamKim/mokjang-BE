@@ -97,11 +97,14 @@ export class VisitationController {
   patchVisitationMetaData(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationMetaDataId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.updateVisitationData(
-      churchId,
+      church,
+      requestManager,
       visitationMetaDataId,
       dto,
       qr,
@@ -115,9 +118,16 @@ export class VisitationController {
   deleteVisiting(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.visitationService.deleteVisitation(churchId, visitationId, qr);
+    return this.visitationService.deleteVisitation(
+      church,
+      requestManager,
+      visitationId,
+      qr,
+    );
   }
 
   @ApiOperation({
@@ -129,11 +139,14 @@ export class VisitationController {
   addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: AddReceiverDto,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.addReportReceivers(
-      churchId,
+      church,
+      requestManager,
       visitationId,
       dto.receiverIds,
       qr,
@@ -149,11 +162,14 @@ export class VisitationController {
   removeReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: DeleteReceiverDto,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.deleteReportReceivers(
-      churchId,
+      church,
+      requestManager,
       visitationId,
       dto.receiverIds,
       qr,
