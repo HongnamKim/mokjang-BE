@@ -139,7 +139,6 @@ export class MemberModel extends BaseModel {
 
   @Index()
   @Column({
-    enum: Baptism,
     default: Baptism.NONE,
     comment: '신급',
   })
