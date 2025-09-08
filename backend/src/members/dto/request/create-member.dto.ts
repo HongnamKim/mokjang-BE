@@ -215,7 +215,7 @@ export class CreateMemberDto {
   @ApiProperty({
     name: 'marriage',
     description: '결혼',
-    example: '미혼',
+    example: Marriage.SINGLE,
     enum: Marriage,
     required: false,
   })
@@ -252,7 +252,7 @@ export class CreateMemberDto {
   })
   @IsEnum(Baptism)
   @IsOptional()
-  baptism?: Baptism = Baptism.NONE;
+  baptism?: Baptism;
 
   /*@ApiProperty({
     name: 'previousChurch',

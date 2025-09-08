@@ -23,6 +23,7 @@ import { PatchChurchUserResponseDto } from '../dto/response/patch-church-user-re
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { LinkMemberDto } from '../dto/request/link-member.dto';
 import { MemberException } from '../../members/exception/member.exception';
+import { UserRole } from '../../user/const/user-role.enum';
 
 @Injectable()
 export class ChurchUserService {
@@ -131,6 +132,35 @@ export class ChurchUserService {
       );
 
     return new PatchChurchUserResponseDto(updatedChurchUser);
+  }
+
+  async leaveChurchUser(
+    church: ChurchModel,
+    churchUserId: number,
+    qr?: QueryRunner,
+  ) {
+    const targetChurchUser =
+      await this.churchUserDomainService.findChurchUserById(
+        church,
+        churchUserId,
+        qr,
+      );
+    const user = await this.userDomainService.findUserById(
+      targetChurchUser.userId,
+      qr,
+    );
+
+    await this.churchUserDomainService.leaveChurch(targetChurchUser, qr);
+    await this.userDomainService.updateUserRole(
+      user,
+      { role: UserRole.NONE },
+      qr,
+    );
+
+    return {
+      success: true,
+      timestamp: new Date(),
+    };
   }
 
   /*async patchChurchUserRole(
