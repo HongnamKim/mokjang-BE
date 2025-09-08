@@ -131,6 +131,23 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     return churchUser;
   }
 
+  async isLinkedWithMember(
+    church: ChurchModel,
+    member: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<boolean> {
+    const repository = this.getChurchUserRepository(qr);
+
+    const churchUser = await repository.findOne({
+      where: {
+        churchId: church.id,
+        memberId: member.id,
+      },
+    });
+
+    return !!churchUser;
+  }
+
   async findChurchUserByUserId(
     userId: number,
     qr?: QueryRunner,
