@@ -41,10 +41,17 @@ import {
 } from '../../../members/member-domain/interface/education-members-domain.service.interface';
 import { GetNotEnrolledMembersDto } from '../dto/request/get-not-enrolled-members.dto';
 import { NotEnrolledMembersPaginationResponseDto } from '../dto/response/not-enrolled-members-pagination-response.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { EducationTermNotificationService } from '../../education-term/service/education-term-notification.service';
+import { NotificationSourceEducationTerm } from '../../../notification/notification-event.dto';
+import { NotificationDomain } from '../../../notification/const/notification-domain.enum';
 
 @Injectable()
 export class EducationEnrollmentService {
   constructor(
+    private readonly educationTermNotificationService: EducationTermNotificationService,
+
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
     @Inject(IEDUCATION_MEMBERS_DOMAIN_SERVICE)
@@ -134,16 +141,13 @@ export class EducationEnrollmentService {
   }
 
   async createEducationEnrollment(
-    churchId: number,
+    requestManager: ChurchUserModel,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     dto: CreateEducationEnrollmentDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -155,7 +159,7 @@ export class EducationEnrollmentService {
         education,
         educationTermId,
         qr,
-        { educationSessions: true },
+        { reports: true, educationSessions: true },
       );
 
     const members = await this.membersDomainService.findMembersById(
@@ -202,6 +206,21 @@ export class EducationEnrollmentService {
         enrollment.map((e) => e.id),
         qr,
       );
+
+    const notificationTitle = `${education.name}__${educationTerm.term}`;
+    const notificationSource = new NotificationSourceEducationTerm(
+      NotificationDomain.EDUCATION_TERM,
+      educationId,
+      educationTermId,
+    );
+
+    await this.educationTermNotificationService.notifyEnrollmentUpdate(
+      church,
+      requestManager,
+      educationTerm,
+      notificationTitle,
+      notificationSource,
+    );
 
     return new PostEducationEnrollmentsResponseDto(newEnrollments);
   }
@@ -285,16 +304,13 @@ export class EducationEnrollmentService {
   }
 
   async deleteEducationEnrollment(
-    churchId: number,
+    requestManager: ChurchUserModel | undefined,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     educationEnrollmentId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -305,6 +321,7 @@ export class EducationEnrollmentService {
         education,
         educationTermId,
         qr,
+        { reports: true },
       );
 
     const targetEnrollment =
@@ -344,6 +361,23 @@ export class EducationEnrollmentService {
       targetEnrollment,
       qr,
     );
+
+    const notificationTitle = `${education.name}__${educationTerm.term}`;
+    const notificationSource = new NotificationSourceEducationTerm(
+      NotificationDomain.EDUCATION_TERM,
+      educationId,
+      educationTermId,
+    );
+
+    // 의도적인 교육대상자 삭제 시에만 알림
+    requestManager &&
+      (await this.educationTermNotificationService.notifyEnrollmentUpdate(
+        church,
+        requestManager,
+        educationTerm,
+        notificationTitle,
+        notificationSource,
+      ));
 
     return {
       timestamp: new Date(),

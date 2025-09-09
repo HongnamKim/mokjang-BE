@@ -271,4 +271,72 @@ export class NotificationService {
   async handleEducationSessionDeleted(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
+
+  @OnEvent(NotificationEvent.EDUCATION_TERM_IN_CHARGE_ADDED, {
+    async: true,
+    suppressErrors: true,
+  })
+  @OnEvent(NotificationEvent.EDUCATION_TERM_IN_CHARGE_REMOVED, {
+    async: true,
+    suppressErrors: true,
+  })
+  @OnEvent(NotificationEvent.EDUCATION_TERM_IN_CHARGE_CHANGED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationTermInChargeAdded(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  /*async handleEducationTermInChargeRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }*/
+
+  /*async handleEducationTermInChargeChanged(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }*/
+
+  @OnEvent(NotificationEvent.EDUCATION_TERM_REPORT_ADDED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationTermReportAdded(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_TERM_REPORT_REMOVED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationTermReportRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_TERM_STATUS_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationTermStatusUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_TERM_DATA_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  @OnEvent(NotificationEvent.EDUCATION_TERM_ENROLLMENT_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationTermDataUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_TERM_DELETED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationTermDeleted(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
 }
