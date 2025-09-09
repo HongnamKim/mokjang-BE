@@ -169,6 +169,8 @@ export class NotificationDomainService implements INotificationDomainService {
 
     const uniqueReceivers = this.uniqBy(receivers, 'id');
 
+    //console.log(uniqueReceivers);
+
     const now = new Date();
 
     const notifications = repository.create(
