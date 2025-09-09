@@ -17,6 +17,7 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 import { EducationReportDomainModule } from '../report/education-report/education-report-domain/education-report-domain.module';
 import { EducationSessionNotificationService } from './education-session/service/education-session-notification.service';
+import { EducationTermNotificationService } from './education-term/service/education-term-notification.service';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { EducationSessionNotificationService } from './education-session/service
     SessionAttendanceService,
     // 알림
     EducationSessionNotificationService,
+    EducationTermNotificationService,
   ],
   exports: [],
 })

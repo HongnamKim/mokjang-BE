@@ -3,22 +3,16 @@ import { EducationTermModel } from '../../entity/education-term.entity';
 import {
   ArrayUnique,
   IsArray,
-  IsDate,
   IsDateString,
   IsNumber,
-  IsOptional,
   IsString,
   MaxLength,
   Min,
 } from 'class-validator';
 import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
-import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
 import { IsAfterDate } from '../../../../common/decorator/validator/is-after-date.decorator';
-import {
-  IsBasicText,
-  IsNoSpecialChar,
-} from '../../../../common/decorator/validator/is-no-special-char.validator';
+import { IsBasicText } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { EducationTermConstraints } from '../../const/education-term.constraints';
 import { IsYYYYMMDD } from '../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
 
@@ -68,11 +62,11 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @ApiProperty({
     description: '교육 진행자 ID',
     minimum: 1,
-    required: false,
+    //required: false,
   })
   @IsNumber()
   @Min(1)
-  @IsOptional()
+  //@IsOptional()
   override inChargeId: number;
 
   @ApiProperty({

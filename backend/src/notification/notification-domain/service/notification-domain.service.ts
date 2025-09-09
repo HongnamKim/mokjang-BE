@@ -153,6 +153,7 @@ export class NotificationDomainService implements INotificationDomainService {
     const seen = new Set<any>();
 
     return arr.filter((item) => {
+      if (item === undefined || item === null) return false;
       const val = item[key];
       if (seen.has(val)) return false;
       seen.add(val);
@@ -168,8 +169,6 @@ export class NotificationDomainService implements INotificationDomainService {
     const receivers = event.notificationReceivers;
 
     const uniqueReceivers = this.uniqBy(receivers, 'id');
-
-    //console.log(uniqueReceivers);
 
     const now = new Date();
 
