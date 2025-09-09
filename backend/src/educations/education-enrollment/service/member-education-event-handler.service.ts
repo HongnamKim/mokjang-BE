@@ -7,6 +7,10 @@ import {
   IEducationEnrollmentsDomainService,
 } from '../../education-domain/interface/education-enrollment-domain.service.interface';
 import { MemberDeletedEvent } from '../../../members/events/member.event';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MemberEducationEventHandler {
@@ -15,6 +19,8 @@ export class MemberEducationEventHandler {
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
 
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
     private readonly educationEnrollmentDomainService: IEducationEnrollmentsDomainService,
   ) {}
@@ -42,10 +48,16 @@ export class MemberEducationEventHandler {
           qr,
         );
 
+      const church = await this.churchesDomainService.findChurchModelById(
+        churchId,
+        qr,
+      );
+
       await Promise.all(
         enrollments.map((enrollment) =>
           this.educationEnrollmentService.deleteEducationEnrollment(
-            churchId,
+            undefined,
+            church,
             enrollment.educationTerm.educationId,
             enrollment.educationTermId,
             enrollment.id,

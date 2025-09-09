@@ -25,4 +25,14 @@ export enum NotificationEvent {
   EDUCATION_SESSION_STATUS_UPDATED = 'education.session.status.updated',
   EDUCATION_SESSION_DATA_UPDATED = 'education.session.meta.updated',
   EDUCATION_SESSION_DELETED = 'education.session.deleted',
+
+  EDUCATION_TERM_IN_CHARGE_ADDED = 'education.term.inCharge.added',
+  EDUCATION_TERM_IN_CHARGE_REMOVED = 'education.term.inCharge.removed',
+  EDUCATION_TERM_IN_CHARGE_CHANGED = 'education.term.inCharge.changed',
+  EDUCATION_TERM_REPORT_ADDED = 'education.term.report.added',
+  EDUCATION_TERM_REPORT_REMOVED = 'education.term.report.removed',
+  EDUCATION_TERM_STATUS_UPDATED = 'education.term.status.updated',
+  EDUCATION_TERM_DATA_UPDATED = 'education.term.data.updated',
+  EDUCATION_TERM_DELETED = 'education.term.deleted',
+  EDUCATION_TERM_ENROLLMENT_UPDATED = 'education.term.enrollment.updated',
 }

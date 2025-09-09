@@ -51,6 +51,9 @@ import {
 } from '../../../report/education-report/education-report-domain/interface/education-report-domain.service.interface';
 import { AddEducationTermReportDto } from '../dto/request/report/add-education-term-report.dto';
 import { DeleteEducationTermReportDto } from '../dto/request/report/delete-education-term-report.dto';
+import { EducationTermNotificationService } from './education-term-notification.service';
+import { NotificationSourceEducationTerm } from '../../../notification/notification-event.dto';
+import { NotificationDomain } from '../../../notification/const/notification-domain.enum';
 
 @Injectable()
 export class EducationTermService {
@@ -73,6 +76,7 @@ export class EducationTermService {
 
     @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
     private readonly educationReportDomainService: IEducationReportDomainService,
+    private readonly educationTermNotificationService: EducationTermNotificationService,
   ) {}
 
   async getEducationTerms(
@@ -142,6 +146,13 @@ export class EducationTermService {
     return new GetEducationTermResponseDto(educationTerm);
   }
 
+  private getNotificationTitle(
+    education: EducationModel,
+    educationTerm: EducationTermModel,
+  ) {
+    return `${education.name}__${educationTerm.term}`;
+  }
+
   async createEducationTerm(
     creatorManager: ChurchUserModel,
     church: ChurchModel,
@@ -155,19 +166,18 @@ export class EducationTermService {
       qr,
     );
 
+    // 기수 생성 제한 확인
     if (education.termsCount > EducationTermConstraints.MAX_COUNT) {
       throw new ConflictException(
         EducationTermException.MAX_TERMS_COUNT_REACHED,
       );
     }
 
-    const inCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerByMemberId(
-          church,
-          dto.inChargeId,
-          qr,
-        )
-      : null;
+    const inCharge = await this.managerDomainService.findManagerByMemberId(
+      church,
+      dto.inChargeId,
+      qr,
+    );
 
     dto.utcStartDate = fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
     dto.utcEndDate = fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
@@ -181,10 +191,24 @@ export class EducationTermService {
         qr,
       );
 
+    const notificationTitle = this.getNotificationTitle(
+      education,
+      educationTerm,
+    );
+
+    this.educationTermNotificationService.notifyPost(
+      educationTerm,
+      creatorManager,
+      inCharge,
+      notificationTitle,
+      educationId,
+    );
+
     await this.educationDomainService.incrementTermsCount(education, qr);
 
     if (dto.receiverIds && dto.receiverIds.length > 0) {
       await this.handleAddEducationTermReport(
+        creatorManager,
         church,
         education,
         educationTerm,
@@ -197,7 +221,8 @@ export class EducationTermService {
   }
 
   async updateEducationTerm(
-    churchId: number,
+    requestManager: ChurchUserModel,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     dto: UpdateEducationTermDto,
@@ -220,11 +245,6 @@ export class EducationTermService {
       7-2. 진행자가 해당 교회에 소속X --> 해당 교인을 찾을 수 없음. NotFoundException
      */
 
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -236,15 +256,17 @@ export class EducationTermService {
         education,
         educationTermId,
         qr,
+        { reports: true },
       );
 
-    const newInCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerByMemberId(
-          church,
-          dto.inChargeId,
-          qr,
-        )
-      : null;
+    const newInCharge =
+      dto.inChargeId && dto.inChargeId !== educationTerm.inChargeId
+        ? await this.managerDomainService.findManagerByMemberId(
+            church,
+            dto.inChargeId,
+            qr,
+          )
+        : null;
 
     dto.utcStartDate = dto.startDate
       ? fromZonedTime(dto.startDate, TIME_ZONE.SEOUL)
@@ -268,19 +290,81 @@ export class EducationTermService {
         qr,
       );
 
+    const [reportReceivers, oldInCharge] = await Promise.all([
+      this.managerDomainService.findManagersForNotification(
+        church,
+        educationTerm.reports.map((r) => r.receiverId),
+      ),
+      educationTerm.inChargeId
+        ? this.managerDomainService.findManagerForNotification(
+            church,
+            educationTerm.inChargeId,
+          )
+        : null,
+    ]);
+
+    const notificationTitle = this.getNotificationTitle(
+      education,
+      educationTerm,
+    );
+    const notificationSource = new NotificationSourceEducationTerm(
+      NotificationDomain.EDUCATION_TERM,
+      education.id,
+      educationTerm.id,
+    );
+
+    // 알림 수신자
+    let notificationTargets: ChurchUserModel[];
+    if (newInCharge) {
+      notificationTargets = reportReceivers;
+    } else {
+      notificationTargets = oldInCharge
+        ? [...reportReceivers, oldInCharge]
+        : reportReceivers;
+    }
+
+    // 기수의 상태값 변경
+    if (dto.status && dto.status !== educationTerm.status) {
+      this.educationTermNotificationService.notifyStatusUpdate(
+        requestManager,
+        notificationTargets,
+        notificationTitle,
+        notificationSource,
+        educationTerm.status,
+        updatedEducationTerm.status,
+      );
+    }
+
+    if (newInCharge) {
+      this.educationTermNotificationService.notifyInChargeUpdate(
+        requestManager,
+        reportReceivers,
+        oldInCharge,
+        newInCharge,
+        notificationTitle,
+        notificationSource,
+      );
+    }
+
+    this.educationTermNotificationService.notifyDataUpdate(
+      requestManager,
+      notificationTargets,
+      notificationTitle,
+      notificationSource,
+      educationTerm,
+      dto,
+    );
+
     return new PatchEducationTermResponseDto(updatedEducationTerm);
   }
 
   async deleteEducationTerm(
-    churchId: number,
+    requestManager: ChurchUserModel,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -292,7 +376,7 @@ export class EducationTermService {
         education,
         educationTermId,
         qr,
-        {},
+        { reports: true },
       );
 
     if (educationTerm.sessionsCount > 0) {
@@ -323,6 +407,34 @@ export class EducationTermService {
     );
 
     await this.educationDomainService.decrementTermsCount(education, qr);
+
+    const [reportReceivers, inCharge] = await Promise.all([
+      this.managerDomainService.findManagersForNotification(
+        church,
+        educationTerm.reports.map((r) => r.receiverId),
+      ),
+      educationTerm.inChargeId
+        ? this.managerDomainService.findManagerForNotification(
+            church,
+            educationTerm.inChargeId,
+          )
+        : null,
+    ]);
+
+    const notificationTargets = inCharge
+      ? [...reportReceivers, inCharge]
+      : reportReceivers;
+
+    const notificationTitle = this.getNotificationTitle(
+      education,
+      educationTerm,
+    );
+
+    this.educationTermNotificationService.notifyDelete(
+      notificationTitle,
+      requestManager,
+      notificationTargets,
+    );
 
     return new DeleteEducationTermResponseDto(
       new Date(),
@@ -375,6 +487,7 @@ export class EducationTermService {
   }
 
   private async handleAddEducationTermReport(
+    requestManager: ChurchUserModel,
     church: ChurchModel,
     education: EducationModel,
     educationTerm: EducationTermModel,
@@ -395,6 +508,19 @@ export class EducationTermService {
       qr,
     );
 
+    const notificationTitle = this.getNotificationTitle(
+      education,
+      educationTerm,
+    );
+
+    this.educationTermNotificationService.notifyReportAdded(
+      educationTerm,
+      requestManager,
+      newReceivers,
+      notificationTitle,
+      education.id,
+    );
+
     return {
       educationId: education.id,
       educationTerm: educationTerm.id,
@@ -407,16 +533,13 @@ export class EducationTermService {
   }
 
   async addReportReceivers(
-    churchId: number,
+    requestManager: ChurchUserModel,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     dto: AddEducationTermReportDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -431,6 +554,7 @@ export class EducationTermService {
       );
 
     return this.handleAddEducationTermReport(
+      requestManager,
       church,
       education,
       educationTerm,
@@ -440,16 +564,13 @@ export class EducationTermService {
   }
 
   async deleteEducationTermReportReceivers(
-    churchId: number,
+    requestManager: ChurchUserModel,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     dto: DeleteEducationTermReportDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -476,6 +597,26 @@ export class EducationTermService {
         targetReports,
         qr,
       );
+
+    const removedReportReceivers =
+      await this.managerDomainService.findManagersForNotification(
+        church,
+        dto.receiverIds,
+        qr,
+      );
+
+    const notificationTitle = this.getNotificationTitle(
+      education,
+      educationTerm,
+    );
+
+    this.educationTermNotificationService.notifyReportRemoved(
+      educationTerm,
+      requestManager,
+      removedReportReceivers,
+      notificationTitle,
+      education.id,
+    );
 
     return {
       educationId: educationTerm.educationId,
