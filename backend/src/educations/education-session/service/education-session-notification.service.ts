@@ -1,36 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { TaskModel } from '../entity/task.entity';
-import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
-import { UpdateTaskDto } from '../dto/request/update-task.dto';
+import { EducationSessionModel } from '../entity/education-session.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationEvent } from '../../../notification/const/notification-event.enum';
 import {
   NotificationEventDto,
   NotificationField,
   NotificationFields,
-  NotificationSourceTask,
-} from '../../notification/notification-event.dto';
-import { NotificationEvent } from '../../notification/const/notification-event.enum';
-import { NotificationDomain } from '../../notification/const/notification-domain.enum';
-import { NotificationAction } from '../../notification/const/notification-action.enum';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { TaskStatus } from '../const/task-status.enum';
+  NotificationSourceEducationSession,
+} from '../../../notification/notification-event.dto';
+import { NotificationDomain } from '../../../notification/const/notification-domain.enum';
+import { NotificationAction } from '../../../notification/const/notification-action.enum';
+import { EducationSessionStatus } from '../const/education-session-status.enum';
+import { UpdateEducationSessionDto } from '../dto/request/update-education-session.dto';
 
 @Injectable()
-export class TaskNotificationService {
+export class EducationSessionNotificationService {
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
   notifyPost(
-    newTask: TaskModel,
+    newSession: EducationSessionModel,
     creatorManager: ChurchUserModel,
     inCharge: ChurchUserModel,
+    sessionTitle: string,
+    educationId: number,
+    educationTermId: number,
   ) {
+    const actorName = creatorManager.member.name;
+
     this.eventEmitter.emit(
-      NotificationEvent.TASK_IN_CHARGE_ADDED,
+      NotificationEvent.EDUCATION_SESSION_IN_CHARGE_ADDED,
       new NotificationEventDto(
-        creatorManager.member.name ? creatorManager.member.name : '',
-        NotificationDomain.TASK,
+        actorName,
+        NotificationDomain.EDUCATION_SESSION,
         NotificationAction.IN_CHARGE_ADDED,
-        newTask.title,
-        new NotificationSourceTask(NotificationDomain.TASK, newTask.id),
+        sessionTitle,
+        new NotificationSourceEducationSession(
+          NotificationDomain.EDUCATION_SESSION,
+          educationId,
+          educationTermId,
+          newSession.id,
+        ),
         [inCharge],
         [],
       ),
@@ -38,9 +48,12 @@ export class TaskNotificationService {
   }
 
   notifyReportAdded(
-    task: TaskModel,
+    session: EducationSessionModel,
     requestManager: ChurchUserModel,
     newReceivers: ChurchUserModel[],
+    sessionTitle: string,
+    educationId: number,
+    educationTermId: number,
   ) {
     const actorName = requestManager.member.name;
 
@@ -49,13 +62,18 @@ export class TaskNotificationService {
     );
 
     this.eventEmitter.emit(
-      NotificationEvent.TASK_REPORT_ADDED,
+      NotificationEvent.EDUCATION_SESSION_REPORT_ADDED,
       new NotificationEventDto(
         actorName,
-        NotificationDomain.TASK,
+        NotificationDomain.EDUCATION_SESSION,
         NotificationAction.REPORT_ADDED,
-        task.title,
-        new NotificationSourceTask(NotificationDomain.TASK, task.id),
+        sessionTitle,
+        new NotificationSourceEducationSession(
+          NotificationDomain.EDUCATION_SESSION,
+          educationId,
+          educationTermId,
+          session.id,
+        ),
         notificationReceivers,
         [],
       ),
@@ -63,9 +81,12 @@ export class TaskNotificationService {
   }
 
   notifyReportRemoved(
-    task: TaskModel,
+    session: EducationSessionModel,
     requestManager: ChurchUserModel,
     removedReportReceivers: ChurchUserModel[],
+    sessionTitle: string,
+    educationId: number,
+    educationTermId: number,
   ) {
     const actorName = requestManager.member.name;
 
@@ -74,13 +95,18 @@ export class TaskNotificationService {
     );
 
     this.eventEmitter.emit(
-      NotificationEvent.TASK_REPORT_REMOVED,
+      NotificationEvent.EDUCATION_SESSION_REPORT_REMOVED,
       new NotificationEventDto(
         actorName,
-        NotificationDomain.TASK,
+        NotificationDomain.EDUCATION_SESSION,
         NotificationAction.REPORT_REMOVED,
-        task.title,
-        new NotificationSourceTask(NotificationDomain.TASK, task.id),
+        sessionTitle,
+        new NotificationSourceEducationSession(
+          NotificationDomain.EDUCATION_SESSION,
+          educationId,
+          educationTermId,
+          session.id,
+        ),
         notificationReceivers,
         [],
       ),
@@ -90,11 +116,12 @@ export class TaskNotificationService {
   notifyStatusUpdate(
     requestManager: ChurchUserModel,
     notificationTargets: ChurchUserModel[],
-    notificationTitle: string,
-    notificationSource: NotificationSourceTask,
-    previousStatus: TaskStatus,
-    newStatus: TaskStatus,
+    sessionTitle: string,
+    notificationSource: NotificationSourceEducationSession,
+    previousStatus: EducationSessionStatus,
+    newStatus: EducationSessionStatus,
   ) {
+    // 요청자 알림에서 제외
     const notificationReceivers = notificationTargets.filter(
       (t) => t.id !== requestManager.id,
     );
@@ -102,12 +129,12 @@ export class TaskNotificationService {
     const actorName = requestManager.member.name;
 
     this.eventEmitter.emit(
-      NotificationEvent.TASK_STATUS_UPDATED,
+      NotificationEvent.EDUCATION_SESSION_STATUS_UPDATED,
       new NotificationEventDto(
         actorName,
-        NotificationDomain.TASK,
+        NotificationDomain.EDUCATION_SESSION,
         NotificationAction.STATUS_UPDATED,
-        notificationTitle,
+        sessionTitle,
         notificationSource,
         notificationReceivers,
         [
@@ -127,17 +154,17 @@ export class TaskNotificationService {
     oldInCharge: ChurchUserModel | null,
     newInCharge: ChurchUserModel,
     notificationTitle: string,
-    notificationSource: NotificationSourceTask,
+    notificationSource: NotificationSourceEducationSession,
   ) {
     const actorName = requestManager.member.name;
 
     // 이전 담당자 제외 알림
     if (oldInCharge && oldInCharge.id !== requestManager.id) {
       this.eventEmitter.emit(
-        NotificationEvent.TASK_IN_CHARGE_REMOVED,
+        NotificationEvent.EDUCATION_SESSION_IN_CHARGE_REMOVED,
         new NotificationEventDto(
           actorName,
-          NotificationDomain.TASK,
+          NotificationDomain.EDUCATION_SESSION,
           NotificationAction.IN_CHARGE_REMOVED,
           notificationTitle,
           notificationSource,
@@ -150,10 +177,10 @@ export class TaskNotificationService {
     // 새 담당자 지정 알림
     if (newInCharge.id !== requestManager.id) {
       this.eventEmitter.emit(
-        NotificationEvent.TASK_IN_CHARGE_ADDED,
+        NotificationEvent.EDUCATION_SESSION_REPORT_ADDED,
         new NotificationEventDto(
           actorName,
-          NotificationDomain.TASK,
+          NotificationDomain.EDUCATION_SESSION,
           NotificationAction.IN_CHARGE_ADDED,
           notificationTitle,
           notificationSource,
@@ -163,15 +190,16 @@ export class TaskNotificationService {
       );
     }
 
+    // 보고대상자에게 담당자 변경 알림
     const notificationReceivers = reportReceivers.filter(
       (r) => r.id !== requestManager.id,
     );
 
     this.eventEmitter.emit(
-      NotificationEvent.TASK_IN_CHARGE_CHANGED,
+      NotificationEvent.EDUCATION_SESSION_IN_CHARGE_CHANGED,
       new NotificationEventDto(
         actorName,
-        NotificationDomain.TASK,
+        NotificationDomain.EDUCATION_SESSION,
         NotificationAction.IN_CHARGE_CHANGED,
         notificationTitle,
         notificationSource,
@@ -189,61 +217,66 @@ export class TaskNotificationService {
 
   notifyDataUpdate(
     requestManager: ChurchUserModel,
-    notificationTargets: ChurchUserModel[],
+    notificationReceivers: ChurchUserModel[], // 담당자 + 보고대상자
     notificationTitle: string,
-    notificationSource: NotificationSourceTask,
-    targetTask: TaskModel,
-    dto: UpdateTaskDto,
+    notificationSource: NotificationSourceEducationSession,
+    educationSession: EducationSessionModel,
+    dto: UpdateEducationSessionDto,
   ) {
-    // 요청자 이름
     const actorName = requestManager.member.name;
 
-    const notificationReceivers = notificationTargets.filter(
+    // 변경자 알림 대상에서 제외
+    const notificationTargets = notificationReceivers.filter(
       (r) => r.id !== requestManager.id,
     );
 
-    const notificationColumns = new Set([
+    const notificationColumns = [
       'title',
       'startDate',
       'endDate',
       'content', // 변경 여부만 표시
-    ]);
+    ];
 
     const notificationFields: NotificationFields[] = [];
 
     for (const key of Object.keys(dto)) {
-      if (!notificationColumns.has(key)) {
+      if (!notificationColumns.includes(key)) {
         continue;
       }
 
       if (key === 'content') {
-        if (dto.content !== targetTask.content) {
-          notificationFields.push(new NotificationFields(key, null, null));
-        }
+        if (dto.content !== educationSession.content)
+          notificationFields.push(
+            new NotificationFields('content', null, null),
+          );
       } else if (key === 'startDate' && dto.utcStartDate) {
-        if (dto.utcStartDate.getTime() !== targetTask.startDate.getTime()) {
+        if (
+          dto.utcStartDate.getTime() !== educationSession.startDate.getTime()
+        ) {
+          // 시작 시간 변경
           notificationFields.push(
             new NotificationFields(
               NotificationField.START_DATE,
-              targetTask.startDate,
+              educationSession.startDate,
               dto.utcStartDate,
             ),
           );
         }
       } else if (key === 'endDate' && dto.utcEndDate) {
-        if (dto.utcEndDate.getTime() !== targetTask.endDate.getTime()) {
+        if (dto.utcEndDate.getTime() !== educationSession.endDate.getTime()) {
+          // 종료 시간 변경
           notificationFields.push(
             new NotificationFields(
               NotificationField.END_DATE,
-              targetTask.endDate,
+              educationSession.endDate,
               dto.utcEndDate,
             ),
           );
         }
       } else {
-        if (dto[key] !== targetTask[key]) {
+        if (dto[key] !== educationSession[key]) {
           notificationFields.push(
-            new NotificationFields(key, targetTask[key], dto[key]),
+            new NotificationFields(key, educationSession[key], dto[key]),
           );
         }
       }
@@ -251,14 +284,14 @@ export class TaskNotificationService {
 
     notificationFields.length > 0 &&
       this.eventEmitter.emit(
-        NotificationEvent.TASK_DATA_UPDATED,
+        NotificationEvent.EDUCATION_SESSION_DATA_UPDATED,
         new NotificationEventDto(
           actorName,
-          NotificationDomain.TASK,
+          NotificationDomain.EDUCATION_SESSION,
           NotificationAction.UPDATED,
           notificationTitle,
           notificationSource,
-          notificationReceivers,
+          notificationTargets,
           notificationFields,
         ),
       );
@@ -269,7 +302,6 @@ export class TaskNotificationService {
     requestManager: ChurchUserModel,
     notificationTargets: ChurchUserModel[],
   ) {
-    // 요청자 이름
     const actorName = requestManager.member.name;
 
     const notificationReceivers = notificationTargets.filter(
@@ -277,10 +309,10 @@ export class TaskNotificationService {
     );
 
     this.eventEmitter.emit(
-      NotificationEvent.TASK_DELETED,
+      NotificationEvent.EDUCATION_SESSION_DELETED,
       new NotificationEventDto(
         actorName,
-        NotificationDomain.TASK,
+        NotificationDomain.EDUCATION_SESSION,
         NotificationAction.DELETED,
         notificationTitle,
         null,

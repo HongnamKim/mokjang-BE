@@ -1,4 +1,11 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { EducationTermModel } from '../../education-term/entity/education-term.entity';
 import { SessionAttendanceModel } from '../../session-attendance/entity/session-attendance.entity';
 import { EducationSessionStatus } from '../const/education-session-status.enum';
@@ -48,6 +55,7 @@ export class EducationSessionModel extends BaseModel {
   })
   status: EducationSessionStatus;
 
+  @Index()
   @Column({ nullable: true, comment: '회차 담당자 교인 ID' })
   inChargeId: number | null;
 
@@ -55,6 +63,7 @@ export class EducationSessionModel extends BaseModel {
     nullable: true,
     onDelete: 'SET NULL',
   })
+  @JoinColumn({ name: 'inChargeId' })
   inCharge: MemberModel;
 
   @OneToMany(

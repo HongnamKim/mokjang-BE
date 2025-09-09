@@ -128,7 +128,7 @@ export class NotificationService {
     await this.notificationDomainService.createNotifications(event);
   }
 
-  @OnEvent(NotificationEvent.TASK_META_UPDATED, {
+  @OnEvent(NotificationEvent.TASK_DATA_UPDATED, {
     async: true,
     suppressErrors: true,
   })
@@ -151,12 +151,19 @@ export class NotificationService {
   async handleVisitationInChargeAdded(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
-  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_CHANGED)
+
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_CHANGED, {
+    async: true,
+    suppressErrors: true,
+  })
   async handleVisitationInChargeChanged(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
 
-  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_REMOVED)
+  @OnEvent(NotificationEvent.VISITATION_IN_CHARGE_REMOVED, {
+    async: true,
+    suppressErrors: true,
+  })
   async handleVisitationInChargeRemoved(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
@@ -185,16 +192,83 @@ export class NotificationService {
     await this.notificationDomainService.createNotifications(event);
   }
 
-  @OnEvent(NotificationEvent.VISITATION_STATUS_UPDATED, {})
-  async handleVisitationStatusStatusChanged(event: NotificationEventDto) {
+  @OnEvent(NotificationEvent.VISITATION_STATUS_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleVisitationStatusChanged(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
 
-  @OnEvent(NotificationEvent.VISITATION_META_UPDATED, {
+  @OnEvent(NotificationEvent.VISITATION_DATA_UPDATED, {
     async: true,
     suppressErrors: true,
   })
   async handleVisitationMetaUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_IN_CHARGE_ADDED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionInChargeAdded(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_IN_CHARGE_REMOVED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionInChargeRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_IN_CHARGE_CHANGED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionInChargeChanged(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_REPORT_ADDED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionReportAdded(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_REPORT_REMOVED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionReportRemoved(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_STATUS_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionStatusUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_DATA_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionDataUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.EDUCATION_SESSION_DELETED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleEducationSessionDeleted(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
 }

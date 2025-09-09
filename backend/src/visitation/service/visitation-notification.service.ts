@@ -1,12 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  IMANAGER_DOMAIN_SERVICE,
-  IManagerDomainService,
-} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { ChurchModel } from '../../churches/entity/church.entity';
 import { VisitationMetaModel } from '../entity/visitation-meta.entity';
-import { QueryRunner } from 'typeorm';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { NotificationEvent } from '../../notification/const/notification-event.enum';
 import {
@@ -24,34 +18,14 @@ import { TIME_ZONE } from '../../common/const/time-zone.const';
 
 @Injectable()
 export class VisitationNotificationService {
-  constructor(
-    private readonly eventEmitter: EventEmitter2,
-    @Inject(IMANAGER_DOMAIN_SERVICE)
-    private readonly managerDomainService: IManagerDomainService,
-  ) {}
-
-  private async getReportReceivers(
-    church: ChurchModel,
-    visitation: VisitationMetaModel,
-    qr: QueryRunner,
-  ) {
-    const reportReceiverIds = visitation.reports.map((r) => r.receiverId);
-
-    return this.managerDomainService.findManagersForNotification(
-      church,
-      reportReceiverIds,
-      qr,
-    );
-  }
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
   notifyPost(
     newVisitation: VisitationMetaModel,
     creatorManager: ChurchUserModel,
     inCharge: ChurchUserModel,
   ) {
-    const actorName = creatorManager.member.name
-      ? creatorManager.member.name
-      : '';
+    const actorName = creatorManager.member.name;
 
     this.eventEmitter.emit(
       NotificationEvent.VISITATION_IN_CHARGE_ADDED,
@@ -75,9 +49,11 @@ export class VisitationNotificationService {
     requestManager: ChurchUserModel,
     newReceivers: ChurchUserModel[],
   ) {
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
+    const actorName = requestManager.member.name;
+
+    const notificationTargets = newReceivers.filter(
+      (r) => r.id !== requestManager.id,
+    );
 
     this.eventEmitter.emit(
       NotificationEvent.VISITATION_REPORT_ADDED,
@@ -90,7 +66,7 @@ export class VisitationNotificationService {
           NotificationDomain.VISITATION,
           visitation.id,
         ),
-        newReceivers,
+        notificationTargets,
         [],
       ),
     );
@@ -101,9 +77,11 @@ export class VisitationNotificationService {
     requestManager: ChurchUserModel,
     removedReportReceivers: ChurchUserModel[],
   ) {
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
+    const actorName = requestManager.member.name;
+
+    const notificationTargets = removedReportReceivers.filter(
+      (r) => r.id !== requestManager.id,
+    );
 
     this.eventEmitter.emit(
       NotificationEvent.VISITATION_REPORT_REMOVED,
@@ -116,40 +94,25 @@ export class VisitationNotificationService {
           NotificationDomain.VISITATION,
           visitation.id,
         ),
-        removedReportReceivers,
+        notificationTargets,
         [],
       ),
     );
   }
 
-  async notifyStatusUpdate(
-    church: ChurchModel,
+  notifyStatusUpdate(
     requestManager: ChurchUserModel,
-    targetVisitation: VisitationMetaModel,
+    notificationTargets: ChurchUserModel[],
+    notificationTitle: string,
+    notificationSource: NotificationSourceVisitation,
+    previousStatus: VisitationStatus,
     newStatus: VisitationStatus,
-    qr: QueryRunner,
   ) {
-    const reportReceivers = await this.getReportReceivers(
-      church,
-      targetVisitation,
-      qr,
+    const notificationReceivers = notificationTargets.filter(
+      (t) => t.id !== requestManager.id,
     );
 
-    const inCharge = targetVisitation.inChargeId
-      ? await this.managerDomainService.findManagerForNotification(
-          church,
-          targetVisitation.inChargeId,
-          qr,
-        )
-      : null;
-
-    const notificationTargets = (
-      inCharge ? [...reportReceivers, inCharge] : reportReceivers
-    ).filter((t) => t.id !== requestManager.id);
-
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
+    const actorName = requestManager.member.name;
 
     this.eventEmitter.emit(
       NotificationEvent.VISITATION_STATUS_UPDATED,
@@ -157,16 +120,13 @@ export class VisitationNotificationService {
         actorName,
         NotificationDomain.VISITATION,
         NotificationAction.STATUS_UPDATED,
-        targetVisitation.title,
-        new NotificationSourceVisitation(
-          NotificationDomain.VISITATION,
-          targetVisitation.id,
-        ),
-        notificationTargets,
+        notificationTitle,
+        notificationSource,
+        notificationReceivers,
         [
           new NotificationFields(
             NotificationField.STATUS,
-            targetVisitation.status,
+            previousStatus,
             newStatus,
           ),
         ],
@@ -174,168 +134,113 @@ export class VisitationNotificationService {
     );
   }
 
-  async notifyInChargeUpdate(
-    church: ChurchModel,
+  notifyInChargeUpdate(
     requestManager: ChurchUserModel,
-    targetVisitation: VisitationMetaModel,
-    newInChargeMember: ChurchUserModel,
-    qr: QueryRunner,
+    reportReceivers: ChurchUserModel[],
+    oldInCharge: ChurchUserModel | null,
+    newInCharge: ChurchUserModel,
+    notificationTitle: string,
+    notificationSource: NotificationSourceVisitation,
   ) {
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
-
-    const previousInCharge = targetVisitation.inChargeId
-      ? await this.managerDomainService.findManagerForNotification(
-          church,
-          targetVisitation.inChargeId,
-          qr,
-        )
-      : null;
-
-    const notificationSource = new NotificationSourceVisitation(
-      NotificationDomain.VISITATION,
-      targetVisitation.id,
-    );
+    const actorName = requestManager.member.name;
 
     // 이전 담당자 제외 알림
-    if (previousInCharge && previousInCharge.id !== requestManager.id) {
+    if (oldInCharge && oldInCharge.id !== requestManager.id) {
       this.eventEmitter.emit(
         NotificationEvent.VISITATION_IN_CHARGE_REMOVED,
         new NotificationEventDto(
           actorName,
           NotificationDomain.VISITATION,
-          NotificationAction.IN_CHARGE_REMOVED,
-          targetVisitation.title,
+          NotificationAction.IN_CHARGE_ADDED,
+          notificationTitle,
           notificationSource,
-          [previousInCharge],
+          [newInCharge],
           [],
         ),
       );
     }
 
     // 새 담당자 지정 알림
-    if (newInChargeMember.id !== requestManager.id) {
+    if (newInCharge.id !== requestManager.id) {
       this.eventEmitter.emit(
         NotificationEvent.VISITATION_IN_CHARGE_ADDED,
         new NotificationEventDto(
           actorName,
           NotificationDomain.VISITATION,
           NotificationAction.IN_CHARGE_ADDED,
-          targetVisitation.title,
+          notificationTitle,
           notificationSource,
-          [newInChargeMember],
+          [newInCharge],
           [],
         ),
       );
     }
 
-    const reportReceivers = (
-      await this.getReportReceivers(church, targetVisitation, qr)
-    ).filter((r) => r.id !== requestManager.id);
+    // 보고대상자에게 담당자 변경 알림
+    const notificationReceivers = reportReceivers.filter(
+      (r) => r.id !== requestManager.id,
+    );
 
-    // 담당자 변경 알림
     this.eventEmitter.emit(
       NotificationEvent.VISITATION_IN_CHARGE_CHANGED,
       new NotificationEventDto(
         actorName,
         NotificationDomain.VISITATION,
         NotificationAction.IN_CHARGE_CHANGED,
-        targetVisitation.title,
+        notificationTitle,
         notificationSource,
-        reportReceivers,
+        notificationReceivers,
         [
           new NotificationFields(
             NotificationField.IN_CHARGE,
-            previousInCharge?.member.name,
-            newInChargeMember.member.name,
+            oldInCharge?.member.name,
+            newInCharge.member.name,
           ),
         ],
       ),
     );
   }
 
-  async notifyMemberUpdate(
-    church: ChurchModel,
-    targetVisitation: VisitationMetaModel,
+  notifyMemberUpdate(
     requestManager: ChurchUserModel,
-    qr: QueryRunner,
+    notificationTargets: ChurchUserModel[],
+    notificationTitle: string,
+    notificationSource: NotificationSourceVisitation,
   ) {
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
+    const actorName = requestManager.member.name;
 
-    const inCharge = targetVisitation.inChargeId
-      ? await this.managerDomainService.findManagerForNotification(
-          church,
-          targetVisitation.inChargeId,
-          qr,
-        )
-      : null;
-
-    const reportReceivers = await this.getReportReceivers(
-      church,
-      targetVisitation,
-      qr,
+    const notificationReceivers = notificationTargets.filter(
+      (t) => t.id !== requestManager.id,
     );
 
-    const notificationReceivers = (
-      inCharge ? [...reportReceivers, inCharge] : reportReceivers
-    ).filter((r) => r.id !== requestManager.id);
-
     this.eventEmitter.emit(
-      NotificationEvent.VISITATION_META_UPDATED,
+      NotificationEvent.VISITATION_DATA_UPDATED,
       new NotificationEventDto(
         actorName,
         NotificationDomain.VISITATION,
         NotificationAction.UPDATED,
-        targetVisitation.title,
-        new NotificationSourceVisitation(
-          NotificationDomain.VISITATION,
-          targetVisitation.id,
-        ),
+        notificationTitle,
+        notificationSource,
         notificationReceivers,
         [new NotificationFields('members', null, null)],
       ),
     );
   }
 
-  async notifyDataUpdate(
-    church: ChurchModel,
-    targetVisitation: VisitationMetaModel,
+  notifyDataUpdate(
     requestManager: ChurchUserModel,
+    notificationTargets: ChurchUserModel[],
+    notificationTitle: string,
+    notificationSource: NotificationSourceVisitation,
+    targetVisitation: VisitationMetaModel,
     dto: UpdateVisitationDto,
-    qr: QueryRunner,
   ) {
-    const reportReceivers = await this.getReportReceivers(
-      church,
-      targetVisitation,
-      qr,
-    );
-    const inCharge = targetVisitation.inChargeId
-      ? await this.managerDomainService.findManagerForNotification(
-          church,
-          targetVisitation.inChargeId,
-          qr,
-        )
-      : null;
+    const actorName = requestManager.member.name;
 
     // 알림 수신 대상자
-    const notificationTargets = (
-      inCharge ? [...reportReceivers, inCharge] : reportReceivers
-    ).filter((r) => r.id !== requestManager.id);
-
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
-
-    const title = targetVisitation.title;
-    const notificationSource = new NotificationSourceVisitation(
-      NotificationDomain.VISITATION,
-      targetVisitation.id,
+    const notificationReceivers = notificationTargets.filter(
+      (t) => t.id !== requestManager.id,
     );
-
-    const notificationFields: NotificationFields[] = [];
 
     const notificationColumns = [
       'title',
@@ -344,6 +249,8 @@ export class VisitationNotificationService {
       'visitationMethod',
     ];
 
+    const notificationFields: NotificationFields[] = [];
+
     // 업데이트 사항 체크
     for (const key of Object.keys(dto)) {
       if (!notificationColumns.includes(key)) {
@@ -351,16 +258,12 @@ export class VisitationNotificationService {
       }
 
       // 제목 변경
-      /*if (key === 'title' && dto.title !== title) {
-        notificationFields.push(
-          new NotificationFields('title', title, dto.title),
-        );
-      } else*/ if (key === 'startDate' && dto.startDate) {
+      if (key === 'startDate' && dto.startDate) {
         const utcStartDate = fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
-        if (utcStartDate !== targetVisitation.startDate) {
+        if (utcStartDate.getTime() !== targetVisitation.startDate.getTime()) {
           notificationFields.push(
             new NotificationFields(
-              'startDate',
+              key,
               targetVisitation.startDate,
               utcStartDate,
             ),
@@ -368,13 +271,9 @@ export class VisitationNotificationService {
         }
       } else if (key === 'endDate' && dto.endDate) {
         const utcEndDate = fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
-        if (utcEndDate !== targetVisitation.startDate) {
+        if (utcEndDate.getTime() !== targetVisitation.startDate.getTime()) {
           notificationFields.push(
-            new NotificationFields(
-              'endDate',
-              targetVisitation.endDate,
-              utcEndDate,
-            ),
+            new NotificationFields(key, targetVisitation.endDate, utcEndDate),
           );
         }
       } else {
@@ -388,42 +287,29 @@ export class VisitationNotificationService {
 
     notificationFields.length > 0 &&
       this.eventEmitter.emit(
-        NotificationEvent.VISITATION_META_UPDATED,
+        NotificationEvent.VISITATION_DATA_UPDATED,
         new NotificationEventDto(
           actorName,
           NotificationDomain.VISITATION,
           NotificationAction.UPDATED,
-          title,
+          notificationTitle,
           notificationSource,
-          notificationTargets,
+          notificationReceivers,
           notificationFields,
         ),
       );
   }
 
-  async notifyDelete(
-    church: ChurchModel,
-    targetVisitation: VisitationMetaModel,
+  notifyDelete(
+    notificationTitle: string,
     requestManager: ChurchUserModel,
-    qr: QueryRunner,
+    notificationTargets: ChurchUserModel[],
   ) {
-    const actorName = requestManager.member.name
-      ? requestManager.member.name
-      : '';
+    const actorName = requestManager.member.name;
 
-    const receiverIds = targetVisitation.reports.map((r) => r.receiverId);
-
-    const notificationReceiverIds = [
-      targetVisitation.inChargeId,
-      ...receiverIds,
-    ].filter((id) => id !== null);
-
-    const notificationReceivers =
-      await this.managerDomainService.findManagersForNotification(
-        church,
-        notificationReceiverIds,
-        qr,
-      );
+    const notificationReceivers = notificationTargets.filter(
+      (t) => t.id !== requestManager.id,
+    );
 
     this.eventEmitter.emit(
       NotificationEvent.VISITATION_DELETED,
@@ -431,7 +317,7 @@ export class VisitationNotificationService {
         actorName,
         NotificationDomain.VISITATION,
         NotificationAction.DELETED,
-        targetVisitation.title,
+        notificationTitle,
         null,
         notificationReceivers,
         [],

@@ -5,7 +5,7 @@ export enum NotificationEvent {
   TASK_REPORT_ADDED = 'task.report.added',
   TASK_REPORT_REMOVED = 'task.report.removed',
   TASK_STATUS_UPDATED = 'task.status.updated',
-  TASK_META_UPDATED = 'task.meta.updated',
+  TASK_DATA_UPDATED = 'task.data.updated',
   TASK_DELETED = 'task.deleted',
 
   VISITATION_IN_CHARGE_ADDED = 'visitation.inCharge.added',
@@ -13,7 +13,16 @@ export enum NotificationEvent {
   VISITATION_IN_CHARGE_CHANGED = 'visitation.inCharge.changed',
   VISITATION_REPORT_ADDED = 'visitation.report.added',
   VISITATION_REPORT_REMOVED = 'visitation.report.removed',
-  VISITATION_DELETED = 'visitation.deleted',
   VISITATION_STATUS_UPDATED = 'visitation.status.updated',
-  VISITATION_META_UPDATED = 'visitation.meta.updated',
+  VISITATION_DATA_UPDATED = 'visitation.data.updated',
+  VISITATION_DELETED = 'visitation.deleted',
+
+  EDUCATION_SESSION_IN_CHARGE_ADDED = 'education.session.inCharge.added',
+  EDUCATION_SESSION_IN_CHARGE_REMOVED = 'education.session.inCharge.removed',
+  EDUCATION_SESSION_IN_CHARGE_CHANGED = 'education.session.inCharge.changed',
+  EDUCATION_SESSION_REPORT_ADDED = 'education.session.report.added',
+  EDUCATION_SESSION_REPORT_REMOVED = 'education.session.report.removed',
+  EDUCATION_SESSION_STATUS_UPDATED = 'education.session.status.updated',
+  EDUCATION_SESSION_DATA_UPDATED = 'education.session.meta.updated',
+  EDUCATION_SESSION_DELETED = 'education.session.deleted',
 }

@@ -46,6 +46,8 @@ import { DeleteVisitationResponseDto } from '../dto/response/delete-visitation-r
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { VisitationNotificationService } from './visitation-notification.service';
+import { NotificationSourceVisitation } from '../../notification/notification-event.dto';
+import { NotificationDomain } from '../../notification/const/notification-domain.enum';
 
 @Injectable()
 export class VisitationService {
@@ -114,7 +116,7 @@ export class VisitationService {
       qr,
     );
 
-    const memberIds = dto.memberIds; //dto.visitationDetails.map((detail) => detail.memberId);
+    const memberIds = dto.memberIds;
 
     const members = await this.membersDomainService.findMembersById(
       church,
@@ -235,6 +237,25 @@ export class VisitationService {
             qr,
           )
         : undefined;
+    const oldInCharge = targetMetaData.inChargeId
+      ? await this.managerDomainService.findManagerForNotification(
+          church,
+          targetMetaData.inChargeId,
+          qr,
+        )
+      : null;
+
+    const notificationSource = new NotificationSourceVisitation(
+      NotificationDomain.VISITATION,
+      targetMetaData.id,
+    );
+
+    const reportReceivers =
+      await this.managerDomainService.findManagersForNotification(
+        church,
+        targetMetaData.reports.map((r) => r.receiverId),
+        qr,
+      );
 
     // 심방 대상자 변경
     let visitationType: VisitationType = targetMetaData.visitationType;
@@ -288,42 +309,59 @@ export class VisitationService {
       qr,
     );
 
-    if (dto.status) {
-      await this.visitationNotificationService.notifyStatusUpdate(
-        church,
+    // 알림 수신 대상자 (보고대상자 + 담당자(optional))
+    let notificationTargets: ChurchUserModel[];
+
+    if (newInstructor) {
+      notificationTargets = reportReceivers;
+    } else {
+      notificationTargets = oldInCharge
+        ? [...reportReceivers, oldInCharge]
+        : reportReceivers;
+    }
+
+    // 심방의 상태값 변경 시 알림
+    if (dto.status && dto.status !== targetMetaData.status) {
+      this.visitationNotificationService.notifyStatusUpdate(
         requestManager,
-        targetMetaData,
+        notificationTargets,
+        targetMetaData.title,
+        notificationSource,
+        targetMetaData.status,
         dto.status,
-        qr,
       );
     }
 
+    // 심방 데이터 변경 시 알림
+    this.visitationNotificationService.notifyDataUpdate(
+      requestManager,
+      notificationTargets,
+      targetMetaData.title,
+      notificationSource,
+      targetMetaData,
+      dto,
+    );
+
+    // 심방 대상자 변경 알림
     if (dto.memberIds && dto.memberIds.length > 0) {
-      await this.visitationNotificationService.notifyMemberUpdate(
-        church,
-        targetMetaData,
+      this.visitationNotificationService.notifyMemberUpdate(
         requestManager,
-        qr,
+        notificationTargets,
+        targetMetaData.title,
+        notificationSource,
       );
     }
 
     if (newInstructor) {
-      await this.visitationNotificationService.notifyInChargeUpdate(
-        church,
+      this.visitationNotificationService.notifyInChargeUpdate(
         requestManager,
-        targetMetaData,
+        reportReceivers,
+        oldInCharge,
         newInstructor,
-        qr,
+        targetMetaData.title,
+        notificationSource,
       );
     }
-
-    await this.visitationNotificationService.notifyDataUpdate(
-      church,
-      targetMetaData,
-      requestManager,
-      dto,
-      qr,
-    );
 
     const updatedVisitation =
       await this.visitationMetaDomainService.findVisitationMetaById(
@@ -364,11 +402,29 @@ export class VisitationService {
       qr,
     );
 
-    await this.visitationNotificationService.notifyDelete(
-      church,
-      metaData,
+    const reportReceivers =
+      await this.managerDomainService.findManagersForNotification(
+        church,
+        metaData.reports.map((r) => r.receiverId),
+        qr,
+      );
+
+    const inCharge = metaData.inChargeId
+      ? await this.managerDomainService.findManagerForNotification(
+          church,
+          metaData.inChargeId,
+          qr,
+        )
+      : null;
+
+    const notificationTargets = inCharge
+      ? [...reportReceivers, inCharge]
+      : reportReceivers;
+
+    this.visitationNotificationService.notifyDelete(
+      metaData.title,
       requestManager,
-      qr,
+      notificationTargets,
     );
 
     return new DeleteVisitationResponseDto(
