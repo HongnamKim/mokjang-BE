@@ -6,7 +6,6 @@ import {
   IsDateString,
   IsNotEmpty,
   IsNumber,
-  IsOptional,
   IsString,
   MaxLength,
   Min,
@@ -60,7 +59,7 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
     description: '담당자 교인 ID',
     required: false,
   })
-  @IsOptional()
+  //@IsOptional()
   @IsNumber()
   @Min(1)
   override inChargeId: number;

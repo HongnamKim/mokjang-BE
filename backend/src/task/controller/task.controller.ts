@@ -104,17 +104,12 @@ export class TaskController {
   patchTask(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdateTaskDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.patchTask(
-      requestManager,
-      churchId,
-      taskId,
-      dto,
-      qr,
-    );
+    return this.taskService.patchTask(requestManager, church, taskId, dto, qr);
   }
 
   @ApiDeleteTask()

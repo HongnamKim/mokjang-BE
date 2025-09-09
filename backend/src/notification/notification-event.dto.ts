@@ -44,6 +44,17 @@ export class NotificationSourceVisitation extends NotificationSource {
   }
 }
 
+export class NotificationSourceEducationSession extends NotificationSource {
+  constructor(
+    domain: NotificationDomain,
+    public readonly educationId: number,
+    public readonly educationTermId: number,
+    id: number,
+  ) {
+    super(domain, id);
+  }
+}
+
 export class NotificationEventDto {
   actorName: string;
 
