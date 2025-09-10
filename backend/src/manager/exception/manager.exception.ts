@@ -4,6 +4,8 @@ export const ManagerException = {
 
   CANNOT_CHANGE_ACTIVITY:
     '관리자 권한의 교인만 활성 상태를 변경할 수 있습니다.',
+  IN_ACTIVE: '권한이 비활성 상태입니다.',
+  NOT_LINKED: '이 계정은 교인 데이터와 연결되지 않아 활동할 수 없습니다.',
 
   MISSING_MEMBER_DATA: (domain: string = '') =>
     `교인 데이터와 연결이 끊겼습니다. (에러 발생 위치: ${domain})`,
