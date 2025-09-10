@@ -11,12 +11,18 @@ import {
   IChurchesDomainService,
 } from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import { CustomRequest } from '../../common/custom-request';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 
 @Injectable()
 export class ChurchOwnerGuard implements CanActivate {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -40,6 +46,13 @@ export class ChurchOwnerGuard implements CanActivate {
     if (church.ownerUserId !== token.id) {
       throw new ForbiddenException('교회 소유자만 접근할 수 있습니다.');
     }
+
+    req.requestOwner =
+      await this.managerDomainService.findManagerForPermissionCheck(
+        church,
+        token.id,
+        req.queryRunner,
+      );
 
     return true;
   }

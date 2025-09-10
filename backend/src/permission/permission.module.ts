@@ -5,6 +5,7 @@ import { PermissionService } from './service/permission.service';
 import { PermissionDomainModule } from './permission-domain/permission-domain.module';
 import { ChurchesDomainModule } from '../churches/churches-domain/churches-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { PermissionNotificationService } from './service/permission-notification.service';
 
 @Module({
   imports: [
@@ -16,7 +17,6 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     PermissionDomainModule,
   ],
   controllers: [PermissionController],
-  providers: [PermissionService],
-  exports: [],
+  providers: [PermissionService, PermissionNotificationService],
 })
 export class PermissionModule {}

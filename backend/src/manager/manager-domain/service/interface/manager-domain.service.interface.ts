@@ -84,6 +84,22 @@ export interface IManagerDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserModel | null>;
 
+  findOwnerForNotification(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel | null>;
+
+  findManagersByPermissionTemplateForNotification(
+    church: ChurchModel,
+    permissionTemplate: PermissionTemplateModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]>;
+
+  findAllManagerIds(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]>;
+
   /**
    * receiver 로 지정된 교인의 권한 확인용
    * @param church

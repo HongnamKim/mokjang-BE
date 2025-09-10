@@ -30,10 +30,10 @@ import { GetInProgressEducationTermDto } from '../../education-term/dto/request/
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Educations')

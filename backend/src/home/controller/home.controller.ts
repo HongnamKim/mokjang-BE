@@ -1,5 +1,5 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { HomeService } from '../service/home.service';
 import { GetNewMemberSummaryDto } from '../dto/request/get-new-member-summary.dto';
@@ -12,7 +12,7 @@ import {
   ApiGetNewMemberSummary,
   ApiGetScheduleStatus,
 } from '../swagger/home.swagger';
-import { RequestManager } from '../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { GetMyInChargedSchedulesDto } from '../dto/request/get-my-in-charged-schedules.dto';
 import { GetMyReportsDto } from '../dto/request/get-my-reports.dto';

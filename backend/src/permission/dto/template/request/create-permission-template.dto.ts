@@ -9,7 +9,10 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
+import {
+  IsBasicText,
+  IsNoSpecialChar,
+} from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
 import { Transform } from 'class-transformer';
 import {
@@ -18,10 +21,12 @@ import {
   MIN_PERMISSION_TEMPLATE_TITLE_LENGTH,
   MIN_PERMISSION_UNIT_COUNT,
 } from '../../../constraints/permission.constraints';
+import { SanitizeDto } from '../../../../common/decorator/sanitize-target.decorator';
 
+@SanitizeDto()
 export class CreatePermissionTemplateDto extends PickType(
   PermissionTemplateModel,
-  ['title'],
+  ['title', 'description'],
 ) {
   @ApiProperty({
     description: '권한 유형 이름',
@@ -35,6 +40,12 @@ export class CreatePermissionTemplateDto extends PickType(
     MAX_PERMISSION_TEMPLATE_TITLE_LENGTH,
   )
   override title: string;
+
+  @ApiProperty({ description: '권한 유형 설명' })
+  @IsString()
+  @IsBasicText('description')
+  @Length(0, 50)
+  override description: string;
 
   @ApiProperty({
     description: '권한 단위 ID 배열',

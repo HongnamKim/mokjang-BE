@@ -11,6 +11,7 @@ import { DummyDataDomainModule } from '../dummy-data/dummy-data-domain/dummy-dat
 import { OfficerHistoryDomainModule } from '../member-history/officer-history/officer-history-domain/officer-history-domain.module';
 import { GroupHistoryDomainModule } from '../member-history/group-history/group-history-domain/group-history-domain.module';
 import { TrialChurchesService } from './service/trial-churches.service';
+import { ChurchesNotificationService } from './service/churches-notification.service';
 
 @Module({
   imports: [
@@ -26,6 +27,10 @@ import { TrialChurchesService } from './service/trial-churches.service';
     GroupHistoryDomainModule,
   ],
   controllers: [ChurchesController],
-  providers: [ChurchesService, TrialChurchesService],
+  providers: [
+    ChurchesService,
+    TrialChurchesService,
+    ChurchesNotificationService,
+  ],
 })
 export class ChurchesModule {}

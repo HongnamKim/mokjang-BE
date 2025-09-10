@@ -26,7 +26,7 @@ import {
   ApiPatchMinistryGroupStructure,
   ApiRefreshMinistryGroupCount,
 } from '../const/swagger/ministry-group.swagger';
-import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
 import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';

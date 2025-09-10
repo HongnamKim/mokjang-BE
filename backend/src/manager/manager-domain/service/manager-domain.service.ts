@@ -230,6 +230,14 @@ export class ManagerDomainService implements IManagerDomainService {
       throw new ForbiddenException(ManagerException.FORBIDDEN);
     }
 
+    if (!churchUser.isPermissionActive) {
+      throw new ForbiddenException(ManagerException.IN_ACTIVE);
+    }
+
+    if (!churchUser.member) {
+      throw new ForbiddenException(ManagerException.NOT_LINKED);
+    }
+
     return churchUser;
   }
 
@@ -251,6 +259,55 @@ export class ManagerDomainService implements IManagerDomainService {
       },
       select: {
         member: MemberSimpleSelect,
+      },
+    });
+  }
+
+  findOwnerForNotification(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel | null> {
+    const repository = this.getRepository(qr);
+
+    return repository.findOne({
+      where: {
+        churchId: church.id,
+        role: ChurchUserRole.OWNER,
+      },
+    });
+  }
+
+  findManagersByPermissionTemplateForNotification(
+    church: ChurchModel,
+    permissionTemplate: PermissionTemplateModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        permissionTemplateId: permissionTemplate.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  async findAllManagerIds(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        role: ChurchUserManagers,
+      },
+      select: {
+        id: true,
       },
     });
   }

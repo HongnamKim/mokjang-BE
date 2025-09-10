@@ -35,4 +35,8 @@ export enum NotificationEvent {
   EDUCATION_TERM_DATA_UPDATED = 'education.term.data.updated',
   EDUCATION_TERM_DELETED = 'education.term.deleted',
   EDUCATION_TERM_ENROLLMENT_UPDATED = 'education.term.enrollment.updated',
+
+  CHURCH_UPDATED = 'church.updated',
+  MANAGER_PERMISSION_UPDATED = 'manager.permission.updated',
+  PERMISSION_TEMPLATE_UPDATED = 'permission.template.updated',
 }

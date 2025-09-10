@@ -24,6 +24,9 @@ export class PermissionTemplateModel extends BaseModel {
   @Column()
   title: string;
 
+  @Column({ default: '' })
+  description: string;
+
   @Column({ default: 0 })
   memberCount: number;
 

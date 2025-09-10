@@ -42,7 +42,7 @@ import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { WorshipScopeGuard } from '../guard/worship-scope.guard';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';

@@ -9,7 +9,10 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { IsNoSpecialChar } from '../../../../common/decorator/validator/is-no-special-char.validator';
+import {
+  IsBasicText,
+  IsNoSpecialChar,
+} from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { RemoveSpaces } from '../../../../common/decorator/transformer/remove-spaces';
 import { Transform } from 'class-transformer';
 import {
@@ -20,7 +23,7 @@ import {
 } from '../../../constraints/permission.constraints';
 
 export class UpdatePermissionTemplateDto extends PartialType(
-  PickType(PermissionTemplateModel, ['title']),
+  PickType(PermissionTemplateModel, ['title', 'description']),
 ) {
   @ApiProperty({
     description: '권한 유형 이름',
@@ -35,6 +38,13 @@ export class UpdatePermissionTemplateDto extends PartialType(
     MAX_PERMISSION_TEMPLATE_TITLE_LENGTH,
   )
   override title?: string;
+
+  @ApiProperty({ description: '권한 유형 설명' })
+  @IsOptionalNotNull()
+  @IsString()
+  @IsBasicText('description')
+  @Length(0, 50)
+  override description?: string;
 
   @ApiProperty({
     description: '권한 단위 ID 배열',

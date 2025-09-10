@@ -32,7 +32,7 @@ import { GetGroupDto } from '../dto/request/get-group.dto';
 import { GroupReadGuard } from '../guard/group-read.guard';
 import { GroupWriteGuard } from '../guard/group-write.guard';
 import { UpdateGroupStructureDto } from '../dto/request/update-group-structure.dto';
-import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
 import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
