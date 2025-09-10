@@ -34,14 +34,24 @@ import {
 import { GetChurchSubscriptionDto } from '../dto/response/get-church-subscription.dto';
 import { UserModel } from '../../user/entity/user.entity';
 import { SubscriptionStatus } from '../../subscription/const/subscription-status.enum';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import {
+  IMANAGER_DOMAIN_SERVICE,
+  IManagerDomainService,
+} from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
+import { ChurchesNotificationService } from './churches-notification.service';
 
 @Injectable()
 export class ChurchesService {
   constructor(
+    private readonly churchesNotificationService: ChurchesNotificationService,
+
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(ICHURCH_USER_DOMAIN_SERVICE)
     private readonly churchUserDomainService: IChurchUserDomainService,
+    @Inject(IMANAGER_DOMAIN_SERVICE)
+    private readonly managerDomainService: IManagerDomainService,
 
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
@@ -123,11 +133,25 @@ export class ChurchesService {
     return newChurch;
   }
 
-  async updateChurch(churchId: number, dto: UpdateChurchDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
+  async updateChurch(
+    requestOwner: ChurchUserModel,
+    church: ChurchModel,
+    dto: UpdateChurchDto,
+  ) {
+    await this.churchesDomainService.updateChurch(church, dto);
 
-    return this.churchesDomainService.updateChurch(church, dto);
+    const allManagers =
+      await this.managerDomainService.findAllManagerIds(church);
+
+    // 모든 관리자에게 알림 발송
+    this.churchesNotificationService.notifyChurchUpdate(
+      requestOwner,
+      allManagers,
+      church,
+      dto,
+    );
+
+    return { data: church, timestamp: new Date() };
   }
 
   async updateChurchJoinCode(

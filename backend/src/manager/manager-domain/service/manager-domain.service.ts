@@ -255,6 +255,23 @@ export class ManagerDomainService implements IManagerDomainService {
     });
   }
 
+  async findAllManagerIds(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        role: ChurchUserManagers,
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
   async findManagersForNotification(
     church: ChurchModel,
     memberIds: number[],

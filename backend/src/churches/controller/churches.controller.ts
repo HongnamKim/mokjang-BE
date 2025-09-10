@@ -36,11 +36,13 @@ import { ChurchReadGuard } from '../guard/church-read.guard';
 import { ChurchWriteGuard } from '../guard/church-write.guard';
 import { TrialChurchesService } from '../service/trial-churches.service';
 import { ChurchOwnerGuard } from '../../permission/guard/church-owner.guard';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../entity/church.entity';
 import { UserGuard } from '../../user/guard/user.guard';
 import { User } from '../../user/decorator/user.decorator';
 import { UserModel } from '../../user/entity/user.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { RequestOwner } from '../../permission/decorator/request-owner.decorator';
 
 @Controller('churches')
 export class ChurchesController {
@@ -84,7 +86,7 @@ export class ChurchesController {
     @QueryRunner() qr: QR,
   ) {
     throw new GoneException();
-    return this.trialChurchesService.startTrialChurch(accessPayload.id, qr);
+    //return this.trialChurchesService.startTrialChurch(accessPayload.id, qr);
   }
 
   @ApiOperation({
@@ -115,9 +117,11 @@ export class ChurchesController {
   @Patch(':churchId')
   patchChurch(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestOwner() requestOwner: ChurchUserModel,
     @Body() dto: UpdateChurchDto,
   ) {
-    return this.churchesService.updateChurch(churchId, dto);
+    return this.churchesService.updateChurch(requestOwner, church, dto);
   }
 
   // 교회 삭제
