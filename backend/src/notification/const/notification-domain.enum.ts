@@ -3,7 +3,7 @@ export enum NotificationDomain {
   VISITATION = 'visitation',
   EDUCATION_TERM = 'educationTerm',
   EDUCATION_SESSION = 'educationSession',
-  WORSHIP_ATTENDANCE = 'worshipAttendance',
   PERMISSION = 'permission',
   CHURCH_INFO = 'churchInfo',
+  WORSHIP_ATTENDANCE = 'worshipAttendance',
 }

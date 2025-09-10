@@ -21,7 +21,7 @@ import { QueryRunner as QR } from 'typeorm';
 import { UpdateWorshipDto } from '../dto/request/worship/update-worship.dto';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { WorshipReadGuard } from '../guard/worship-read.guard';

@@ -15,7 +15,7 @@ import { GetChurchUsersDto } from '../dto/request/get-church-users.dto';
 import { UpdateChurchUserRoleDto } from '../dto/request/update-church-user-role.dto';
 import { ChurchUserReadGuard } from '../guard/church-user-read.guard';
 import { ChurchUserWriteGuard } from '../guard/church-user-write.guard';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { LinkMemberDto } from '../dto/request/link-member.dto';
 import { UseTransaction } from '../../common/decorator/use-transaction.decorator';

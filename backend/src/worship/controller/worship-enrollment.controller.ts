@@ -18,7 +18,7 @@ import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipScopeGuard } from '../guard/worship-scope.guard';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';

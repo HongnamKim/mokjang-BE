@@ -339,4 +339,12 @@ export class NotificationService {
   async handleEducationTermDeleted(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
+
+  @OnEvent(NotificationEvent.CHURCH_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleChurchUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
 }

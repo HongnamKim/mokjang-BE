@@ -26,7 +26,7 @@ import {
   ApiRefreshMinistryCount,
 } from '../const/swagger/ministry.swagger';
 import { MinistryWriteGuard } from '../guard/ministry-write.guard';
-import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MinistryReadGuard } from '../guard/ministry-read.guard';
 

@@ -12,5 +12,4 @@ export enum NotificationAction {
   REPORT_REMOVED = 'reportRemoved',
 
   MANAGER_UPDATED = 'managerUpdated',
-  CHURCH_INFO_UPDATED = 'churchInfoUpdated',
 }

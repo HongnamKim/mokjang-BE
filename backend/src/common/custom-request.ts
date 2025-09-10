@@ -14,6 +14,7 @@ export interface CustomRequest extends Request {
   worship: WorshipModel;
   requestChurchUser: ChurchUserModel;
   requestManager: ChurchUserModel;
+  requestOwner: ChurchUserModel;
   permissionScopeGroupIds: number[];
   tokenPayload: JwtAccessPayload;
   user: UserModel;

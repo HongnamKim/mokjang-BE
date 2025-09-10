@@ -21,9 +21,9 @@ import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { GetNotEnrolledMembersDto } from '../dto/request/get-not-enrolled-members.dto';
-import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Educations:Enrollments')

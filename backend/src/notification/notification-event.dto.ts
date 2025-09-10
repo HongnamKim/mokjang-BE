@@ -31,6 +31,11 @@ export abstract class NotificationSource {
     this.domain = domain;
   }
 }
+export class NotificationSourceChurch extends NotificationSource {
+  constructor(domain: NotificationDomain, id: number) {
+    super(domain, id);
+  }
+}
 
 export class NotificationSourceTask extends NotificationSource {
   constructor(domain: NotificationDomain, id: number) {
