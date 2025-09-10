@@ -347,4 +347,20 @@ export class NotificationService {
   async handleChurchUpdated(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
+
+  @OnEvent(NotificationEvent.MANAGER_PERMISSION_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleManagerPermissionUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.PERMISSION_TEMPLATE_UPDATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handlePermissionTemplateUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
 }

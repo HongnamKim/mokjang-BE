@@ -7,6 +7,7 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { PermissionDomainModule } from '../permission/permission-domain/permission-domain.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
+import { ManagerNotificationService } from './service/manager-notification.service';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { GroupsDomainModule } from '../management/groups/groups-domain/groups-do
     GroupsDomainModule,
   ],
   controllers: [ManagerController],
-  providers: [ManagerService],
+  providers: [ManagerService, ManagerNotificationService],
 })
 export class ManagerModule {}
