@@ -37,9 +37,7 @@ export interface INotificationDomainService {
     qr?: QueryRunner,
   ): Promise<NotificationModel>;
 
-  createNotifications(
-    event: NotificationEventDto,
-  ): Promise<NotificationModel[]>;
+  createNotifications(event: NotificationEventDto): Promise<any[]>;
 
   checkRead(
     notification: NotificationModel,

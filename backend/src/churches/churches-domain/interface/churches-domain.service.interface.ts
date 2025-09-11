@@ -137,4 +137,9 @@ export interface IChurchesDomainService {
     expiredChurches: ChurchModel[],
     qr: QueryRunner,
   ): Promise<DeleteResult>;
+
+  findWorshipNotificationTargets(
+    targetChurchIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchModel[]>;
 }

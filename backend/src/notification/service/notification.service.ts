@@ -10,7 +10,15 @@ import { GetNotificationListResponseDto } from '../dto/response/get-notification
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationEvent } from '../const/notification-event.enum';
-import { NotificationEventDto } from '../notification-event.dto';
+import {
+  NotificationEventDto,
+  NotificationSourceWorship,
+} from '../notification-event.dto';
+import { NotificationDomain } from '../const/notification-domain.enum';
+import { NotificationAction } from '../const/notification-action.enum';
+import { toZonedTime } from 'date-fns-tz';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { format } from 'date-fns';
 
 @Injectable()
 export class NotificationService {
@@ -40,6 +48,52 @@ export class NotificationService {
 
   async createDummyNotification(churchUser: ChurchUserModel) {
     return this.notificationDomainService.createDummyNotification(churchUser);
+  }
+
+  async createDummyWorshipNotification(churchUser: ChurchUserModel) {
+    const kstDate = toZonedTime(new Date(), TIME_ZONE.SEOUL);
+    const kstStr = format(kstDate, 'MM-dd');
+
+    const kstToday = kstDate.getDay();
+    let domainTitle: string;
+    switch (kstToday) {
+      case 0:
+        domainTitle = `주일예배 ${kstStr}`;
+        break;
+      case 1:
+        domainTitle = `월요예배 ${kstStr}`;
+        break;
+      case 2:
+        domainTitle = `화요예배 ${kstStr}`;
+        break;
+      case 3:
+        domainTitle = `수요예배 ${kstStr}`;
+        break;
+      case 4:
+        domainTitle = `목요예배 ${kstStr}`;
+        break;
+      case 5:
+        domainTitle = `금요예배 ${kstStr}`;
+        break;
+      default:
+        domainTitle = `토요예배 ${kstStr}`;
+        break;
+    }
+
+    const event = new NotificationEventDto(
+      '',
+      NotificationDomain.WORSHIP,
+      NotificationAction.CREATED,
+      domainTitle,
+      new NotificationSourceWorship(
+        NotificationDomain.WORSHIP,
+        Math.ceil(Math.random() * 5),
+      ),
+      [churchUser],
+      [],
+    );
+
+    await this.notificationDomainService.createNotifications(event);
   }
 
   async getUnreadCount(churchUser: ChurchUserModel) {
@@ -361,6 +415,14 @@ export class NotificationService {
     suppressErrors: true,
   })
   async handlePermissionTemplateUpdated(event: NotificationEventDto) {
+    await this.notificationDomainService.createNotifications(event);
+  }
+
+  @OnEvent(NotificationEvent.WORSHIP_SESSION_CREATED, {
+    async: true,
+    suppressErrors: true,
+  })
+  async handleWorshipSessionCreated(event: NotificationEventDto) {
     await this.notificationDomainService.createNotifications(event);
   }
 }

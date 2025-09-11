@@ -10,7 +10,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
-import { addWeeks, subMonths } from 'date-fns';
+import { addWeeks, subWeeks } from 'date-fns';
 import { GetNotificationsDto } from '../../dto/request/get-notifications.dto';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import {
@@ -161,9 +161,7 @@ export class NotificationDomainService implements INotificationDomainService {
     });
   }
 
-  createNotifications(
-    event: NotificationEventDto,
-  ): Promise<NotificationModel[]> {
+  async createNotifications(event: NotificationEventDto): Promise<any[]> {
     const repository = this.getRepository();
 
     const receivers = event.notificationReceivers;
@@ -172,20 +170,36 @@ export class NotificationDomainService implements INotificationDomainService {
 
     const now = new Date();
 
-    const notifications = repository.create(
-      uniqueReceivers.map((receiver) => ({
-        churchUserId: receiver.id,
-        actorName: event.actorName,
-        domain: event.domain,
-        action: event.action,
-        domainTitle: event.title,
-        payload: event.fields,
-        sourceInfo: event.source,
-        expiresAt: addWeeks(now, 2),
-      })),
-    );
+    const rows = uniqueReceivers.map((receiver) => ({
+      churchUserId: receiver.id,
+      churchUser: receiver,
+      actorName: event.actorName,
+      domain: event.domain,
+      action: event.action,
+      domainTitle: event.title,
+      payload: event.fields as any,
+      sourceInfo: event.source as any,
+      expiresAt: addWeeks(now, 2),
+      createdAt: now,
+      updatedAt: now,
+      isRead: false,
+    }));
 
-    return repository.save(notifications, { chunk: 10 });
+    const qb = repository.createQueryBuilder();
+
+    const result: any[] = [];
+
+    for (let i = 0; i < rows.length; i += 1000) {
+      const slice = rows.slice(i, i + 1000);
+      const res = await qb
+        .insert()
+        .into(NotificationModel)
+        .values(slice)
+        .execute();
+      result.push(res);
+    }
+
+    return result;
   }
 
   async checkRead(notification: NotificationModel, qr?: QueryRunner) {
@@ -221,7 +235,7 @@ export class NotificationDomainService implements INotificationDomainService {
   async cleanUp() {
     const repository = this.getRepository();
 
-    const expireDate = subMonths(new Date(), 1);
+    const expireDate = subWeeks(new Date(), 2);
 
     return repository.delete({
       createdAt: LessThanOrEqual(expireDate),

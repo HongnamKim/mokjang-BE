@@ -37,6 +37,12 @@ export class NotificationSourceChurch extends NotificationSource {
   }
 }
 
+export class NotificationSourceWorship extends NotificationSource {
+  constructor(domain: NotificationDomain, id: number) {
+    super(domain, id);
+  }
+}
+
 export class NotificationSourceManager extends NotificationSource {
   constructor(domain: NotificationDomain, id: number) {
     super(domain, id);
