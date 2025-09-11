@@ -158,11 +158,6 @@ export class WorshipSessionService {
     dto: GetWorshipSessionDto,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );*/
-
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,

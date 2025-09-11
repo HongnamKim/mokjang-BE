@@ -10,6 +10,7 @@ import { WorshipModel } from '../../entity/worship.entity';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  MoreThan,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -262,5 +263,29 @@ export class WorshipDomainService implements IWorshipDomainService {
     }
 
     return query.getMany();
+  }
+
+  findBulkWorshipByDay(
+    targetWorshipDay: number,
+    bulkSize: number,
+    cursor: number,
+  ): Promise<WorshipModel[]> {
+    const repository = this.getRepository();
+
+    return repository.find({
+      where: {
+        worshipDay: targetWorshipDay,
+        id: cursor > 0 ? MoreThan(cursor) : undefined,
+      },
+      select: {
+        id: true,
+        churchId: true,
+        title: true,
+      },
+      order: {
+        id: 'ASC',
+      },
+      take: bulkSize,
+    });
   }
 }

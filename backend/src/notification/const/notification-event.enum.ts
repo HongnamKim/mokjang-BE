@@ -39,4 +39,6 @@ export enum NotificationEvent {
   CHURCH_UPDATED = 'church.updated',
   MANAGER_PERMISSION_UPDATED = 'manager.permission.updated',
   PERMISSION_TEMPLATE_UPDATED = 'permission.template.updated',
+
+  WORSHIP_SESSION_CREATED = 'worship.session.created',
 }

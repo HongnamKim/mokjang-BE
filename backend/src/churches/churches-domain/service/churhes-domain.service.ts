@@ -564,4 +564,20 @@ export class ChurchesDomainService implements IChurchesDomainService {
 
     return result;
   }
+
+  async findWorshipNotificationTargets(
+    targetChurchIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchModel[]> {
+    const repository = this.getChurchRepository();
+
+    return repository.find({
+      where: {
+        id: In(targetChurchIds),
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
 }
