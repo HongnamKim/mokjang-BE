@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import {
   In,
+  LessThanOrEqual,
   QueryRunner,
   Repository,
   SelectQueryBuilder,
@@ -130,12 +131,19 @@ export class WorshipEnrollmentDomainService
   async findAllEnrollments(
     worship: WorshipModel,
     qr?: QueryRunner,
+    sessionDate?: Date,
   ): Promise<WorshipEnrollmentModel[]> {
     const repository = this.getRepository(qr);
 
     return repository.find({
       where: {
         worshipId: worship.id,
+        member: {
+          registeredAt: sessionDate && LessThanOrEqual(sessionDate),
+        },
+      },
+      select: {
+        id: true,
       },
     });
   }

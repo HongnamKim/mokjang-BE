@@ -21,6 +21,7 @@ import {
   ApiPatchCheckAllRead,
   ApiPatchCheckRead,
 } from '../swagger/notification.swagger';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller()
 export class NotificationController {
@@ -47,6 +48,15 @@ export class NotificationController {
   @UseGuards(AccessTokenGuard, ChurchUserGuard)
   createDummyNotification(@RequestChurchUser() churchUser: ChurchUserModel) {
     return this.notificationService.createDummyNotification(churchUser);
+  }
+
+  @ApiOperation({ description: '생성되는 sourceInfo 는 랜덤한 값' })
+  @Post('test-worship')
+  @UseGuards(AccessTokenGuard, ChurchUserGuard)
+  createDummyWorshipNotification(
+    @RequestChurchUser() churchUser: ChurchUserModel,
+  ) {
+    return this.notificationService.createDummyWorshipNotification(churchUser);
   }
 
   @ApiPatchCheckAllRead()

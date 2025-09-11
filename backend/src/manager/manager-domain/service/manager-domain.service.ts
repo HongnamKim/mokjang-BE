@@ -253,6 +253,7 @@ export class ManagerDomainService implements IManagerDomainService {
         churchId: church.id,
         memberId,
         role: ChurchUserManagers,
+        leftAt: IsNull(),
       },
       relations: {
         member: MemberSummarizedRelation,
@@ -273,6 +274,7 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         role: ChurchUserRole.OWNER,
+        leftAt: IsNull(),
       },
     });
   }
@@ -288,6 +290,8 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         permissionTemplateId: permissionTemplate.id,
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
       },
       select: {
         id: true,
@@ -305,9 +309,29 @@ export class ManagerDomainService implements IManagerDomainService {
       where: {
         churchId: church.id,
         role: ChurchUserManagers,
+        leftAt: IsNull(),
       },
       select: {
         id: true,
+      },
+    });
+  }
+
+  findAllManagerIdsBulk(
+    churchIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: In(churchIds),
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      select: {
+        id: true,
+        churchId: true,
       },
     });
   }
@@ -324,6 +348,7 @@ export class ManagerDomainService implements IManagerDomainService {
         churchId: church.id,
         memberId: In(memberIds),
         role: ChurchUserManagers,
+        leftAt: IsNull(),
       },
       relations: {
         member: MemberSummarizedRelation,
@@ -346,6 +371,7 @@ export class ManagerDomainService implements IManagerDomainService {
         churchId: church.id,
         memberId: In(memberIds),
         role: ChurchUserManagers,
+        leftAt: IsNull(),
       },
       relations: {
         member: MemberSummarizedRelation,

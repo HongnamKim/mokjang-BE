@@ -85,8 +85,6 @@ export class WorshipSessionService {
     worshipId: number,
     dto: GetWorshipSessionsDto,
   ) {
-    /*const church =
-      await this.churchesDomainService.findChurchModelById(churchId);*/
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -152,17 +150,11 @@ export class WorshipSessionService {
    * @param qr
    */
   async getOrPostWorshipSession(
-    //churchId: number,
     church: ChurchModel,
     worshipId: number,
     dto: GetWorshipSessionDto,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );*/
-
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -202,6 +194,7 @@ export class WorshipSessionService {
         await this.worshipEnrollmentDomainService.findAllEnrollments(
           worship,
           qr,
+          sessionDate,
         );
 
       await this.worshipAttendanceDomainService.refreshAttendances(
@@ -238,7 +231,6 @@ export class WorshipSessionService {
     );
 
     const intersectionGroupIds = getIntersectionGroupIds(
-      //defaultWorshipTargetGroupIds,
       requestGroupIds,
       permissionScopeGroupIds,
     );
@@ -246,7 +238,6 @@ export class WorshipSessionService {
     const stats =
       await this.worshipAttendanceDomainService.getAttendanceStatsBySession(
         session,
-        //requestGroupIds,
         intersectionGroupIds,
       );
 

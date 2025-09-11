@@ -6,5 +6,5 @@ export enum NotificationDomain {
   MANAGER = 'manager',
   PERMISSION = 'permission',
   CHURCH_INFO = 'churchInfo',
-  WORSHIP_ATTENDANCE = 'worshipAttendance',
+  WORSHIP = 'worship',
 }
