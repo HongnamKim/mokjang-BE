@@ -161,7 +161,11 @@ export class WorshipAttendanceService {
       );
 
     const allEnrollments =
-      await this.worshipEnrollmentDomainService.findAllEnrollments(worship, qr);
+      await this.worshipEnrollmentDomainService.findAllEnrollments(
+        worship,
+        qr,
+        session.sessionDate,
+      );
 
     const existWorshipAttendances =
       await this.worshipAttendanceDomainService.findAllAttendances(session, qr);
