@@ -102,7 +102,8 @@ export class WorshipDomainService implements IWorshipDomainService {
 
     const qb = repository
       .createQueryBuilder('worship')
-      .where('worship.churchId = :churchId', { churchId: church.id });
+      .where('worship.churchId = :churchId', { churchId: church.id })
+      .select(['worship.id']);
 
     return qb.getMany();
   }

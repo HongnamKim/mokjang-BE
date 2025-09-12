@@ -34,6 +34,9 @@ import { RequestManager } from '../../permission/decorator/request-manager.decor
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { RequestVisitation } from '../decorator/request-visitation.decorator';
+import { VisitationMetaModel } from '../entity/visitation-meta.entity';
+import { GetVisitationResponseDto } from '../dto/response/get-visitation-response.dto';
 
 @ApiTags('Visitations')
 @Controller('visitations')
@@ -77,17 +80,12 @@ export class VisitationController {
   @ApiGetVisitationById()
   @VisitationReadGuard()
   @Get(':visitationId')
-  @UseInterceptors(TransactionInterceptor)
   getVisitingById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationMetaDataId: number,
-    @QueryRunner() qr: QR,
+    @RequestVisitation() visitation: VisitationMetaModel,
   ) {
-    return this.visitationService.getVisitationById(
-      churchId,
-      visitationMetaDataId,
-      qr,
-    );
+    return new GetVisitationResponseDto(visitation);
   }
 
   @ApiPatchVisitationMeta()
@@ -99,13 +97,14 @@ export class VisitationController {
     @Param('visitationId', ParseIntPipe) visitationMetaDataId: number,
     @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
+    @RequestVisitation() requestVisitation: VisitationMetaModel,
     @Body() dto: UpdateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.updateVisitationData(
       church,
       requestManager,
-      visitationMetaDataId,
+      requestVisitation,
       dto,
       qr,
     );
@@ -120,12 +119,13 @@ export class VisitationController {
     @Param('visitationId', ParseIntPipe) visitationId: number,
     @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
+    @RequestVisitation() requestVisitation: VisitationMetaModel,
     @QueryRunner() qr: QR,
   ) {
     return this.visitationService.deleteVisitation(
       church,
       requestManager,
-      visitationId,
+      requestVisitation,
       qr,
     );
   }
