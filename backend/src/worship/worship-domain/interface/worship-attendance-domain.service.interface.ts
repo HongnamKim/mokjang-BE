@@ -77,6 +77,10 @@ export interface IWorshipAttendanceDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
+  deleteAttendanceCascadeEnrollment(
+    targetEnrollments: WorshipEnrollmentModel[],
+  ): Promise<UpdateResult>;
+
   getAttendanceStatsBySession(
     worshipSession: WorshipSessionModel,
     requestGroupIds: number[] | undefined,

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ChurchException } from '../const/exception/church.exception';
+import { ChurchException } from '../../const/exception/church.exception';
 
 export class UpdateChurchJoinCodeDto {
   @ApiProperty({

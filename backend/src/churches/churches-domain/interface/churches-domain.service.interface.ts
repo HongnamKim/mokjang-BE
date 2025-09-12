@@ -5,8 +5,8 @@ import {
   QueryRunner,
   UpdateResult,
 } from 'typeorm';
-import { CreateChurchDto } from '../../dto/create-church.dto';
-import { UpdateChurchDto } from '../../dto/update-church.dto';
+import { CreateChurchDto } from '../../dto/request/create-church.dto';
+import { UpdateChurchDto } from '../../dto/request/update-church.dto';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';

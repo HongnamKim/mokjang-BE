@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import {
   IPERMISSION_DOMAIN_SERVICE,
   IPermissionDomainService,
@@ -23,6 +23,7 @@ import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { PermissionNotificationService } from './permission-notification.service';
+import { PermissionException } from '../exception/permission.exception';
 
 @Injectable()
 export class PermissionService {
@@ -131,6 +132,16 @@ export class PermissionService {
         church,
         templateId,
       );
+
+    const managers =
+      await this.managerDomainService.findManagersByPermissionTemplateForNotification(
+        church,
+        targetTemplate,
+      );
+
+    if (managers.length > 0) {
+      throw new ConflictException(PermissionException.CANNOT_DELETE);
+    }
 
     await this.permissionDomainService.deletePermissionTemplate(targetTemplate);
 

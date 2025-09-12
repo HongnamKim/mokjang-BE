@@ -97,4 +97,8 @@ export interface IWorshipEnrollmentDomainService {
     worshipAttendance: WorshipAttendanceModel[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findEnrollmentsByMemberId(
+    memberId: number,
+  ): Promise<WorshipEnrollmentModel[]>;
 }
