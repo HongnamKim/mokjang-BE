@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IChurchesDomainService } from '../interface/churches-domain.service.interface';
-import { CreateChurchDto } from '../../dto/create-church.dto';
+import { CreateChurchDto } from '../../dto/request/create-church.dto';
 import {
   DeleteResult,
   FindOptionsRelations,
@@ -16,7 +16,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { ChurchModel, ManagementCountType } from '../../entity/church.entity';
-import { UpdateChurchDto } from '../../dto/update-church.dto';
+import { UpdateChurchDto } from '../../dto/request/update-church.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
 import { ChurchException } from '../../const/exception/church.exception';

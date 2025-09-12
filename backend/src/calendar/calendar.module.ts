@@ -10,6 +10,7 @@ import { ChurchEventController } from './controller/church-event.controller';
 import { CalendarEducationService } from './service/calendar-education.service';
 import { CalendarEducationController } from './controller/calendar-education.controller';
 import { EducationDomainModule } from '../educations/education-domain/education-domain.module';
+import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { EducationDomainModule } from '../educations/education-domain/education-
       { path: 'churches/:churchId/calendar', module: CalendarModule },
     ]),
     ChurchesDomainModule,
+    ManagerDomainModule,
     MembersDomainModule,
     CalendarDomainModule,
     EducationDomainModule,

@@ -1,6 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { ChurchModel } from '../entity/church.entity';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ChurchModel } from '../../entity/church.entity';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
 
 export class CreateChurchDto extends PickType(ChurchModel, [
   'name',
@@ -63,7 +64,7 @@ export class CreateChurchDto extends PickType(ChurchModel, [
   @ApiProperty({
     description: '교회 상세 주소',
   })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsString()
   @MaxLength(50)
   @IsNotEmpty()

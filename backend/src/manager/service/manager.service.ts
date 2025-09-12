@@ -134,7 +134,7 @@ export class ManagerService {
     );
 
     // 기존 권한 유형이 있는 경우 memberCount 감소
-    if (manager.permissionTemplateId) {
+    if (manager.permissionTemplateId && manager.permissionTemplate) {
       await this.permissionDomainService.decrementMemberCount(
         manager.permissionTemplate,
         qr,

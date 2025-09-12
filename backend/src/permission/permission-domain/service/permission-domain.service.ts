@@ -175,6 +175,7 @@ export class PermissionDomainService implements IPermissionDomainService {
     return templateRepository.save({
       churchId: church.id,
       title: dto.title,
+      description: dto.description,
       permissionUnits: units,
     });
   }
@@ -258,6 +259,10 @@ export class PermissionDomainService implements IPermissionDomainService {
     template: PermissionTemplateModel,
     qr?: QueryRunner,
   ) {
+    if (template.memberCount > 0) {
+      throw new ConflictException(PermissionException.CANNOT_DELETE);
+    }
+
     const templateRepository = this.getTemplateRepository(qr);
 
     const result = await templateRepository.softDelete(template.id);

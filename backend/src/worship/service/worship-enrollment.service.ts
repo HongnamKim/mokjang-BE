@@ -11,7 +11,7 @@ import {
   IWORSHIP_DOMAIN_SERVICE,
   IWorshipDomainService,
 } from '../worship-domain/interface/worship-domain.service.interface';
-import { QueryRunner } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { GetWorshipEnrollmentsDto } from '../dto/request/worship-enrollment/get-worship-enrollments.dto';
 import {
   IMEMBERS_DOMAIN_SERVICE,
@@ -32,10 +32,14 @@ import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
 import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
 import { WorshipModel } from '../entity/worship.entity';
 import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { OnEvent } from '@nestjs/event-emitter';
+import { MemberDeletedEvent } from '../../members/events/member.event';
 
 @Injectable()
 export class WorshipEnrollmentService {
   constructor(
+    private readonly dataSource: DataSource,
+
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IWORSHIP_DOMAIN_SERVICE)
@@ -266,5 +270,29 @@ export class WorshipEnrollmentService {
     );
 
     return { createdCount: result.length, timestamp: new Date() };
+  }
+
+  @OnEvent('member.deleted')
+  async handleMemberDeleted(event: MemberDeletedEvent) {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      const targetEnrollments =
+        await this.worshipEnrollmentDomainService.findEnrollmentsByMemberId(
+          event.memberId,
+        );
+
+      await this.worshipAttendanceDomainService.deleteAttendanceCascadeEnrollment(
+        targetEnrollments,
+      );
+
+      await qr.commitTransaction();
+    } catch {
+      await qr.rollbackTransaction();
+    } finally {
+      await qr.release();
+    }
   }
 }

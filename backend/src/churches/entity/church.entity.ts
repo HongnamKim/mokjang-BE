@@ -44,26 +44,26 @@ export class ChurchModel extends BaseModel {
   @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   identifyNumber: string;
 
   @Index()
   @Column({ type: 'varchar', nullable: true, length: 20, unique: true })
   joinCode: string | null;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   pastor: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   phone: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   denomination: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   address: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   detailAddress: string;
 
   @Column({ default: 0 })

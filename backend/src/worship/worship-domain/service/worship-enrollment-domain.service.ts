@@ -382,91 +382,19 @@ export class WorshipEnrollmentDomainService
     });
   }
 
-  /*async findEnrollments(
-    worship: WorshipModel,
-    dto: GetWorshipEnrollmentsDto,
-    groupIds?: number[],
+  findEnrollmentsByMemberId(
+    memberId: number,
     qr?: QueryRunner,
-  ) {
+  ): Promise<WorshipEnrollmentModel[]> {
     const repository = this.getRepository(qr);
 
-    const whereOptions: FindOptionsWhere<WorshipEnrollmentModel> = {
-      worshipId: worship.id,
-      member: {
-        groupId: groupIds && In(groupIds),
+    return repository.find({
+      where: {
+        memberId,
       },
-    };
-
-    const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> =
-      this.parseOrderOption(dto);
-    orderOptions.id = 'ASC';
-
-    /!*if (dto.order !== WorshipEnrollmentOrderEnum.ID) {
-      orderOptions.id = 'ASC';
-    }*!/
-
-    const [data, totalCount] = await Promise.all([
-      repository.find({
-        where: whereOptions,
-        order: orderOptions,
-        relations: {
-          member: MemberSummarizedRelation,
-        },
-        select: {
-          member: MemberSummarizedSelect,
-        },
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-      repository.count({
-        where: whereOptions,
-      }),
-    ]);
-
-    return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
-  }*/
-  /*private parseOrderOption(dto: GetWorshipEnrollmentsDto) {
-      if (dto.order === WorshipEnrollmentOrderEnum.NAME) {
-        const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-          member: {
-            name: dto.orderDirection,
-          },
-        };
-
-        return orderOptions;
-      } else if (dto.order === WorshipEnrollmentOrderEnum.GROUP_NAME) {
-        const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-          member: {
-            group: {
-              name: dto.orderDirection,
-            },
-            name: dto.orderDirection,
-          },
-        };
-
-        return orderOptions;
-      } else {
-        const orderOptions: FindOptionsOrder<WorshipEnrollmentModel> = {
-          //[dto.order]: dto.orderDirection,
-        };
-        return orderOptions;
-      }
-    }*/
-  /*async updatePresentAbsentCount(
-    enrollment: WorshipEnrollmentModel,
-    presentCount: number,
-    absentCount: number,
-  ) {
-    const repository = this.getRepository();
-
-    return repository.update(
-      {
-        id: enrollment.id,
+      select: {
+        id: true,
       },
-      {
-        presentCount: presentCount,
-        absentCount: absentCount,
-      },
-    );
-  }*/
+    });
+  }
 }
