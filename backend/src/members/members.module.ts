@@ -12,6 +12,8 @@ import { MemberFilterService } from './service/member-filter.service';
 import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.module';
 import { MinistryHistoryDomainModule } from '../member-history/ministry-history/ministry-history-domain/ministry-history-domain.module';
 import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
+import { ISEARCH_MEMBERS_SERVICE } from './service/interface/search-members.service.interface';
+import { SearchMembersService } from './service/search-members.service';
 
 @Module({
   imports: [
@@ -30,10 +32,10 @@ import { ChurchUserDomainModule } from '../church-user/church-user-domain/church
   controllers: [MembersController],
   providers: [
     MembersService,
-    /*{
+    {
       provide: ISEARCH_MEMBERS_SERVICE,
       useClass: SearchMembersService,
-    },*/
+    },
     {
       provide: IMEMBER_FILTER_SERVICE,
       useClass: MemberFilterService,

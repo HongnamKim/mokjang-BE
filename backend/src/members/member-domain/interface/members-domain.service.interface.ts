@@ -139,18 +139,18 @@ export interface IMembersDomainService {
     to: Date,
   ): Promise<MemberModel[]>;
 
-  /*findMembers(
-   dto: GetMemberDto,
-   whereOptions: FindOptionsWhere<MemberModel>,
-   orderOptions: FindOptionsOrder<MemberModel>,
-   relationOptions: FindOptionsRelations<MemberModel>,
-   selectOptions: FindOptionsSelect<MemberModel>,
-   qr?: QueryRunner,
- ): Promise<{ data: MemberModel[]; totalCount: number }>;*/
+  findMembers(
+    dto: GetMemberDto,
+    whereOptions: FindOptionsWhere<MemberModel>,
+    orderOptions: FindOptionsOrder<MemberModel>,
+    relationOptions: FindOptionsRelations<MemberModel>,
+    selectOptions: FindOptionsSelect<MemberModel>,
+    qr?: QueryRunner,
+  ): Promise<{ data: MemberModel[]; totalCount: number }>;
 
-  /*findSimpleMembers(
+  findSimpleMembers(
     church: ChurchModel,
     dto: GetSimpleMembersDto,
     qr?: QueryRunner,
-  ): Promise<MemberModel[]>;*/
+  ): Promise<MemberModel[]>;
 }
