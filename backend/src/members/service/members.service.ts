@@ -1,9 +1,8 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
-import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { CreateMemberDto } from '../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../dto/request/update-member.dto';
-import { GetMemberDto } from '../dto/request/get-member.dto';
 import { DeleteMemberResponseDto } from '../dto/response/delete-member-response.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../events/member.event';
@@ -16,16 +15,9 @@ import {
   IMembersDomainService,
 } from '../member-domain/interface/members-domain.service.interface';
 import {
-  ISEARCH_MEMBERS_SERVICE,
-  ISearchMembersService,
-} from './interface/search-members.service.interface';
-import {
   IFAMILY_RELATION_DOMAIN_SERVICE,
   IFamilyRelationDomainService,
 } from '../../family-relation/family-relation-domain/service/interface/family-relation-domain.service.interface';
-import { MemberPaginationResponseDto } from '../dto/response/member-pagination-response.dto';
-import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
-import { SimpleMembersPaginationResponseDto } from '../dto/response/simple-members-pagination-response.dto';
 import { PostMemberResponseDto } from '../dto/response/post-member-response.dto';
 import { PatchMemberResponseDto } from '../dto/response/patch-member-response.dto';
 import { GetMemberResponseDto } from '../dto/response/get-member-response.dto';
@@ -83,8 +75,6 @@ export class MembersService {
     private readonly churchUserDomainService: IChurchUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
-    @Inject(ISEARCH_MEMBERS_SERVICE)
-    private readonly searchMembersService: ISearchMembersService,
     @Inject(IFAMILY_RELATION_DOMAIN_SERVICE)
     private readonly familyDomainService: IFamilyRelationDomainService,
     @Inject(IWORSHIP_DOMAIN_SERVICE)
@@ -103,68 +93,12 @@ export class MembersService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  async getMembers(
-    churchId: number,
-    requestManager: ChurchUserModel,
-    dto: GetMemberDto,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
-    const whereOptions: FindOptionsWhere<MemberModel> =
-      this.searchMembersService.parseWhereOption(church, dto);
-
-    const orderOptions: FindOptionsOrder<MemberModel> =
-      this.searchMembersService.parseOrderOption(dto);
-
-    const relationOptions = this.searchMembersService.parseRelationOption(dto);
-
-    const selectOptions = this.searchMembersService.parseSelectOption(dto);
-
-    const { data, totalCount } = await this.membersDomainService.findMembers(
-      dto,
-      whereOptions,
-      orderOptions,
-      relationOptions,
-      selectOptions,
-      qr,
-    );
-
-    const possibleGroupIds = await this.memberFilterService.getScopeGroupIds(
-      church,
-      requestManager,
-      qr,
-    );
-
-    const filteredMember = this.memberFilterService.filterMembers(
-      requestManager,
-      data,
-      possibleGroupIds,
-    );
-
-    return new MemberPaginationResponseDto(
-      filteredMember,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
-  }
-
   async getMemberById(
-    churchId: number,
+    church: ChurchModel,
     memberId: number,
     requestManager: ChurchUserModel,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const member = await this.membersDomainService.findMemberById(
       church,
       memberId,
@@ -193,12 +127,11 @@ export class MembersService {
     return new GetMemberResponseDto(filteredMember);
   }
 
-  async createMember(churchId: number, dto: CreateMemberDto, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async createMember(
+    church: ChurchModel,
+    dto: CreateMemberDto,
+    qr: QueryRunner,
+  ) {
     // 교회의 교인 수 증가
     await this.churchesDomainService.incrementMemberCount(church, qr);
     church.memberCount++;
@@ -311,15 +244,6 @@ export class MembersService {
       targetMember.name,
       true,
     );
-  }
-
-  async getSimpleMembers(churchId: number, dto: GetSimpleMembersDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
-    const data = await this.membersDomainService.findSimpleMembers(church, dto);
-
-    return new SimpleMembersPaginationResponseDto(data);
   }
 
   async getSimpleMemberList(
@@ -471,4 +395,56 @@ export class MembersService {
       result.hasMore,
     );
   }
+
+  /*async getMembers(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    dto: GetMemberDto,
+    qr?: QueryRunner,
+  ) {
+    const whereOptions: FindOptionsWhere<MemberModel> =
+      this.searchMembersService.parseWhereOption(church, dto);
+
+    const orderOptions: FindOptionsOrder<MemberModel> =
+      this.searchMembersService.parseOrderOption(dto);
+
+    const relationOptions = this.searchMembersService.parseRelationOption(dto);
+
+    const selectOptions = this.searchMembersService.parseSelectOption(dto);
+
+    const { data, totalCount } = await this.membersDomainService.findMembers(
+      dto,
+      whereOptions,
+      orderOptions,
+      relationOptions,
+      selectOptions,
+      qr,
+    );
+
+    const possibleGroupIds = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+      qr,
+    );
+
+    const filteredMember = this.memberFilterService.filterMembers(
+      requestManager,
+      data,
+      possibleGroupIds,
+    );
+
+    return new MemberPaginationResponseDto(
+      filteredMember,
+      totalCount,
+      data.length,
+      dto.page,
+      Math.ceil(totalCount / dto.take),
+    );
+  }*/
+
+  /*async getSimpleMembers(church: ChurchModel, dto: GetSimpleMembersDto) {
+    const data = await this.membersDomainService.findSimpleMembers(church, dto);
+
+    return new SimpleMembersPaginationResponseDto(data);
+  }*/
 }

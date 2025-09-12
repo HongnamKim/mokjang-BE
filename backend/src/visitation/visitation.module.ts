@@ -10,6 +10,9 @@ import { VisitationDetailController } from './controller/visitation-detail.contr
 import { VisitationDetailService } from './service/visitation-detail.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
 import { VisitationNotificationService } from './service/visitation-notification.service';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
+import { MemberFilterService } from '../members/service/member-filter.service';
+import { IMEMBER_FILTER_SERVICE } from '../members/service/interface/member-filter.service.interface';
 
 @Module({
   imports: [
@@ -18,6 +21,7 @@ import { VisitationNotificationService } from './service/visitation-notification
     ]),
     ChurchesDomainModule,
     ManagerDomainModule,
+    GroupsDomainModule,
     MembersDomainModule,
 
     VisitationDomainModule,
@@ -28,6 +32,10 @@ import { VisitationNotificationService } from './service/visitation-notification
     VisitationService,
     VisitationDetailService,
     VisitationNotificationService,
+    {
+      provide: IMEMBER_FILTER_SERVICE,
+      useClass: MemberFilterService,
+    },
   ],
 })
 export class VisitationModule {}

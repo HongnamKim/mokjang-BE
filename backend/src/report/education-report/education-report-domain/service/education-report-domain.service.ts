@@ -11,6 +11,7 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   In,
+  IsNull,
   LessThanOrEqual,
   MoreThanOrEqual,
   QueryRunner,
@@ -514,6 +515,7 @@ export class EducationReportDomainService
       where: {
         educationSessionId: educationSession.id,
         receiverId: In(receiverIds),
+        educationReportType: EducationReportType.SESSION,
       },
       relations: relationOptions,
     });
@@ -538,6 +540,8 @@ export class EducationReportDomainService
     const reports = await repository.find({
       where: {
         educationTermId: educationTerm.id,
+        educationSessionId: IsNull(),
+        educationReportType: EducationReportType.TERM,
         receiverId: In(receiverIds),
       },
       relations: relationOptions,
