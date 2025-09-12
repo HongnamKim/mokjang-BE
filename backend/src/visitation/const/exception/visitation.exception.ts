@@ -22,6 +22,8 @@ export const VisitationException = {
 
   OUT_OF_SCOPE_MEMBER_INCLUDE:
     '심방 대상 교인 중 권한 범위 밖의 교인이 존재합니다.',
+  OUT_OF_IN_CHARGE_SCOPE_MEMBER_INCLUDE:
+    '심방 대상 교인 중 담당자의 권한 범위 밖의 교인이 존재합니다.',
 };
 
 export const VisitationDetailException = {

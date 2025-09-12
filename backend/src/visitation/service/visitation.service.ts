@@ -154,7 +154,7 @@ export class VisitationService {
 
       if (inChargeFiltered.some((member) => member.isConcealed)) {
         throw new ForbiddenException(
-          VisitationException.OUT_OF_SCOPE_MEMBER_INCLUDE,
+          VisitationException.OUT_OF_IN_CHARGE_SCOPE_MEMBER_INCLUDE,
         );
       }
     }
@@ -372,6 +372,19 @@ export class VisitationService {
       await this.visitationMetaDomainService.updateVisitationMember(
         targetMetaData,
         newVisitationMembers,
+        qr,
+      );
+    } else if (newInstructor) {
+      // 대상 교인 변경 없이, 담당자만 변경
+      const targetMembers = targetMetaData.members;
+
+      console.log('tt');
+
+      await this.validateVisitationMember(
+        church,
+        requestManager,
+        newInstructor,
+        targetMembers,
         qr,
       );
     }
