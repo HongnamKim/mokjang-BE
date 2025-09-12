@@ -61,17 +61,15 @@ export class CreateVisitationDto {
   })
   @IsDateString({ strict: true })
   @IsDateTime('startDate')
-  //@IsDate()
-  startDate: string; //Date;
+  startDate: string;
 
   @ApiProperty({
     description: '심방 종료 날짜 (yyyy-MM-ddTHH:mm:ss)',
   })
-  //@IsDate()
   @IsDateString({ strict: true })
   @IsDateTime('endDate')
   @IsAfterDate('startDate')
-  endDate: string; //Date;
+  endDate: string;
 
   @ApiProperty({
     description: '심방 대상자 교인 ID 배열',
@@ -91,12 +89,8 @@ export class CreateVisitationDto {
   })
   @ValidateNested({ each: true })
   @Type(() => VisitationDetailDto)
-  @ArrayMaxSize(
-    1 /*30, {
-    message: VisitationException.EXCEED_VISITATION_MEMBER,
-  }*/,
-  )
-  //@VisitationDetailValidator()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(1)
   visitationDetails: VisitationDetailDto[];
 
   @ApiProperty({

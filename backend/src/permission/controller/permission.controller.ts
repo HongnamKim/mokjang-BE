@@ -36,6 +36,10 @@ import { PermissionReadGuard } from '../guard/permission-read.guard';
 import { PermissionWriteGuard } from '../guard/permission-write.guard';
 import { ChurchManagerGuard } from '../guard/church-manager.guard';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
+import { RequestChurch } from '../decorator/request-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { RequestManager } from '../decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('Churches:Permissions')
 @Controller('permissions')
@@ -58,9 +62,10 @@ export class PermissionController {
   @PermissionReadGuard()
   getPermissionTemplates(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetPermissionTemplateDto,
   ) {
-    return this.permissionService.getPermissionTemplates(churchId, dto);
+    return this.permissionService.getPermissionTemplates(church, dto);
   }
 
   @ApiPostPermissionTemplates()
@@ -68,9 +73,10 @@ export class PermissionController {
   @PermissionWriteGuard()
   postPermissionTemplates(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreatePermissionTemplateDto,
   ) {
-    return this.permissionService.postPermissionTemplates(churchId, dto);
+    return this.permissionService.postPermissionTemplates(church, dto);
   }
 
   @ApiPostSamplePermissionTemplates()
@@ -79,9 +85,10 @@ export class PermissionController {
   @UseInterceptors(TransactionInterceptor)
   postSamplePermissionTemplates(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.permissionService.postSamplePermissionTemplates(churchId, qr);
+    return this.permissionService.postSamplePermissionTemplates(church, qr);
   }
 
   @ApiGetPermissionTemplateById()
@@ -89,12 +96,10 @@ export class PermissionController {
   @PermissionReadGuard()
   getPermissionTemplateById(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('templateId', ParseIntPipe) templateId: number,
   ) {
-    return this.permissionService.getPermissionTemplateById(
-      churchId,
-      templateId,
-    );
+    return this.permissionService.getPermissionTemplateById(church, templateId);
   }
 
   @ApiGetManagersByPermissionTemplate()
@@ -102,11 +107,12 @@ export class PermissionController {
   @PermissionReadGuard()
   getManagersByPermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('templateId', ParseIntPipe) templateId: number,
     @Query() dto: GetManagersByPermissionTemplateDto,
   ) {
     return this.permissionService.getManagersByPermissionTemplate(
-      churchId,
+      church,
       templateId,
       dto,
     );
@@ -117,11 +123,14 @@ export class PermissionController {
   @PermissionWriteGuard()
   patchPermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('templateId', ParseIntPipe) templateId: number,
     @Body() dto: UpdatePermissionTemplateDto,
+    @RequestManager() requestManager: ChurchUserModel,
   ) {
     return this.permissionService.patchPermissionTemplate(
-      churchId,
+      church,
+      requestManager,
       templateId,
       dto,
     );
@@ -132,11 +141,9 @@ export class PermissionController {
   @PermissionWriteGuard()
   deletePermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('templateId', ParseIntPipe) templateId: number,
   ) {
-    return this.permissionService.deletePermissionTemplate(
-      churchId,
-      templateId,
-    );
+    return this.permissionService.deletePermissionTemplate(church, templateId);
   }
 }

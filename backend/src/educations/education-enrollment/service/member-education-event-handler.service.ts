@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
 import { EducationEnrollmentService } from './education-enrollment.service';
@@ -7,6 +7,10 @@ import {
   IEducationEnrollmentsDomainService,
 } from '../../education-domain/interface/education-enrollment-domain.service.interface';
 import { MemberDeletedEvent } from '../../../members/events/member.event';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
 
 @Injectable()
 export class MemberEducationEventHandler {
@@ -15,9 +19,13 @@ export class MemberEducationEventHandler {
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
 
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IEDUCATION_ENROLLMENT_DOMAIN_SERVICE)
     private readonly educationEnrollmentDomainService: IEducationEnrollmentsDomainService,
   ) {}
+
+  private readonly logger = new Logger('MemberEducationEventHandler');
 
   // 재시도 간격을 지수적으로 증가 (exponential backoff)
   private getRetryDelay(attempt: number): number {
@@ -40,10 +48,16 @@ export class MemberEducationEventHandler {
           qr,
         );
 
+      const church = await this.churchesDomainService.findChurchModelById(
+        churchId,
+        qr,
+      );
+
       await Promise.all(
         enrollments.map((enrollment) =>
           this.educationEnrollmentService.deleteEducationEnrollment(
-            churchId,
+            undefined,
+            church,
             enrollment.educationTerm.educationId,
             enrollment.educationTermId,
             enrollment.id,
@@ -55,20 +69,20 @@ export class MemberEducationEventHandler {
 
       await qr.commitTransaction();
       await qr.release();
-      console.log(
+      this.logger.log(
         `Successfully processed member deletion for churchId: ${churchId}, memberId: ${memberId}`,
       );
     } catch (error) {
       await qr.rollbackTransaction();
       await qr.release();
 
-      console.error(
+      this.logger.error(
         `Failed to process member deletion. churchId: ${churchId}, memberId: ${memberId}, attempt: ${attempt}`,
         error.stack,
       );
 
       if (attempt < maxAttempts) {
-        console.log(`Retrying... Attempt ${attempt + 1} of ${maxAttempts}`);
+        this.logger.log(`Retrying... Attempt ${attempt + 1} of ${maxAttempts}`);
 
         // 일정 시간 후 재시도
         setTimeout(() => {
@@ -84,7 +98,7 @@ export class MemberEducationEventHandler {
         }, this.getRetryDelay(attempt));
       } else {
         // 최대 시도 횟수 초과
-        console.error(
+        this.logger.error(
           `Max retry attempts reached for member deletion. churchId: ${churchId}, memberId: ${memberId}`,
         );
 

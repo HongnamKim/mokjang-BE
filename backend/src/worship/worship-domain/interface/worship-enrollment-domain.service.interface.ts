@@ -34,6 +34,7 @@ export interface IWorshipEnrollmentDomainService {
   findAllEnrollments(
     worship: WorshipModel,
     qr?: QueryRunner,
+    sessionDate?: Date,
   ): Promise<WorshipEnrollmentModel[]>;
 
   refreshEnrollments(
@@ -96,4 +97,8 @@ export interface IWorshipEnrollmentDomainService {
     worshipAttendance: WorshipAttendanceModel[],
     qr: QueryRunner,
   ): Promise<UpdateResult>;
+
+  findEnrollmentsByMemberId(
+    memberId: number,
+  ): Promise<WorshipEnrollmentModel[]>;
 }

@@ -2,6 +2,7 @@ import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { CalendarEducationService } from '../service/calendar-education.service';
 import { GetEducationSessionForCalendarDto } from '../dto/request/education/get-education-session-for-calendar.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { EducationReadGuard } from '../../educations/guard/education-read.guard';
 
 @ApiTags('Calendar:Educations')
 @Controller('educations')
@@ -11,6 +12,7 @@ export class CalendarEducationController {
   ) {}
 
   @Get()
+  @EducationReadGuard()
   getEducationSessionsForCalendar(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Query() dto: GetEducationSessionForCalendarDto,
@@ -22,6 +24,7 @@ export class CalendarEducationController {
   }
 
   @Get(':educationSessionId')
+  @EducationReadGuard()
   getEducationSessionById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,

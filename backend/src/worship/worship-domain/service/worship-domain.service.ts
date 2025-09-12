@@ -10,6 +10,7 @@ import { WorshipModel } from '../../entity/worship.entity';
 import {
   FindOptionsOrder,
   FindOptionsRelations,
+  MoreThan,
   QueryRunner,
   Repository,
   UpdateResult,
@@ -21,7 +22,6 @@ import { WorshipDomainPaginationResultDto } from '../dto/worship-domain-paginati
 import { WorshipException } from '../../exception/worship.exception';
 import { CreateWorshipDto } from '../../dto/request/worship/create-worship.dto';
 import { UpdateWorshipDto } from '../../dto/request/worship/update-worship.dto';
-import * as console from 'node:console';
 import { MemberModel } from '../../../members/entity/member.entity';
 
 @Injectable()
@@ -64,6 +64,20 @@ export class WorshipDomainService implements IWorshipDomainService {
       repository.find({
         where: {
           churchId: church.id,
+        },
+        relations: {
+          worshipTargetGroups: {
+            group: true,
+          },
+        },
+        select: {
+          worshipTargetGroups: {
+            id: true,
+            group: {
+              id: true,
+              name: true,
+            },
+          },
         },
         order: orderOptions,
         take: dto.take,
@@ -226,8 +240,6 @@ export class WorshipDomainService implements IWorshipDomainService {
     const result = await repository.softDelete({ id: targetWorship.id });
 
     if (result.affected === 0) {
-      console.log(result);
-
       throw new InternalServerErrorException(WorshipException.DELETE_ERROR);
     }
 
@@ -265,5 +277,29 @@ export class WorshipDomainService implements IWorshipDomainService {
     }
 
     return query.getMany();
+  }
+
+  findBulkWorshipByDay(
+    targetWorshipDay: number,
+    bulkSize: number,
+    cursor: number,
+  ): Promise<WorshipModel[]> {
+    const repository = this.getRepository();
+
+    return repository.find({
+      where: {
+        worshipDay: targetWorshipDay,
+        id: cursor > 0 ? MoreThan(cursor) : undefined,
+      },
+      select: {
+        id: true,
+        churchId: true,
+        title: true,
+      },
+      order: {
+        id: 'ASC',
+      },
+      take: bulkSize,
+    });
   }
 }

@@ -28,7 +28,7 @@ import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { WorshipAttendanceWriteScopeGuard } from '../guard/worship-attendance-write-scope.guard';
 import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
-import { RequestChurch } from '../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';

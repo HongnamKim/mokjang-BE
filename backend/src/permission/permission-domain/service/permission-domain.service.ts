@@ -175,6 +175,7 @@ export class PermissionDomainService implements IPermissionDomainService {
     return templateRepository.save({
       churchId: church.id,
       title: dto.title,
+      description: dto.description,
       permissionUnits: units,
     });
   }
@@ -238,41 +239,30 @@ export class PermissionDomainService implements IPermissionDomainService {
 
     if (dto.title) {
       await this.assertValidTemplateTitle(church, dto.title, qr);
-      template.title = dto.title;
-    }
-
-    if (units) {
-      template.permissionUnits = units;
     }
 
     const templateRepository = this.getTemplateRepository(qr);
 
-    await templateRepository.save(template);
+    const update = templateRepository.create({
+      ...template,
+      title: dto.title,
+      permissionUnits: units,
+      description: dto.description,
+    });
+
+    await templateRepository.save(update);
 
     return;
-
-    /*const result = await templateRepository.update(
-      {
-        churchId: church.id,
-        id: template.id,
-      },
-      {
-        title: dto.title,
-        permissionUnits: units,
-      },
-    );
-
-    if (result.affected === 0) {
-      throw new InternalServerErrorException(PermissionException.UPDATE_ERROR);
-    }
-
-    return result;*/
   }
 
   async deletePermissionTemplate(
     template: PermissionTemplateModel,
     qr?: QueryRunner,
   ) {
+    if (template.memberCount > 0) {
+      throw new ConflictException(PermissionException.CANNOT_DELETE);
+    }
+
     const templateRepository = this.getTemplateRepository(qr);
 
     const result = await templateRepository.softDelete(template.id);

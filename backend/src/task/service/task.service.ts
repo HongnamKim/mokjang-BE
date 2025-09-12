@@ -35,10 +35,15 @@ import { TaskModel } from '../entity/task.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { TaskNotificationService } from './task-notification.service';
+import { NotificationSourceTask } from '../../notification/notification-event.dto';
+import { NotificationDomain } from '../../notification/const/notification-domain.enum';
 
 @Injectable()
 export class TaskService {
   constructor(
+    private readonly taskNotificationService: TaskNotificationService,
+
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMANAGER_DOMAIN_SERVICE)
@@ -128,8 +133,22 @@ export class TaskService {
       qr,
     );
 
+    if (inCharge) {
+      this.taskNotificationService.notifyPost(
+        newTask,
+        creatorManager,
+        inCharge,
+      );
+    }
+
     if (dto.receiverIds && dto.receiverIds.length > 0) {
-      await this.handleAddTaskReport(church, newTask, dto.receiverIds, qr);
+      await this.handleAddTaskReport(
+        church,
+        newTask,
+        creatorManager,
+        dto.receiverIds,
+        qr,
+      );
     }
 
     return new PostTaskResponseDto(newTask, new Date());
@@ -145,40 +164,39 @@ export class TaskService {
   }
 
   async patchTask(
-    churchId: number,
+    requestManager: ChurchUserModel,
+    church: ChurchModel,
     taskId: number,
     dto: UpdateTaskDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const targetTask = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
       qr,
       {
         subTasks: true,
+        reports: true,
       },
     );
 
-    const newInChargeMember = dto.inChargeId
-      ? await this.managerDomainService.findManagerByMemberId(
-          church,
-          dto.inChargeId,
-          qr,
-        )
-      : null;
+    const newInCharge =
+      dto.inChargeId && dto.inChargeId !== targetTask.inChargeId
+        ? await this.managerDomainService.findManagerByMemberId(
+            church,
+            dto.inChargeId,
+            qr,
+          )
+        : null;
 
-    const newParentTask = dto.parentTaskId
-      ? await this.taskDomainService.findParentTaskModelById(
-          church,
-          dto.parentTaskId,
-          qr,
-        )
-      : null;
+    const newParentTask =
+      dto.parentTaskId && dto.parentTaskId !== targetTask.parentTaskId
+        ? await this.taskDomainService.findParentTaskModelById(
+            church,
+            dto.parentTaskId,
+            qr,
+          )
+        : null;
 
     dto.utcStartDate = dto.startDate
       ? fromZonedTime(dto.startDate, TIME_ZONE.SEOUL)
@@ -189,10 +207,71 @@ export class TaskService {
 
     await this.taskDomainService.updateTask(
       targetTask,
-      newInChargeMember,
+      newInCharge,
       newParentTask,
       dto,
       qr,
+    );
+
+    const [oldInCharge, reportReceivers] = await Promise.all([
+      targetTask.inChargeId
+        ? this.managerDomainService.findManagerForNotification(
+            church,
+            targetTask.inChargeId,
+          )
+        : null,
+      this.managerDomainService.findManagersForNotification(
+        church,
+        targetTask.reports.map((r) => r.receiverId),
+      ),
+    ]);
+
+    const notificationSource = new NotificationSourceTask(
+      NotificationDomain.TASK,
+      targetTask.id,
+    );
+
+    let notificationTargets: ChurchUserModel[];
+
+    if (newInCharge) {
+      notificationTargets = reportReceivers;
+    } else {
+      notificationTargets = oldInCharge
+        ? [...reportReceivers, oldInCharge]
+        : reportReceivers;
+    }
+
+    // 상태 변경 알림
+    if (dto.status && dto.status !== targetTask.status) {
+      this.taskNotificationService.notifyStatusUpdate(
+        requestManager,
+        notificationTargets,
+        targetTask.title,
+        notificationSource,
+        targetTask.status,
+        dto.status,
+      );
+    }
+
+    // 담당자 변경 알림
+    if (newInCharge) {
+      this.taskNotificationService.notifyInChargeUpdate(
+        requestManager,
+        reportReceivers,
+        oldInCharge,
+        newInCharge,
+        targetTask.title,
+        notificationSource,
+      );
+    }
+
+    this.taskNotificationService.notifyDataUpdate(
+      requestManager,
+      notificationTargets,
+      targetTask.title,
+      notificationSource,
+      targetTask,
+      dto,
     );
 
     const updatedTask = await this.taskDomainService.findTaskById(
@@ -204,7 +283,12 @@ export class TaskService {
     return new PatchTaskResponseDto(updatedTask);
   }
 
-  async deleteTask(churchId: number, taskId: number, qr: QueryRunner) {
+  async deleteTask(
+    requestManager: ChurchUserModel,
+    churchId: number,
+    taskId: number,
+    qr: QueryRunner,
+  ) {
     const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
@@ -223,6 +307,27 @@ export class TaskService {
     // 업무 보고 삭제
     await this.taskReportDomainService.deleteTaskReportCascade(targetTask, qr);
 
+    const [reportReceivers, inCharge] = await Promise.all([
+      this.managerDomainService.findManagersForNotification(
+        church,
+        targetTask.reports.map((r) => r.receiverId),
+      ),
+      this.managerDomainService.findManagerForNotification(
+        church,
+        targetTask.inChargeId,
+      ),
+    ]);
+
+    const notificationTargets = inCharge
+      ? [...reportReceivers, inCharge]
+      : reportReceivers;
+
+    this.taskNotificationService.notifyDelete(
+      targetTask.title,
+      requestManager,
+      notificationTargets,
+    );
+
     return new DeleteTaskResponseDto(
       new Date(),
       targetTask.id,
@@ -234,6 +339,7 @@ export class TaskService {
   async addTaskReportReceivers(
     churchId: number,
     taskId: number,
+    requestManager: ChurchUserModel,
     dto: AddTaskReportReceiverDto,
     qr: QueryRunner,
   ) {
@@ -248,12 +354,19 @@ export class TaskService {
       qr,
     );
 
-    return this.handleAddTaskReport(church, task, dto.receiverIds, qr);
+    return this.handleAddTaskReport(
+      church,
+      task,
+      requestManager,
+      dto.receiverIds,
+      qr,
+    );
   }
 
   private async handleAddTaskReport(
     church: ChurchModel,
     task: TaskModel,
+    requestManager: ChurchUserModel,
     newReceiverIds: number[],
     qr: QueryRunner,
   ) {
@@ -270,6 +383,12 @@ export class TaskService {
       qr,
     );
 
+    this.taskNotificationService.notifyReportAdded(
+      task,
+      requestManager,
+      newReceivers,
+    );
+
     return {
       taskId: task.id,
       addReceivers: newReceivers.map((receiver) => ({
@@ -283,6 +402,7 @@ export class TaskService {
   async deleteTaskReportReceivers(
     churchId: number,
     taskId: number,
+    requestManager: ChurchUserModel,
     dto: DeleteTaskReportReceiverDto,
     qr: QueryRunner,
   ) {
@@ -301,6 +421,19 @@ export class TaskService {
       task,
       dto.receiverIds,
       qr,
+    );
+
+    const removedReportReceivers =
+      await this.managerDomainService.findManagersForNotification(
+        church,
+        dto.receiverIds,
+        qr,
+      );
+
+    this.taskNotificationService.notifyReportRemoved(
+      task,
+      requestManager,
+      removedReportReceivers,
     );
 
     return {

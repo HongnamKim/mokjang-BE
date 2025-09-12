@@ -13,6 +13,7 @@ import { IMEMBER_FILTER_SERVICE } from './service/interface/member-filter.servic
 import { MemberFilterService } from './service/member-filter.service';
 import { WorshipDomainModule } from '../worship/worship-domain/worship-domain.module';
 import { MinistryHistoryDomainModule } from '../member-history/ministry-history/ministry-history-domain/ministry-history-domain.module';
+import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MinistryHistoryDomainModule } from '../member-history/ministry-history/
       { path: 'churches/:churchId', module: MembersModule },
     ]),
     ChurchesDomainModule,
+    ChurchUserDomainModule,
     ManagerDomainModule,
     MembersDomainModule,
     FamilyRelationDomainModule,

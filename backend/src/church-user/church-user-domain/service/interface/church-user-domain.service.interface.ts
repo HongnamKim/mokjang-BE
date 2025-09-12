@@ -51,11 +51,28 @@ export interface IChurchUserDomainService {
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
 
+  isLinkedWithMember(
+    church: ChurchModel,
+    member: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<boolean>;
+
   findChurchUserByUser(
     church: ChurchModel,
     user: UserModel,
     qr?: QueryRunner,
   ): Promise<ChurchUserModel>;
+
+  updateLinkedMember(
+    targetChurchUser: ChurchUserModel,
+    targetMember: MemberModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  unlinkMember(
+    targetChurchUser: ChurchUserModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
 
   updateChurchUserRole(
     churchUser: ChurchUserModel,

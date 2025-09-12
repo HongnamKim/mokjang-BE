@@ -9,6 +9,7 @@ import { VisitationReportDomainModule } from '../report/visitation-report/visita
 import { VisitationDetailController } from './controller/visitation-detail.controller';
 import { VisitationDetailService } from './service/visitation-detail.service';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { VisitationNotificationService } from './service/visitation-notification.service';
 
 @Module({
   imports: [
@@ -23,6 +24,10 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     VisitationReportDomainModule,
   ],
   controllers: [VisitationController, VisitationDetailController],
-  providers: [VisitationService, VisitationDetailService],
+  providers: [
+    VisitationService,
+    VisitationDetailService,
+    VisitationNotificationService,
+  ],
 })
 export class VisitationModule {}

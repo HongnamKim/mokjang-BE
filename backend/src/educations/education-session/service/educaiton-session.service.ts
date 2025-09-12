@@ -51,6 +51,9 @@ import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { AddEducationSessionReportDto } from '../../../report/education-report/dto/session/request/add-education-session-report.dto';
 import { DeleteEducationSessionReportDto } from '../../../report/education-report/dto/session/request/delete-education-session-report.dto';
+import { EducationSessionNotificationService } from './education-session-notification.service';
+import { NotificationSourceEducationSession } from '../../../notification/notification-event.dto';
+import { NotificationDomain } from '../../../notification/const/notification-domain.enum';
 
 @Injectable()
 export class EducationSessionService {
@@ -73,6 +76,7 @@ export class EducationSessionService {
 
     @Inject(IEDUCATION_REPORT_DOMAIN_SERVICE)
     private readonly educationSessionReportDomainService: IEducationReportDomainService,
+    private readonly educationSessionNotificationService: EducationSessionNotificationService,
   ) {}
 
   private async getEducationTerm(
@@ -159,17 +163,26 @@ export class EducationSessionService {
     return new GetEducationSessionResponseDto(session);
   }
 
+  private getNotificationSessionTitle(
+    education: EducationModel,
+    educationTerm: EducationTermModel,
+    educationSession: EducationSessionModel,
+  ) {
+    return `${education.name}__${educationTerm.term}__${educationSession.title}`;
+  }
+
   async createEducationSession(
+    church: ChurchModel,
     creatorManager: ChurchUserModel,
-    churchId: number,
     educationId: number,
     educationTermId: number,
     dto: CreateEducationSessionDto,
     qr: QueryRunner,
   ) {
-    const { church, education } = await this.getEducationInfo(
-      churchId,
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
       educationId,
+      qr,
     );
 
     const educationTerm =
@@ -187,13 +200,11 @@ export class EducationSessionService {
     }
 
     // 세션 담당자
-    const inCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerByMemberId(
-          church,
-          dto.inChargeId,
-          qr,
-        )
-      : null;
+    const inCharge = await this.managerDomainService.findManagerByMemberId(
+      church,
+      dto.inChargeId,
+      qr,
+    );
 
     dto.utcStartDate = fromZonedTime(dto.startDate, TIME_ZONE.SEOUL);
     dto.utcEndDate = fromZonedTime(dto.endDate, TIME_ZONE.SEOUL);
@@ -232,6 +243,7 @@ export class EducationSessionService {
     if (dto.receiverIds && dto.receiverIds.length > 0) {
       await this.handleAddEducationReport(
         church,
+        creatorManager,
         education,
         educationTerm,
         newSession,
@@ -239,6 +251,21 @@ export class EducationSessionService {
         qr,
       );
     }
+
+    const sessionTitle = this.getNotificationSessionTitle(
+      education,
+      educationTerm,
+      newSession,
+    );
+
+    this.educationSessionNotificationService.notifyPost(
+      newSession,
+      creatorManager,
+      inCharge,
+      sessionTitle,
+      educationId,
+      educationTermId,
+    );
 
     const session =
       await this.educationSessionDomainService.findEducationSessionById(
@@ -251,15 +278,16 @@ export class EducationSessionService {
   }
 
   async updateEducationSession(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
     dto: UpdateEducationSessionDto,
     qr: QueryRunner,
   ) {
-    const { church, education } = await this.getEducationInfo(
-      churchId,
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
       educationId,
       qr,
     );
@@ -271,19 +299,12 @@ export class EducationSessionService {
         qr,
       );
 
-    const inCharge = dto.inChargeId
-      ? await this.managerDomainService.findManagerByMemberId(
-          church,
-          dto.inChargeId,
-          qr,
-        )
-      : null;
-
     const targetSession =
       await this.educationSessionDomainService.findEducationSessionModelById(
         educationTerm,
         educationSessionId,
         qr,
+        { reports: true },
       );
 
     // status 변경으로 EducationTerm 의 완료된 세션 수 업데이트
@@ -310,12 +331,110 @@ export class EducationSessionService {
       ? fromZonedTime(dto.endDate, TIME_ZONE.SEOUL)
       : undefined;
 
+    const newInCharge =
+      dto.inChargeId && dto.inChargeId !== targetSession.inChargeId
+        ? await this.managerDomainService.findManagerByMemberId(
+            church,
+            dto.inChargeId,
+            qr,
+          )
+        : null;
+
+    const [oldInCharge, reportReceivers] = await Promise.all([
+      targetSession.inChargeId
+        ? this.managerDomainService.findManagerForNotification(
+            church,
+            targetSession.inChargeId,
+          )
+        : null,
+      this.managerDomainService.findManagersForNotification(
+        church,
+        targetSession.reports.map((r) => r.receiverId),
+      ),
+    ]);
+
     await this.educationSessionDomainService.updateEducationSession(
       targetSession,
       dto,
-      inCharge,
+      newInCharge,
       qr,
     );
+
+    const notificationSessionTitle = this.getNotificationSessionTitle(
+      education,
+      educationTerm,
+      targetSession,
+    );
+
+    const notificationSource = new NotificationSourceEducationSession(
+      NotificationDomain.EDUCATION_SESSION,
+      educationId,
+      educationTermId,
+      targetSession.id,
+    );
+
+    // 세션의 상태값 변경
+    if (dto.status && dto.status !== targetSession.status) {
+      let notificationTargets: ChurchUserModel[];
+
+      if (newInCharge) {
+        // 담당자 변경 시 보고대상자에게만 상태 변경 알림
+        notificationTargets = reportReceivers;
+      } else {
+        // 담당자 유지 시 담당자 + 보고대상자에게 상태 변경 알림
+        notificationTargets = oldInCharge
+          ? [...reportReceivers, oldInCharge]
+          : reportReceivers;
+      }
+
+      this.educationSessionNotificationService.notifyStatusUpdate(
+        requestManager,
+        notificationTargets,
+        notificationSessionTitle,
+        notificationSource,
+        targetSession.status,
+        dto.status,
+      );
+    }
+
+    // 데이터 변경 알림
+    if (newInCharge) {
+      // 담당자 변경 시 보고 대상자에게만 변경 내용 알림
+      this.educationSessionNotificationService.notifyDataUpdate(
+        requestManager,
+        reportReceivers,
+        notificationSessionTitle,
+        notificationSource,
+        targetSession,
+        dto,
+      );
+    } else {
+      // 담당자 유지 시 담당자 + 보고대상자
+      const notificationReceivers = [...reportReceivers, oldInCharge].filter(
+        (churchUser) => churchUser !== null,
+      );
+
+      this.educationSessionNotificationService.notifyDataUpdate(
+        requestManager,
+        notificationReceivers,
+        notificationSessionTitle,
+        notificationSource,
+        targetSession,
+        dto,
+      );
+    }
+
+    // 담당자 변경 알림
+    if (newInCharge) {
+      this.educationSessionNotificationService.notifyInChargeUpdate(
+        requestManager,
+        reportReceivers,
+        oldInCharge,
+        newInCharge,
+        notificationSessionTitle,
+        notificationSource,
+      );
+    }
 
     const updatedSession =
       await this.educationSessionDomainService.findEducationSessionById(
@@ -328,24 +447,31 @@ export class EducationSessionService {
   }
 
   async deleteEducationSessions(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
     qr: QueryRunner,
   ) {
-    const educationTerm = await this.getEducationTerm(
-      churchId,
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
       educationId,
-      educationTermId,
       qr,
     );
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        education,
+        educationTermId,
+        qr,
+      );
 
     const targetSession =
       await this.educationSessionDomainService.findEducationSessionModelById(
         educationTerm,
         educationSessionId,
         qr,
+        { reports: true },
       );
 
     // 세션 삭제
@@ -404,6 +530,35 @@ export class EducationSessionService {
       qr,
     );
 
+    const [reportReceivers, inCharge] = await Promise.all([
+      this.managerDomainService.findManagersForNotification(
+        church,
+        targetSession.reports.map((r) => r.receiverId),
+      ),
+      targetSession.inChargeId
+        ? this.managerDomainService.findManagerForNotification(
+            church,
+            targetSession.inChargeId,
+          )
+        : null,
+    ]);
+
+    const notificationTargets = inCharge
+      ? [...reportReceivers, inCharge]
+      : reportReceivers;
+
+    const notificationTitle = this.getNotificationSessionTitle(
+      education,
+      educationTerm,
+      targetSession,
+    );
+
+    this.educationSessionNotificationService.notifyDelete(
+      notificationTitle,
+      requestManager,
+      notificationTargets,
+    );
+
     return new DeleteSessionResponseDto(
       new Date(),
       targetSession.id,
@@ -416,15 +571,16 @@ export class EducationSessionService {
   }
 
   async addReportReceivers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
     dto: AddEducationSessionReportDto,
     qr: QueryRunner,
   ) {
-    const { church, education } = await this.getEducationInfo(
-      churchId,
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
       educationId,
       qr,
     );
@@ -443,6 +599,7 @@ export class EducationSessionService {
 
     return this.handleAddEducationReport(
       church,
+      requestManager,
       education,
       educationTerm,
       educationSession,
@@ -453,6 +610,7 @@ export class EducationSessionService {
 
   private async handleAddEducationReport(
     church: ChurchModel,
+    requestManager: ChurchUserModel,
     education: EducationModel,
     educationTerm: EducationTermModel,
     educationSession: EducationSessionModel,
@@ -474,6 +632,21 @@ export class EducationSessionService {
       qr,
     );
 
+    const notificationSessionTitle = this.getNotificationSessionTitle(
+      education,
+      educationTerm,
+      educationSession,
+    );
+
+    this.educationSessionNotificationService.notifyReportAdded(
+      educationSession,
+      requestManager,
+      newReceivers,
+      notificationSessionTitle,
+      education.id,
+      educationTerm.id,
+    );
+
     return {
       educationId: education.id,
       educationTermId: educationTerm.id,
@@ -487,19 +660,25 @@ export class EducationSessionService {
   }
 
   async deleteEducationSessionReportReceivers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
     dto: DeleteEducationSessionReportDto,
     qr: QueryRunner,
   ) {
-    const educationTerm = await this.getEducationTerm(
-      churchId,
+    const education = await this.educationDomainService.findEducationModelById(
+      church,
       educationId,
-      educationTermId,
       qr,
     );
+    const educationTerm =
+      await this.educationTermDomainService.findEducationTermModelById(
+        education,
+        educationTermId,
+        qr,
+      );
 
     const educationSession =
       await this.educationSessionDomainService.findEducationSessionModelById(
@@ -521,6 +700,30 @@ export class EducationSessionService {
         targetReports,
         qr,
       );
+
+    const removedReportReceivers =
+      await this.managerDomainService.findManagersForNotification(
+        church,
+        dto.receiverIds,
+        qr,
+      );
+
+    // 알림 표시용 제목
+    const notificationSessionTitle = this.getNotificationSessionTitle(
+      education,
+      educationTerm,
+      educationSession,
+    );
+
+    // 보고 대상자 제외 알림
+    this.educationSessionNotificationService.notifyReportRemoved(
+      educationSession,
+      requestManager,
+      removedReportReceivers,
+      notificationSessionTitle,
+      educationId,
+      educationTermId,
+    );
 
     return {
       educationId: educationTerm.educationId,

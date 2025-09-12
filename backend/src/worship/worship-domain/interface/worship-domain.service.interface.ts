@@ -58,4 +58,10 @@ export interface IWorshipDomainService {
     member: MemberModel,
     targetGroupIds: number[] | undefined,
   ): Promise<WorshipModel[]>;
+
+  findBulkWorshipByDay(
+    targetWorshipDay: number,
+    bulkSize: number,
+    cursor: number,
+  ): Promise<WorshipModel[]>;
 }

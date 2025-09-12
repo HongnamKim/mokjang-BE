@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
 import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
 import { CreateMemberDto } from '../dto/request/create-member.dto';
@@ -45,7 +45,7 @@ import {
 } from '../../worship/worship-domain/interface/worship-enrollment-domain.service.interface';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
-import { getHistoryStartDate } from '../../member-history/history-date.utils';
+import { getStartOfToday } from '../../member-history/history-date.utils';
 import { GetMemberListDto } from '../dto/list/get-member-list.dto';
 import {
   IGROUPS_DOMAIN_SERVICE,
@@ -66,6 +66,11 @@ import {
 import { GetMemberWorshipStatisticsResponseDto } from '../dto/response/worship/get-member-worship-statistics-response.dto';
 import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-member-worship-attendances.dto';
 import { GetMemberWorshipAttendancesResponseDto } from '../dto/response/worship/get-member-worship-attendances-response.dto';
+import {
+  ICHURCH_USER_DOMAIN_SERVICE,
+  IChurchUserDomainService,
+} from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
+import { MemberException } from '../exception/member.exception';
 
 @Injectable()
 export class MembersService {
@@ -74,6 +79,8 @@ export class MembersService {
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(ICHURCH_USER_DOMAIN_SERVICE)
+    private readonly churchUserDomainService: IChurchUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
     @Inject(ISEARCH_MEMBERS_SERVICE)
@@ -198,7 +205,7 @@ export class MembersService {
 
     dto.utcRegisteredAt = dto.registeredAt
       ? fromZonedTime(dto.registeredAt, TIME_ZONE.SEOUL)
-      : getHistoryStartDate(TIME_ZONE.SEOUL);
+      : getStartOfToday(TIME_ZONE.SEOUL);
 
     dto.utcBirth = dto.birth
       ? fromZonedTime(dto.birth, TIME_ZONE.SEOUL)
@@ -271,6 +278,17 @@ export class MembersService {
     targetMember: MemberModel,
     qr: QueryRunner,
   ) {
+    const isLinkedMember =
+      await this.churchUserDomainService.isLinkedWithMember(
+        church,
+        targetMember,
+        qr,
+      );
+
+    if (isLinkedMember) {
+      throw new ConflictException(MemberException.CANNOT_DELETE_LINKED_MEMBER);
+    }
+
     // 교인 삭제
     await this.membersDomainService.deleteMember(church, targetMember, qr);
 

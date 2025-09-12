@@ -8,6 +8,20 @@ export const ApiGetUser = () =>
     }),
   );
 
+export const ApiPatchUser = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '회원 이름 수정',
+    }),
+  );
+
+export const ApiDeleteUser = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '회원 탈퇴',
+    }),
+  );
+
 export const ApiGetMyJoinRequest = () =>
   applyDecorators(
     ApiOperation({

@@ -27,10 +27,10 @@ import {
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
-import { RequestChurch } from '../../../permission/decorator/permission-church.decorator';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { AddEducationTermReportDto } from '../dto/request/report/add-education-term-report.dto';
 import { DeleteEducationTermReportDto } from '../dto/request/report/delete-education-term-report.dto';
@@ -101,11 +101,14 @@ export class EducationTermsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdateEducationTermDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.updateEducationTerm(
-      churchId,
+      requestManager,
+      church,
       educationId,
       educationTermId,
       dto,
@@ -121,10 +124,13 @@ export class EducationTermsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.deleteEducationTerm(
-      churchId,
+      requestManager,
+      church,
       educationId,
       educationTermId,
       qr,
@@ -151,15 +157,19 @@ export class EducationTermsController {
 
   @Patch(':educationTermId/add-receivers')
   @UseInterceptors(TransactionInterceptor)
+  @EducationWriteGuard()
   addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: AddEducationTermReportDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.addReportReceivers(
-      churchId,
+      requestManager,
+      church,
       educationId,
       educationTermId,
       dto,
@@ -169,15 +179,19 @@ export class EducationTermsController {
 
   @Patch(':educationTermId/delete-receivers')
   @UseInterceptors(TransactionInterceptor)
+  @EducationWriteGuard()
   deleteReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: DeleteEducationTermReportDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationTermService.deleteEducationTermReportReceivers(
-      churchId,
+      requestManager,
+      church,
       educationId,
       educationTermId,
       dto,

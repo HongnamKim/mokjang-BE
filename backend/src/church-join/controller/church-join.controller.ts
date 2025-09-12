@@ -58,7 +58,6 @@ export class ChurchJoinController {
 
   @ApiGetChurchJoinRequest()
   @Get(':churchId/join')
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @ChurchJoinReadGuard()
   getChurchJoinRequests(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -79,7 +78,6 @@ export class ChurchJoinController {
   @ApiApproveChurchJoinRequest()
   @Patch(':churchId/join/:joinId/approve')
   @ChurchJoinWriteGuard()
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   approveChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -87,8 +85,6 @@ export class ChurchJoinController {
     @Body() dto: ApproveJoinRequestDto,
     @QueryRunner() qr: QR,
   ) {
-    //return dto;
-
     return this.churchJoinRequestService.approveChurchJoinRequest(
       churchId,
       joinId,
@@ -100,7 +96,6 @@ export class ChurchJoinController {
   @ApiRejectChurchJoinRequest()
   @Patch(':churchId/join/:joinId/reject')
   @ChurchJoinWriteGuard()
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   rejectChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,
@@ -114,7 +109,6 @@ export class ChurchJoinController {
   @ApiDeleteChurchJoinRequest()
   @Delete(':churchId/join/:joinId')
   @ChurchJoinWriteGuard()
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   deleteChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,

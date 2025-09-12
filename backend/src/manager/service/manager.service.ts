@@ -1,9 +1,5 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { GetManagersDto } from '../dto/request/get-managers.dto';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import { QueryRunner } from 'typeorm';
 import { ManagerPaginationResponseDto } from '../dto/response/manager-pagination-response.dto';
 import { PatchManagerResponseDto } from '../dto/response/patch-manager-response.dto';
@@ -31,12 +27,14 @@ import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
+import { ManagerNotificationService } from './manager-notification.service';
+import { ChurchUserException } from '../../church-user/exception/church-user.exception';
 
 @Injectable()
 export class ManagerService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
+    private readonly managerNotificationService: ManagerNotificationService,
+
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
     @Inject(IPERMISSION_DOMAIN_SERVICE)
@@ -47,10 +45,7 @@ export class ManagerService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  async getManagers(churchId: number, dto: GetManagersDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getManagers(church: ChurchModel, dto: GetManagersDto) {
     const { data, totalCount } = await this.managerDomainService.findManagers(
       church,
       dto,
@@ -66,20 +61,21 @@ export class ManagerService {
   }
 
   async togglePermissionActive(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     churchUserId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const targetManager = await this.managerDomainService.findManagerModelById(
       church,
       churchUserId,
       qr,
+      { member: true },
     );
+
+    if (!targetManager.member) {
+      throw new ConflictException(ChurchUserException.NOT_LINKED);
+    }
 
     await this.managerDomainService.updatePermissionActive(
       targetManager,
@@ -93,13 +89,21 @@ export class ManagerService {
       qr,
     );
 
+    const owner = await this.managerDomainService.findOwnerForNotification(
+      church,
+      qr,
+    );
+
+    this.managerNotificationService.notifyPermissionUpdated(
+      requestManager,
+      targetManager,
+      owner,
+    );
+
     return new PatchManagerResponseDto(updatedManager);
   }
 
-  async getManagerById(churchId: number, churchUserId: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getManagerById(church: ChurchModel, churchUserId: number) {
     const manager = await this.managerDomainService.findManagerById(
       church,
       churchUserId,
@@ -109,16 +113,12 @@ export class ManagerService {
   }
 
   async assignPermissionTemplate(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     churchUserId: number,
     dto: AssignPermissionTemplateDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const permissionTemplate =
       await this.permissionDomainService.findPermissionTemplateModelById(
         church,
@@ -130,11 +130,11 @@ export class ManagerService {
       church,
       churchUserId,
       qr,
-      { permissionTemplate: true },
+      { member: true, permissionTemplate: true },
     );
 
     // 기존 권한 유형이 있는 경우 memberCount 감소
-    if (manager.permissionTemplateId) {
+    if (manager.permissionTemplateId && manager.permissionTemplate) {
       await this.permissionDomainService.decrementMemberCount(
         manager.permissionTemplate,
         qr,
@@ -152,6 +152,18 @@ export class ManagerService {
       qr,
     );
 
+    const owner = await this.managerDomainService.findOwnerForNotification(
+      church,
+      qr,
+    );
+
+    manager.permissionTemplateId !== dto.permissionTemplateId &&
+      this.managerNotificationService.notifyPermissionUpdated(
+        requestManager,
+        manager,
+        owner,
+      );
+
     const updatedManager = await this.managerDomainService.findManagerById(
       church,
       churchUserId,
@@ -162,20 +174,16 @@ export class ManagerService {
   }
 
   async unassignPermissionTemplate(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     churchUserId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const manager = await this.managerDomainService.findManagerModelById(
       church,
       churchUserId,
       qr,
-      { permissionTemplate: true },
+      { member: true, permissionTemplate: true },
     );
 
     await this.managerDomainService.unassignPermissionTemplate(manager, qr);
@@ -185,6 +193,17 @@ export class ManagerService {
         manager.permissionTemplate,
         qr,
       ));
+
+    const owner = await this.managerDomainService.findOwnerForNotification(
+      church,
+      qr,
+    );
+
+    this.managerNotificationService.notifyPermissionUpdated(
+      requestManager,
+      manager,
+      owner,
+    );
 
     const updatedManager = await this.managerDomainService.findManagerById(
       church,
@@ -276,14 +295,12 @@ export class ManagerService {
   }
 
   async patchPermissionScope(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     churchUserId: number,
     dto: UpdatePermissionScopeDto,
     qr: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const manager = await this.managerDomainService.findManagerById(
       church,
       churchUserId,
@@ -300,9 +317,20 @@ export class ManagerService {
         qr,
       );
 
+    const owner = await this.managerDomainService.findOwnerForNotification(
+      church,
+      qr,
+    );
+
     // 전체 그룹 범위 지정
     if (dto.isAllGroups) {
       await this.handleAllGroupScope(manager, existingScope, qr);
+
+      this.managerNotificationService.notifyPermissionUpdated(
+        requestManager,
+        manager,
+        owner,
+      );
 
       return this.managerDomainService.findManagerById(
         church,
@@ -316,6 +344,12 @@ export class ManagerService {
         existingScope,
         dto,
         qr,
+      );
+
+      this.managerNotificationService.notifyPermissionUpdated(
+        requestManager,
+        manager,
+        owner,
       );
 
       return this.managerDomainService.findManagerById(

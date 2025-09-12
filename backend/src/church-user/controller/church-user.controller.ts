@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -14,6 +15,12 @@ import { GetChurchUsersDto } from '../dto/request/get-church-users.dto';
 import { UpdateChurchUserRoleDto } from '../dto/request/update-church-user-role.dto';
 import { ChurchUserReadGuard } from '../guard/church-user-read.guard';
 import { ChurchUserWriteGuard } from '../guard/church-user-write.guard';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { LinkMemberDto } from '../dto/request/link-member.dto';
+import { UseTransaction } from '../../common/decorator/use-transaction.decorator';
+import { QueryRunner } from '../../common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
 
 @ApiTags('Churches:Church-Users')
 @Controller('church-users')
@@ -41,7 +48,36 @@ export class ChurchUserController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
   ) {
-    return this.churchUserService.getChurchUserByUserId(churchId, churchUserId);
+    return this.churchUserService.getChurchUserById(churchId, churchUserId);
+  }
+
+  @ApiOperation({
+    summary: '계정 - 교인 연결 수정',
+  })
+  @Patch(':churchUserId/change-member')
+  @ChurchUserWriteGuard()
+  changeMember(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @Body() dto: LinkMemberDto,
+    @RequestChurch() church: ChurchModel,
+  ) {
+    return this.churchUserService.changeMemberLink(church, churchUserId, dto);
+  }
+
+  @ApiOperation({
+    summary: '교회 계정 가입 취소',
+  })
+  @Patch(':churchUserId/leave-church')
+  @UseTransaction()
+  @ChurchUserWriteGuard()
+  leaveChurch(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
+    @QueryRunner() qr: QR,
+  ) {
+    return this.churchUserService.leaveChurchUser(church, churchUserId, qr);
   }
 
   @ApiOperation({
@@ -65,6 +101,7 @@ export class ChurchUserController {
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '계정 - 교인 정보 연결',
   })
   @ChurchUserWriteGuard()
@@ -72,11 +109,15 @@ export class ChurchUserController {
   linkMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @Body() dto: LinkMemberDto,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return '개발 전';
+    throw new GoneException('다른 엔드포인트로 대체 됨.');
+    //return this.churchUserService.changeMemberLink(church, churchUserId, dto);
   }
 
   @ApiOperation({
+    deprecated: true,
     summary: '계정 - 교인 정보 연결 해제',
   })
   @Patch(':churchUserId/unlink-member')
@@ -84,19 +125,9 @@ export class ChurchUserController {
   unlinkMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return '개발 전';
-  }
-
-  @ApiOperation({
-    summary: '교회 계정 가입 취소',
-  })
-  @Patch(':churchUserId/leave-church')
-  @ChurchUserWriteGuard()
-  leaveChurch(
-    @Param('churchId', ParseIntPipe) churchId: number,
-    @Param('churchUserId', ParseIntPipe) churchUserId: number,
-  ) {
-    return '개발 전';
+    throw new GoneException('다른 엔드포인트로 대체 됨.');
+    //return this.churchUserService.unLinkMember(church, churchUserId);
   }
 }

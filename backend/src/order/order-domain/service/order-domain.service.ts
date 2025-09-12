@@ -47,7 +47,6 @@ export class OrderDomainService implements IOrderDomainService {
     }
 
     const items = await query.limit(dto.limit + 1).getMany();
-    console.log(query.getQuery());
 
     const hasMore = items.length > dto.limit;
     if (hasMore) {
@@ -121,7 +120,7 @@ export class OrderDomainService implements IOrderDomainService {
     return result;
   }
 
-  private applySort(
+  /*private applySort(
     query: SelectQueryBuilder<OrderModel>,
     sortBy: OrderSortColumn,
     sortDirection: 'ASC' | 'DESC',
@@ -135,7 +134,7 @@ export class OrderDomainService implements IOrderDomainService {
     }
 
     query.addOrderBy('order.id', sortDirection);
-  }
+  }*/
 
   private getSortColumnPath(sortBy: OrderSortColumn) {
     switch (sortBy) {

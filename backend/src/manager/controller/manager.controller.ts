@@ -18,6 +18,10 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdatePermissionScopeDto } from '../dto/request/update-permission-scope.dto';
 import { ManagerReadGuard } from '../guard/manager-read.guard';
 import { ManagerWriteGuard } from '../guard/manager-write.guard';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { RequestManager } from '../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 
 @ApiTags('Churches:Managers')
 @Controller('managers')
@@ -29,9 +33,10 @@ export class ManagerController {
   @ManagerReadGuard()
   getManagers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetManagersDto,
   ) {
-    return this.managerService.getManagers(churchId, dto);
+    return this.managerService.getManagers(church, dto);
   }
 
   @ApiOperation({ summary: '관리자 단건 조회' })
@@ -40,8 +45,9 @@ export class ManagerController {
   getManagerById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return this.managerService.getManagerById(churchId, churchUserId);
+    return this.managerService.getManagerById(church, churchUserId);
   }
 
   @ApiOperation({ summary: '관리자 활성 상태 온오프' })
@@ -51,10 +57,13 @@ export class ManagerController {
   toggleManagerPermissionActive(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.togglePermissionActive(
-      churchId,
+      church,
+      requestManager,
       churchUserId,
       qr,
     );
@@ -67,11 +76,14 @@ export class ManagerController {
   assignPermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: AssignPermissionTemplateDto,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.assignPermissionTemplate(
-      churchId,
+      church,
+      requestManager,
       churchUserId,
       dto,
       qr,
@@ -85,10 +97,13 @@ export class ManagerController {
   unassignPermissionTemplate(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.unassignPermissionTemplate(
-      churchId,
+      church,
+      requestManager,
       churchUserId,
       qr,
     );
@@ -101,11 +116,14 @@ export class ManagerController {
   patchPermissionScope(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdatePermissionScopeDto,
     @QueryRunner() qr: QR,
   ) {
     return this.managerService.patchPermissionScope(
-      churchId,
+      church,
+      requestManager,
       churchUserId,
       dto,
       qr,

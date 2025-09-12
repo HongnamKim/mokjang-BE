@@ -38,15 +38,6 @@ export class UpdateEducationTermDto {
   @IsBasicText('장소')
   location: string;
 
-  /*@ApiProperty({
-    description: '내용',
-    required: false,
-  })
-  @IsOptionalNotNull()
-  @IsString()
-  @PlainTextMaxLength(500)
-  content?: string;*/
-
   @ApiProperty({
     description: '교육 진행 상태',
     enum: EducationTermStatus,

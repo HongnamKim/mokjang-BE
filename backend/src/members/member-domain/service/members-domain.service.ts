@@ -1,6 +1,5 @@
 import { IMembersDomainService } from '../interface/members-domain.service.interface';
 import {
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -521,7 +520,7 @@ export class MembersDomainService implements IMembersDomainService {
   ) {
     const membersRepository = this.getMembersRepository(qr);
 
-    const isExist = await this.isExistMemberByNameAndMobilePhone(
+    /*const isExist = await this.isExistMemberByNameAndMobilePhone(
       church,
       dto.name,
       dto.mobilePhone,
@@ -530,7 +529,7 @@ export class MembersDomainService implements IMembersDomainService {
 
     if (isExist) {
       throw new ConflictException(MemberException.ALREADY_EXIST);
-    }
+    }*/
 
     if (dto.guidedById) {
       const isExistGuide = await this.isExistMemberById(
@@ -576,6 +575,20 @@ export class MembersDomainService implements IMembersDomainService {
 
     const membersRepository = this.getMembersRepository(qr);
 
+    const partialEntity = {};
+
+    for (const [key, value] of Object.entries(dto)) {
+      if (key === 'registeredAt' && dto.utcRegisteredAt) {
+        partialEntity[key] = dto.utcRegisteredAt;
+      } else if (key === 'birth' && dto.utcBirth) {
+        partialEntity[key] = dto.utcBirth;
+        partialEntity['birthdayMMDD'] = dto.utcBirth.toISOString().slice(5, 10);
+      } else if (key === 'utcBirth' || key === 'utcRegisteredAt') {
+      } else {
+        partialEntity[key] = value;
+      }
+    }
+
     const result = await membersRepository.update(
       {
         id: member.id,
@@ -583,12 +596,7 @@ export class MembersDomainService implements IMembersDomainService {
         deletedAt: IsNull(),
       },
       {
-        ...dto,
-        registeredAt: dto.utcRegisteredAt,
-        birth: dto.utcBirth,
-        birthdayMMDD: dto.utcBirth
-          ? dto.utcBirth.toISOString().slice(5, 10)
-          : undefined,
+        ...partialEntity,
       },
     );
 

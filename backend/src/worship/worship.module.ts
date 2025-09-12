@@ -13,6 +13,7 @@ import { WorshipDomainModule } from './worship-domain/worship-domain.module';
 import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 import { MembersDomainModule } from '../members/member-domain/members-domain.module';
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { WorshipNotificationService } from './service/worship-notification.service';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
     WorshipAttendanceService,
     WorshipEnrollmentService,
     WorshipSessionService,
+    WorshipNotificationService,
   ],
 })
 export class WorshipModule {}

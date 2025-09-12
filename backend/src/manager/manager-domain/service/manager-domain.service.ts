@@ -35,6 +35,7 @@ import {
   ManagersFindOptionsSelect,
 } from '../../const/manager-find-options.const';
 import {
+  MemberSimpleSelect,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
@@ -229,7 +230,133 @@ export class ManagerDomainService implements IManagerDomainService {
       throw new ForbiddenException(ManagerException.FORBIDDEN);
     }
 
+    if (!churchUser.isPermissionActive) {
+      throw new ForbiddenException(ManagerException.IN_ACTIVE);
+    }
+
+    if (!churchUser.member) {
+      throw new ForbiddenException(ManagerException.NOT_LINKED);
+    }
+
     return churchUser;
+  }
+
+  async findManagerForNotification(
+    church: ChurchModel,
+    memberId: number,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel | null> {
+    const repository = this.getRepository(qr);
+
+    return repository.findOne({
+      where: {
+        churchId: church.id,
+        memberId,
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSimpleSelect,
+      },
+    });
+  }
+
+  findOwnerForNotification(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel | null> {
+    const repository = this.getRepository(qr);
+
+    return repository.findOne({
+      where: {
+        churchId: church.id,
+        role: ChurchUserRole.OWNER,
+        leftAt: IsNull(),
+      },
+    });
+  }
+
+  findManagersByPermissionTemplateForNotification(
+    church: ChurchModel,
+    permissionTemplate: PermissionTemplateModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        permissionTemplateId: permissionTemplate.id,
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  async findAllManagerIds(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  findAllManagerIdsBulk(
+    churchIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: In(churchIds),
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      select: {
+        id: true,
+        churchId: true,
+      },
+    });
+  }
+
+  async findManagersForNotification(
+    church: ChurchModel,
+    memberIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getRepository(qr);
+
+    return repository.find({
+      where: {
+        churchId: church.id,
+        memberId: In(memberIds),
+        role: ChurchUserManagers,
+        leftAt: IsNull(),
+      },
+      relations: {
+        member: MemberSummarizedRelation,
+      },
+      select: {
+        member: MemberSimpleSelect,
+      },
+    });
   }
 
   async findManagersByMemberIds(
@@ -244,6 +371,7 @@ export class ManagerDomainService implements IManagerDomainService {
         churchId: church.id,
         memberId: In(memberIds),
         role: ChurchUserManagers,
+        leftAt: IsNull(),
       },
       relations: {
         member: MemberSummarizedRelation,

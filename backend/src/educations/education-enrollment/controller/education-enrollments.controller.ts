@@ -21,6 +21,10 @@ import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { GetNotEnrolledMembersDto } from '../dto/request/get-not-enrolled-members.dto';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Educations:Enrollments')
 @Controller('educations/:educationId/terms/:educationTermId/enrollments')
@@ -52,11 +56,15 @@ export class EducationEnrollmentsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
-    @Body() dto: CreateEducationEnrollmentDto,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
+    @Body()
+    dto: CreateEducationEnrollmentDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationEnrollmentsService.createEducationEnrollment(
-      churchId,
+      requestManager,
+      church,
       educationId,
       educationTermId,
       dto,
@@ -108,10 +116,13 @@ export class EducationEnrollmentsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationEnrollmentId', ParseIntPipe) educationEnrollmentId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
     return this.educationEnrollmentsService.deleteEducationEnrollment(
-      churchId,
+      requestManager,
+      church,
       educationId,
       educationTermId,
       educationEnrollmentId,

@@ -1,14 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import {
   IPERMISSION_DOMAIN_SERVICE,
   IPermissionDomainService,
 } from '../permission-domain/service/interface/permission-domain.service.interface';
 import { DomainType } from '../const/domain-type.enum';
 import { GetPermissionTemplateDto } from '../dto/template/request/get-permission-template.dto';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import { PermissionTemplatePaginationResponseDto } from '../dto/template/response/permission-template-pagination-response.dto';
 import { CreatePermissionTemplateDto } from '../dto/template/request/create-permission-template.dto';
 import { PostPermissionTemplateResponseDto } from '../dto/template/response/post-permission-template-response.dto';
@@ -24,12 +20,16 @@ import {
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { MemberPaginationResponseDto } from '../../members/dto/response/member-pagination-response.dto';
 import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-managers-by-permission-template.dto';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
+import { PermissionNotificationService } from './permission-notification.service';
+import { PermissionException } from '../exception/permission.exception';
 
 @Injectable()
 export class PermissionService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
+    private readonly permissionNotificationService: PermissionNotificationService,
+
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
 
@@ -45,12 +45,9 @@ export class PermissionService {
   }
 
   async getPermissionTemplates(
-    churchId: number,
+    church: ChurchModel,
     dto: GetPermissionTemplateDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const { data, totalCount } =
       await this.permissionDomainService.findPermissionTemplates(church, dto);
 
@@ -64,22 +61,16 @@ export class PermissionService {
   }
 
   async postPermissionTemplates(
-    churchId: number,
+    church: ChurchModel,
     dto: CreatePermissionTemplateDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const newTemplate =
       await this.permissionDomainService.createPermissionTemplate(church, dto);
 
     return new PostPermissionTemplateResponseDto(newTemplate);
   }
 
-  async getPermissionTemplateById(churchId: number, templateId: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getPermissionTemplateById(church: ChurchModel, templateId: number) {
     const template =
       await this.permissionDomainService.findPermissionTemplateById(
         church,
@@ -90,21 +81,38 @@ export class PermissionService {
   }
 
   async patchPermissionTemplate(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     templateId: number,
     dto: UpdatePermissionTemplateDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const targetTemplate =
       await this.permissionDomainService.findPermissionTemplateModelById(
         church,
         templateId,
+        undefined,
+        { permissionUnits: true },
       );
 
     await this.permissionDomainService.updatePermissionTemplate(
       church,
+      targetTemplate,
+      dto,
+    );
+
+    const owner =
+      await this.managerDomainService.findOwnerForNotification(church);
+
+    const notificationTargets =
+      await this.managerDomainService.findManagersByPermissionTemplateForNotification(
+        church,
+        targetTemplate,
+      );
+
+    this.permissionNotificationService.notifyPermissionTemplateUpdated(
+      requestManager,
+      notificationTargets,
+      owner,
       targetTemplate,
       dto,
     );
@@ -118,15 +126,22 @@ export class PermissionService {
     return new PatchPermissionTemplateResponseDto(updatedTemplate);
   }
 
-  async deletePermissionTemplate(churchId: number, templateId: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async deletePermissionTemplate(church: ChurchModel, templateId: number) {
     const targetTemplate =
       await this.permissionDomainService.findPermissionTemplateModelById(
         church,
         templateId,
       );
+
+    const managers =
+      await this.managerDomainService.findManagersByPermissionTemplateForNotification(
+        church,
+        targetTemplate,
+      );
+
+    if (managers.length > 0) {
+      throw new ConflictException(PermissionException.CANNOT_DELETE);
+    }
 
     await this.permissionDomainService.deletePermissionTemplate(targetTemplate);
 
@@ -138,12 +153,7 @@ export class PermissionService {
     );
   }
 
-  async postSamplePermissionTemplates(churchId: number, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async postSamplePermissionTemplates(church: ChurchModel, qr: QueryRunner) {
     const educationUnits =
       await this.permissionDomainService.findPermissionUnits(
         DomainType.EDUCATION,
@@ -151,6 +161,7 @@ export class PermissionService {
 
     const educationManager: CreatePermissionTemplateDto = {
       title: '교육 관리자(샘플)',
+      description: '교회의 교육을 열람/작성합니다.',
       unitIds: educationUnits.map((unit) => unit.id),
     };
 
@@ -161,6 +172,7 @@ export class PermissionService {
 
     const visitationManager: CreatePermissionTemplateDto = {
       title: '심방 관리자(샘플)',
+      description: '교인의 심방을 열람/작성합니다.',
       unitIds: visitationUnits.map((unit) => unit.id),
     };
 
@@ -181,12 +193,10 @@ export class PermissionService {
   }
 
   async getManagersByPermissionTemplate(
-    churchId: number,
+    church: ChurchModel,
     templateId: number,
     dto: GetManagersByPermissionTemplateDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
     const permissionTemplate =
       await this.permissionDomainService.findPermissionTemplateModelById(
         church,

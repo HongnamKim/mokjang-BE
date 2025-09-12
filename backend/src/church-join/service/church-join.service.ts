@@ -66,7 +66,7 @@ export class ChurchJoinService {
     qr: QueryRunner,
   ) {
     const userId = accessPayload.id;
-    const user = await this.userDomainService.findUserModelById(userId);
+    const user = await this.userDomainService.findUserModelById(userId, qr);
 
     /**
      * ChurchUserModel 조회로 소속된 교회가 있는지 확인
@@ -171,7 +171,7 @@ export class ChurchJoinService {
       qr,
     );
 
-    await this.userDomainService.updateUser(
+    await this.userDomainService.updateUserRole(
       joinRequest.user,
       { role: UserRole.MANAGER },
       qr,

@@ -28,11 +28,13 @@ import {
 import { EducationReadGuard } from '../../guard/education-read.guard';
 import { EducationWriteGuard } from '../../guard/education-write.guard';
 import { TransactionInterceptor } from '../../../common/interceptor/transaction.interceptor';
-import { RequestManager } from '../../../permission/decorator/permission-manager.decorator';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { AddEducationSessionReportDto } from '../../../report/education-report/dto/session/request/add-education-session-report.dto';
 import { DeleteEducationSessionReportDto } from '../../../report/education-report/dto/session/request/delete-education-session-report.dto';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Educations:Sessions')
 @Controller('educations/:educationId/terms/:educationTermId/sessions')
@@ -61,19 +63,19 @@ export class EducationSessionsController {
   @ApiPostEducationSessions()
   @EducationWriteGuard()
   @Post()
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @UseInterceptors(TransactionInterceptor)
   postEducationSession(
-    @RequestManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: CreateEducationSessionDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationSessionsService.createEducationSession(
-      manager,
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       dto,
@@ -107,11 +109,14 @@ export class EducationSessionsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: UpdateEducationSessionDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationSessionsService.updateEducationSession(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       educationSessionId,
@@ -129,10 +134,13 @@ export class EducationSessionsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
     return this.educationSessionsService.deleteEducationSessions(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       educationSessionId,
@@ -149,11 +157,14 @@ export class EducationSessionsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: AddEducationSessionReportDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationSessionsService.addReportReceivers(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       educationSessionId,
@@ -171,11 +182,14 @@ export class EducationSessionsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationSessionId', ParseIntPipe) educationSessionId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: DeleteEducationSessionReportDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationSessionsService.deleteEducationSessionReportReceivers(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       educationSessionId,
