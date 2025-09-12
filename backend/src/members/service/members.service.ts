@@ -1,6 +1,6 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { MemberModel } from '../entity/member.entity';
-import { QueryRunner } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, QueryRunner } from 'typeorm';
 import { CreateMemberDto } from '../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../dto/request/update-member.dto';
 import { DeleteMemberResponseDto } from '../dto/response/delete-member-response.dto';
@@ -63,11 +63,22 @@ import {
   IChurchUserDomainService,
 } from '../../church-user/church-user-domain/service/interface/church-user-domain.service.interface';
 import { MemberException } from '../exception/member.exception';
+import { GetSimpleMembersDto } from '../dto/request/get-simple-members.dto';
+import { SimpleMembersPaginationResponseDto } from '../dto/response/simple-members-pagination-response.dto';
+import { GetMemberDto } from '../dto/request/get-member.dto';
+import {
+  ISEARCH_MEMBERS_SERVICE,
+  ISearchMembersService,
+} from './interface/search-members.service.interface';
+import { MemberPaginationResponseDto } from '../dto/response/member-pagination-response.dto';
 
 @Injectable()
 export class MembersService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
+
+    @Inject(ISEARCH_MEMBERS_SERVICE)
+    private readonly searchMembersService: ISearchMembersService,
 
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
@@ -396,7 +407,7 @@ export class MembersService {
     );
   }
 
-  /*async getMembers(
+  async getMembers(
     church: ChurchModel,
     requestManager: ChurchUserModel,
     dto: GetMemberDto,
@@ -440,11 +451,11 @@ export class MembersService {
       dto.page,
       Math.ceil(totalCount / dto.take),
     );
-  }*/
+  }
 
-  /*async getSimpleMembers(church: ChurchModel, dto: GetSimpleMembersDto) {
+  async getSimpleMembers(church: ChurchModel, dto: GetSimpleMembersDto) {
     const data = await this.membersDomainService.findSimpleMembers(church, dto);
 
     return new SimpleMembersPaginationResponseDto(data);
-  }*/
+  }
 }

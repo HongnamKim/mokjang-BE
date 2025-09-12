@@ -44,7 +44,7 @@ import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-membe
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
-  /*@Get()
+  @Get()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -53,7 +53,7 @@ export class MembersController {
     @RequestManager() pm: ChurchUserModel,
   ) {
     return this.membersService.getMembers(church, pm, dto);
-  }*/
+  }
 
   @Post()
   @MemberWriteGuard()
@@ -88,7 +88,7 @@ export class MembersController {
     return this.membersService.getMemberList(church, requestManager, query);
   }
 
-  /*@Get('simple')
+  @Get('simple')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembersSimple(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -96,7 +96,7 @@ export class MembersController {
     @Query() dto: GetSimpleMembersDto,
   ) {
     return this.membersService.getSimpleMembers(church, dto);
-  }*/
+  }
 
   @Get('simple/v2')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)

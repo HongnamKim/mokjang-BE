@@ -9,7 +9,9 @@ import { MemberModel } from '../../entity/member.entity';
 import {
   Between,
   Brackets,
+  FindOptionsOrder,
   FindOptionsRelations,
+  FindOptionsSelect,
   FindOptionsWhere,
   ILike,
   In,
@@ -51,6 +53,7 @@ import {
   getToDate,
 } from '../../../member-history/history-date.utils';
 import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
+import { GetMemberDto } from '../../dto/request/get-member.dto';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -1006,7 +1009,7 @@ export class MembersDomainService implements IMembersDomainService {
     }
   }
 
-  /*async findMembers(
+  async findMembers(
     dto: GetMemberDto,
     whereOptions: FindOptionsWhere<MemberModel>,
     orderOptions: FindOptionsOrder<MemberModel>,
@@ -1034,9 +1037,9 @@ export class MembersDomainService implements IMembersDomainService {
       data: result,
       totalCount,
     };
-  }*/
+  }
 
-  /*async findSimpleMembers(
+  async findSimpleMembers(
     church: ChurchModel,
     dto: GetSimpleMembersDto,
     qr?: QueryRunner,
@@ -1073,5 +1076,5 @@ export class MembersDomainService implements IMembersDomainService {
         ministryGroupRole: true,
       },
     });
-  }*/
+  }
 }
