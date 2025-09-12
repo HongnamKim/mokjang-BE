@@ -24,15 +24,6 @@ import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dt
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
 export interface IMembersDomainService {
-  findMembers(
-    dto: GetMemberDto,
-    whereOptions: FindOptionsWhere<MemberModel>,
-    orderOptions: FindOptionsOrder<MemberModel>,
-    relationOptions: FindOptionsRelations<MemberModel>,
-    selectOptions: FindOptionsSelect<MemberModel>,
-    qr?: QueryRunner,
-  ): Promise<{ data: MemberModel[]; totalCount: number }>;
-
   migrationBirthdayMMDD(church: ChurchModel): Promise<void>;
 
   findBirthdayMembers(
@@ -41,11 +32,10 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
   ): Promise<MemberModel[]>;
 
-  findSimpleMembers(
+  getMemberListWithPagination(
     church: ChurchModel,
-    dto: GetSimpleMembersDto,
-    qr?: QueryRunner,
-  ): Promise<MemberModel[]>;
+    dto: GetMemberListDto,
+  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
   findSimpleMemberList(
     church: ChurchModel,
@@ -149,8 +139,18 @@ export interface IMembersDomainService {
     to: Date,
   ): Promise<MemberModel[]>;
 
-  getMemberListWithPagination(
+  /*findMembers(
+   dto: GetMemberDto,
+   whereOptions: FindOptionsWhere<MemberModel>,
+   orderOptions: FindOptionsOrder<MemberModel>,
+   relationOptions: FindOptionsRelations<MemberModel>,
+   selectOptions: FindOptionsSelect<MemberModel>,
+   qr?: QueryRunner,
+ ): Promise<{ data: MemberModel[]; totalCount: number }>;*/
+
+  /*findSimpleMembers(
     church: ChurchModel,
-    dto: GetMemberListDto,
-  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
+    dto: GetSimpleMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;*/
 }

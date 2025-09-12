@@ -6,6 +6,7 @@ import { JwtAccessPayload } from '../auth/type/jwt';
 import { MemberModel } from '../members/entity/member.entity';
 import { QueryRunner } from 'typeorm';
 import { UserModel } from '../user/entity/user.entity';
+import { VisitationMetaModel } from '../visitation/entity/visitation-meta.entity';
 
 export interface CustomRequest extends Request {
   queryRunner: QueryRunner;
@@ -15,11 +16,12 @@ export interface CustomRequest extends Request {
   requestChurchUser: ChurchUserModel;
   requestManager: ChurchUserModel;
   requestOwner: ChurchUserModel;
-  permissionScopeGroupIds: number[];
+  permissionScopeGroupIds: number[]; // 요청자의 권한 범위 내 모든 그룹 ID
   tokenPayload: JwtAccessPayload;
   user: UserModel;
 
   targetMember: MemberModel;
+  targetVisitation: VisitationMetaModel;
 
   worshipTargetGroupIds: number[] | undefined;
 }

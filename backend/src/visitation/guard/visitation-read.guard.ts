@@ -5,6 +5,7 @@ import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { VisitationScopeGuard } from './visitation-scope.guard';
 
 export const VisitationReadGuard = () =>
   applyDecorators(
@@ -16,5 +17,6 @@ export const VisitationReadGuard = () =>
         DomainName.VISITATION,
         DomainAction.READ,
       ),
+      VisitationScopeGuard,
     ),
   );

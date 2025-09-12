@@ -44,26 +44,27 @@ import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-membe
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
-  @Get()
-  //@MemberReadGuard()
+  /*@Get()
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetMemberDto,
     @RequestManager() pm: ChurchUserModel,
   ) {
-    return this.membersService.getMembers(churchId, pm, dto);
-  }
+    return this.membersService.getMembers(church, pm, dto);
+  }*/
 
   @Post()
   @MemberWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postMember(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateMemberDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.membersService.createMember(churchId, dto, qr);
+    return this.membersService.createMember(church, dto, qr);
   }
 
   @Get('v2')
@@ -87,14 +88,15 @@ export class MembersController {
     return this.membersService.getMemberList(church, requestManager, query);
   }
 
-  @Get('simple')
+  /*@Get('simple')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMembersSimple(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetSimpleMembersDto,
   ) {
-    return this.membersService.getSimpleMembers(churchId, dto);
-  }
+    return this.membersService.getSimpleMembers(church, dto);
+  }*/
 
   @Get('simple/v2')
   @UseGuards(AccessTokenGuard, ChurchManagerGuard)
@@ -111,9 +113,10 @@ export class MembersController {
   getMemberById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('memberId', ParseIntPipe) memberId: number,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() pm: ChurchUserModel,
   ) {
-    return this.membersService.getMemberById(churchId, memberId, pm);
+    return this.membersService.getMemberById(church, memberId, pm);
   }
 
   @Patch(':memberId')
@@ -126,7 +129,6 @@ export class MembersController {
     @TargetMember() targetMember: MemberModel,
   ) {
     return this.membersService.updateMember(church, targetMember, dto);
-    //return this.membersService.updateMember(churchId, memberId, dto);
   }
 
   @Delete(':memberId')
