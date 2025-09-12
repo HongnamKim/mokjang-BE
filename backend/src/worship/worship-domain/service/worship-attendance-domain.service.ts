@@ -494,6 +494,17 @@ export class WorshipAttendanceDomainService
     });
   }
 
+  deleteAttendanceCascadeEnrollment(
+    targetEnrollments: WorshipEnrollmentModel[],
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getRepository(qr);
+
+    const enrollmentIds = targetEnrollments.map((e) => e.id);
+
+    return repository.softDelete({ worshipEnrollmentId: In(enrollmentIds) });
+  }
+
   async getAttendanceStatsBySession(
     worshipSession: WorshipSessionModel,
     requestGroupIds: number[] | undefined,
@@ -713,7 +724,7 @@ export class WorshipAttendanceDomainService
         'enrollment.memberId = :memberId AND enrollment.worshipId = :worshipId',
         { memberId: member.id, worshipId: worship.id },
       )
-      .where('attendance.sessionDate BETWEEN :from AND :to', {
+      .andWhere('attendance.sessionDate BETWEEN :from AND :to', {
         from: dto.utcFrom,
         to: dto.utcTo,
       })

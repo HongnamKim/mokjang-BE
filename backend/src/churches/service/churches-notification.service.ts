@@ -8,7 +8,7 @@ import {
 } from '../../notification/notification-event.dto';
 import { NotificationDomain } from '../../notification/const/notification-domain.enum';
 import { NotificationAction } from '../../notification/const/notification-action.enum';
-import { UpdateChurchDto } from '../dto/update-church.dto';
+import { UpdateChurchDto } from '../dto/request/update-church.dto';
 import { ChurchModel } from '../entity/church.entity';
 
 @Injectable()

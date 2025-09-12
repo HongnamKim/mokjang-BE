@@ -65,6 +65,20 @@ export class WorshipDomainService implements IWorshipDomainService {
         where: {
           churchId: church.id,
         },
+        relations: {
+          worshipTargetGroups: {
+            group: true,
+          },
+        },
+        select: {
+          worshipTargetGroups: {
+            id: true,
+            group: {
+              id: true,
+              name: true,
+            },
+          },
+        },
         order: orderOptions,
         take: dto.take,
         skip: dto.take * (dto.page - 1),

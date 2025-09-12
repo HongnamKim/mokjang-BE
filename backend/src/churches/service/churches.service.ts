@@ -5,8 +5,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
-import { CreateChurchDto } from '../dto/create-church.dto';
-import { UpdateChurchDto } from '../dto/update-church.dto';
+import { CreateChurchDto } from '../dto/request/create-church.dto';
+import { UpdateChurchDto } from '../dto/request/update-church.dto';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -21,7 +21,7 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../members/member-domain/interface/members-domain.service.interface';
-import { TransferOwnerDto } from '../dto/transfer-owner.dto';
+import { TransferOwnerDto } from '../dto/request/transfer-owner.dto';
 import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
@@ -40,6 +40,7 @@ import {
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { ChurchesNotificationService } from './churches-notification.service';
+import { PatchChurchResponseDto } from '../dto/response/patch-church-response.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -151,7 +152,11 @@ export class ChurchesService {
       dto,
     );
 
-    return { data: church, timestamp: new Date() };
+    for (const key of Object.keys(dto)) {
+      church[key] = dto[key];
+    }
+
+    return new PatchChurchResponseDto(church);
   }
 
   async updateChurchJoinCode(

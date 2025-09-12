@@ -162,7 +162,7 @@ export class MembersController {
     @RequestChurch() church: ChurchModel,
     @Query() dto: GetMemberWorshipStatisticsDto,
   ) {
-    dto.utcFrom = dto.utcFrom
+    dto.utcFrom = dto.from
       ? fromZonedTime(dto.from, TIME_ZONE.SEOUL)
       : fromZonedTime(subYears(startOfToday(), 1), TIME_ZONE.SEOUL);
     dto.utcTo = dto.to
@@ -184,7 +184,7 @@ export class MembersController {
     @RequestChurch() church: ChurchModel,
     @Query() dto: GetMemberWorshipAttendancesDto,
   ) {
-    dto.utcFrom = dto.utcFrom
+    dto.utcFrom = dto.from
       ? fromZonedTime(dto.from, TIME_ZONE.SEOUL)
       : fromZonedTime(subYears(startOfToday(), 1), TIME_ZONE.SEOUL);
     dto.utcTo = dto.to
