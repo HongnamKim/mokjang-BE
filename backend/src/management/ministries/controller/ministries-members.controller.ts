@@ -45,6 +45,7 @@ export class MinistriesMembersController {
       '<p>기존 사역이 있을 경우, 기존 사역은 종료 처리</p>',
   })
   @Patch('members')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   addMemberToMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -63,6 +64,7 @@ export class MinistriesMembersController {
   }
 
   @Delete('members')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   removeMemberFromMinistry(
     @Param('churchId', ParseIntPipe) churchId: number,

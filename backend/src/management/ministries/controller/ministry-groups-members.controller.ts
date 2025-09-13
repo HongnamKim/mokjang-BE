@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -24,6 +25,9 @@ import {
   ApiRemoveMembersFromMinistryGroup,
   ApiSearchMembersForMinistryGroup,
 } from '../const/swagger/ministry-group-member.swagger';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { MinistryWriteGuard } from '../guard/ministry-write.guard';
 
 @ApiTags('Management:MinistryGroups:Members')
 @Controller('ministry-groups')
@@ -33,6 +37,7 @@ export class MinistryGroupsMembersController {
   ) {}
 
   @ApiSearchMembersForMinistryGroup()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @Get(':ministryGroupId/member-search')
   searchMembersForMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -48,6 +53,7 @@ export class MinistryGroupsMembersController {
 
   @ApiGetMinistryGroupMembers()
   @Get(':ministryGroupId/members')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMinistryGroupMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
@@ -62,6 +68,7 @@ export class MinistryGroupsMembersController {
 
   @ApiAddMemberToGroup()
   @Patch(':ministryGroupId/members')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   addMemberToGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
@@ -79,6 +86,7 @@ export class MinistryGroupsMembersController {
 
   @ApiRemoveMembersFromMinistryGroup()
   @Delete(':ministryGroupId/members')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   removeMembersFromMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
