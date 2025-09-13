@@ -378,8 +378,6 @@ export class VisitationService {
       // 대상 교인 변경 없이, 담당자만 변경
       const targetMembers = targetMetaData.members;
 
-      console.log('tt');
-
       await this.validateVisitationMember(
         church,
         requestManager,

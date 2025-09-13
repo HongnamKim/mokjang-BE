@@ -22,6 +22,8 @@ export class ChurchManagerGuard implements CanActivate {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
+    /*@Inject(CACHE_MANAGER)
+    private readonly cache: Cache,*/
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
