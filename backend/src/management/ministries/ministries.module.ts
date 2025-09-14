@@ -13,6 +13,9 @@ import { MinistryGroupMemberService } from './service/ministry-group-member.serv
 import { MinistriesMembersController } from './controller/ministries-members.controller';
 import { MinistryGroupsMembersController } from './controller/ministry-groups-members.controller';
 import { MinistryHistoryDomainModule } from '../../member-history/ministry-history/ministry-history-domain/ministry-history-domain.module';
+import { IMEMBER_FILTER_SERVICE } from '../../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../../members/service/member-filter.service';
+import { GroupsDomainModule } from '../groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { MinistryHistoryDomainModule } from '../../member-history/ministry-histo
     ]),
     ChurchesDomainModule,
     ManagerDomainModule,
+    GroupsDomainModule,
     MinistriesDomainModule,
     MembersDomainModule,
 
@@ -40,6 +44,10 @@ import { MinistryHistoryDomainModule } from '../../member-history/ministry-histo
     MinistryMemberService,
     MinistryGroupService,
     MinistryGroupMemberService,
+    {
+      provide: IMEMBER_FILTER_SERVICE,
+      useClass: MemberFilterService,
+    },
   ],
   exports: [],
 })

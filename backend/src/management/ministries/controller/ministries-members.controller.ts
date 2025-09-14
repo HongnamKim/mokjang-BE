@@ -16,6 +16,8 @@ import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
 import { RemoveMinistryFromMember } from '../dto/ministry/request/member/remove-ministry-from-member.dto';
 import { MinistryMemberService } from '../service/ministry-member.service';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @ApiTags('Management:MinistryGroups:Ministries:Members')
 @Controller('ministry-groups/:ministryGroupId/ministries/:ministryId')
@@ -29,9 +31,10 @@ export class MinistriesMembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
     return this.ministryMemberService.refreshMinistryMemberCount(
-      churchId,
+      church,
       ministryGroupId,
       ministryId,
     );
@@ -51,11 +54,12 @@ export class MinistriesMembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: AssignMinistryToMemberDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryMemberService.assignMemberToMinistry(
-      churchId,
+      church,
       ministryGroupId,
       ministryId,
       dto,
@@ -70,11 +74,12 @@ export class MinistriesMembersController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: RemoveMinistryFromMember,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryMemberService.removeMemberFromMinistry(
-      churchId,
+      church,
       ministryGroupId,
       ministryId,
       dto,

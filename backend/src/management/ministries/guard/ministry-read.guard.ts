@@ -3,14 +3,4 @@ import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 
 export const MinistryReadGuard = () =>
-  applyDecorators(
-    UseGuards(
-      AccessTokenGuard,
-      ChurchManagerGuard,
-      /*createDomainGuard(
-        DomainType.MANAGEMENT,
-        DomainName.MINISTRY,
-        DomainAction.READ,
-      ),*/
-    ),
-  );
+  applyDecorators(UseGuards(AccessTokenGuard, ChurchManagerGuard));

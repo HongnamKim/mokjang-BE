@@ -10,6 +10,7 @@ import {
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { QueryRunner } from 'typeorm';
+import { MemberDto } from '../dto/member.dto';
 
 @Injectable()
 export class MemberFilterService implements IMemberFilterService {
@@ -63,6 +64,7 @@ export class MemberFilterService implements IMemberFilterService {
       'gender',
       'group',
       'groupRole',
+      'ministryGroups',
       'ministryGroupRole',
       'officer',
       'ministries',
@@ -82,6 +84,38 @@ export class MemberFilterService implements IMemberFilterService {
     }
 
     return member;
+  }
+
+  filterMemberDto(
+    requestManager: ChurchUserModel,
+    memberDto: MemberDto[],
+    scopeGroupIds: number[],
+  ): MemberDto[] {
+    const possibleGroupIds = new Set(scopeGroupIds);
+
+    return memberDto.map((member) => {
+      if (requestManager.memberId === member.id) {
+        return { ...member };
+      }
+
+      if (requestManager.role === ChurchUserRole.OWNER) {
+        return { ...member };
+      }
+
+      if (requestManager.permissionScopes.find((scope) => scope.isAllGroups)) {
+        return { ...member };
+      }
+
+      if (!member.group) {
+        return { ...member, mobilePhone: 'CONCEALED' };
+      }
+
+      if (possibleGroupIds.has(member.group.id)) {
+        return { ...member };
+      } else {
+        return { ...member, mobilePhone: 'CONCEALED' };
+      }
+    });
   }
 
   filterMembers(

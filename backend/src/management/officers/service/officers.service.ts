@@ -26,6 +26,12 @@ import {
   IOfficerMembersDomainService,
 } from '../../../members/member-domain/interface/officer-members-domain.service.interface';
 import { UnassignedMembersResponseDto } from '../dto/response/members/unassigned-members-response.dto';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
+import { RefreshOfficerCountResponseDto } from '../dto/response/refresh-officer-count-response.dto';
 
 @Injectable()
 export class OfficersService {
@@ -36,14 +42,16 @@ export class OfficersService {
     private readonly officersDomainService: IOfficersDomainService,
     @Inject(IOFFICER_MEMBERS_DOMAIN_SERVICE)
     private readonly officerMembersDomainService: IOfficerMembersDomainService,
+
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
   ) {}
 
-  async getOfficers(churchId: number, dto: GetOfficersDto, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async getOfficers(
+    church: ChurchModel,
+    dto: GetOfficersDto,
+    qr?: QueryRunner,
+  ) {
     const { data, totalCount } = await this.officersDomainService.findOfficers(
       church,
       dto,
@@ -60,15 +68,10 @@ export class OfficersService {
   }
 
   async createOfficer(
-    churchId: number,
+    church: ChurchModel,
     dto: CreateOfficerDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const officer = await this.officersDomainService.createOfficer(
       church,
       dto,
@@ -84,16 +87,11 @@ export class OfficersService {
   }
 
   async updateOfficerStructure(
-    churchId: number,
+    church: ChurchModel,
     officerId: number,
     dto: UpdateOfficerStructureDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const targetOfficer = await this.officersDomainService.findOfficerModelById(
       church,
       officerId,
@@ -115,16 +113,11 @@ export class OfficersService {
   }
 
   async updateOfficerName(
-    churchId: number,
+    church: ChurchModel,
     officerId: number,
     dto: UpdateOfficerNameDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const officer = await this.officersDomainService.findOfficerModelById(
       church,
       officerId,
@@ -141,12 +134,7 @@ export class OfficersService {
     return new OfficerPatchResponse(updatedOfficer);
   }
 
-  async deleteOfficer(churchId: number, officerId: number, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async deleteOfficer(church: ChurchModel, officerId: number, qr: QueryRunner) {
     const officer = await this.officersDomainService.findOfficerModelById(
       church,
       officerId,
@@ -182,16 +170,28 @@ export class OfficersService {
       qr,
     );
 
-    return { officerCount };
+    return new RefreshOfficerCountResponseDto(officerCount);
   }
 
-  async getUnassignedMembers(churchId: number, dto: GetUnassignedMembersDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getUnassignedMembers(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    dto: GetUnassignedMembersDto,
+  ) {
     const members =
       await this.officerMembersDomainService.findUnassignedMembers(church, dto);
 
-    return new UnassignedMembersResponseDto(members);
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMembers = this.memberFilterService.filterMembers(
+      requestManager,
+      members,
+      scope,
+    );
+
+    return new UnassignedMembersResponseDto(filteredMembers);
   }
 }

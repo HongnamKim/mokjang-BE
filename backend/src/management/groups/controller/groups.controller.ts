@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -36,6 +37,10 @@ import { RequestChurch } from '../../../permission/decorator/request-church.deco
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateGroupLeaderDto } from '../dto/request/update-group-leader.dto';
 import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:Groups')
 @Controller('groups')
@@ -47,9 +52,10 @@ export class GroupsController {
   @GroupReadGuard()
   getGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetGroupDto,
   ) {
-    return this.groupsService.getGroups(churchId, dto);
+    return this.groupsService.getGroups(church, dto);
   }
 
   @ApiPostGroups()
@@ -58,10 +64,11 @@ export class GroupsController {
   @UseInterceptors(TransactionInterceptor)
   postGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateGroupDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.groupsService.createGroup(churchId, dto, qr);
+    return this.groupsService.createGroup(church, dto, qr);
   }
 
   @ApiRefreshGroupCount()
@@ -77,11 +84,14 @@ export class GroupsController {
 
   @ApiGetUnassignedMembers()
   @Get('unassigned-member')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getUnassignedMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetUnassignedMembersDto,
   ) {
-    return this.groupsService.getUnassignedMembers(churchId, dto);
+    return this.groupsService.getUnassignedMembers(church, requestManager, dto);
   }
 
   @ApiGetGroupById()
@@ -89,9 +99,10 @@ export class GroupsController {
   @Get(':groupId')
   getGroupById(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Param('groupId', ParseIntPipe) groupId: number,
   ) {
-    return this.groupsService.getGroupByIdWithParents(churchId, groupId);
+    return this.groupsService.getGroupByIdWithParents(church, groupId);
   }
 
   @ApiDeleteGroup()
@@ -101,9 +112,10 @@ export class GroupsController {
   deleteGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.groupsService.deleteGroup(churchId, groupId, qr);
+    return this.groupsService.deleteGroup(church, groupId, qr);
   }
 
   @ApiPatchGroupLeader()
@@ -126,10 +138,11 @@ export class GroupsController {
   patchGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateGroupNameDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.groupsService.updateGroupName(churchId, groupId, dto, qr);
+    return this.groupsService.updateGroupName(church, groupId, dto, qr);
   }
 
   @ApiPatchGroupStructure()
@@ -139,9 +152,10 @@ export class GroupsController {
   patchGroupStructure(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('groupId', ParseIntPipe) groupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateGroupStructureDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.groupsService.updateGroupStructure(churchId, groupId, dto, qr);
+    return this.groupsService.updateGroupStructure(church, groupId, dto, qr);
   }
 }

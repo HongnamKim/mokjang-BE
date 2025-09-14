@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -32,6 +33,10 @@ import { RequestChurch } from '../../../permission/decorator/request-church.deco
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetUnassignedMembersDto } from '../../ministries/dto/ministry-group/request/member/get-unassigned-members.dto';
 import { OfficerReadGuard } from '../guard/officer-read.guard';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
 
 @ApiTags('Management:Officers')
 @Controller('officers')
@@ -43,9 +48,10 @@ export class OfficersController {
   @Get()
   getOfficers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetOfficersDto,
   ) {
-    return this.officersService.getOfficers(churchId, dto);
+    return this.officersService.getOfficers(church, dto);
   }
 
   @ApiPostOfficer()
@@ -54,10 +60,11 @@ export class OfficersController {
   @UseInterceptors(TransactionInterceptor)
   postOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateOfficerDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.officersService.createOfficer(churchId, dto, qr);
+    return this.officersService.createOfficer(church, dto, qr);
   }
 
   @ApiRefreshOfficerCount()
@@ -73,11 +80,18 @@ export class OfficersController {
 
   @ApiOperation({ summary: '직분을 가지지 않은 교인 조회' })
   @Get('unassigned-member')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getUnassignedMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetUnassignedMembersDto,
   ) {
-    return this.officersService.getUnassignedMembers(churchId, dto);
+    return this.officersService.getUnassignedMembers(
+      church,
+      requestManager,
+      dto,
+    );
   }
 
   @ApiDeleteOfficer()
@@ -87,9 +101,10 @@ export class OfficersController {
   deleteOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.officersService.deleteOfficer(churchId, officerId, qr);
+    return this.officersService.deleteOfficer(church, officerId, qr);
   }
 
   @ApiPatchOfficerName()
@@ -99,10 +114,11 @@ export class OfficersController {
   patchOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateOfficerNameDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.officersService.updateOfficerName(churchId, officerId, dto, qr);
+    return this.officersService.updateOfficerName(church, officerId, dto, qr);
   }
 
   @ApiPatchOfficerStructure()
@@ -112,11 +128,12 @@ export class OfficersController {
   patchOfficerStructure(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateOfficerStructureDto,
     @QueryRunner() qr: QR,
   ) {
     return this.officersService.updateOfficerStructure(
-      churchId,
+      church,
       officerId,
       dto,
       qr,
