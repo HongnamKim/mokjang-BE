@@ -48,7 +48,7 @@ export function createDomainGuard(
       return false;
     }
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
+    canActivate(context: ExecutionContext): boolean {
       const req: CustomRequest = context.switchToHttp().getRequest();
 
       const token = req.tokenPayload;
