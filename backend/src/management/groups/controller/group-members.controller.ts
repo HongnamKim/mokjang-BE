@@ -44,7 +44,12 @@ export class GroupMembersController {
     @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetGroupMembersDto,
   ) {
-    return this.groupMembersService.getGroupMembers(churchId, groupId, dto);
+    return this.groupMembersService.getGroupMembers(
+      church,
+      requestManager,
+      groupId,
+      dto,
+    );
   }
 
   @ApiOperation({

@@ -21,7 +21,7 @@ import {
   IMinistryMembersDomainService,
 } from '../../../members/member-domain/interface/ministry-members-domain.service.interface';
 import { QueryRunner } from 'typeorm';
-import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
+import { PatchMinistryResponseDto } from '../dto/ministry/response/patch-ministry-response.dto';
 import { RemoveMinistryFromMember } from '../dto/ministry/request/member/remove-ministry-from-member.dto';
 import { StartMinistryHistoryVo } from '../../../member-history/ministry-history/dto/start-ministry-history.vo';
 import {
@@ -38,6 +38,7 @@ import {
   getStartOfToday,
 } from '../../../member-history/history-date.utils';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { ChurchModel } from '../../../churches/entity/church.entity';
 
 @Injectable()
 export class MinistryMemberService {
@@ -59,16 +60,11 @@ export class MinistryMemberService {
   ) {}
 
   async refreshMinistryMemberCount(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     ministryId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -83,10 +79,6 @@ export class MinistryMemberService {
       { members: true },
     );
 
-    /*if (ministry.members.length === ministry.membersCount) {
-      throw new BadRequestException('');
-    }*/
-
     const updatedMinistry =
       await this.ministriesDomainService.refreshMembersCount(
         ministry,
@@ -94,20 +86,16 @@ export class MinistryMemberService {
         qr,
       );
 
-    return new MinistryPatchResponseDto(updatedMinistry);
+    return new PatchMinistryResponseDto(updatedMinistry);
   }
 
   async assignMemberToMinistry(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     ministryId: number,
     dto: any,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -203,16 +191,12 @@ export class MinistryMemberService {
   }
 
   async removeMemberFromMinistry(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     ministryId: number,
     dto: RemoveMinistryFromMember,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,

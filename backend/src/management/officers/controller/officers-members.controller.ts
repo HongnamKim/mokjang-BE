@@ -21,6 +21,10 @@ import { QueryRunner as QR } from 'typeorm';
 import { MinistryWriteGuard } from '../../ministries/guard/ministry-write.guard';
 import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
 import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:Officers:Members')
 @Controller('officers/:officerId/members')
@@ -33,10 +37,13 @@ export class OfficersMembersController {
   getOfficerMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetOfficerMembersDto,
   ) {
     return this.officerMembersService.getOfficerMembers(
-      churchId,
+      church,
+      requestManager,
       officerId,
       dto,
     );
@@ -49,11 +56,12 @@ export class OfficersMembersController {
   addMembersToOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: AddMembersToOfficerDto,
     @QueryRunner() qr: QR,
   ) {
     return this.officerMembersService.addMembersToOfficer(
-      churchId,
+      church,
       officerId,
       dto,
       qr,
@@ -67,11 +75,12 @@ export class OfficersMembersController {
   deleteMembersFromOfficer(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('officerId', ParseIntPipe) officerId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: RemoveMembersFromOfficerDto,
     @QueryRunner() qr: QR,
   ) {
     return this.officerMembersService.removeMembersFromOfficer(
-      churchId,
+      church,
       officerId,
       dto,
       qr,

@@ -15,13 +15,15 @@ import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
 } from '../ministries-domain/interface/ministry-groups-domain.service.interface';
-import { MinistryDeleteResponseDto } from '../dto/ministry/response/ministry-delete-response.dto';
-import { MinistryPostResponseDto } from '../dto/ministry/response/ministry-post-response.dto';
-import { MinistryPatchResponseDto } from '../dto/ministry/response/ministry-patch-response.dto';
+import { DeleteMinistryResponseDto } from '../dto/ministry/response/delete-ministry-response.dto';
+import { PostMinistryResponseDto } from '../dto/ministry/response/post-ministry-response.dto';
+import { PatchMinistryResponseDto } from '../dto/ministry/response/patch-ministry-response.dto';
 import {
   ChurchModel,
   ManagementCountType,
 } from '../../../churches/entity/church.entity';
+import { GetMinistryResponseDto } from '../dto/ministry/response/get-ministry-response.dto';
+import { RefreshMinistryCountResponseDto } from '../dto/ministry/response/refresh-ministry-count-response.dto';
 
 @Injectable()
 export class MinistryService {
@@ -35,16 +37,11 @@ export class MinistryService {
   ) {}
 
   async getMinistries(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     dto: GetMinistryDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -58,10 +55,7 @@ export class MinistryService {
       qr,
     );
 
-    return {
-      data: result,
-      timestamp: new Date(),
-    };
+    return new GetMinistryResponseDto(result);
   }
 
   async getMinistryById(
@@ -82,16 +76,11 @@ export class MinistryService {
   }
 
   async createMinistry(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     dto: CreateMinistryDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     // 소속 사역 그룹 조회
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
@@ -124,21 +113,16 @@ export class MinistryService {
       qr,
     );
 
-    return new MinistryPostResponseDto(ministry);
+    return new PostMinistryResponseDto(ministry);
   }
 
   async updateMinistry(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     ministryId: number,
     dto: UpdateMinistryDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -157,20 +141,15 @@ export class MinistryService {
 
     targetMinistry.name = dto.name;
 
-    return new MinistryPatchResponseDto(targetMinistry);
+    return new PatchMinistryResponseDto(targetMinistry);
   }
 
   async deleteMinistry(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     ministryId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -197,7 +176,7 @@ export class MinistryService {
       qr,
     );
 
-    return new MinistryDeleteResponseDto(new Date(), ministry.id, true);
+    return new DeleteMinistryResponseDto(new Date(), ministry.id, true);
   }
 
   async refreshMinistryCount(
@@ -225,6 +204,6 @@ export class MinistryService {
       qr,
     );
 
-    return { ministryCount };
+    return new RefreshMinistryCountResponseDto(ministryCount);
   }
 }
