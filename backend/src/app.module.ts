@@ -84,12 +84,17 @@ import { NotificationModule } from './notification/notification.module';
 import { NotificationModel } from './notification/entity/notification.entity';
 import { MobileVerificationModel } from './mobile-verification/entity/mobile-verification.entity';
 import { MobileVerificationModule } from './mobile-verification/mobile-verification.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 //import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
 
 @Module({
   imports: [
     EventEmitterModule.forRoot(),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 300_000,
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({

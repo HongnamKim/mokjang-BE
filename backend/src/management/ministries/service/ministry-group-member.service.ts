@@ -5,10 +5,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
   IMINISTRY_GROUPS_DOMAIN_SERVICE,
   IMinistryGroupsDomainService,
 } from '../ministries-domain/interface/ministry-groups-domain.service.interface';
@@ -51,17 +47,26 @@ import {
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { RemoveMembersFromMinistryGroupDto } from '../dto/ministry-group/request/member/remove-member-from-ministry-group.dto';
 import { MinistryGroupDetailHistoryException } from '../../../member-history/ministry-history/exception/ministry-group-detail-history.exception';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
+import { AddMemberToMinistryGroupResponseDto } from '../dto/ministry-group/response/member/add-member-to-ministry-group-response.dto';
+import { GetMinistryGroupMembersResponseDto } from '../dto/ministry-group/response/member/get-ministry-group-members-response.dto';
+import { RemoveMembersFromMinistryGroupResponseDto } from '../dto/ministry-group/response/member/remove-members-from-ministry-group-response.dto';
+import { SearchMembersForMinistryGroupResponseDto } from '../dto/ministry-group/response/member/search-members-for-ministry-group-response.dto';
 
 @Injectable()
 export class MinistryGroupMemberService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMINISTRY_GROUPS_DOMAIN_SERVICE)
     private readonly ministryGroupsDomainService: IMinistryGroupsDomainService,
     @Inject(IMINISTRIES_DOMAIN_SERVICE)
     private readonly ministryDomainService: IMinistriesDomainService,
 
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
     @Inject(IMINISTRY_MEMBERS_DOMAIN_SERVICE)
@@ -74,16 +79,11 @@ export class MinistryGroupMemberService {
   ) {}
 
   async addMemberToMinistryGroup(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     dto: AddMemberToMinistryGroupDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -151,10 +151,7 @@ export class MinistryGroupMemberService {
         qr,
       );
 
-    return {
-      data: updatedMinistryGroup,
-      timestamp: new Date(),
-    };
+    return new AddMemberToMinistryGroupResponseDto(updatedMinistryGroup);
   }
 
   private async assignMinistry(
@@ -256,13 +253,11 @@ export class MinistryGroupMemberService {
   }
 
   async getMinistryGroupMembers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     ministryGroupId: number,
     dto: GetMinistryGroupMembersDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -275,18 +270,26 @@ export class MinistryGroupMemberService {
         dto,
       );
 
-    return { data: members, timestamp: new Date() };
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMembers = this.memberFilterService.filterMemberDto(
+      requestManager,
+      members,
+      scope,
+    );
+
+    return new GetMinistryGroupMembersResponseDto(filteredMembers);
   }
 
   async removeMembersFromMinistryGroup(
-    churchId: number,
+    church: ChurchModel,
     ministryGroupId: number,
     dto: RemoveMembersFromMinistryGroupDto,
     qr: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -457,17 +460,15 @@ export class MinistryGroupMemberService {
         qr,
       );
 
-    return { data: updatedMinistryGroup, timestamp: new Date() };
+    return new RemoveMembersFromMinistryGroupResponseDto(updatedMinistryGroup);
   }
 
   async searchMembersForMinistryGroup(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     ministryGroupId: number,
     dto: SearchMembersForMinistryGroupDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const ministryGroup =
       await this.ministryGroupsDomainService.findMinistryGroupModelById(
         church,
@@ -481,9 +482,17 @@ export class MinistryGroupMemberService {
         dto,
       );
 
-    return {
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMember = this.memberFilterService.filterMembers(
+      requestManager,
       data,
-      timestamp: new Date(),
-    };
+      scope,
+    );
+
+    return new SearchMembersForMinistryGroupResponseDto(filteredMember);
   }
 }

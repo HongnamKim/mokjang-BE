@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -24,6 +25,13 @@ import {
   ApiRemoveMembersFromMinistryGroup,
   ApiSearchMembersForMinistryGroup,
 } from '../const/swagger/ministry-group-member.swagger';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { MinistryWriteGuard } from '../guard/ministry-write.guard';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:MinistryGroups:Members')
 @Controller('ministry-groups')
@@ -33,14 +41,18 @@ export class MinistryGroupsMembersController {
   ) {}
 
   @ApiSearchMembersForMinistryGroup()
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @Get(':ministryGroupId/member-search')
   searchMembersForMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: SearchMembersForMinistryGroupDto,
   ) {
     return this.ministryGroupMemberService.searchMembersForMinistryGroup(
-      churchId,
+      church,
+      requestManager,
       ministryGroupId,
       dto,
     );
@@ -48,13 +60,17 @@ export class MinistryGroupsMembersController {
 
   @ApiGetMinistryGroupMembers()
   @Get(':ministryGroupId/members')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMinistryGroupMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetMinistryGroupMembersDto,
   ) {
     return this.ministryGroupMemberService.getMinistryGroupMembers(
-      churchId,
+      church,
+      requestManager,
       ministryGroupId,
       dto,
     );
@@ -62,15 +78,17 @@ export class MinistryGroupsMembersController {
 
   @ApiAddMemberToGroup()
   @Patch(':ministryGroupId/members')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   addMemberToGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: AddMemberToMinistryGroupDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupMemberService.addMemberToMinistryGroup(
-      churchId,
+      church,
       ministryGroupId,
       dto,
       qr,
@@ -79,15 +97,17 @@ export class MinistryGroupsMembersController {
 
   @ApiRemoveMembersFromMinistryGroup()
   @Delete(':ministryGroupId/members')
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   removeMembersFromMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: RemoveMembersFromMinistryGroupDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupMemberService.removeMembersFromMinistryGroup(
-      churchId,
+      church,
       ministryGroupId,
       dto,
       qr,
