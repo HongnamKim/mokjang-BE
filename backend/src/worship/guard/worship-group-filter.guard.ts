@@ -78,7 +78,16 @@ export class WorshipGroupFilterGuard implements CanActivate {
     req.worship = worship;
 
     // 조회 요청 그룹 ID
-    const requestGroupId = parseInt(req.query.groupId as string);
+    //const requestGroupId = parseInt(req.query.groupId as string);
+    let requestGroupId: number;
+
+    if (parseInt(req.query.groupId as string)) {
+      requestGroupId = parseInt(req.query.groupId as string);
+    } else if (parseInt(req.body.groupId as string)) {
+      requestGroupId = parseInt(req.body.groupId as string);
+    } else {
+      requestGroupId = NaN;
+    }
 
     const rootTargetGroupIds = worship.worshipTargetGroups.map(
       (targetGroup) => targetGroup.groupId,

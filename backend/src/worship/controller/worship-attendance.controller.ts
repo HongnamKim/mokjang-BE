@@ -176,6 +176,7 @@ export class WorshipAttendanceController {
       church,
       worship,
       sessionId,
+      dto,
       defaultTargetGroupIds,
       permissionScopeGroupIds,
       qr,
