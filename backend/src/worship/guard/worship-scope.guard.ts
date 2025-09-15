@@ -107,11 +107,29 @@ export class WorshipScopeGuard implements CanActivate {
 
     // 소유자
     if (requestManager.role === ChurchUserRole.OWNER) {
+      req.permissionScopeGroupIds = (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(
+          church,
+          [],
+          undefined,
+          true,
+        )
+      ).map((group) => group.id);
+
       return true;
     }
 
     // 전체 권한 범위
     if (requestManager.permissionScopes.some((scope) => scope.isAllGroups)) {
+      req.permissionScopeGroupIds = (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(
+          church,
+          [],
+          undefined,
+          true,
+        )
+      ).map((group) => group.id);
+
       return true;
     }
 
@@ -120,6 +138,13 @@ export class WorshipScopeGuard implements CanActivate {
       church,
       requestManager,
     );
+
+    // 권한 범위가 지정되지 않은 관리자
+    if (permissionGroupIds.length === 0) {
+      throw new ForbiddenException(
+        PermissionScopeException.NO_PERMISSION_SCOPE,
+      );
+    }
 
     req.permissionScopeGroupIds = permissionGroupIds;
 

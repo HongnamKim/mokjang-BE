@@ -23,6 +23,7 @@ import { WorshipAttendanceDomainPaginationResultDto } from '../dto/worship-atten
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { WorshipAttendanceException } from '../../exception/worship-attendance.exception';
 import {
+  MemberSimpleSelect,
   MemberSimpleSelectQB,
   MemberSummarizedGroupSelectQB,
   MemberSummarizedOfficerSelectQB,
@@ -87,7 +88,7 @@ export class WorshipAttendanceDomainService
   async findAttendanceList(
     session: WorshipSessionModel,
     dto: GetWorshipAttendanceListDto,
-    groupIds: number[] | undefined,
+    groupIds: number[],
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -300,7 +301,7 @@ export class WorshipAttendanceDomainService
             updatedAt: true,
             presentCount: true,
             absentCount: true,
-            member: MemberSummarizedSelect,
+            member: MemberSimpleSelect,
           },
         },
       }),

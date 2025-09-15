@@ -13,7 +13,6 @@ import {
 import { WorshipModel } from '../../entity/worship.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
-import { WorshipEnrollmentDomainPaginationResultDto } from '../dto/worship-enrollment-domain-pagination-result.dto';
 import { WorshipEnrollmentOrderEnum } from '../../const/worship-enrollment-order.enum';
 import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
 import { LowAttendanceOrder } from '../../../home/const/low-attendance-order.enum';
@@ -112,12 +111,14 @@ export class WorshipEnrollmentDomainService
 
     qb.skip(dto.take * (dto.page - 1)).take(dto.take);
 
-    const [{ entities, raw }, totalCount] = await Promise.all([
+    /*const [{ entities, raw }, totalCount] = await Promise.all([
       qb.getRawAndEntities(),
       qb.getCount(),
-    ]);
+    ]);*/
 
-    const data = entities.map((entity, i) => {
+    const { entities, raw } = await qb.getRawAndEntities();
+
+    return entities.map((entity, i) => {
       const rate = Number(raw[i].attendance_rate);
       return {
         ...entity,
@@ -125,7 +126,7 @@ export class WorshipEnrollmentDomainService
       };
     });
 
-    return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
+    //return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
   }
 
   async findAllEnrollments(
