@@ -18,7 +18,6 @@ import {
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetWorshipsDto } from '../../dto/request/worship/get-worships.dto';
 import { WorshipOrderEnum } from '../../const/worship-order.enum';
-import { WorshipDomainPaginationResultDto } from '../dto/worship-domain-pagination-result.dto';
 import { WorshipException } from '../../exception/worship.exception';
 import { CreateWorshipDto } from '../../dto/request/worship/create-worship.dto';
 import { UpdateWorshipDto } from '../../dto/request/worship/update-worship.dto';
@@ -60,7 +59,29 @@ export class WorshipDomainService implements IWorshipDomainService {
       orderOptions.createdAt = 'ASC';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: {
+        churchId: church.id,
+      },
+      relations: {
+        worshipTargetGroups: {
+          group: true,
+        },
+      },
+      select: {
+        worshipTargetGroups: {
+          id: true,
+          group: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      order: orderOptions,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: {
           churchId: church.id,
@@ -92,6 +113,7 @@ export class WorshipDomainService implements IWorshipDomainService {
     ]);
 
     return new WorshipDomainPaginationResultDto(data, totalCount);
+    */
   }
 
   async findAllWorships(

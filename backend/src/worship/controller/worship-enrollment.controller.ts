@@ -38,13 +38,12 @@ export class WorshipEnrollmentController {
   ) {}
 
   @Get()
-  //@WorshipReadGuard()
   @UseGuards(
     AccessTokenGuard,
     ChurchManagerGuard,
     createDomainGuard(
-      DomainType.WORSHIP,
-      DomainName.WORSHIP,
+      DomainType.WORSHIP_ATTENDANCE,
+      DomainName.WORSHIP_ATTENDANCE,
       DomainAction.READ,
     ),
     WorshipGroupFilterGuard,
@@ -56,8 +55,8 @@ export class WorshipEnrollmentController {
     @Query() dto: GetWorshipEnrollmentsDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @PermissionScopeGroups() permissionScopeGroupIds?: number[],
-    @WorshipTargetGroupIds() defaultTargetGroupIds?: number[],
+    @WorshipTargetGroupIds() defaultTargetGroupIds: number[], // 예배 대상 그룹
+    @PermissionScopeGroups() permissionScopeGroupIds: number[], // 요청자의 권한 범위 내 그룹들
   ) {
     return this.worshipEnrollmentService.getEnrollments(
       church,
@@ -77,6 +76,7 @@ export class WorshipEnrollmentController {
   postEnrollment(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.worshipEnrollmentService.refreshEnrollment(

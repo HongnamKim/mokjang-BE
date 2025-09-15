@@ -54,13 +54,29 @@ export class WorshipAttendanceService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
+  private async getRequestGroupIds(
+    church: ChurchModel,
+    defaultTargetGroupIds: number[],
+    groupId?: number,
+  ) {
+    if (groupId) {
+      return (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
+          groupId,
+        ])
+      ).map((group) => group.id);
+    } else {
+      return defaultTargetGroupIds;
+    }
+  }
+
   async getAttendances(
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
     dto: GetWorshipAttendancesDto,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
   ) {
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
@@ -102,8 +118,8 @@ export class WorshipAttendanceService {
     worship: WorshipModel,
     sessionId: number,
     query: GetWorshipAttendanceListDto,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
   ) {
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
@@ -122,6 +138,10 @@ export class WorshipAttendanceService {
       permissionScopeGroupIds,
     );
 
+    if (intersectionGroupIds.length === 0) {
+      return new WorshipAttendanceListResponseDto([], 0, undefined, false);
+    }
+
     const result = await this.worshipAttendanceDomainService.findAttendanceList(
       session,
       query,
@@ -137,15 +157,16 @@ export class WorshipAttendanceService {
   }
 
   async refreshAttendance(
-    churchId: number,
+    church: ChurchModel,
     worshipId: number,
     sessionId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
+    */
 
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
@@ -192,14 +213,13 @@ export class WorshipAttendanceService {
   }
 
   async patchAttendance(
-    churchId: number,
-    worshipId: number,
+    worship: WorshipModel,
     sessionId: number,
     attendanceId: number,
     dto: UpdateWorshipAttendanceDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
@@ -207,7 +227,7 @@ export class WorshipAttendanceService {
       church,
       worshipId,
       qr,
-    );
+    );*/
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
         worship,
@@ -304,28 +324,12 @@ export class WorshipAttendanceService {
     }
   }
 
-  private async getRequestGroupIds(
-    church: ChurchModel,
-    defaultTargetGroupIds: number[] | undefined,
-    groupId?: number,
-  ) {
-    if (groupId) {
-      return (
-        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
-          groupId,
-        ])
-      ).map((group) => group.id);
-    } else {
-      return defaultTargetGroupIds;
-    }
-  }
-
   async patchAllAttended(
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
     qr: QueryRunner,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(

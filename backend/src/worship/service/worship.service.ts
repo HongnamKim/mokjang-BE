@@ -77,18 +77,9 @@ export class WorshipService {
   ) {}
 
   async findWorships(church: ChurchModel, dto: GetWorshipsDto) {
-    const { data, totalCount } = await this.worshipDomainService.findWorships(
-      church,
-      dto,
-    );
+    const worships = await this.worshipDomainService.findWorships(church, dto);
 
-    return new WorshipPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new WorshipPaginationResponseDto(worships);
   }
 
   async findWorshipById(
@@ -162,11 +153,6 @@ export class WorshipService {
     dto: UpdateWorshipDto,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );*/
-
     const targetWorship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -202,13 +188,10 @@ export class WorshipService {
   }
 
   async deleteWorshipById(
-    //churchId: number,
     church: ChurchModel,
     worshipId: number,
     qr: QueryRunner,
   ) {
-    //const church = await this.churchesDomainService.findChurchModelById(churchId);
-
     const targetWorship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -330,8 +313,8 @@ export class WorshipService {
   async getWorshipStatistics(
     church: ChurchModel,
     worship: WorshipModel,
-    defaultWorshipTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultWorshipTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
     dto: GetWorshipStatsDto,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
@@ -345,11 +328,15 @@ export class WorshipService {
       permissionScopeGroupIds,
     );
 
+    if (intersectionGroupIds.length === 0) {
+      return new GetWorshipStatsResponseDto(worship.id, 0, {
+        overall: 0,
+        period: 0,
+      });
+    }
+
     dto.utcFrom = getFromDate(dto.from, TIME_ZONE.SEOUL);
     dto.utcTo = getToDate(dto.to, TIME_ZONE.SEOUL);
-
-    // Session Count
-    //const totalSessions = await this.worshipSessionDomainService.countByWorship(worship),
 
     const [worshipStats, customStats] = await Promise.all([
       // 전체 기간 출석률
@@ -379,7 +366,7 @@ export class WorshipService {
 
   private async getRequestGroupIds(
     church: ChurchModel,
-    defaultTargetGroupIds: number[] | undefined,
+    defaultTargetGroupIds: number[],
     groupId?: number,
   ) {
     // 조회 대상 groupId 가 있는 경우

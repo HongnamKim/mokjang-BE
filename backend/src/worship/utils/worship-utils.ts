@@ -24,9 +24,14 @@ export function getRecentSessionDate(
   return fromZonedTime(lastWorshipDateKst, timeZone);
 }
 
+/**
+ *
+ * @param defaultWorshipTargetGroupIds
+ * @param permissionScopeGroupIds
+ */
 export function getIntersectionGroupIds(
-  defaultWorshipTargetGroupIds: number[] | undefined,
-  permissionScopeGroupIds: number[] | undefined,
+  defaultWorshipTargetGroupIds: number[],
+  permissionScopeGroupIds: number[],
 ) {
   if (!defaultWorshipTargetGroupIds) {
     // 요청 그룹이 없고, 예배 대상이 전체인 경우
