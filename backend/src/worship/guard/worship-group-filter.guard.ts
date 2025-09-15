@@ -89,6 +89,8 @@ export class WorshipGroupFilterGuard implements CanActivate {
       await this.groupsDomainService.findGroupAndDescendantsByIds(
         church,
         rootTargetGroupIds,
+        undefined,
+        rootTargetGroupIds.length === 0,
       )
     ).map((group) => group.id);
 
