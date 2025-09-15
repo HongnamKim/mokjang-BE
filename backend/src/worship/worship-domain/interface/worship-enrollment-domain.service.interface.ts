@@ -23,7 +23,7 @@ export interface IWorshipEnrollmentDomainService {
     dto: GetWorshipEnrollmentsDto,
     groupIds?: number[],
     qr?: QueryRunner,
-  ): Promise<any>;
+  ): Promise<WorshipEnrollmentModel[]>;
 
   createNewMemberEnrollments(
     newMember: MemberModel,

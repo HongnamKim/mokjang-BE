@@ -84,12 +84,6 @@ export class WorshipGroupFilterGuard implements CanActivate {
       (targetGroup) => targetGroup.groupId,
     );
 
-    // 대상 그룹이 전체인 예배
-    if (rootTargetGroupIds.length === 0) {
-      req.worshipTargetGroupIds = undefined;
-      return true;
-    }
-
     // 대상 그룹과 그 하위 그룹의 ID 들
     const allowedGroupIds = (
       await this.groupsDomainService.findGroupAndDescendantsByIds(
@@ -98,6 +92,7 @@ export class WorshipGroupFilterGuard implements CanActivate {
       )
     ).map((group) => group.id);
 
+    // 예배 대상 그룹
     req.worshipTargetGroupIds = allowedGroupIds;
 
     // 필터링할 그룹이 없을 경우 통과

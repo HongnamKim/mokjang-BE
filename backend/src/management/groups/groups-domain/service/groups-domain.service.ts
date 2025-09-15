@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -35,12 +36,15 @@ import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-r
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GroupRole } from '../../const/group-role.enum';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
   constructor(
     @InjectRepository(GroupModel)
     private readonly groupsRepository: Repository<GroupModel>,
+    @Inject(CACHE_MANAGER)
+    private readonly cache: Cache,
   ) {}
 
   private getGroupsRepository(qr?: QueryRunner) {
@@ -178,18 +182,44 @@ export class GroupsDomainService implements IGroupsDomainService {
     return group;
   }
 
-  async findGroupAndDescendantsByIds(
-    church: ChurchModel,
-    rootGroupIds: number[],
-    qr?: QueryRunner,
-  ): Promise<GroupModel[]> {
+  private async getAllGroups(church: ChurchModel, qr?: QueryRunner) {
+    const allGroupKey = `allGroups-${church.id}`;
+
+    const cachedGroups = await this.cache.get<GroupModel[]>(allGroupKey);
+
+    if (cachedGroups) {
+      return cachedGroups;
+    }
+
     const repository = this.getGroupsRepository(qr);
 
     const allGroups = await repository.find({
       where: {
         churchId: church.id,
       },
+      select: {
+        id: true,
+        childGroupIds: true,
+        parentGroupId: true,
+      },
     });
+
+    await this.cache.set(allGroupKey, allGroups, 180_000); // 3분 세팅
+
+    return allGroups;
+  }
+
+  async findGroupAndDescendantsByIds(
+    church: ChurchModel,
+    rootGroupIds: number[],
+    qr?: QueryRunner,
+    isAllGroups?: boolean,
+  ): Promise<GroupModel[]> {
+    const allGroups = await this.getAllGroups(church, qr);
+
+    if (isAllGroups) {
+      return allGroups;
+    }
 
     const groupMap = new Map<number, GroupModel>();
     const parentToChildren = new Map<number, number[]>();
@@ -223,6 +253,7 @@ export class GroupsDomainService implements IGroupsDomainService {
       resultIds.push(currentId);
 
       const children = parentToChildren.get(currentId) || [];
+
       queue.push(...children);
     }
 

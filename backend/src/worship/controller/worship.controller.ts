@@ -130,8 +130,8 @@ export class WorshipController {
     AccessTokenGuard,
     ChurchManagerGuard,
     createDomainGuard(
-      DomainType.WORSHIP,
-      DomainName.WORSHIP,
+      DomainType.WORSHIP_ATTENDANCE,
+      DomainName.WORSHIP_ATTENDANCE,
       DomainAction.READ,
     ),
     WorshipGroupFilterGuard,
@@ -142,8 +142,8 @@ export class WorshipController {
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds: number[] | undefined,
-    @PermissionScopeGroups() permissionScopeGroupIds: number[] | undefined,
+    @WorshipTargetGroupIds() defaultTargetGroupIds: number[],
+    @PermissionScopeGroups() permissionScopeGroupIds: number[],
     @Query() dto: GetWorshipStatsDto,
   ) {
     return this.worshipService.getWorshipStatistics(

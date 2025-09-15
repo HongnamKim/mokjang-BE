@@ -3,7 +3,6 @@ import { CreateWorshipSessionDto } from '../../dto/request/worship-session/creat
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { WorshipSessionModel } from '../../entity/worship-session.entity';
 import { GetWorshipSessionsDto } from '../../dto/request/worship-session/get-worship-sessions.dto';
-import { WorshipSessionDomainPaginationResultDto } from '../dto/worship-session-domain-pagination-result.dto';
 import { UpdateWorshipSessionDto } from '../../dto/request/worship-session/update-worship-session.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
@@ -16,7 +15,7 @@ export interface IWorshipSessionDomainService {
     worship: WorshipModel,
     dto: GetWorshipSessionsDto,
     qr?: QueryRunner,
-  ): Promise<WorshipSessionDomainPaginationResultDto>;
+  ): Promise<WorshipSessionModel[]>;
 
   createWorshipSession(
     worship: WorshipModel,

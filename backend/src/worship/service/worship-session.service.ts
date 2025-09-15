@@ -8,18 +8,12 @@ import {
   IWORSHIP_SESSION_DOMAIN_SERVICE,
   IWorshipSessionDomainService,
 } from '../worship-domain/interface/worship-session-domain.service.interface';
-import { CreateWorshipSessionDto } from '../dto/request/worship-session/create-worship-session.dto';
 import { QueryRunner } from 'typeorm';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import {
   IWORSHIP_DOMAIN_SERVICE,
   IWorshipDomainService,
 } from '../worship-domain/interface/worship-domain.service.interface';
 import { PostWorshipSessionResponseDto } from '../dto/response/worship-session/post-worship-session-response.dto';
-import { GetWorshipSessionResponseDto } from '../dto/response/worship-session/get-worship-session-response.dto';
 import { GetWorshipSessionsDto } from '../dto/request/worship-session/get-worship-sessions.dto';
 import { WorshipSessionPaginationResponseDto } from '../dto/response/worship-session/worship-session-pagination-response.dto';
 import { DeleteWorshipSessionResponseDto } from '../dto/response/worship-session/delete-worship-session.response.dto';
@@ -39,7 +33,7 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 import { differenceInWeeks, getDay, subWeeks } from 'date-fns';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { GetWorshipSessionDto } from '../dto/request/worship-session/get-worship-session.dto';
@@ -62,8 +56,6 @@ import {
 @Injectable()
 export class WorshipSessionService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IWORSHIP_DOMAIN_SERVICE)
     private readonly worshipDomainService: IWorshipDomainService,
     @Inject(IMANAGER_DOMAIN_SERVICE)
@@ -90,23 +82,19 @@ export class WorshipSessionService {
       worshipId,
     );
 
-    const { data, totalCount } =
-      await this.worshipSessionDomainService.findWorshipSessions(worship, dto);
-
-    return new WorshipSessionPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
+    const data = await this.worshipSessionDomainService.findWorshipSessions(
+      worship,
+      dto,
     );
+
+    return new WorshipSessionPaginationResponseDto(data);
   }
 
   async getSessionCheckStatus(
     church: ChurchModel,
     worship: WorshipModel,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
     dto: GetWorshipSessionCheckStatusDto,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
@@ -119,6 +107,10 @@ export class WorshipSessionService {
       requestGroupIds,
       permissionScopeGroupIds,
     );
+
+    if (intersectionGroupIds.length === 0) {
+      return { data: [], timestamp: new Date() };
+    }
 
     const from = dto.from
       ? getFromDate(dto.from, TIME_ZONE.SEOUL)
@@ -214,8 +206,8 @@ export class WorshipSessionService {
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
-    defaultWorshipTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultWorshipTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
     dto: GetWorshipSessionStatsDto,
   ) {
     const session =
@@ -235,6 +227,15 @@ export class WorshipSessionService {
       permissionScopeGroupIds,
     );
 
+    if (intersectionGroupIds.length === 0) {
+      return {
+        totalCount: 0,
+        presentCount: 0,
+        absentCount: 0,
+        unknownCount: 0,
+      };
+    }
+
     const stats =
       await this.worshipAttendanceDomainService.getAttendanceStatsBySession(
         session,
@@ -251,7 +252,7 @@ export class WorshipSessionService {
 
   private async getRequestGroupIds(
     church: ChurchModel,
-    defaultWorshipTargetGroupIds: number[] | undefined,
+    defaultWorshipTargetGroupIds: number[],
     groupId?: number,
   ) {
     // 조회 대상 groupId 가 있는 경우
@@ -270,24 +271,19 @@ export class WorshipSessionService {
 
   /**
    * 예배 세션 수정
-   * @param churchId
+   * @param church
    * @param worshipId
    * @param sessionId
    * @param dto
    * @param qr
    */
   async patchWorshipSessionById(
-    churchId: number,
+    church: ChurchModel,
     worshipId: number,
     sessionId: number,
     dto: UpdateWorshipSessionDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -327,16 +323,11 @@ export class WorshipSessionService {
   }
 
   async deleteWorshipSessionById(
-    churchId: number,
+    church: ChurchModel,
     worshipId: number,
     sessionId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -373,7 +364,7 @@ export class WorshipSessionService {
    * @param worshipId
    * @param dto
    */
-  async postWorshipSessionManual(
+  /*async postWorshipSessionManual(
     churchId: number,
     worshipId: number,
     dto: CreateWorshipSessionDto,
@@ -406,7 +397,7 @@ export class WorshipSessionService {
       );
 
     return new PostWorshipSessionResponseDto(newSession);
-  }
+  }*/
 
   /**
    * 가장 최근의 예배 세션 조회 or 생성
@@ -415,7 +406,7 @@ export class WorshipSessionService {
    * @param worshipId
    * @param qr
    */
-  async getOrPostRecentSession(
+  /*async getOrPostRecentSession(
     churchId: number,
     worshipId: number,
     qr: QueryRunner,
@@ -465,5 +456,5 @@ export class WorshipSessionService {
       );
 
     return new GetWorshipSessionResponseDto(responseSession);
-  }
+  }*/
 }

@@ -94,8 +94,8 @@ export class WorshipSessionController {
     AccessTokenGuard,
     ChurchManagerGuard,
     createDomainGuard(
-      DomainType.WORSHIP,
-      DomainName.WORSHIP,
+      DomainType.WORSHIP_ATTENDANCE,
+      DomainName.WORSHIP_ATTENDANCE,
       DomainAction.READ,
     ),
     WorshipGroupFilterGuard,
@@ -107,8 +107,8 @@ export class WorshipSessionController {
     @Query() dto: GetWorshipSessionCheckStatusDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds?: number[],
-    @PermissionScopeGroups() permissionScopeGroupIds?: number[],
+    @WorshipTargetGroupIds() defaultTargetGroupIds: number[],
+    @PermissionScopeGroups() permissionScopeGroupIds: number[],
   ) {
     return this.worshipSessionService.getSessionCheckStatus(
       church,
@@ -125,8 +125,8 @@ export class WorshipSessionController {
     AccessTokenGuard,
     ChurchManagerGuard,
     createDomainGuard(
-      DomainType.WORSHIP,
-      DomainName.WORSHIP,
+      DomainType.WORSHIP_ATTENDANCE,
+      DomainName.WORSHIP_ATTENDANCE,
       DomainAction.READ,
     ),
     WorshipGroupFilterGuard,
@@ -136,8 +136,8 @@ export class WorshipSessionController {
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @WorshipTargetGroupIds() defaultWorshipTargetGroupIds: number[] | undefined,
-    @PermissionScopeGroups() permissionScopeGroupIds: number[] | undefined,
+    @WorshipTargetGroupIds() defaultWorshipTargetGroupIds: number[],
+    @PermissionScopeGroups() permissionScopeGroupIds: number[],
     @Query() dto: GetWorshipSessionStatsDto,
   ) {
     return this.worshipSessionService.getWorshipSessionStatistics(
@@ -158,11 +158,12 @@ export class WorshipSessionController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateWorshipSessionDto,
     @QueryRunner() qr: QR,
   ) {
     return this.worshipSessionService.patchWorshipSessionById(
-      churchId,
+      church,
       worshipId,
       sessionId,
       dto,
@@ -178,10 +179,11 @@ export class WorshipSessionController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.worshipSessionService.deleteWorshipSessionById(
-      churchId,
+      church,
       worshipId,
       sessionId,
       qr,

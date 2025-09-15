@@ -95,6 +95,7 @@ export interface IGroupsDomainService {
     church: ChurchModel,
     rootGroupIds: number[],
     qr?: QueryRunner,
+    isAllGroups?: boolean,
   ): Promise<GroupModel[]>;
 
   incrementMembersCount(
