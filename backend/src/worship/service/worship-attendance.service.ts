@@ -35,6 +35,7 @@ import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/g
 import { getIntersectionGroupIds } from '../utils/worship-utils';
 import { WorshipAttendanceListResponseDto } from '../dto/response/worship-attendance/worship-attendance-list-response.dto';
 import { PatchWorshipAllAttendedResponseDto } from '../dto/response/worship-attendance/patch-worship-all-attended-response.dto';
+import { UpdateWorshipAllAttendedDto } from '../dto/request/worship-attendance/update-worship-all-attended.dto';
 
 @Injectable()
 export class WorshipAttendanceService {
@@ -328,6 +329,7 @@ export class WorshipAttendanceService {
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
+    dto: UpdateWorshipAllAttendedDto,
     defaultTargetGroupIds: number[],
     permissionScopeGroupIds: number[],
     qr: QueryRunner,
@@ -335,6 +337,7 @@ export class WorshipAttendanceService {
     const requestGroupIds = await this.getRequestGroupIds(
       church,
       defaultTargetGroupIds,
+      dto.groupId,
     );
 
     const intersectionGroupIds = getIntersectionGroupIds(
