@@ -5,23 +5,17 @@ import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
 import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 export const IWORSHIP_ENROLLMENT_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ENROLLMENT_DOMAIN',
 );
 
 export interface IWorshipEnrollmentDomainService {
-  /*findEnrollments(
-    worship: WorshipModel,
-    dto: GetWorshipEnrollmentsDto,
-    groupIds?: number[],
-    qr?: QueryRunner,
-  ): Promise<WorshipEnrollmentDomainPaginationResultDto>;*/
-
   findEnrollmentsByQueryBuilder(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
-    groupIds?: number[],
+    groupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ): Promise<WorshipEnrollmentModel[]>;
 

@@ -43,15 +43,15 @@ import {
   IGROUPS_DOMAIN_SERVICE,
   IGroupsDomainService,
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
-import {
-  getIntersectionGroupIds,
-  getRecentSessionDate,
-} from '../utils/worship-utils';
+import { getIntersection, getRecentSessionDate } from '../utils/worship-utils';
 import { GetWorshipSessionCheckStatusDto } from '../dto/request/worship-session/get-worship-session-check-status.dto';
 import {
   getFromDate,
   getToDate,
 } from '../../member-history/history-date.utils';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
+import { GetWorshipSessionCheckStatusResponseDto } from '../dto/response/worship-session/get-worship-session-check-status-response.dto';
 
 @Injectable()
 export class WorshipSessionService {
@@ -93,22 +93,26 @@ export class WorshipSessionService {
   async getSessionCheckStatus(
     church: ChurchModel,
     worship: WorshipModel,
-    defaultTargetGroupIds: number[],
-    permissionScopeGroupIds: number[],
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
+    permissionScopeIds: PermissionScopeIdsVo,
     dto: GetWorshipSessionCheckStatusDto,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
       church,
-      defaultTargetGroupIds,
+      defaultWorshipGroupIds,
       dto.groupId,
     );
 
-    const intersectionGroupIds = getIntersectionGroupIds(
+    const intersectionGroupIds = getIntersection(
       requestGroupIds,
-      permissionScopeGroupIds,
+      permissionScopeIds,
     );
 
-    if (intersectionGroupIds.length === 0) {
+    if (
+      intersectionGroupIds.groupIds.length === 0 &&
+      !permissionScopeIds.isAllGroups
+    ) {
+      // 현재 권한에서 조회할 수 있는 그룹이 없는 경우
       return { data: [], timestamp: new Date() };
     }
 
@@ -131,7 +135,8 @@ export class WorshipSessionService {
         to,
       );
 
-    return { data: result, timestamp: new Date() };
+    return new GetWorshipSessionCheckStatusResponseDto(result);
+    //return { data: result, timestamp: new Date() };
   }
 
   /**
@@ -206,8 +211,8 @@ export class WorshipSessionService {
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
-    defaultWorshipTargetGroupIds: number[],
-    permissionScopeGroupIds: number[],
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
+    permissionScopeIds: PermissionScopeIdsVo,
     dto: GetWorshipSessionStatsDto,
   ) {
     const session =
@@ -218,16 +223,19 @@ export class WorshipSessionService {
 
     const requestGroupIds = await this.getRequestGroupIds(
       church,
-      defaultWorshipTargetGroupIds,
+      defaultWorshipGroupIds,
       dto.groupId,
     );
 
-    const intersectionGroupIds = getIntersectionGroupIds(
+    const intersectionGroupIds = getIntersection(
       requestGroupIds,
-      permissionScopeGroupIds,
+      permissionScopeIds,
     );
 
-    if (intersectionGroupIds.length === 0) {
+    if (
+      intersectionGroupIds.groupIds.length === 0 &&
+      !permissionScopeIds.isAllGroups
+    ) {
       return {
         totalCount: 0,
         presentCount: 0,
@@ -252,20 +260,24 @@ export class WorshipSessionService {
 
   private async getRequestGroupIds(
     church: ChurchModel,
-    defaultWorshipTargetGroupIds: number[],
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
     groupId?: number,
   ) {
     // 조회 대상 groupId 가 있는 경우
     if (groupId) {
-      return (
+      const groupIds = (
         await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
           groupId,
         ])
       ).map((group) => group.id);
+
+      return new WorshipGroupIdsVo(groupIds, false);
+    } else if (Number.isNaN(groupId)) {
+      return new WorshipGroupIdsVo([], false);
     } else {
       // 조회 대상 groupId 가 없을 경우
       // 기본 예배 대상 그룹
-      return defaultWorshipTargetGroupIds;
+      return defaultWorshipGroupIds;
     }
   }
 

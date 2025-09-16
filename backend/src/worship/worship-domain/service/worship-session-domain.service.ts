@@ -32,6 +32,7 @@ import {
 } from '../../../members/const/member-find-options.const';
 import { session } from 'passport';
 import { AttendanceStatus } from '../../const/attendance-status.enum';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 @Injectable()
 export class WorshipSessionDomainService
@@ -347,7 +348,7 @@ export class WorshipSessionDomainService
 
   async findSessionCheckStatus(
     worship: WorshipModel,
-    intersectionGroupIds: number[] | undefined,
+    intersectionGroupIds: WorshipGroupIdsVo,
     from: Date,
     to: Date,
   ): Promise<any> {
@@ -367,10 +368,15 @@ export class WorshipSessionDomainService
       ])
       .setParameter('unknown', AttendanceStatus.UNKNOWN);
 
-    if (intersectionGroupIds && intersectionGroupIds.length > 0) {
+    if (
+      intersectionGroupIds.groupIds.length > 0 &&
+      !intersectionGroupIds.isAllGroups
+    ) {
       query.andWhere('member.groupId IN (:...groupIds)', {
-        groupIds: intersectionGroupIds,
+        groupIds: intersectionGroupIds.groupIds,
       });
+    } else if (!intersectionGroupIds.isAllGroups) {
+      query.andWhere('member.groupId IS NULL');
     }
 
     const results = await query

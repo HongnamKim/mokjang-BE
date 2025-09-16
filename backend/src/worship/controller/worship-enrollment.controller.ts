@@ -26,9 +26,12 @@ import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
 import { DomainType } from '../../permission/const/domain-type.enum';
 import { DomainName } from '../../permission/const/domain-name.enum';
 import { DomainAction } from '../../permission/const/domain-action.enum';
-import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
-import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
+import { DefaultWorshipGroupIds } from '../decorator/default-worship-group-ids.decorator';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIds } from '../decorator/permission-scope-ids.decorator';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
+import { ApiGetWorshipEnrollments } from '../swagger/worship-enrollment.swagger';
 
 @ApiTags('Worships:Enrollments')
 @Controller(':worshipId/enrollments')
@@ -37,6 +40,7 @@ export class WorshipEnrollmentController {
     private readonly worshipEnrollmentService: WorshipEnrollmentService,
   ) {}
 
+  @ApiGetWorshipEnrollments()
   @Get()
   @UseGuards(
     AccessTokenGuard,
@@ -55,15 +59,15 @@ export class WorshipEnrollmentController {
     @Query() dto: GetWorshipEnrollmentsDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds: number[], // 예배 대상 그룹
-    @PermissionScopeGroups() permissionScopeGroupIds: number[], // 요청자의 권한 범위 내 그룹들
+    @DefaultWorshipGroupIds() defaultWorshipGroupIds: WorshipGroupIdsVo,
+    @PermissionScopeIds() permissionScopeIds: PermissionScopeIdsVo,
   ) {
     return this.worshipEnrollmentService.getEnrollments(
       church,
       worship,
       dto,
-      permissionScopeGroupIds,
-      defaultTargetGroupIds,
+      permissionScopeIds,
+      defaultWorshipGroupIds,
     );
   }
 
