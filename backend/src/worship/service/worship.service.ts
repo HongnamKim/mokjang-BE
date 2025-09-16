@@ -46,13 +46,15 @@ import {
   IWorshipAttendanceDomainService,
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
 import { GetWorshipStatsResponseDto } from '../dto/response/worship/get-worship-stats-response.dto';
-import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { getIntersection } from '../utils/worship-utils';
 import { GetWorshipStatsDto } from '../dto/request/worship/get-worship-stats.dto';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import {
   getFromDate,
   getToDate,
 } from '../../member-history/history-date.utils';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 
 @Injectable()
 export class WorshipService {
@@ -313,22 +315,27 @@ export class WorshipService {
   async getWorshipStatistics(
     church: ChurchModel,
     worship: WorshipModel,
-    defaultWorshipTargetGroupIds: number[],
-    permissionScopeGroupIds: number[],
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
+    permissionScopeIds: PermissionScopeIdsVo,
+    //defaultWorshipTargetGroupIds: number[],
+    //permissionScopeGroupIds: number[],
     dto: GetWorshipStatsDto,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
       church,
-      defaultWorshipTargetGroupIds,
+      defaultWorshipGroupIds,
       dto.groupId,
     );
 
-    const intersectionGroupIds = getIntersectionGroupIds(
+    const intersectionGroupIds = getIntersection(
       requestGroupIds,
-      permissionScopeGroupIds,
+      permissionScopeIds,
     );
 
-    if (intersectionGroupIds.length === 0) {
+    if (
+      intersectionGroupIds.groupIds.length === 0 &&
+      !permissionScopeIds.isAllGroups
+    ) {
       return new GetWorshipStatsResponseDto(worship.id, 0, {
         overall: 0,
         period: 0,
@@ -342,7 +349,6 @@ export class WorshipService {
       // 전체 기간 출석률
       this.worshipAttendanceDomainService.getOverallAttendanceStats(
         worship,
-        //requestGroupIds,
         intersectionGroupIds,
       ),
       // 선택기간 출석률
@@ -366,19 +372,21 @@ export class WorshipService {
 
   private async getRequestGroupIds(
     church: ChurchModel,
-    defaultTargetGroupIds: number[],
+    defaultTargetGroupIds: WorshipGroupIdsVo, //number[],
     groupId?: number,
   ) {
     // 조회 대상 groupId 가 있는 경우
     if (groupId) {
-      return (
+      const groupIds = (
         await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
           groupId,
         ])
       ).map((group) => group.id);
+
+      return new WorshipGroupIdsVo(groupIds, false);
+    } else if (Number.isNaN(groupId)) {
+      return new WorshipGroupIdsVo([], false);
     } else {
-      // 조회 대상 groupId 가 없을 경우
-      // 예배 대상 그룹
       return defaultTargetGroupIds;
     }
   }

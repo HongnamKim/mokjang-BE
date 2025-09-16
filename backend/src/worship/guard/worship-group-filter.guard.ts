@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
@@ -20,6 +21,7 @@ import {
 import { WorshipException } from '../exception/worship.exception';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { CustomRequest } from '../../common/custom-request';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
 
 /**
  * 필터링 요청한 그룹이 해당 예배의 대상 그룹인지 검사
@@ -78,15 +80,23 @@ export class WorshipGroupFilterGuard implements CanActivate {
     req.worship = worship;
 
     // 조회 요청 그룹 ID
-    //const requestGroupId = parseInt(req.query.groupId as string);
-    let requestGroupId: number;
+    let requestGroupId: number | undefined;
 
-    if (parseInt(req.query.groupId as string)) {
-      requestGroupId = parseInt(req.query.groupId as string);
-    } else if (parseInt(req.body.groupId as string)) {
-      requestGroupId = parseInt(req.body.groupId as string);
+    if (req.query.groupId) {
+      // 쿼리 파라미터
+      requestGroupId = +(req.query.groupId as string); // number | NaN
+    } else if (req.body.groupId) {
+      // 요청 본문
+      requestGroupId = +(req.body.groupId as string); // number | NaN
     } else {
-      requestGroupId = NaN;
+      // 필터링 없을 때
+      requestGroupId = undefined;
+    }
+
+    if (Number.isNaN(requestGroupId)) {
+      if (req.query.groupId !== 'null') {
+        throw new BadRequestException();
+      }
     }
 
     const rootTargetGroupIds = worship.worshipTargetGroups.map(
@@ -105,6 +115,17 @@ export class WorshipGroupFilterGuard implements CanActivate {
 
     // 예배 대상 그룹
     req.worshipTargetGroupIds = allowedGroupIds;
+    req.worshipGroupIds = new WorshipGroupIdsVo(
+      allowedGroupIds,
+      rootTargetGroupIds.length === 0,
+    );
+
+    // 일부 대상 예배 조회 시 그룹없음을 필터링 요청했을 경우
+    if (Number.isNaN(requestGroupId)) {
+      if (rootTargetGroupIds.length !== 0) {
+        throw new ForbiddenException(WorshipException.INVALID_TARGET_GROUP);
+      }
+    }
 
     // 필터링할 그룹이 없을 경우 통과
     if (!requestGroupId) {

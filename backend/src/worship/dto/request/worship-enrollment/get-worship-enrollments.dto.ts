@@ -1,11 +1,12 @@
 import { BaseOffsetPaginationRequestDto } from '../../../../common/dto/request/base-offset-pagination-request.dto';
 import { WorshipEnrollmentOrderEnum } from '../../../const/worship-enrollment-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsNumber } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../../../common/const/time-zone.const';
 import { IsYYYYMMDD } from '../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { Transform } from 'class-transformer';
 
 export class GetWorshipEnrollmentsDto extends BaseOffsetPaginationRequestDto<WorshipEnrollmentOrderEnum> {
   @ApiProperty({
@@ -20,10 +21,11 @@ export class GetWorshipEnrollmentsDto extends BaseOffsetPaginationRequestDto<Wor
   @ApiProperty({
     description: '교인 그룹',
     required: false,
+    type: 'string',
   })
-  @IsOptionalNotNull()
-  @IsNumber()
-  groupId: number;
+  @IsOptional()
+  @Transform(({ value }) => +value)
+  groupId?: number;
 
   @ApiProperty({
     description: '불러올 예배 세션 시작 날짜 (YYYY-MM-DD)',

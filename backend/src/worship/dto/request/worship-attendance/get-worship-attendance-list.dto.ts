@@ -1,7 +1,8 @@
 import { BaseCursorPaginationRequestDto } from '../../../../common/dto/request/base-cursor-pagination-request.dto';
 import { WorshipAttendanceSortColumn } from '../../../const/worship-attendance-sort-column.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class GetWorshipAttendanceListDto extends BaseCursorPaginationRequestDto<WorshipAttendanceSortColumn> {
   @ApiPropertyOptional({
@@ -15,10 +16,9 @@ export class GetWorshipAttendanceListDto extends BaseCursorPaginationRequestDto<
 
   @ApiPropertyOptional({
     description: '조회할 그룹 ID',
-    minimum: 1,
+    type: 'string',
   })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
+  @Transform(({ value }) => +value)
   groupId?: number;
 }
