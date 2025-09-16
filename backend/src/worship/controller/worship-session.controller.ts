@@ -34,7 +34,6 @@ import { WorshipReadGuard } from '../guard/worship-read.guard';
 import { WorshipWriteGuard } from '../guard/worship-write.guard';
 import { GetWorshipSessionDto } from '../dto/request/worship-session/get-worship-session.dto';
 import { GetWorshipSessionStatsDto } from '../dto/request/worship-session/get-worship-session-stats.dto';
-import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { createDomainGuard } from '../../permission/guard/generic-domain.guard';
 import { DomainType } from '../../permission/const/domain-type.enum';
@@ -46,9 +45,12 @@ import { RequestChurch } from '../../permission/decorator/request-church.decorat
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
-import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
 import { GetWorshipSessionCheckStatusDto } from '../dto/request/worship-session/get-worship-session-check-status.dto';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { DefaultWorshipGroupIds } from '../decorator/default-worship-group-ids.decorator';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIds } from '../decorator/permission-scope-ids.decorator';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 
 @ApiTags('Worships:Sessions')
 @Controller(':worshipId/sessions')
@@ -107,14 +109,14 @@ export class WorshipSessionController {
     @Query() dto: GetWorshipSessionCheckStatusDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds: number[],
-    @PermissionScopeGroups() permissionScopeGroupIds: number[],
+    @DefaultWorshipGroupIds() defaultWorshipGroupIds: WorshipGroupIdsVo,
+    @PermissionScopeIds() permissionScope: PermissionScopeIdsVo,
   ) {
     return this.worshipSessionService.getSessionCheckStatus(
       church,
       worship,
-      defaultTargetGroupIds,
-      permissionScopeGroupIds,
+      defaultWorshipGroupIds,
+      permissionScope,
       dto,
     );
   }
@@ -136,16 +138,16 @@ export class WorshipSessionController {
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
     @Param('sessionId', ParseIntPipe) sessionId: number,
-    @WorshipTargetGroupIds() defaultWorshipTargetGroupIds: number[],
-    @PermissionScopeGroups() permissionScopeGroupIds: number[],
+    @DefaultWorshipGroupIds() defaultWorshipGroupIds: WorshipGroupIdsVo,
+    @PermissionScopeIds() permissionScope: PermissionScopeIdsVo,
     @Query() dto: GetWorshipSessionStatsDto,
   ) {
     return this.worshipSessionService.getWorshipSessionStatistics(
       church,
       worship,
       sessionId,
-      defaultWorshipTargetGroupIds,
-      permissionScopeGroupIds,
+      defaultWorshipGroupIds,
+      permissionScope,
       dto,
     );
   }

@@ -34,7 +34,6 @@ import { WorshipGroupFilterGuard } from '../guard/worship-group-filter.guard';
 import { WorshipScopeGuard } from '../guard/worship-scope.guard';
 import { RequestWorship } from '../decorator/request-worship.decorator';
 import { WorshipModel } from '../entity/worship.entity';
-import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
 import {
   ApiDeleteWorship,
   ApiGetWorshipById,
@@ -44,7 +43,10 @@ import {
   ApiPostWorship,
   ApiRefreshWorshipCount,
 } from '../swagger/worship.swagger';
-import { PermissionScopeGroups } from '../decorator/permission-scope-groups.decorator';
+import { DefaultWorshipGroupIds } from '../decorator/default-worship-group-ids.decorator';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIds } from '../decorator/permission-scope-ids.decorator';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 
 @ApiTags('Worships')
 @Controller()
@@ -142,15 +144,15 @@ export class WorshipController {
     @Param('worshipId', ParseIntPipe) worshipId: number,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds: number[],
-    @PermissionScopeGroups() permissionScopeGroupIds: number[],
+    @DefaultWorshipGroupIds() defaultWorshipGroupIds: WorshipGroupIdsVo,
+    @PermissionScopeIds() permissionScopeIds: PermissionScopeIdsVo,
     @Query() dto: GetWorshipStatsDto,
   ) {
     return this.worshipService.getWorshipStatistics(
       church,
       worship,
-      defaultTargetGroupIds,
-      permissionScopeGroupIds,
+      defaultWorshipGroupIds,
+      permissionScopeIds,
       dto,
     );
   }

@@ -5,6 +5,7 @@ import { WorshipSessionModel } from '../../entity/worship-session.entity';
 import { GetWorshipSessionsDto } from '../../dto/request/worship-session/get-worship-sessions.dto';
 import { UpdateWorshipSessionDto } from '../../dto/request/worship-session/update-worship-session.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 export const IWORSHIP_SESSION_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_SESSION_DOMAIN_SERVICE',
@@ -70,8 +71,10 @@ export interface IWorshipSessionDomainService {
 
   findSessionCheckStatus(
     worship: WorshipModel,
-    intersectionGroupIds: number[] | undefined,
+    intersectionGroupIds: WorshipGroupIdsVo,
     from: Date,
     to: Date,
-  ): Promise<any>;
+  ): Promise<
+    { id: number; sessionDate: Date; completeAttendanceCheck: boolean }[]
+  >;
 }

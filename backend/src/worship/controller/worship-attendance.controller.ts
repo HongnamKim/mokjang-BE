@@ -41,6 +41,10 @@ import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/g
 import { WorshipTargetGroupIds } from '../decorator/worship-target-group-ids.decorator';
 import { UpdateWorshipAllAttendedDto } from '../dto/request/worship-attendance/update-worship-all-attended.dto';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
+import { DefaultWorshipGroupIds } from '../decorator/default-worship-group-ids.decorator';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIds } from '../decorator/permission-scope-ids.decorator';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 
 @ApiTags('Worships:Attendance')
 @Controller(':worshipId/sessions/:sessionId/attendances')
@@ -105,16 +109,16 @@ export class WorshipAttendanceController {
     @Query() query: GetWorshipAttendanceListDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds: number[],
-    @PermissionScopeGroups() permissionScopeGroupIds: number[],
+    @DefaultWorshipGroupIds() defaultWorshipGroupIds: WorshipGroupIdsVo,
+    @PermissionScopeIds() permissionScopeIds: PermissionScopeIdsVo,
   ) {
     return this.worshipAttendanceService.getAttendancesV2(
       church,
       worship,
       sessionId,
       query,
-      defaultTargetGroupIds,
-      permissionScopeGroupIds,
+      defaultWorshipGroupIds,
+      permissionScopeIds,
     );
   }
 
@@ -168,8 +172,8 @@ export class WorshipAttendanceController {
     @Body() dto: UpdateWorshipAllAttendedDto,
     @RequestChurch() church: ChurchModel,
     @RequestWorship() worship: WorshipModel,
-    @WorshipTargetGroupIds() defaultTargetGroupIds: number[],
-    @PermissionScopeGroups() permissionScopeGroupIds: number[],
+    @DefaultWorshipGroupIds() defaultWorshipGroupIds: WorshipGroupIdsVo,
+    @PermissionScopeIds() permissionScopeIds: PermissionScopeIdsVo,
     @QueryRunner() qr: QR,
   ) {
     return this.worshipAttendanceService.patchAllAttended(
@@ -177,8 +181,8 @@ export class WorshipAttendanceController {
       worship,
       sessionId,
       dto,
-      defaultTargetGroupIds,
-      permissionScopeGroupIds,
+      defaultWorshipGroupIds,
+      permissionScopeIds,
       qr,
     );
   }

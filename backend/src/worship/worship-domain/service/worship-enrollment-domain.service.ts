@@ -21,6 +21,7 @@ import { SimpleGroupDto } from '../../../management/groups/dto/simple-group.dto'
 import { SimpleOfficerDto } from '../../../management/officers/dto/simple-officer.dto';
 import { LowAttendanceMemberDto } from '../../../home/dto/low-attendance-member.dto';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 @Injectable()
 export class WorshipEnrollmentDomainService
@@ -96,25 +97,26 @@ export class WorshipEnrollmentDomainService
   async findEnrollmentsByQueryBuilder(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
-    groupIds?: number[],
+    groupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
     const qb = this.initEnrollmentQb(repository, worship.id);
 
-    if (groupIds?.length) {
-      qb.andWhere('member.groupId IN (:...groupIds)', { groupIds });
-    }
+    if (groupIds.groupIds.length && !groupIds.isAllGroups) {
+      // 조회 그룹 필터링
+      qb.andWhere(`member.groupId IN (:...groupIds)`, {
+        groupIds: groupIds.groupIds,
+      });
+    } else if (!groupIds.isAllGroups) {
+      // 그룹없는 사람 필터링
+      qb.andWhere(`member.groupId IS NULL`);
+    } // else 필터링 없는 경우
 
     this.applyOrderOption(qb, dto);
 
     qb.skip(dto.take * (dto.page - 1)).take(dto.take);
-
-    /*const [{ entities, raw }, totalCount] = await Promise.all([
-      qb.getRawAndEntities(),
-      qb.getCount(),
-    ]);*/
 
     const { entities, raw } = await qb.getRawAndEntities();
 
@@ -125,8 +127,6 @@ export class WorshipEnrollmentDomainService
         attendanceRate: rate,
       };
     });
-
-    //return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
   }
 
   async findAllEnrollments(
