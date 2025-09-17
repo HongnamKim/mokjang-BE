@@ -42,7 +42,10 @@ export interface IMembersDomainService {
     query: GetSimpleMemberListDto,
   ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
-  findAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<MemberModel[]>;
+  findAllMemberIds(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
 
   findRecommendLinkMember(
     church: ChurchModel,

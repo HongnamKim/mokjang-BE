@@ -1,10 +1,17 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, Min } from 'class-validator';
+import { IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateWorshipAllAttendedDto {
-  @ApiPropertyOptional({ description: '그룹 ID' })
+  @ApiPropertyOptional({ description: '그룹 ID', type: 'string' })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
+  //@IsNumber()
+  @Transform(({ value }) => {
+    if (value === null) {
+      return NaN;
+    }
+
+    return +value;
+  })
   groupId?: number;
 }

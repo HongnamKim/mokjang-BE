@@ -160,7 +160,8 @@ export class WorshipEnrollmentService {
       qr,
     );
 
-    const allMembers = await this.membersDomainService.findAllMembers(
+    // MemberModel 의 ID 만
+    const allMembers = await this.membersDomainService.findAllMemberIds(
       church,
       qr,
     );
