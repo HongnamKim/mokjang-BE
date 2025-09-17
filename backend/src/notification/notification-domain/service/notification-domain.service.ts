@@ -40,21 +40,20 @@ export class NotificationDomainService implements INotificationDomainService {
       .createQueryBuilder('notification')
       .leftJoin('notification.churchUser', 'churchUser')
       .where('churchUser.id = :churchUserId', { churchUserId: churchUser.id })
-      .orderBy('notification.isRead', 'ASC')
-      .addOrderBy('notification.id', 'DESC');
+      .orderBy('notification.id', 'DESC');
+
+    if (dto.unread) {
+      query.andWhere('notification.isRead IS FALSE');
+    }
 
     if (dto.cursor) {
       const decodedCursor = this.decodeCursor(dto.cursor);
 
-      const { id, value } = decodedCursor;
+      const { id } = decodedCursor;
 
-      query.andWhere(
-        `(notification.isRead = :value AND notification.id < :notificationId) OR (notification.isRead = true AND :value = false)`,
-        {
-          value,
-          notificationId: id,
-        },
-      );
+      query.andWhere(`notification.id < :notificationId`, {
+        notificationId: id,
+      });
     }
 
     const items = await query.limit(dto.limit + 1).getMany();
@@ -75,7 +74,6 @@ export class NotificationDomainService implements INotificationDomainService {
   private encodeCursor(notification: NotificationModel) {
     const cursorData = {
       id: notification.id,
-      value: notification.isRead,
     };
 
     return Buffer.from(JSON.stringify(cursorData)).toString('base64');
