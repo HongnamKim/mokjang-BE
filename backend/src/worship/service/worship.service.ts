@@ -134,7 +134,7 @@ export class WorshipService {
       qr,
     );
 
-    const allMembers = await this.membersDomainService.findAllMembers(
+    const allMembers = await this.membersDomainService.findAllMemberIds(
       church,
       qr,
     );
