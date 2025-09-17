@@ -23,21 +23,25 @@ import {
   IEducationSessionDomainService,
 } from '../../education-domain/interface/education-session-domain.service.interface';
 import { SessionAttendancePaginationResponseDto } from '../dto/response/session-attendance-pagination-response.dto';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
 import { UpdateAttendanceNoteDto } from '../dto/request/update-attendance-note.dto';
 import { PatchSessionAttendanceResponseDto } from '../dto/response/patch-session-attendance-response.dto';
 import { UpdateAttendancePresentDto } from '../dto/request/update-attendance-present.dto';
 import { SessionAttendanceException } from '../exception/session-attendance.exception';
 import { SessionAttendanceStatus } from '../const/session-attendance-status.enum';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../../../members/service/member-filter.service';
 
 @Injectable()
 export class SessionAttendanceService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
+
     @Inject(IEDUCATION_DOMAIN_SERVICE)
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
@@ -51,7 +55,7 @@ export class SessionAttendanceService {
   ) {}
 
   private async getSessionAttendanceModelById(
-    churchId: number,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
@@ -60,7 +64,7 @@ export class SessionAttendanceService {
     relationOptions?: FindOptionsRelations<SessionAttendanceModel>,
   ) {
     const { educationSession } = await this.getEducationInfo(
-      churchId,
+      church,
       educationId,
       educationTermId,
       educationSessionId,
@@ -76,17 +80,12 @@ export class SessionAttendanceService {
   }
 
   private async getEducationInfo(
-    churchId: number,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -116,14 +115,15 @@ export class SessionAttendanceService {
   }
 
   async getSessionAttendance(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     educationSessionId: number,
     dto: GetAttendanceDto,
   ) {
     const { educationSession } = await this.getEducationInfo(
-      churchId,
+      church,
       educationId,
       educationTermId,
       educationSessionId,
@@ -135,20 +135,44 @@ export class SessionAttendanceService {
         dto,
       );
 
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const members = data.map(
+      (attendance) => attendance.educationEnrollment.member,
+    );
+
+    const filteredMembers = this.memberFilterService.filterMembers(
+      requestManager,
+      members,
+      scope,
+    );
+
+    data.forEach((attendance) => {
+      const filteredMember = filteredMembers.find(
+        (m) => m.id === attendance.educationEnrollment.memberId,
+      );
+
+      if (filteredMember) {
+        attendance.educationEnrollment.member = filteredMember;
+      } else {
+        attendance.educationEnrollment.member.mobilePhone =
+          MemberFilterService.MASKING_TEXT;
+      }
+    });
+
     return new SessionAttendancePaginationResponseDto(data);
   }
 
   async bulkAttendance(
-    churchId: number,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     sessionId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -210,7 +234,7 @@ export class SessionAttendanceService {
   }
 
   async updateSessionAttendancePresent(
-    churchId: number,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     sessionId: number,
@@ -219,7 +243,7 @@ export class SessionAttendanceService {
     qr: QueryRunner,
   ) {
     const { educationSession } = await this.getEducationInfo(
-      churchId,
+      church,
       educationId,
       educationTermId,
       sessionId,
@@ -287,7 +311,7 @@ export class SessionAttendanceService {
   }
 
   async updateSessionAttendanceNote(
-    churchId: number,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     sessionId: number,
@@ -295,7 +319,7 @@ export class SessionAttendanceService {
     dto: UpdateAttendanceNoteDto,
   ) {
     const targetAttendance = await this.getSessionAttendanceModelById(
-      churchId,
+      church,
       educationId,
       educationTermId,
       sessionId,

@@ -23,10 +23,6 @@ import {
   IMEMBERS_DOMAIN_SERVICE,
   IMembersDomainService,
 } from '../../../members/member-domain/interface/members-domain.service.interface';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
 import { EducationEnrollmentStatus } from '../const/education-enrollment-status.enum';
 import { PostEducationEnrollmentsResponseDto } from '../dto/response/post-education-enrollments-response.dto';
 import {
@@ -46,6 +42,11 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { EducationTermNotificationService } from '../../education-term/service/education-term-notification.service';
 import { NotificationSourceEducationTerm } from '../../../notification/notification-event.dto';
 import { NotificationDomain } from '../../../notification/const/notification-domain.enum';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../../../members/service/member-filter.service';
 
 @Injectable()
 export class EducationEnrollmentService {
@@ -54,11 +55,11 @@ export class EducationEnrollmentService {
 
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
     @Inject(IEDUCATION_MEMBERS_DOMAIN_SERVICE)
     private readonly educationMembersDomainService: IEducationMembersDomainService,
 
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IEDUCATION_DOMAIN_SERVICE)
     private readonly educationDomainService: IEducationDomainService,
     @Inject(IEDUCATION_TERM_DOMAIN_SERVICE)
@@ -72,16 +73,13 @@ export class EducationEnrollmentService {
   ) {}
 
   async getNotEnrolledMembers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     dto: GetNotEnrolledMembersDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -103,20 +101,29 @@ export class EducationEnrollmentService {
         qr,
       );
 
-    return new NotEnrolledMembersPaginationResponseDto(members);
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+      qr,
+    );
+
+    const filteredMembers = this.memberFilterService.filterMembers(
+      requestManager,
+      members,
+      scope,
+    );
+
+    return new NotEnrolledMembersPaginationResponseDto(filteredMembers);
   }
 
   async getEducationEnrollments(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     educationId: number,
     educationTermId: number,
     dto: GetEducationEnrollmentDto,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,
@@ -136,6 +143,32 @@ export class EducationEnrollmentService {
         dto,
         qr,
       );
+
+    const members = data.map((enrollment) => enrollment.member);
+
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+      qr,
+    );
+
+    const filteredMembers = this.memberFilterService.filterMembers(
+      requestManager,
+      members,
+      scope,
+    );
+
+    data.forEach((enrollment) => {
+      const filteredMember = filteredMembers!.find(
+        (m) => m.id === enrollment.memberId,
+      );
+
+      if (!filteredMember) {
+        enrollment.member.mobilePhone = MemberFilterService.MASKING_TEXT;
+      } else {
+        enrollment.member = filteredMember;
+      }
+    });
 
     return new EducationEnrollmentPaginationResponseDto(data);
   }
@@ -226,17 +259,13 @@ export class EducationEnrollmentService {
   }
 
   async updateEducationEnrollment(
-    churchId: number,
+    church: ChurchModel,
     educationId: number,
     educationTermId: number,
     educationEnrollmentId: number,
     status: EducationEnrollmentStatus,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const education = await this.educationDomainService.findEducationModelById(
       church,
       educationId,

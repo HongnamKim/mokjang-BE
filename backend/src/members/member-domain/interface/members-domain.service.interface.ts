@@ -20,6 +20,7 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
+import { WorshipGroupIdsVo } from '../../../worship/vo/worship-group-ids.vo';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
@@ -156,4 +157,10 @@ export interface IMembersDomainService {
     dto: GetSimpleMembersDto,
     qr?: QueryRunner,
   ): Promise<MemberModel[]>;
+
+  getGroupMembersCount(
+    church: ChurchModel,
+    intersectionGroupIds: WorshipGroupIdsVo,
+    qr?: QueryRunner,
+  ): Promise<number>;
 }

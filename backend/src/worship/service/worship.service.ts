@@ -317,8 +317,6 @@ export class WorshipService {
     worship: WorshipModel,
     defaultWorshipGroupIds: WorshipGroupIdsVo,
     permissionScopeIds: PermissionScopeIdsVo,
-    //defaultWorshipTargetGroupIds: number[],
-    //permissionScopeGroupIds: number[],
     dto: GetWorshipStatsDto,
   ) {
     const requestGroupIds = await this.getRequestGroupIds(
@@ -336,7 +334,7 @@ export class WorshipService {
       intersectionGroupIds.groupIds.length === 0 &&
       !permissionScopeIds.isAllGroups
     ) {
-      return new GetWorshipStatsResponseDto(worship.id, 0, {
+      return new GetWorshipStatsResponseDto(worship.id, 0, 0, {
         overall: 0,
         period: 0,
       });
@@ -345,7 +343,7 @@ export class WorshipService {
     dto.utcFrom = getFromDate(dto.from, TIME_ZONE.SEOUL);
     dto.utcTo = getToDate(dto.to, TIME_ZONE.SEOUL);
 
-    const [worshipStats, customStats] = await Promise.all([
+    const [worshipStats, customStats, memberCount] = await Promise.all([
       // 전체 기간 출석률
       this.worshipAttendanceDomainService.getOverallAttendanceStats(
         worship,
@@ -358,10 +356,15 @@ export class WorshipService {
         dto.utcFrom,
         dto.utcTo,
       ),
+      this.membersDomainService.getGroupMembersCount(
+        church,
+        intersectionGroupIds,
+      ),
     ]);
 
     return new GetWorshipStatsResponseDto(
       worship.id,
+      memberCount,
       Math.round(worshipStats.attendanceCheckRate * 100) / 100,
       {
         overall: Math.round(worshipStats.overallRate * 100) / 100,

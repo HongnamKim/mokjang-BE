@@ -18,6 +18,9 @@ import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.mo
 import { EducationReportDomainModule } from '../report/education-report/education-report-domain/education-report-domain.module';
 import { EducationSessionNotificationService } from './education-session/service/education-session-notification.service';
 import { EducationTermNotificationService } from './education-term/service/education-term-notification.service';
+import { IMEMBER_FILTER_SERVICE } from '../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../members/service/member-filter.service';
+import { GroupsDomainModule } from '../management/groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -30,6 +33,7 @@ import { EducationTermNotificationService } from './education-term/service/educa
     MembersDomainModule,
     ChurchesDomainModule,
     ManagerDomainModule,
+    GroupsDomainModule,
     EducationDomainModule,
 
     EducationReportDomainModule,
@@ -53,6 +57,10 @@ import { EducationTermNotificationService } from './education-term/service/educa
     // 알림
     EducationSessionNotificationService,
     EducationTermNotificationService,
+    {
+      provide: IMEMBER_FILTER_SERVICE,
+      useClass: MemberFilterService,
+    },
   ],
   exports: [],
 })

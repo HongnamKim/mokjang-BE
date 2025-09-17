@@ -1,6 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationTermModel } from '../../entity/education-term.entity';
 import {
+  ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsDateString,
@@ -15,6 +16,7 @@ import { IsAfterDate } from '../../../../common/decorator/validator/is-after-dat
 import { IsBasicText } from '../../../../common/decorator/validator/is-no-special-char.validator';
 import { EducationTermConstraints } from '../../const/education-term.constraints';
 import { IsYYYYMMDD } from '../../../../common/decorator/validator/is-yyyy-mm-dd.validator';
+import { ReportException } from '../../../../report/exception/report.exception';
 
 @SanitizeDto()
 export class CreateEducationTermDto extends PickType(EducationTermModel, [
@@ -78,5 +80,6 @@ export class CreateEducationTermDto extends PickType(EducationTermModel, [
   @ArrayUnique()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
+  @ArrayMaxSize(30, { message: ReportException.EXCEED_RECEIVERS })
   receiverIds: number[];
 }

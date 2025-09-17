@@ -33,7 +33,7 @@ export class EducationMembersDomainService
   ): Promise<MemberModel[]> {
     const repository = this.getRepository(qr);
 
-    return repository
+    const query = repository
       .createQueryBuilder('member')
       .leftJoin('member.officer', 'officer')
       .leftJoin('member.group', 'group')
@@ -73,8 +73,12 @@ export class EducationMembersDomainService
           AND ee."educationTermId" = :educationTermId
           )`,
         { educationTermId: educationTerm.id },
-      )
-      .andWhere('member.name ILIKE :name', { name: `%${dto.name}%` })
+      );
+    if (dto.name) {
+      query.andWhere('member.name ILIKE :name', { name: `%${dto.name}%` });
+    }
+
+    return query
       .orderBy(`member.${dto.order}`, dto.orderDirection)
       .limit(dto.take)
       .offset(dto.take * (dto.page - 1))
