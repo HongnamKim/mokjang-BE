@@ -19,11 +19,9 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { VisitationReportException } from '../../exception/visitation-report.exception';
 import { UpdateVisitationReportDto } from '../../dto/update-visitation-report.dto';
 import { ChurchUserModel } from '../../../../church-user/entity/church-user.entity';
 import { MAX_RECEIVER_COUNT } from '../../../base-report/const/report.constraints';
-import { TaskReportException } from '../../../task-report/exception/task-report.exception';
 import { AddConflictExceptionV2 } from '../../../../common/exception/add-conflict.exception';
 import { RemoveConflictException } from '../../../../common/exception/remove-conflict.exception';
 import { differenceInDays } from 'date-fns';
@@ -38,6 +36,7 @@ import {
   VisitationReportsFindOptionsRelation,
   VisitationReportsFindOptionsSelect,
 } from '../../const/visitation-report-find-options.const';
+import { ReportException } from '../../../exception/report.exception';
 
 export class VisitationReportDomainService
   implements IVisitationReportDomainService
@@ -67,22 +66,25 @@ export class VisitationReportDomainService
     );
 
     if (oldReports.length + newReceivers.length > MAX_RECEIVER_COUNT) {
-      throw new ConflictException(VisitationReportException.EXCEED_RECEIVERS);
+      throw new ConflictException(ReportException.EXCEED_RECEIVERS);
     }
 
-    const failed: { receiverId: number; reason: string }[] = [];
+    const failed: { receiverName: string; reason: string }[] = [];
 
     for (const receiver of newReceivers) {
       if (oldReceiverIds.has(receiver.member.id)) {
         failed.push({
-          receiverId: receiver.member.id,
-          reason: TaskReportException.ALREADY_REPORTED_MEMBER,
+          receiverName: receiver.member.name,
+          reason: ReportException.ALREADY_REPORTED_MEMBER,
         });
       }
     }
 
     if (failed.length > 0) {
-      throw new AddConflictExceptionV2('피보고자 추가 실패', failed);
+      throw new AddConflictExceptionV2(
+        ReportException.FAIL_ADD_REPORT_RECEIVERS,
+        failed,
+      );
     }
 
     const reports = newReceivers.map((receiver) =>
@@ -144,7 +146,7 @@ export class VisitationReportDomainService
     });
 
     if (!report) {
-      throw new NotFoundException(VisitationReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     return report;
@@ -168,17 +170,13 @@ export class VisitationReportDomainService
     });
 
     if (!report) {
-      throw new NotFoundException(VisitationReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     if (isRead) {
       report.isRead = true;
       await repository.save(report);
     }
-
-    /*isRead && (report.isRead = true);
-
-    isRead && repository.save(report);*/
 
     return report;
   }
@@ -198,9 +196,7 @@ export class VisitationReportDomainService
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        VisitationReportException.UPDATE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.UPDATE_ERROR);
     }
 
     return result;
@@ -215,9 +211,7 @@ export class VisitationReportDomainService
     const result = await repository.softDelete({ id: visitationReport.id });
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        VisitationReportException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;
@@ -253,7 +247,7 @@ export class VisitationReportDomainService
 
     if (notExistReceiverIds.length > 0) {
       throw new RemoveConflictException(
-        VisitationReportException.NOT_EXIST_REPORTED_MEMBER,
+        ReportException.NOT_EXIST_REPORTED_MEMBER,
         notExistReceiverIds,
       );
     }
@@ -264,9 +258,7 @@ export class VisitationReportDomainService
     });
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        VisitationReportException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;

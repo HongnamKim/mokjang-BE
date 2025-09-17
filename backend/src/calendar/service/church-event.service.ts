@@ -1,10 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateChurchEventDto } from '../dto/request/event/create-church-event.dto';
 import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
   ICHURCH_EVENT_DOMAIN_SERVICE,
   IChurchEventDomainService,
 } from '../calendar-domain/interface/church-event-domain.service.interface';
@@ -14,20 +10,16 @@ import { GetChurchEventResponseDto } from '../dto/response/event/get-church-even
 import { UpdateChurchEventDto } from '../dto/request/event/update-church-event.dto';
 import { PatchChurchEventResponseDto } from '../dto/response/event/patch-church-event-response.dto';
 import { DeleteChurchEventResponseDto } from '../dto/response/event/delete-church-event-response.dto';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class ChurchEventService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(ICHURCH_EVENT_DOMAIN_SERVICE)
     private readonly churchEventDomainService: IChurchEventDomainService,
   ) {}
 
-  async getChurchEvents(churchId: number, dto: GetChurchEventsDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getChurchEvents(church: ChurchModel, dto: GetChurchEventsDto) {
     const events = await this.churchEventDomainService.findChurchEvents(
       church,
       dto,
@@ -36,20 +28,14 @@ export class ChurchEventService {
     return new GetChurchEventResponseDto(events);
   }
 
-  async postChurchEvent(churchId: number, dto: CreateChurchEventDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async postChurchEvent(church: ChurchModel, dto: CreateChurchEventDto) {
     const newChurchEvent =
       await this.churchEventDomainService.createChurchEvent(church, dto);
 
     return new PostChurchEventResponseDto(newChurchEvent);
   }
 
-  async getChurchEventById(churchId: number, eventId: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getChurchEventById(church: ChurchModel, eventId: number) {
     const event = await this.churchEventDomainService.findChurchEventById(
       church,
       eventId,
@@ -59,13 +45,10 @@ export class ChurchEventService {
   }
 
   async patchChurchEvent(
-    churchId: number,
+    church: ChurchModel,
     eventId: number,
     dto: UpdateChurchEventDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const event = await this.churchEventDomainService.findChurchEventModelById(
       church,
       eventId,
@@ -79,10 +62,7 @@ export class ChurchEventService {
     return new PatchChurchEventResponseDto(updatedEvent);
   }
 
-  async deleteChurchEvent(churchId: number, eventId: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async deleteChurchEvent(church: ChurchModel, eventId: number) {
     const event = await this.churchEventDomainService.findChurchEventModelById(
       church,
       eventId,

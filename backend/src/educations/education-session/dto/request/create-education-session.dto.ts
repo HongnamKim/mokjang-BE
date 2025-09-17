@@ -1,6 +1,7 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { EducationSessionModel } from '../../entity/education-session.entity';
 import {
+  ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsDateString,
@@ -18,6 +19,7 @@ import { IsAfterDate } from '../../../../common/decorator/validator/is-after-dat
 import { IsOptionalNotNull } from '../../../../common/decorator/validator/is-optional-not.null.validator';
 import { PlainTextMaxLength } from '../../../../common/decorator/validator/plain-text-max-length.validator';
 import { IsDateTime } from '../../../../common/decorator/validator/is-date-time.validator';
+import { ReportException } from '../../../../report/exception/report.exception';
 
 @SanitizeDto()
 export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
@@ -82,5 +84,6 @@ export class CreateEducationSessionDto extends PickType(EducationSessionModel, [
   @ArrayUnique()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
+  @ArrayMaxSize(30, { message: ReportException.EXCEED_RECEIVERS })
   receiverIds: number[];
 }

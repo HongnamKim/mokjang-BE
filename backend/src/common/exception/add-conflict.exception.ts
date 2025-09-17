@@ -15,7 +15,7 @@ export class AddConflictException extends ConflictException {
 export class AddConflictExceptionV2 extends ConflictException {
   constructor(
     message: string,
-    conflicts: { receiverId: number; reason: string }[],
+    conflicts: { receiverName: string; reason: string }[],
   ) {
     super({
       message,

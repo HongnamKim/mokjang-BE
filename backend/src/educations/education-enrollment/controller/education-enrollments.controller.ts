@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -25,6 +26,9 @@ import { RequestChurch } from '../../../permission/decorator/request-church.deco
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { UseTransaction } from '../../../common/decorator/use-transaction.decorator';
 
 @ApiTags('Educations:Enrollments')
 @Controller('educations/:educationId/terms/:educationTermId/enrollments')
@@ -39,10 +43,13 @@ export class EducationEnrollmentsController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetEducationEnrollmentDto,
   ) {
     return this.educationEnrollmentsService.getEducationEnrollments(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       dto,
@@ -51,7 +58,7 @@ export class EducationEnrollmentsController {
 
   @EducationWriteGuard()
   @Post()
-  @UseInterceptors(TransactionInterceptor)
+  @UseTransaction()
   postEducationEnrollment(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
@@ -73,14 +80,18 @@ export class EducationEnrollmentsController {
   }
 
   @Get('not-enrolled-members')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getNotEnrolledMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetNotEnrolledMembersDto,
   ) {
     return this.educationEnrollmentsService.getNotEnrolledMembers(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       dto,
@@ -95,11 +106,12 @@ export class EducationEnrollmentsController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('educationEnrollmentId', ParseIntPipe) educationEnrollmentId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateEducationEnrollmentDto,
     @QueryRunner() qr: QR,
   ) {
     return this.educationEnrollmentsService.updateEducationEnrollment(
-      churchId,
+      church,
       educationId,
       educationTermId,
       educationEnrollmentId,

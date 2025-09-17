@@ -34,6 +34,8 @@ import {
 } from '../const/swagger/church-join.swagger';
 import { ChurchJoinReadGuard } from '../guard/church-join-read.guard';
 import { ChurchJoinWriteGuard } from '../guard/church-join-write.guard';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Churches:Join')
 @Controller('churches')
@@ -61,18 +63,20 @@ export class ChurchJoinController {
   @ChurchJoinReadGuard()
   getChurchJoinRequests(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetJoinRequestDto,
   ) {
-    return this.churchJoinRequestService.getChurchJoinRequests(churchId, dto);
+    return this.churchJoinRequestService.getChurchJoinRequests(church, dto);
   }
 
   @Get(':churchId/join/recommend-link-member')
   @ChurchJoinWriteGuard()
   getRecommendLinkMember(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetRecommendLinkMemberDto,
   ) {
-    return this.churchJoinRequestService.getRecommendLinkMember(churchId, dto);
+    return this.churchJoinRequestService.getRecommendLinkMember(church, dto);
   }
 
   @ApiApproveChurchJoinRequest()
@@ -82,11 +86,12 @@ export class ChurchJoinController {
   approveChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: ApproveJoinRequestDto,
     @QueryRunner() qr: QR,
   ) {
     return this.churchJoinRequestService.approveChurchJoinRequest(
-      churchId,
+      church,
       joinId,
       dto,
       qr,
@@ -99,9 +104,10 @@ export class ChurchJoinController {
   rejectChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
     return this.churchJoinRequestService.rejectChurchJoinRequest(
-      churchId,
+      church,
       joinId,
     );
   }
@@ -112,9 +118,10 @@ export class ChurchJoinController {
   deleteChurchJoinRequest(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('joinId', ParseIntPipe) joinId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
     return this.churchJoinRequestService.deleteChurchJoinRequest(
-      churchId,
+      church,
       joinId,
     );
   }

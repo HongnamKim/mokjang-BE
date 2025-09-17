@@ -1,6 +1,8 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { TaskModel } from '../../entity/task.entity';
 import {
+  ArrayMaxSize,
+  ArrayUnique,
   IsArray,
   IsDateString,
   IsEnum,
@@ -16,8 +18,8 @@ import { RemoveSpaces } from '../../../common/decorator/transformer/remove-space
 import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator';
 import { TaskStatus } from '../../const/task-status.enum';
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
-import { Transform } from 'class-transformer';
 import { IsDateTime } from '../../../common/decorator/validator/is-date-time.validator';
+import { ReportException } from '../../../report/exception/report.exception';
 
 @SanitizeDto()
 export class CreateTaskDto extends PickType(TaskModel, [
@@ -97,8 +99,10 @@ export class CreateTaskDto extends PickType(TaskModel, [
   })
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) => Array.from(new Set(value)))
+  //@Transform(({ value }) => Array.from(new Set(value)))
+  @ArrayUnique()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
+  @ArrayMaxSize(30, { message: ReportException.EXCEED_RECEIVERS })
   receiverIds: number[];
 }

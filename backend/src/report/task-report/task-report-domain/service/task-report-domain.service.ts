@@ -19,7 +19,6 @@ import {
 import { ITaskReportDomainService } from '../interface/task-report-domain.service.interface';
 import { TaskModel } from '../../../../task/entity/task.entity';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { TaskReportException } from '../../exception/task-report.exception';
 import { GetTaskReportDto } from '../../dto/get-task-report.dto';
 import { MAX_RECEIVER_COUNT } from '../../../base-report/const/report.constraints';
 import { AddConflictExceptionV2 } from '../../../../common/exception/add-conflict.exception';
@@ -37,6 +36,7 @@ import {
   TaskReportsFindOptionsRelation,
   TaskReportsFindOptionsSelect,
 } from '../../const/task-report-find-options.const';
+import { ReportException } from '../../../exception/report.exception';
 
 @Injectable()
 export class TaskReportDomainService implements ITaskReportDomainService {
@@ -58,29 +58,36 @@ export class TaskReportDomainService implements ITaskReportDomainService {
   ) {
     const repository = this.getTaskReportRepository(qr);
 
-    const oldReports = await repository.find({ where: { taskId: task.id } });
+    const oldReports = await repository.find({
+      where: { taskId: task.id },
+      select: { receiverId: true },
+    });
+
     const oldReceiverIds = new Set(
       oldReports.map((report) => report.receiverId),
     );
 
     if (oldReports.length + receivers.length > MAX_RECEIVER_COUNT) {
-      throw new ConflictException(TaskReportException.EXCEED_RECEIVERS);
+      throw new ConflictException(ReportException.EXCEED_RECEIVERS);
     }
 
-    const failed: { receiverId: number; reason: string }[] = [];
+    const failed: { receiverName: string; reason: string }[] = [];
 
     // 피보고자 중복 체크
     for (const receiver of receivers) {
       if (oldReceiverIds.has(receiver.member.id)) {
         failed.push({
-          receiverId: receiver.member.id,
-          reason: TaskReportException.ALREADY_REPORTED_MEMBER,
+          receiverName: receiver.member.name,
+          reason: ReportException.ALREADY_REPORTED_MEMBER,
         });
       }
     }
 
     if (failed.length > 0) {
-      throw new AddConflictExceptionV2('피보고자 추가 실패', failed);
+      throw new AddConflictExceptionV2(
+        ReportException.FAIL_ADD_REPORT_RECEIVERS,
+        failed,
+      );
     }
 
     const reports = receivers.map((receiver) =>
@@ -144,7 +151,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     });
 
     if (!report) {
-      throw new NotFoundException(TaskReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     if (checkIsRead) {
@@ -172,7 +179,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     });
 
     if (!task) {
-      throw new NotFoundException(TaskReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     return task;
@@ -195,7 +202,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(TaskReportException.UPDATE_ERROR);
+      throw new InternalServerErrorException(ReportException.UPDATE_ERROR);
     }
 
     return result;
@@ -207,7 +214,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     const result = await repository.softDelete({ id: taskReport.id });
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(TaskReportException.DELETE_ERROR);
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;
@@ -242,7 +249,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
 
     if (notExistReceiverIds.length > 0) {
       throw new RemoveConflictException(
-        TaskReportException.NOT_EXIST_REPORTED_MEMBER,
+        ReportException.NOT_EXIST_REPORTED_MEMBER,
         notExistReceiverIds,
       );
     }
@@ -253,7 +260,7 @@ export class TaskReportDomainService implements ITaskReportDomainService {
     });
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(TaskReportException.DELETE_ERROR);
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;

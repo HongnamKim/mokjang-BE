@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayUnique, IsArray, IsNumber, Min } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
+  IsNumber,
+  Min,
+} from 'class-validator';
+import { ReportException } from '../../../../../report/exception/report.exception';
 
 export class AddEducationTermReportDto {
   @ApiProperty({
@@ -10,5 +17,6 @@ export class AddEducationTermReportDto {
   @ArrayUnique()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
+  @ArrayMaxSize(30, { message: ReportException.EXCEED_RECEIVERS })
   receiverIds: number[];
 }

@@ -25,11 +25,11 @@ import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { WorshipAttendanceException } from '../../exception/worship-attendance.exception';
 import {
   MemberSimpleSelect,
-  MemberSimpleSelectQB,
   MemberSummarizedGroupSelectQB,
   MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
+  MemberSummarizedSelectQB,
 } from '../../../members/const/member-find-options.const';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
 import { WorshipAttendanceOrder } from '../../const/worship-attendance-order.enum';
@@ -40,7 +40,6 @@ import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetMemberWorshipAttendancesDto } from '../../../members/dto/request/worship/get-member-worship-attendances.dto';
-import { session } from 'passport';
 import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 @Injectable()
@@ -108,7 +107,7 @@ export class WorshipAttendanceDomainService
       .leftJoin('attendance.worshipEnrollment', 'enrollment')
       .addSelect(['enrollment.id'])
       .leftJoin('enrollment.member', 'member')
-      .addSelect(MemberSimpleSelectQB)
+      .addSelect(MemberSummarizedSelectQB)
       .leftJoin('member.group', 'group')
       .addSelect(MemberSummarizedGroupSelectQB)
       .leftJoin('member.officer', 'officer')
@@ -621,12 +620,11 @@ export class WorshipAttendanceDomainService
     requestGroupIds: WorshipGroupIdsVo,
     from: Date,
     to: Date | undefined,
-  ): Promise<{ rate: number; attendanceCheckRate: number }> {
+  ): Promise<{
+    rate: number;
+    attendanceCheckRate: number;
+  }> {
     const repository = this.getRepository();
-
-    // const lastWorshipDate = getRecentSessionDate(worship, TIME_ZONE.SEOUL);
-    // const fourWeeksAgo = subWeeks(lastWorshipDate, 4);
-    // const twelveWeeksAgo = subWeeks(lastWorshipDate, 12);
 
     const statsQuery = (from: Date, to?: Date) => {
       const query = repository

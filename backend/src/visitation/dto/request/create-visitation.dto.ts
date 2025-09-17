@@ -22,6 +22,8 @@ import { SanitizeDto } from '../../../common/decorator/sanitize-target.decorator
 import { IsAfterDate } from '../../../common/decorator/validator/is-after-date.decorator';
 import { IsNoSpecialChar } from '../../../common/decorator/validator/is-no-special-char.validator';
 import { IsDateTime } from '../../../common/decorator/validator/is-date-time.validator';
+import { VisitationException } from '../../const/exception/visitation.exception';
+import { ReportException } from '../../../report/exception/report.exception';
 
 @SanitizeDto()
 export class CreateVisitationDto {
@@ -78,6 +80,7 @@ export class CreateVisitationDto {
   @IsArray()
   @ArrayUnique()
   @ArrayMinSize(1)
+  @ArrayMaxSize(30, { message: VisitationException.EXCEED_VISITATION_MEMBER })
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
   memberIds: number[];
@@ -102,5 +105,6 @@ export class CreateVisitationDto {
   @IsArray()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
+  @ArrayMaxSize(30, { message: ReportException.EXCEED_RECEIVERS })
   receiverIds?: number[];
 }
