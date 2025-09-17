@@ -45,10 +45,6 @@ export const MemberSimpleSelect: FindOptionsSelect<MemberModel> = {
   name: true,
   profileImageUrl: true,
   registeredAt: true,
-  //mobilePhone: true,
-  //birth: true,
-  //isLunar: true,
-  //isLeafMonth: true,
   officer: {
     id: true,
     name: true,
@@ -65,11 +61,7 @@ export const MemberSimpleSelectQB: string[] = [
   'member.id',
   'member.name',
   'member.profileImageUrl',
-  //'member.mobilePhone',
   'member.registeredAt',
-  //'member.birth',
-  //'member.isLunar',
-  //'member.isLeafMonth',
   'member.groupRole',
   'member.ministryGroupRole',
 ];
@@ -108,24 +100,12 @@ export const InChargeSummarizedSelectQB: string[] = [
   'inCharge.id',
   'inCharge.name',
   'inCharge.profileImageUrl',
-  //'inCharge.mobilePhone',
-  //'inCharge.registeredAt',
-  //'inCharge.birth',
-  //'inCharge.isLunar',
-  //'inCharge.isLeafMonth',
-  //'inCharge.groupRole',
-  //'inCharge.ministryGroupRole',
 ];
 
 export const InChargeSummarizedSelect: FindOptionsSelect<MemberModel> = {
   id: true,
   name: true,
   profileImageUrl: true,
-  //registeredAt: true,
-  //mobilePhone: true,
-  //birth: true,
-  //isLunar: true,
-  //isLeafMonth: true,
   officer: {
     id: true,
     name: true,
@@ -142,24 +122,12 @@ export const ReceiverSummarizedSelectQB: string[] = [
   'receiver.id',
   'receiver.name',
   'receiver.profileImageUrl',
-  //'receiver.mobilePhone',
-  //'receiver.registeredAt',
-  //'receiver.birth',
-  //'receiver.isLunar',
-  //'receiver.isLeafMonth',
-  //'receiver.groupRole',
-  //'receiver.ministryGroupRole',
 ];
 
 export const ReceiverSummarizedSelect: FindOptionsSelect<MemberModel> = {
   id: true,
   name: true,
   profileImageUrl: true,
-  //registeredAt: true,
-  //mobilePhone: true,
-  //birth: true,
-  //isLunar: true,
-  //isLeafMonth: true,
   officer: {
     id: true,
     name: true,

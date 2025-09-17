@@ -36,7 +36,7 @@ import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-r
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GroupRole } from '../../const/group-role.enum';
-import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {

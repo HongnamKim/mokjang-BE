@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
+import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
+import { ReportException } from '../../../exception/report.exception';
 
 export class AddTaskReportReceiverDto {
   @ApiProperty({
@@ -10,8 +17,10 @@ export class AddTaskReportReceiverDto {
   })
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) => Array.from(new Set(value)))
+  //@Transform(({ value }) => Array.from(new Set(value)))
+  @ArrayUnique()
   @IsNumber({}, { each: true })
   @Min(1, { each: true })
+  @ArrayMaxSize(30, { message: ReportException.EXCEED_RECEIVERS })
   receiverIds: number[];
 }

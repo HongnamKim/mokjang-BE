@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
@@ -28,6 +29,11 @@ import {
 } from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { VisitationException } from '../const/exception/visitation.exception';
+import {
+  IMEMBERS_DOMAIN_SERVICE,
+  IMembersDomainService,
+} from '../../members/member-domain/interface/members-domain.service.interface';
+import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
 
 @Injectable()
 export class VisitationScopeGuard implements CanActivate {
@@ -36,6 +42,8 @@ export class VisitationScopeGuard implements CanActivate {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
+    @Inject(IMEMBERS_DOMAIN_SERVICE)
+    private readonly membersDomainService: IMembersDomainService,
     @Inject(IVISITATION_META_DOMAIN_SERVICE)
     private readonly visitationDomainService: IVisitationMetaDomainService,
     @Inject(IGROUPS_DOMAIN_SERVICE)
@@ -104,9 +112,61 @@ export class VisitationScopeGuard implements CanActivate {
     const requestManager = await this.getRequestManager(req, church);
 
     const visitationId = parseInt(req.params.visitationId);
+    let memberId: number | undefined;
+
+    if (req.query.memberId) {
+      const value = req.query.memberId as string;
+
+      memberId = +value;
+
+      if (Number.isNaN(memberId)) {
+        throw new BadRequestException('invalid memberId');
+      }
+    } else {
+      memberId = undefined;
+    }
 
     // 목록 조회 시 검증 X
-    if (!visitationId) {
+    if (!visitationId && !memberId) {
+      return true;
+    }
+
+    // 소유자
+    if (requestManager.role === ChurchUserRole.OWNER) {
+      return true;
+    } else {
+      // 전체 권한 범위
+      if (requestManager.permissionScopes.some((scope) => scope.isAllGroups))
+        return true;
+    }
+
+    // 요청자의 권한 범위 내 모든 그룹 ID
+    const permissionGroupIds = await this.getPermissionScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const permissionGroupIdsSet = new Set(permissionGroupIds);
+
+    // 특정 교인의 심방 목록 조회 시
+    if (!visitationId && memberId) {
+      const member = await this.membersDomainService.findMemberModelById(
+        church,
+        memberId,
+      );
+
+      if (member.groupId === null) {
+        throw new ForbiddenException(
+          PermissionScopeException.OUT_OF_SCOPE_MEMBER,
+        );
+      }
+
+      if (!permissionGroupIdsSet.has(member.groupId)) {
+        throw new ForbiddenException(
+          PermissionScopeException.OUT_OF_SCOPE_MEMBER,
+        );
+      }
+
       return true;
     }
 
@@ -118,15 +178,6 @@ export class VisitationScopeGuard implements CanActivate {
       );
 
     req.targetVisitation = targetVisitation;
-
-    // 소유자
-    if (requestManager.role === ChurchUserRole.OWNER) {
-      return true;
-    } else {
-      // 전체 권한 범위
-      if (requestManager.permissionScopes.some((scope) => scope.isAllGroups))
-        return true;
-    }
 
     // 심방 대상 교인들
     const members = targetVisitation.members;
@@ -142,14 +193,6 @@ export class VisitationScopeGuard implements CanActivate {
         VisitationException.OUT_OF_SCOPE_MEMBER_INCLUDE,
       );
     }
-
-    // 요청자의 권한 범위 내 모든 그룹 ID
-    const permissionGroupIds = await this.getPermissionScopeGroupIds(
-      church,
-      requestManager,
-    );
-
-    const permissionGroupIdsSet = new Set(permissionGroupIds);
 
     // 심방 대상 교인들의 그룹이 권한 범위 내에 속하는지 확인
     let isAllowed: boolean = true;

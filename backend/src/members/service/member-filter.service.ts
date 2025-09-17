@@ -19,6 +19,8 @@ export class MemberFilterService implements IMemberFilterService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
+  static MASKING_TEXT = 'CONCEALED';
+
   filterMember(
     requestManager: ChurchUserModel,
     member: MemberModel,
@@ -74,13 +76,14 @@ export class MemberFilterService implements IMemberFilterService {
       'groupHistory',
       'ministryGroupHistory',
       'officerHistory',
+      'educationEnrollments',
     ]);
 
     for (const key of Object.keys(member)) {
       if (openInfo.has(key)) {
         continue;
       }
-      member[key] = 'CONCEALED';
+      member[key] = MemberFilterService.MASKING_TEXT;
     }
 
     return member;

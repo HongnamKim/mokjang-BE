@@ -54,6 +54,7 @@ import {
 } from '../../../member-history/history-date.utils';
 import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
 import { GetMemberDto } from '../../dto/request/get-member.dto';
+import { WorshipGroupIdsVo } from '../../../worship/vo/worship-group-ids.vo';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -1077,6 +1078,31 @@ export class MembersDomainService implements IMembersDomainService {
         },
         groupRole: true,
         ministryGroupRole: true,
+      },
+    });
+  }
+
+  getGroupMembersCount(
+    church: ChurchModel,
+    requestGroupIds: WorshipGroupIdsVo,
+    qr?: QueryRunner,
+  ): Promise<number> {
+    const repository = this.getMembersRepository(qr);
+
+    let groupId: any;
+
+    if (requestGroupIds.groupIds.length && !requestGroupIds.isAllGroups) {
+      groupId = In(requestGroupIds.groupIds);
+    } else if (!requestGroupIds.isAllGroups) {
+      groupId = IsNull();
+    } else {
+      groupId = undefined;
+    }
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+        groupId: groupId,
       },
     });
   }
