@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { WorshipAttendanceService } from '../service/worship-attendance.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetWorshipAttendancesDto } from '../dto/request/worship-attendance/get-worship-attendances.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
@@ -53,7 +53,8 @@ export class WorshipAttendanceController {
     private readonly worshipAttendanceService: WorshipAttendanceService,
   ) {}
 
-  @ApiGetWorshipAttendance()
+  //@ApiGetWorshipAttendance()
+  @ApiOperation({ deprecated: true })
   @Get()
   @UseGuards(
     AccessTokenGuard,

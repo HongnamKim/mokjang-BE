@@ -85,18 +85,31 @@ export class WorshipGroupFilterGuard implements CanActivate {
     if (req.query.groupId) {
       // 쿼리 파라미터
       requestGroupId = +(req.query.groupId as string); // number | NaN
-    } else if (req.body.groupId) {
-      // 요청 본문
-      requestGroupId = +(req.body.groupId as string); // number | NaN
+
+      if (Number.isNaN(requestGroupId)) {
+        if (req.query.groupId !== 'null') {
+          throw new BadRequestException();
+        }
+      }
+    } else if (req.body.groupId !== undefined) {
+      const value = req.body.groupId;
+
+      if (value === null) {
+        // 요청 본문에 null 을 넣은 경우
+        requestGroupId = NaN;
+      } else {
+        // 요청 본문에 숫자 or "null" 을 넣은 경우
+        requestGroupId = +(req.body.groupId as string); // number | NaN
+
+        if (Number.isNaN(requestGroupId)) {
+          if (value !== 'null') {
+            throw new BadRequestException();
+          }
+        }
+      }
     } else {
       // 필터링 없을 때
       requestGroupId = undefined;
-    }
-
-    if (Number.isNaN(requestGroupId)) {
-      if (req.query.groupId !== 'null') {
-        throw new BadRequestException();
-      }
     }
 
     const rootTargetGroupIds = worship.worshipTargetGroups.map(

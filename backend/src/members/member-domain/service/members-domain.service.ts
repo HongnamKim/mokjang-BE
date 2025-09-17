@@ -151,12 +151,15 @@ export class MembersDomainService implements IMembersDomainService {
     return query.getMany();
   }
 
-  async findAllMembers(church: ChurchModel, qr?: QueryRunner) {
+  async findAllMemberIds(church: ChurchModel, qr?: QueryRunner) {
     const repository = this.getMembersRepository(qr);
 
     return repository.find({
       where: {
         churchId: church.id,
+      },
+      select: {
+        id: true,
       },
       order: {
         id: 'asc',

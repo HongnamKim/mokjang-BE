@@ -145,6 +145,7 @@ export class WorshipEnrollmentDomainService
       },
       select: {
         id: true,
+        memberId: true,
       },
     });
   }
