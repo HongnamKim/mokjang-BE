@@ -11,6 +11,7 @@ import {
   FindOptionsOrder,
   FindOptionsRelations,
   In,
+  IsNull,
   LessThanOrEqual,
   MoreThanOrEqual,
   QueryRunner,
@@ -18,7 +19,7 @@ import {
   UpdateResult,
 } from 'typeorm';
 import { MemberModel } from '../../../../members/entity/member.entity';
-import { EducationReportException } from '../../exception/education-report.exception';
+//import { EducationReportException } from '../../exception/education-report.exception';
 import { ChurchUserModel } from '../../../../church-user/entity/church-user.entity';
 import { differenceInDays } from 'date-fns';
 import {
@@ -39,6 +40,9 @@ import {
 import { EducationReportType } from '../../const/education-report-type.enum';
 import { GetEducationTermReportsDto } from '../../dto/term/request/get-education-term-reports.dto';
 import { BaseReportFindOptionsSelect } from '../../../base-report/const/base-report-find-options.const';
+import { MAX_RECEIVER_COUNT } from '../../../base-report/const/report.constraints';
+import { ReportException } from '../../../exception/report.exception';
+import { AddConflictExceptionV2 } from '../../../../common/exception/add-conflict.exception';
 
 @Injectable()
 export class EducationReportDomainService
@@ -145,19 +149,39 @@ export class EducationReportDomainService
   ) {
     const repository = this.getRepository(qr);
 
-    const receiverIds = receivers.map((receiver) => receiver.memberId);
-
-    const alreadyReported = await repository.find({
+    const oldReports = await repository.find({
       where: {
         educationSessionId: educationSession.id,
-        receiverId: In(receiverIds),
         educationReportType: EducationReportType.SESSION,
+      },
+      select: {
+        receiverId: true,
       },
     });
 
-    if (alreadyReported.length > 0) {
-      throw new ConflictException(
-        EducationReportException.FAIL_ADD_REPORT_RECEIVERS,
+    const oldReceiverIds = new Set(
+      oldReports.map((oldReport) => oldReport.receiverId),
+    );
+
+    if (oldReports.length + receivers.length > MAX_RECEIVER_COUNT) {
+      throw new ConflictException(ReportException.EXCEED_RECEIVERS);
+    }
+
+    const failed: { receiverName: string; reason: string }[] = [];
+
+    for (const receiver of receivers) {
+      if (oldReceiverIds.has(receiver.member.id)) {
+        failed.push({
+          receiverName: receiver.member.name,
+          reason: ReportException.ALREADY_REPORTED_MEMBER,
+        });
+      }
+    }
+
+    if (failed.length > 0) {
+      throw new AddConflictExceptionV2(
+        ReportException.FAIL_ADD_REPORT_RECEIVERS,
+        failed,
       );
     }
 
@@ -185,19 +209,39 @@ export class EducationReportDomainService
   ) {
     const repository = this.getRepository(qr);
 
-    const receiverIds = newReceivers.map((receiver) => receiver.memberId);
-
-    const alreadyReported = await repository.find({
+    const oldReports = await repository.find({
       where: {
         educationTermId: educationTerm.id,
-        receiverId: In(receiverIds),
         educationReportType: EducationReportType.TERM,
+      },
+      select: {
+        receiverId: true,
       },
     });
 
-    if (alreadyReported.length > 0) {
-      throw new ConflictException(
-        EducationReportException.FAIL_ADD_REPORT_RECEIVERS,
+    const oldReceiverIds = new Set(
+      oldReports.map((oldReport) => oldReport.receiverId),
+    );
+
+    if (oldReports.length + newReceivers.length > MAX_RECEIVER_COUNT) {
+      throw new ConflictException(ReportException.EXCEED_RECEIVERS);
+    }
+
+    const failed: { receiverName: string; reason: string }[] = [];
+
+    for (const receiver of newReceivers) {
+      if (oldReceiverIds.has(receiver.member.id)) {
+        failed.push({
+          receiverName: receiver.member.name,
+          reason: ReportException.ALREADY_REPORTED_MEMBER,
+        });
+      }
+    }
+
+    if (failed.length > 0) {
+      throw new AddConflictExceptionV2(
+        ReportException.FAIL_ADD_REPORT_RECEIVERS,
+        failed,
       );
     }
 
@@ -233,7 +277,7 @@ export class EducationReportDomainService
     });
 
     if (!report) {
-      throw new NotFoundException(EducationReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     return report;
@@ -257,7 +301,7 @@ export class EducationReportDomainService
     });
 
     if (!report) {
-      throw new NotFoundException(EducationReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     return report;
@@ -282,7 +326,7 @@ export class EducationReportDomainService
     });
 
     if (!report) {
-      throw new NotFoundException(EducationReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     // 읽음 처리
@@ -331,7 +375,7 @@ export class EducationReportDomainService
     });
 
     if (!report) {
-      throw new NotFoundException(EducationReportException.NOT_FOUND);
+      throw new NotFoundException(ReportException.NOT_FOUND);
     }
 
     if (checkIsRead) {
@@ -360,9 +404,7 @@ export class EducationReportDomainService
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        EducationReportException.UPDATE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.UPDATE_ERROR);
     }
 
     return result;
@@ -386,9 +428,7 @@ export class EducationReportDomainService
     );
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        EducationReportException.UPDATE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.UPDATE_ERROR);
     }
 
     return result;
@@ -430,9 +470,7 @@ export class EducationReportDomainService
     });
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        EducationReportException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;
@@ -450,9 +488,7 @@ export class EducationReportDomainService
     });
 
     if (result.affected === 0) {
-      throw new InternalServerErrorException(
-        EducationReportException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;
@@ -472,9 +508,7 @@ export class EducationReportDomainService
     });
 
     if (result.affected !== targetReports.length) {
-      throw new InternalServerErrorException(
-        EducationReportException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;
@@ -494,9 +528,7 @@ export class EducationReportDomainService
     });
 
     if (result.affected !== targetReports.length) {
-      throw new InternalServerErrorException(
-        EducationReportException.DELETE_ERROR,
-      );
+      throw new InternalServerErrorException(ReportException.DELETE_ERROR);
     }
 
     return result;
@@ -514,14 +546,13 @@ export class EducationReportDomainService
       where: {
         educationSessionId: educationSession.id,
         receiverId: In(receiverIds),
+        educationReportType: EducationReportType.SESSION,
       },
       relations: relationOptions,
     });
 
     if (reports.length !== receiverIds.length) {
-      throw new NotFoundException(
-        EducationReportException.NOT_EXIST_REPORTED_MEMBERS,
-      );
+      throw new NotFoundException(ReportException.NOT_EXIST_REPORTED_MEMBER);
     }
 
     return reports;
@@ -538,15 +569,15 @@ export class EducationReportDomainService
     const reports = await repository.find({
       where: {
         educationTermId: educationTerm.id,
+        educationSessionId: IsNull(),
+        educationReportType: EducationReportType.TERM,
         receiverId: In(receiverIds),
       },
       relations: relationOptions,
     });
 
     if (reports.length !== receiverIds.length) {
-      throw new NotFoundException(
-        EducationReportException.NOT_EXIST_REPORTED_MEMBERS,
-      );
+      throw new NotFoundException(ReportException.NOT_EXIST_REPORTED_MEMBER);
     }
 
     return reports;

@@ -1,7 +1,6 @@
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetWorshipsDto } from '../../dto/request/worship/get-worships.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
-import { WorshipDomainPaginationResultDto } from '../dto/worship-domain-pagination-result.dto';
 import { WorshipModel } from '../../entity/worship.entity';
 import { CreateWorshipDto } from '../../dto/request/worship/create-worship.dto';
 import { UpdateWorshipDto } from '../../dto/request/worship/update-worship.dto';
@@ -14,7 +13,7 @@ export interface IWorshipDomainService {
     church: ChurchModel,
     dto: GetWorshipsDto,
     qr?: QueryRunner,
-  ): Promise<WorshipDomainPaginationResultDto>;
+  ): Promise<WorshipModel[]>;
 
   findAllWorships(
     church: ChurchModel,

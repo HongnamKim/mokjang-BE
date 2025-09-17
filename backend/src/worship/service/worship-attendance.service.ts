@@ -3,11 +3,6 @@ import {
   IWORSHIP_ATTENDANCE_DOMAIN_SERVICE,
   IWorshipAttendanceDomainService,
 } from '../worship-domain/interface/worship-attendance-domain.service.interface';
-import { GetWorshipAttendancesDto } from '../dto/request/worship-attendance/get-worship-attendances.dto';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import {
   IWORSHIP_DOMAIN_SERVICE,
   IWorshipDomainService,
@@ -16,7 +11,6 @@ import {
   IWORSHIP_SESSION_DOMAIN_SERVICE,
   IWorshipSessionDomainService,
 } from '../worship-domain/interface/worship-session-domain.service.interface';
-import { WorshipAttendancePaginationResponseDto } from '../dto/response/worship-attendance/worship-attendance-pagination-response.dto';
 import { QueryRunner } from 'typeorm';
 import {
   IWORSHIP_ENROLLMENT_DOMAIN_SERVICE,
@@ -32,15 +26,16 @@ import {
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { WorshipModel } from '../entity/worship.entity';
 import { GetWorshipAttendanceListDto } from '../dto/request/worship-attendance/get-worship-attendance-list.dto';
-import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { getIntersection } from '../utils/worship-utils';
 import { WorshipAttendanceListResponseDto } from '../dto/response/worship-attendance/worship-attendance-list-response.dto';
+import { UpdateWorshipAllAttendedDto } from '../dto/request/worship-attendance/update-worship-all-attended.dto';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 import { PatchWorshipAllAttendedResponseDto } from '../dto/response/worship-attendance/patch-worship-all-attended-response.dto';
 
 @Injectable()
 export class WorshipAttendanceService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IWORSHIP_DOMAIN_SERVICE)
     private readonly worshipDomainService: IWorshipDomainService,
     @Inject(IWORSHIP_SESSION_DOMAIN_SERVICE)
@@ -54,15 +49,35 @@ export class WorshipAttendanceService {
     private readonly groupsDomainService: IGroupsDomainService,
   ) {}
 
-  async getAttendances(
+  private async getRequestGroupIds(
+    church: ChurchModel,
+    defaultTargetGroupIds: WorshipGroupIdsVo,
+    groupId?: number,
+  ) {
+    if (groupId) {
+      const groupIds = (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
+          groupId,
+        ])
+      ).map((group) => group.id);
+
+      return new WorshipGroupIdsVo(groupIds, false);
+    } else if (Number.isNaN(groupId)) {
+      return new WorshipGroupIdsVo([], false);
+    } else {
+      return defaultTargetGroupIds;
+    }
+  }
+
+  /*async getAttendances(
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
     dto: GetWorshipAttendancesDto,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultTargetGroupIds: number[],
+    permissionScopeGroupIds: number[],
   ) {
-    const session =
+    /!*const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
         worship,
         sessionId,
@@ -94,16 +109,16 @@ export class WorshipAttendanceService {
       data.length,
       dto.page,
       Math.ceil(totalCount / dto.take),
-    );
-  }
+    );*!/
+  }*/
 
   async getAttendancesV2(
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
     query: GetWorshipAttendanceListDto,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
+    permissionScopeIds: PermissionScopeIdsVo,
   ) {
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
@@ -113,14 +128,21 @@ export class WorshipAttendanceService {
 
     const requestGroupIds = await this.getRequestGroupIds(
       church,
-      defaultTargetGroupIds,
+      defaultWorshipGroupIds,
       query.groupId,
     );
 
-    const intersectionGroupIds = getIntersectionGroupIds(
+    const intersectionGroupIds = getIntersection(
       requestGroupIds,
-      permissionScopeGroupIds,
+      permissionScopeIds,
     );
+
+    if (
+      intersectionGroupIds.groupIds.length === 0 &&
+      !permissionScopeIds.isAllGroups
+    ) {
+      return new WorshipAttendanceListResponseDto([], 0, undefined, false);
+    }
 
     const result = await this.worshipAttendanceDomainService.findAttendanceList(
       session,
@@ -137,15 +159,16 @@ export class WorshipAttendanceService {
   }
 
   async refreshAttendance(
-    churchId: number,
+    church: ChurchModel,
     worshipId: number,
     sessionId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
     );
+    */
 
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
@@ -192,22 +215,12 @@ export class WorshipAttendanceService {
   }
 
   async patchAttendance(
-    churchId: number,
-    worshipId: number,
+    worship: WorshipModel,
     sessionId: number,
     attendanceId: number,
     dto: UpdateWorshipAttendanceDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    const worship = await this.worshipDomainService.findWorshipModelById(
-      church,
-      worshipId,
-      qr,
-    );
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
         worship,
@@ -304,46 +317,32 @@ export class WorshipAttendanceService {
     }
   }
 
-  private async getRequestGroupIds(
-    church: ChurchModel,
-    defaultTargetGroupIds: number[] | undefined,
-    groupId?: number,
-  ) {
-    if (groupId) {
-      return (
-        await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
-          groupId,
-        ])
-      ).map((group) => group.id);
-    } else {
-      return defaultTargetGroupIds;
-    }
-  }
-
   async patchAllAttended(
     church: ChurchModel,
     worship: WorshipModel,
     sessionId: number,
-    defaultTargetGroupIds: number[] | undefined,
-    permissionScopeGroupIds: number[] | undefined,
+    dto: UpdateWorshipAllAttendedDto,
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
+    permissionScopeIds: PermissionScopeIdsVo,
     qr: QueryRunner,
   ) {
-    const requestGroupIds = await this.getRequestGroupIds(
-      church,
-      defaultTargetGroupIds,
-    );
-
-    const intersectionGroupIds = getIntersectionGroupIds(
-      requestGroupIds,
-      permissionScopeGroupIds,
-    );
-
     const session =
       await this.worshipSessionDomainService.findWorshipSessionModelById(
         worship,
         sessionId,
         qr,
       );
+
+    const requestGroupIds = await this.getRequestGroupIds(
+      church,
+      defaultWorshipGroupIds,
+      dto.groupId,
+    );
+
+    const intersectionGroupIds = getIntersection(
+      requestGroupIds,
+      permissionScopeIds,
+    );
 
     const unknownAttendances =
       await this.worshipAttendanceDomainService.findUnknownAttendances(

@@ -24,6 +24,7 @@ import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
 import { CustomRequest } from '../../common/custom-request';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 
 /**
  * 필터링 요청한 그룹이 요청자의 권한 범위 내에 속하는지 검사
@@ -107,11 +108,35 @@ export class WorshipScopeGuard implements CanActivate {
 
     // 소유자
     if (requestManager.role === ChurchUserRole.OWNER) {
+      const groupIds = (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(
+          church,
+          [],
+          undefined,
+          true,
+        )
+      ).map((group) => group.id);
+
+      req.permissionScopeGroupIds = groupIds;
+      req.permissionScopeIds = new PermissionScopeIdsVo(groupIds, true);
+
       return true;
     }
 
     // 전체 권한 범위
     if (requestManager.permissionScopes.some((scope) => scope.isAllGroups)) {
+      const groupIds = (
+        await this.groupsDomainService.findGroupAndDescendantsByIds(
+          church,
+          [],
+          undefined,
+          true,
+        )
+      ).map((group) => group.id);
+
+      req.permissionScopeGroupIds = groupIds;
+      req.permissionScopeIds = new PermissionScopeIdsVo(groupIds, true);
+
       return true;
     }
 
@@ -121,9 +146,40 @@ export class WorshipScopeGuard implements CanActivate {
       requestManager,
     );
 
-    req.permissionScopeGroupIds = permissionGroupIds;
+    // 권한 범위가 지정되지 않은 관리자
+    if (permissionGroupIds.length === 0) {
+      throw new ForbiddenException(
+        PermissionScopeException.NO_PERMISSION_SCOPE,
+      );
+    }
 
-    const requestGroupId = parseInt(req.query.groupId as string);
+    req.permissionScopeGroupIds = permissionGroupIds;
+    req.permissionScopeIds = new PermissionScopeIdsVo(
+      permissionGroupIds,
+      false,
+    );
+
+    // 조회 요청 그룹 ID
+    let requestGroupId: number | undefined;
+
+    if (req.query.groupId) {
+      // 쿼리 파라미터
+      requestGroupId = parseInt(req.query.groupId as string); // number | NaN
+    } else if (req.body.groupId) {
+      // 요청 본문
+      requestGroupId = parseInt(req.body.groupId as string); // number | NaN
+    } else {
+      // 필터링 없을 때
+      requestGroupId = undefined;
+    }
+
+    if (Number.isNaN(requestGroupId)) {
+      if (!req.permissionScopeIds.isAllGroups) {
+        throw new ForbiddenException(
+          PermissionScopeException.OUT_OF_SCOPE_GROUP,
+        );
+      }
+    }
 
     if (!requestGroupId) {
       return true;

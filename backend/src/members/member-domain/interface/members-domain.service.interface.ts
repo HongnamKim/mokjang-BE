@@ -20,19 +20,11 @@ import { GroupRole } from '../../../management/groups/const/group-role.enum';
 import { GetMemberListDto } from '../../dto/list/get-member-list.dto';
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
+import { WorshipGroupIdsVo } from '../../../worship/vo/worship-group-ids.vo';
 
 export const IMEMBERS_DOMAIN_SERVICE = Symbol('IMEMBERS_DOMAIN_SERVICE');
 
 export interface IMembersDomainService {
-  findMembers(
-    dto: GetMemberDto,
-    whereOptions: FindOptionsWhere<MemberModel>,
-    orderOptions: FindOptionsOrder<MemberModel>,
-    relationOptions: FindOptionsRelations<MemberModel>,
-    selectOptions: FindOptionsSelect<MemberModel>,
-    qr?: QueryRunner,
-  ): Promise<{ data: MemberModel[]; totalCount: number }>;
-
   migrationBirthdayMMDD(church: ChurchModel): Promise<void>;
 
   findBirthdayMembers(
@@ -41,18 +33,20 @@ export interface IMembersDomainService {
     qr?: QueryRunner,
   ): Promise<MemberModel[]>;
 
-  findSimpleMembers(
+  getMemberListWithPagination(
     church: ChurchModel,
-    dto: GetSimpleMembersDto,
-    qr?: QueryRunner,
-  ): Promise<MemberModel[]>;
+    dto: GetMemberListDto,
+  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
   findSimpleMemberList(
     church: ChurchModel,
     query: GetSimpleMemberListDto,
   ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
-  findAllMembers(church: ChurchModel, qr?: QueryRunner): Promise<MemberModel[]>;
+  findAllMemberIds(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
 
   findRecommendLinkMember(
     church: ChurchModel,
@@ -149,8 +143,24 @@ export interface IMembersDomainService {
     to: Date,
   ): Promise<MemberModel[]>;
 
-  getMemberListWithPagination(
+  findMembers(
+    dto: GetMemberDto,
+    whereOptions: FindOptionsWhere<MemberModel>,
+    orderOptions: FindOptionsOrder<MemberModel>,
+    relationOptions: FindOptionsRelations<MemberModel>,
+    selectOptions: FindOptionsSelect<MemberModel>,
+    qr?: QueryRunner,
+  ): Promise<{ data: MemberModel[]; totalCount: number }>;
+
+  findSimpleMembers(
     church: ChurchModel,
-    dto: GetMemberListDto,
-  ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
+    dto: GetSimpleMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]>;
+
+  getGroupMembersCount(
+    church: ChurchModel,
+    intersectionGroupIds: WorshipGroupIdsVo,
+    qr?: QueryRunner,
+  ): Promise<number>;
 }

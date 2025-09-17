@@ -272,7 +272,14 @@ export class VisitationMetaDomainService
         id: visitationMetaData.id,
       },
       {
-        ...dto,
+        status: dto.status,
+        visitationMethod: dto.visitationMethod,
+        visitationType: dto.visitationType,
+        title: dto.title,
+        inChargeId: dto.inCharge && dto.inCharge.member.id,
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        //...dto,
       },
     );
 

@@ -36,29 +36,30 @@ export class MinistriesController {
   constructor(private readonly ministryService: MinistryService) {}
 
   @ApiGetMinistries()
-  //@UseGuards(AccessTokenGuard, ChurchManagerGuard)
   @MinistryReadGuard()
   @Get()
   getMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetMinistryDto,
   ) {
-    return this.ministryService.getMinistries(churchId, ministryGroupId, dto);
+    return this.ministryService.getMinistries(church, ministryGroupId, dto);
   }
 
   @ApiPostMinistry()
-  @MinistryWriteGuard()
   @Post()
+  @MinistryWriteGuard()
   @UseInterceptors(TransactionInterceptor)
   postMinistries(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateMinistryDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryService.createMinistry(
-      churchId,
+      church,
       ministryGroupId,
       dto,
       qr,
@@ -89,11 +90,12 @@ export class MinistriesController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateMinistryDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryService.updateMinistry(
-      churchId,
+      church,
       ministryGroupId,
       ministryId,
       dto,
@@ -109,10 +111,11 @@ export class MinistriesController {
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
     @Param('ministryId', ParseIntPipe) ministryId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryService.deleteMinistry(
-      churchId,
+      church,
       ministryGroupId,
       ministryId,
       qr,

@@ -46,12 +46,20 @@ import {
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
 import { toZonedTime } from 'date-fns-tz';
 import { format } from 'date-fns';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
+import { RefreshGroupCountResponseDto } from '../dto/response/refresh-group-count-response.dto';
 
 @Injectable()
 export class GroupsService {
   constructor(
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
 
     @Inject(IGROUPS_DOMAIN_SERVICE)
     private readonly groupsDomainService: IGroupsDomainService,
@@ -65,10 +73,7 @@ export class GroupsService {
     private readonly groupDetailHistoryDomainService: IGroupDetailHistoryDomainService,
   ) {}
 
-  async getGroups(churchId: number, dto: GetGroupDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getGroups(church: ChurchModel, dto: GetGroupDto) {
     const { data, totalCount } = await this.groupsDomainService.findGroups(
       church,
       dto,
@@ -84,15 +89,10 @@ export class GroupsService {
   }
 
   async getGroupByIdWithParents(
-    churchId: number,
+    church: ChurchModel,
     groupId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     return this.groupsDomainService.findGroupByIdWithParents(
       church,
       groupId,
@@ -100,12 +100,7 @@ export class GroupsService {
     );
   }
 
-  async createGroup(churchId: number, dto: CreateGroupDto, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async createGroup(church: ChurchModel, dto: CreateGroupDto, qr: QueryRunner) {
     await this.churchesDomainService.incrementManagementCount(
       church,
       ManagementCountType.GROUP,
@@ -212,15 +207,15 @@ export class GroupsService {
   }
 
   async updateGroupStructure(
-    churchId: number,
+    church: ChurchModel,
     groupId: number,
     dto: UpdateGroupStructureDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
 
     const targetGroup = await this.groupsDomainService.findGroupModelById(
       church,
@@ -255,15 +250,15 @@ export class GroupsService {
   }
 
   async updateGroupName(
-    churchId: number,
+    church: ChurchModel,
     groupId: number,
     dto: UpdateGroupNameDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
 
     const targetGroup = await this.groupsDomainService.findGroupModelById(
       church,
@@ -282,11 +277,11 @@ export class GroupsService {
     return this.groupsDomainService.findGroupById(church, targetGroup.id, qr);
   }
 
-  async deleteGroup(churchId: number, groupId: number, qr: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
+  async deleteGroup(church: ChurchModel, groupId: number, qr: QueryRunner) {
+    /*const church = await this.churchesDomainService.findChurchModelById(
       churchId,
       qr,
-    );
+    );*/
     const group = await this.groupsDomainService.findGroupModelById(
       church,
       groupId,
@@ -319,18 +314,30 @@ export class GroupsService {
       qr,
     );
 
-    return { groupCount };
+    return new RefreshGroupCountResponseDto(groupCount);
   }
 
-  async getUnassignedMembers(churchId: number, dto: GetUnassignedMembersDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getUnassignedMembers(
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
+    dto: GetUnassignedMembersDto,
+  ) {
     const members = await this.groupMembersDomainService.findUnassignedMembers(
       church,
       dto,
     );
 
-    return new UnassignedMembersResponseDto(members);
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMember = this.memberFilterService.filterMembers(
+      requestManager,
+      members,
+      scope,
+    );
+
+    return new UnassignedMembersResponseDto(filteredMember);
   }
 }

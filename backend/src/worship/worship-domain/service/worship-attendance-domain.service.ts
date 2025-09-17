@@ -12,6 +12,7 @@ import {
   FindOptionsRelations,
   FindOptionsWhere,
   In,
+  IsNull,
   QueryRunner,
   Repository,
   SelectQueryBuilder,
@@ -23,11 +24,12 @@ import { WorshipAttendanceDomainPaginationResultDto } from '../dto/worship-atten
 import { WorshipEnrollmentModel } from '../../entity/worship-enrollment.entity';
 import { WorshipAttendanceException } from '../../exception/worship-attendance.exception';
 import {
-  MemberSimpleSelectQB,
+  MemberSimpleSelect,
   MemberSummarizedGroupSelectQB,
   MemberSummarizedOfficerSelectQB,
   MemberSummarizedRelation,
   MemberSummarizedSelect,
+  MemberSummarizedSelectQB,
 } from '../../../members/const/member-find-options.const';
 import { UpdateWorshipAttendanceDto } from '../../dto/request/worship-attendance/update-worship-attendance.dto';
 import { WorshipAttendanceOrder } from '../../const/worship-attendance-order.enum';
@@ -38,7 +40,7 @@ import { WorshipAttendanceSortColumn } from '../../const/worship-attendance-sort
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetMemberWorshipAttendancesDto } from '../../../members/dto/request/worship/get-member-worship-attendances.dto';
-import { session } from 'passport';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 @Injectable()
 export class WorshipAttendanceDomainService
@@ -87,7 +89,7 @@ export class WorshipAttendanceDomainService
   async findAttendanceList(
     session: WorshipSessionModel,
     dto: GetWorshipAttendanceListDto,
-    groupIds: number[] | undefined,
+    groupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -105,14 +107,18 @@ export class WorshipAttendanceDomainService
       .leftJoin('attendance.worshipEnrollment', 'enrollment')
       .addSelect(['enrollment.id'])
       .leftJoin('enrollment.member', 'member')
-      .addSelect(MemberSimpleSelectQB)
+      .addSelect(MemberSummarizedSelectQB)
       .leftJoin('member.group', 'group')
       .addSelect(MemberSummarizedGroupSelectQB)
       .leftJoin('member.officer', 'officer')
       .addSelect(MemberSummarizedOfficerSelectQB);
 
-    if (groupIds) {
-      query.andWhere('member.groupId IN (:...groupIds)', { groupIds });
+    if (groupIds.groupIds.length && !groupIds.isAllGroups) {
+      query.andWhere('member.groupId IN (:...groupIds)', {
+        groupIds: groupIds.groupIds,
+      });
+    } else if (!groupIds.isAllGroups) {
+      query.andWhere('member.groupId IS NULL');
     }
 
     this.applySorting(query, dto.sortBy, dto.sortDirection);
@@ -300,7 +306,7 @@ export class WorshipAttendanceDomainService
             updatedAt: true,
             presentCount: true,
             absentCount: true,
-            member: MemberSummarizedSelect,
+            member: MemberSimpleSelect,
           },
         },
       }),
@@ -507,7 +513,7 @@ export class WorshipAttendanceDomainService
 
   async getAttendanceStatsBySession(
     worshipSession: WorshipSessionModel,
-    requestGroupIds: number[] | undefined,
+    requestGroupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
@@ -531,13 +537,18 @@ export class WorshipAttendanceDomainService
         unknown: AttendanceStatus.UNKNOWN,
       });
 
-    if (requestGroupIds) {
+    if (requestGroupIds.groupIds.length && !requestGroupIds.isAllGroups) {
       query
         .leftJoin('attendance.worshipEnrollment', 'enrollment')
         .leftJoin('enrollment.member', 'member')
         .andWhere('member.groupId IN (:...groupIds)', {
-          groupIds: requestGroupIds,
+          groupIds: requestGroupIds.groupIds,
         });
+    } else if (!requestGroupIds.isAllGroups) {
+      query
+        .leftJoin('attendance.worshipEnrollment', 'enrollment')
+        .leftJoin('enrollment.member', 'member')
+        .andWhere('member.groupId IS NULL');
     }
 
     const result = await query.getRawOne();
@@ -551,7 +562,7 @@ export class WorshipAttendanceDomainService
 
   async getOverallAttendanceStats(
     worship: WorshipModel,
-    requestGroupIds: number[] | undefined,
+    requestGroupIds: WorshipGroupIdsVo,
   ): Promise<{ overallRate: number; attendanceCheckRate: number }> {
     const repository = this.getRepository();
 
@@ -574,13 +585,18 @@ export class WorshipAttendanceDomainService
         unknown: AttendanceStatus.UNKNOWN,
       });
 
-    if (requestGroupIds) {
+    if (requestGroupIds.groupIds.length && !requestGroupIds.isAllGroups) {
       query
         .leftJoin('attendance.worshipEnrollment', 'enrollment')
         .leftJoin('enrollment.member', 'member')
         .andWhere('member.groupId IN (:...groupIds)', {
-          groupIds: requestGroupIds,
+          groupIds: requestGroupIds.groupIds,
         });
+    } else if (!requestGroupIds.isAllGroups) {
+      query
+        .leftJoin('attendance.worshipEnrollment', 'enrollment')
+        .leftJoin('enrollment.member', 'member')
+        .andWhere('member.groupId IS NULL');
     }
 
     const result = await query.getRawOne();
@@ -601,15 +617,14 @@ export class WorshipAttendanceDomainService
 
   async getAttendanceStatsByPeriod(
     worship: WorshipModel,
-    requestGroupIds: number[] | undefined,
+    requestGroupIds: WorshipGroupIdsVo,
     from: Date,
     to: Date | undefined,
-  ): Promise<{ rate: number; attendanceCheckRate: number }> {
+  ): Promise<{
+    rate: number;
+    attendanceCheckRate: number;
+  }> {
     const repository = this.getRepository();
-
-    // const lastWorshipDate = getRecentSessionDate(worship, TIME_ZONE.SEOUL);
-    // const fourWeeksAgo = subWeeks(lastWorshipDate, 4);
-    // const twelveWeeksAgo = subWeeks(lastWorshipDate, 12);
 
     const statsQuery = (from: Date, to?: Date) => {
       const query = repository
@@ -632,13 +647,18 @@ export class WorshipAttendanceDomainService
         query.andWhere('session.sessionDate <= :to', { to });
       }
 
-      if (requestGroupIds) {
+      if (requestGroupIds.groupIds.length && !requestGroupIds.isAllGroups) {
         query
           .leftJoin('attendance.worshipEnrollment', 'enrollment')
           .leftJoin('enrollment.member', 'member')
           .andWhere('member.groupId IN (:...groupId)', {
-            groupId: requestGroupIds,
+            groupId: requestGroupIds.groupIds,
           });
+      } else if (!requestGroupIds.isAllGroups) {
+        query
+          .leftJoin('attendance.worshipEnrollment', 'enrollment')
+          .leftJoin('enrollment.member', 'member')
+          .andWhere('member.groupId IS NULL');
       }
 
       return query;
@@ -766,10 +786,20 @@ export class WorshipAttendanceDomainService
 
   findAbsentAttendances(
     session: WorshipSessionModel,
-    groupIds: number[] | undefined,
+    groupIds: WorshipGroupIdsVo,
     qr: QueryRunner,
   ): Promise<WorshipAttendanceModel[]> {
     const repository = this.getRepository(qr);
+
+    let groupId: any;
+
+    if (groupIds.groupIds.length && !groupIds.isAllGroups) {
+      groupId = In(groupIds.groupIds);
+    } else if (!groupIds.isAllGroups) {
+      groupId = IsNull();
+    } else {
+      groupId = undefined;
+    }
 
     return repository.find({
       where: {
@@ -777,7 +807,7 @@ export class WorshipAttendanceDomainService
         attendanceStatus: AttendanceStatus.ABSENT,
         worshipEnrollment: groupIds && {
           member: {
-            groupId: In(groupIds),
+            groupId: groupId,
           },
         },
       },
@@ -786,10 +816,20 @@ export class WorshipAttendanceDomainService
 
   findUnknownAttendances(
     session: WorshipSessionModel,
-    groupIds: number[] | undefined,
+    groupIds: WorshipGroupIdsVo,
     qr: QueryRunner,
   ): Promise<WorshipAttendanceModel[]> {
     const repository = this.getRepository(qr);
+
+    let groupId: any;
+
+    if (groupIds.groupIds.length && !groupIds.isAllGroups) {
+      groupId = In(groupIds.groupIds);
+    } else if (!groupIds.isAllGroups) {
+      groupId = IsNull();
+    } else {
+      groupId = undefined;
+    }
 
     return repository.find({
       where: {
@@ -797,7 +837,7 @@ export class WorshipAttendanceDomainService
         attendanceStatus: AttendanceStatus.UNKNOWN,
         worshipEnrollment: groupIds && {
           member: {
-            groupId: In(groupIds),
+            groupId: groupId,
           },
         },
       },

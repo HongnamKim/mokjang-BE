@@ -41,6 +41,7 @@ import { GetRecommendLinkMemberResponseDto } from '../dto/response/get-recommend
 import { ChurchJoinException } from '../exception/church-join.exception';
 import { PostJoinRequestResponseDto } from '../dto/response/post-join-request-response.dto';
 import { MemberException } from '../../members/exception/member.exception';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class ChurchJoinService {
@@ -100,10 +101,7 @@ export class ChurchJoinService {
     return new PostJoinRequestResponseDto(newRequest);
   }
 
-  async getChurchJoinRequests(churchId: number, dto: GetJoinRequestDto) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getChurchJoinRequests(church: ChurchModel, dto: GetJoinRequestDto) {
     const { data, totalCount } =
       await this.churchJoinRequestsDomainService.findChurchJoinRequests(
         church,
@@ -120,16 +118,11 @@ export class ChurchJoinService {
   }
 
   async approveChurchJoinRequest(
-    churchId: number,
+    church: ChurchModel,
     joinId: number,
     dto: ApproveJoinRequestDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const joinRequest =
       await this.churchJoinRequestsDomainService.findChurchJoinRequestById(
         church,
@@ -185,15 +178,10 @@ export class ChurchJoinService {
   }
 
   async rejectChurchJoinRequest(
-    churchId: number,
+    church: ChurchModel,
     joinId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const joinRequest =
       await this.churchJoinRequestsDomainService.findChurchJoinRequestById(
         church,
@@ -219,15 +207,10 @@ export class ChurchJoinService {
   }
 
   async deleteChurchJoinRequest(
-    churchId: number,
+    church: ChurchModel,
     joinId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const joinRequest =
       await this.churchJoinRequestsDomainService.findChurchJoinRequestById(
         church,
@@ -252,12 +235,9 @@ export class ChurchJoinService {
   }
 
   async getRecommendLinkMember(
-    churchId: number,
+    church: ChurchModel,
     dto: GetRecommendLinkMemberDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const members = await this.membersDomainService.findRecommendLinkMember(
       church,
       dto,

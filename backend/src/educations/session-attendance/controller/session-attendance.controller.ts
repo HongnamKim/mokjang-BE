@@ -18,6 +18,10 @@ import { TransactionInterceptor } from '../../../common/interceptor/transaction.
 import { QueryRunner } from '../../../common/decorator/query-runner.decorator';
 import { UpdateAttendancePresentDto } from '../dto/request/update-attendance-present.dto';
 import { UpdateAttendanceNoteDto } from '../dto/request/update-attendance-note.dto';
+import { RequestChurch } from '../../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Educations:Attendance')
 @Controller(
@@ -36,10 +40,13 @@ export class SessionAttendanceController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetAttendanceDto,
   ) {
     return this.sessionAttendanceService.getSessionAttendance(
-      churchId,
+      church,
+      requestManager,
       educationId,
       educationTermId,
       sessionId,
@@ -55,10 +62,11 @@ export class SessionAttendanceController {
     @Param('educationId', ParseIntPipe) educationId: number,
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.sessionAttendanceService.bulkAttendance(
-      churchId,
+      church,
       educationId,
       educationTermId,
       sessionId,
@@ -75,11 +83,12 @@ export class SessionAttendanceController {
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Param('attendanceId', ParseIntPipe) attendanceId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateAttendancePresentDto,
     @QueryRunner() qr: QR,
   ) {
     return this.sessionAttendanceService.updateSessionAttendancePresent(
-      churchId,
+      church,
       educationId,
       educationTermId,
       sessionId,
@@ -97,10 +106,11 @@ export class SessionAttendanceController {
     @Param('educationTermId', ParseIntPipe) educationTermId: number,
     @Param('sessionId', ParseIntPipe) sessionId: number,
     @Param('attendanceId', ParseIntPipe) attendanceId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateAttendanceNoteDto,
   ) {
     return this.sessionAttendanceService.updateSessionAttendanceNote(
-      churchId,
+      church,
       educationId,
       educationTermId,
       sessionId,

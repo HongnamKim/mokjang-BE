@@ -9,6 +9,9 @@ import { OfficersMembersController } from './controller/officers-members.control
 import { MembersDomainModule } from '../../members/member-domain/members-domain.module';
 import { OfficerMembersService } from './service/officer-members.service';
 import { OfficerHistoryDomainModule } from '../../member-history/officer-history/officer-history-domain/officer-history-domain.module';
+import { IMEMBER_FILTER_SERVICE } from '../../members/service/interface/member-filter.service.interface';
+import { MemberFilterService } from '../../members/service/member-filter.service';
+import { GroupsDomainModule } from '../groups/groups-domain/groups-domain.module';
 
 @Module({
   imports: [
@@ -19,14 +22,19 @@ import { OfficerHistoryDomainModule } from '../../member-history/officer-history
       },
     ]),
     ChurchesDomainModule,
-    OfficersDomainModule,
     ManagerDomainModule,
     MembersDomainModule,
+    GroupsDomainModule,
 
+    OfficersDomainModule,
     OfficerHistoryDomainModule,
   ],
   controllers: [OfficersController, OfficersMembersController],
-  providers: [OfficersService, OfficerMembersService],
+  providers: [
+    OfficersService,
+    OfficerMembersService,
+    { provide: IMEMBER_FILTER_SERVICE, useClass: MemberFilterService },
+  ],
   exports: [],
 })
 export class OfficersModule {}

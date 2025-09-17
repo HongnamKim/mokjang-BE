@@ -24,7 +24,6 @@ import {
   WhereExpressionBuilder,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { GetMemberDto } from '../../dto/request/get-member.dto';
 import { MemberException } from '../../exception/member.exception';
 import { CreateMemberDto } from '../../dto/request/create-member.dto';
 import { UpdateMemberDto } from '../../dto/request/update-member.dto';
@@ -54,6 +53,8 @@ import {
   getToDate,
 } from '../../../member-history/history-date.utils';
 import { GetSimpleMemberListDto } from '../../dto/list/get-simple-member-list.dto';
+import { GetMemberDto } from '../../dto/request/get-member.dto';
+import { WorshipGroupIdsVo } from '../../../worship/vo/worship-group-ids.vo';
 
 @Injectable()
 export class MembersDomainService implements IMembersDomainService {
@@ -64,36 +65,6 @@ export class MembersDomainService implements IMembersDomainService {
 
   private getMembersRepository(qr?: QueryRunner) {
     return qr ? qr.manager.getRepository(MemberModel) : this.membersRepository;
-  }
-
-  async findMembers(
-    dto: GetMemberDto,
-    whereOptions: FindOptionsWhere<MemberModel>,
-    orderOptions: FindOptionsOrder<MemberModel>,
-    relationOptions: FindOptionsRelations<MemberModel>,
-    selectOptions: FindOptionsSelect<MemberModel>,
-    qr?: QueryRunner,
-  ) {
-    const membersRepository = this.getMembersRepository(qr);
-
-    const [totalCount, result] = await Promise.all([
-      membersRepository.count({
-        where: whereOptions,
-      }),
-      membersRepository.find({
-        where: whereOptions,
-        order: orderOptions,
-        relations: relationOptions,
-        select: selectOptions,
-        take: dto.take,
-        skip: dto.take * (dto.page - 1),
-      }),
-    ]);
-
-    return {
-      data: result,
-      totalCount,
-    };
   }
 
   async migrationBirthdayMMDD(church: ChurchModel) {
@@ -181,12 +152,15 @@ export class MembersDomainService implements IMembersDomainService {
     return query.getMany();
   }
 
-  async findAllMembers(church: ChurchModel, qr?: QueryRunner) {
+  async findAllMemberIds(church: ChurchModel, qr?: QueryRunner) {
     const repository = this.getMembersRepository(qr);
 
     return repository.find({
       where: {
         churchId: church.id,
+      },
+      select: {
+        id: true,
       },
       order: {
         id: 'asc',
@@ -221,45 +195,6 @@ export class MembersDomainService implements IMembersDomainService {
       ],
       relations: MemberSummarizedRelation,
       select: { ...MemberSummarizedSelect, mobilePhone: true },
-    });
-  }
-
-  async findSimpleMembers(
-    church: ChurchModel,
-    dto: GetSimpleMembersDto,
-    qr?: QueryRunner,
-  ): Promise<MemberModel[]> {
-    const repository = this.getMembersRepository(qr);
-
-    const whereOptions: FindOptionsWhere<MemberModel> = {
-      churchId: church.id,
-      name: dto.name && ILike(`%${dto.name}%`),
-      mobilePhone: dto.mobilePhone && ILike(`%${dto.mobilePhone}%`),
-    };
-
-    return repository.find({
-      where: whereOptions,
-      relations: MemberSummarizedRelation,
-      order: {
-        [dto.order]: dto.orderDirection,
-        id: dto.orderDirection,
-      },
-      select: {
-        id: true,
-        name: true,
-        profileImageUrl: true,
-        registeredAt: true,
-        officer: {
-          id: true,
-          name: true,
-        },
-        group: {
-          id: true,
-          name: true,
-        },
-        groupRole: true,
-        ministryGroupRole: true,
-      },
     });
   }
 
@@ -1076,5 +1011,99 @@ export class MembersDomainService implements IMembersDomainService {
     } catch {
       return null;
     }
+  }
+
+  async findMembers(
+    dto: GetMemberDto,
+    whereOptions: FindOptionsWhere<MemberModel>,
+    orderOptions: FindOptionsOrder<MemberModel>,
+    relationOptions: FindOptionsRelations<MemberModel>,
+    selectOptions: FindOptionsSelect<MemberModel>,
+    qr?: QueryRunner,
+  ) {
+    const membersRepository = this.getMembersRepository(qr);
+
+    const [totalCount, result] = await Promise.all([
+      membersRepository.count({
+        where: whereOptions,
+      }),
+      membersRepository.find({
+        where: whereOptions,
+        order: orderOptions,
+        relations: relationOptions,
+        select: selectOptions,
+        take: dto.take,
+        skip: dto.take * (dto.page - 1),
+      }),
+    ]);
+
+    return {
+      data: result,
+      totalCount,
+    };
+  }
+
+  async findSimpleMembers(
+    church: ChurchModel,
+    dto: GetSimpleMembersDto,
+    qr?: QueryRunner,
+  ): Promise<MemberModel[]> {
+    const repository = this.getMembersRepository(qr);
+
+    const whereOptions: FindOptionsWhere<MemberModel> = {
+      churchId: church.id,
+      name: dto.name && ILike(`%${dto.name}%`),
+      mobilePhone: dto.mobilePhone && ILike(`%${dto.mobilePhone}%`),
+    };
+
+    return repository.find({
+      where: whereOptions,
+      relations: MemberSummarizedRelation,
+      order: {
+        [dto.order]: dto.orderDirection,
+        id: dto.orderDirection,
+      },
+      select: {
+        id: true,
+        name: true,
+        profileImageUrl: true,
+        registeredAt: true,
+        officer: {
+          id: true,
+          name: true,
+        },
+        group: {
+          id: true,
+          name: true,
+        },
+        groupRole: true,
+        ministryGroupRole: true,
+      },
+    });
+  }
+
+  getGroupMembersCount(
+    church: ChurchModel,
+    requestGroupIds: WorshipGroupIdsVo,
+    qr?: QueryRunner,
+  ): Promise<number> {
+    const repository = this.getMembersRepository(qr);
+
+    let groupId: any;
+
+    if (requestGroupIds.groupIds.length && !requestGroupIds.isAllGroups) {
+      groupId = In(requestGroupIds.groupIds);
+    } else if (!requestGroupIds.isAllGroups) {
+      groupId = IsNull();
+    } else {
+      groupId = undefined;
+    }
+
+    return repository.count({
+      where: {
+        churchId: church.id,
+        groupId: groupId,
+      },
+    });
   }
 }

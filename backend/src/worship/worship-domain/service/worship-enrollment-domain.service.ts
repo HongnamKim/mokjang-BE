@@ -13,7 +13,6 @@ import {
 import { WorshipModel } from '../../entity/worship.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetWorshipEnrollmentsDto } from '../../dto/request/worship-enrollment/get-worship-enrollments.dto';
-import { WorshipEnrollmentDomainPaginationResultDto } from '../dto/worship-enrollment-domain-pagination-result.dto';
 import { WorshipEnrollmentOrderEnum } from '../../const/worship-enrollment-order.enum';
 import { GetLowWorshipAttendanceMembersDto } from '../../../home/dto/request/get-low-worship-attendance-members.dto';
 import { LowAttendanceOrder } from '../../../home/const/low-attendance-order.enum';
@@ -22,6 +21,7 @@ import { SimpleGroupDto } from '../../../management/groups/dto/simple-group.dto'
 import { SimpleOfficerDto } from '../../../management/officers/dto/simple-officer.dto';
 import { LowAttendanceMemberDto } from '../../../home/dto/low-attendance-member.dto';
 import { WorshipAttendanceModel } from '../../entity/worship-attendance.entity';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 @Injectable()
 export class WorshipEnrollmentDomainService
@@ -97,35 +97,36 @@ export class WorshipEnrollmentDomainService
   async findEnrollmentsByQueryBuilder(
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
-    groupIds?: number[],
+    groupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ) {
     const repository = this.getRepository(qr);
 
     const qb = this.initEnrollmentQb(repository, worship.id);
 
-    if (groupIds?.length) {
-      qb.andWhere('member.groupId IN (:...groupIds)', { groupIds });
-    }
+    if (groupIds.groupIds.length && !groupIds.isAllGroups) {
+      // 조회 그룹 필터링
+      qb.andWhere(`member.groupId IN (:...groupIds)`, {
+        groupIds: groupIds.groupIds,
+      });
+    } else if (!groupIds.isAllGroups) {
+      // 그룹없는 사람 필터링
+      qb.andWhere(`member.groupId IS NULL`);
+    } // else 필터링 없는 경우
 
     this.applyOrderOption(qb, dto);
 
     qb.skip(dto.take * (dto.page - 1)).take(dto.take);
 
-    const [{ entities, raw }, totalCount] = await Promise.all([
-      qb.getRawAndEntities(),
-      qb.getCount(),
-    ]);
+    const { entities, raw } = await qb.getRawAndEntities();
 
-    const data = entities.map((entity, i) => {
+    return entities.map((entity, i) => {
       const rate = Number(raw[i].attendance_rate);
       return {
         ...entity,
         attendanceRate: rate,
       };
     });
-
-    return new WorshipEnrollmentDomainPaginationResultDto(data, totalCount);
   }
 
   async findAllEnrollments(
@@ -144,6 +145,7 @@ export class WorshipEnrollmentDomainService
       },
       select: {
         id: true,
+        memberId: true,
       },
     });
   }

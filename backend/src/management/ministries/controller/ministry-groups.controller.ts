@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { MinistryGroupService } from '../service/ministry-group.service';
@@ -31,6 +32,10 @@ import { ChurchModel } from '../../../churches/entity/church.entity';
 import { UpdateMinistryGroupLeaderDto } from '../dto/ministry-group/request/update-ministry-group-leader.dto';
 import { GetUnassignedMembersDto } from '../dto/ministry-group/request/member/get-unassigned-members.dto';
 import { MinistryReadGuard } from '../guard/ministry-read.guard';
+import { AccessTokenGuard } from '../../../auth/guard/jwt.guard';
+import { ChurchManagerGuard } from '../../../permission/guard/church-manager.guard';
+import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
 @ApiTags('Management:MinistryGroups')
 @Controller('ministry-groups')
@@ -41,9 +46,10 @@ export class MinistryGroupsController {
   @MinistryReadGuard()
   getMinistryGroups(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetMinistryGroupDto,
   ) {
-    return this.ministryGroupService.getMinistryGroups(churchId, dto);
+    return this.ministryGroupService.getMinistryGroups(church, dto);
   }
 
   @Post()
@@ -51,10 +57,11 @@ export class MinistryGroupsController {
   @UseInterceptors(TransactionInterceptor)
   postMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateMinistryGroupDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.ministryGroupService.createMinistryGroup(churchId, dto, qr);
+    return this.ministryGroupService.createMinistryGroup(church, dto, qr);
   }
 
   @ApiRefreshMinistryGroupCount()
@@ -69,20 +76,29 @@ export class MinistryGroupsController {
   }
 
   @Get('unassigned-member')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getUnassignedMembers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestManager() requestManager: ChurchUserModel,
     @Query() dto: GetUnassignedMembersDto,
   ) {
-    return this.ministryGroupService.getUnassignedMembers(churchId, dto);
+    return this.ministryGroupService.getUnassignedMembers(
+      church,
+      requestManager,
+      dto,
+    );
   }
 
   @Get(':ministryGroupId')
+  @UseGuards(AccessTokenGuard, ChurchManagerGuard)
   getMinistryGroupById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
     return this.ministryGroupService.getMinistryGroupById(
-      churchId,
+      church,
       ministryGroupId,
     );
   }
@@ -93,10 +109,11 @@ export class MinistryGroupsController {
   deleteMinistryGroup(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupService.deleteMinistryGroup(
-      churchId,
+      church,
       ministryGroupId,
       qr,
     );
@@ -109,11 +126,12 @@ export class MinistryGroupsController {
   patchMinistryGroupName(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateMinistryGroupNameDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupService.updateMinistryGroupName(
-      churchId,
+      church,
       ministryGroupId,
       dto,
       qr,
@@ -127,11 +145,12 @@ export class MinistryGroupsController {
   patchMinistryGroupStructure(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateMinistryGroupStructureDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupService.updateMinistryGroupStructure(
-      churchId,
+      church,
       ministryGroupId,
       dto,
       qr,
@@ -144,11 +163,12 @@ export class MinistryGroupsController {
   patchMinistryGroupLeader(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('ministryGroupId', ParseIntPipe) ministryGroupId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateMinistryGroupLeaderDto,
     @QueryRunner() qr: QR,
   ) {
     return this.ministryGroupService.updateMinistryGroupLeader(
-      churchId,
+      church,
       ministryGroupId,
       dto,
       qr,

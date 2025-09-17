@@ -31,9 +31,11 @@ import {
 import { WorshipEnrollmentModel } from '../entity/worship-enrollment.entity';
 import { WorshipAttendanceModel } from '../entity/worship-attendance.entity';
 import { WorshipModel } from '../entity/worship.entity';
-import { getIntersectionGroupIds } from '../utils/worship-utils';
+import { getIntersection } from '../utils/worship-utils';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MemberDeletedEvent } from '../../members/events/member.event';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
 
 @Injectable()
 export class WorshipEnrollmentService {
@@ -55,137 +57,58 @@ export class WorshipEnrollmentService {
     private readonly worshipAttendanceDomainService: IWorshipAttendanceDomainService,
   ) {}
 
+  /**
+   * 필터링 그룹이 있을 경우 해당 그룹과 그 하위를 반환
+   * 필터링 그룹이 없을 경우 예배 대상 그룹과 그 하위를 반환
+   * @param church
+   * @param defaultWorshipGroupIds
+   * @param groupId
+   * @private
+   */
   private async getRequestGroupIds(
     church: ChurchModel,
-    defaultTargetGroupIds: number[] | undefined,
+    defaultWorshipGroupIds: WorshipGroupIdsVo,
     groupId?: number,
-    /*dto: GetWorshipEnrollmentsDto,
-    qr?: QueryRunner,*/
-  ): Promise<number[] | undefined> {
+  ) {
+    // 특정 그룹 필터링
     if (groupId) {
-      return (
+      const groupIds = (
         await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
           groupId,
         ])
       ).map((group) => group.id);
+
+      return new WorshipGroupIdsVo(groupIds, false);
+    } else if (Number.isNaN(groupId)) {
+      return new WorshipGroupIdsVo([], false);
     } else {
-      return defaultTargetGroupIds;
+      return defaultWorshipGroupIds;
     }
-
-    /*if (!dto.groupId) {
-      return undefined;
-    }
-
-    const group = await this.groupsDomainService.findGroupModelById(
-      church,
-      dto.groupId,
-      qr,
-    );
-
-    const groupIds = (
-      await this.groupsDomainService.findChildGroups(group, qr)
-    ).map((group) => group.id);
-
-    groupIds && groupIds.unshift(group.id);
-
-    return groupIds;*/
   }
-
-  /*private async getDefaultGroupIds(
-    church: ChurchModel,
-    worship: WorshipModel,
-    qr?: QueryRunner,
-  ) {
-    const rootTargetGroupIds = worship.worshipTargetGroups.map(
-      (group) => group.group.id,
-    );
-
-    const defaultGroupIds = (
-      await this.groupsDomainService.findGroupAndDescendantsByIds(
-        church,
-        rootTargetGroupIds,
-        qr,
-      )
-    ).map((group) => group.id);
-
-    if (defaultGroupIds.length) {
-      return defaultGroupIds;
-    } else {
-      return undefined;
-    }
-  }*/
-
-  /*private intersection(
-    defaultWorshipTargetGroupIds?: number[],
-    permissionScopeGroupIds?: number[],
-  ) {
-    /!*
-    2. 예배 범위가 전체인 경우
-    --> defaultWorshipTargetGroup 이 빈 배열 []
-      case 1. 권한 범위가 정해져있는 경우
-      --> permissionScopeGroupIds 로 조회
-      case 2. 권한 범위가 전체인 경우
-      --> 그룹 조건 없이 모두 조회
-    *!/
-    if (!defaultWorshipTargetGroupIds) {
-      return permissionScopeGroupIds;
-    }
-
-    /!*
-    3. 예배 범위가 정해진 경우
-      case 1. 권한 범위가 정해져 있는 경우
-      --> defaultWorshipTargetGroup 과 permissionScopeGroupIds 의 교집합으로 조회
-      case 2. 권한 범위가 전체인 경우
-      --> permissionScopeGroupIds 가 undefined
-      --> defaultWorshipTargetGroup 으로 조회
-     *!/
-    if (!permissionScopeGroupIds) {
-      return defaultWorshipTargetGroupIds;
-    }
-
-    const targetGroupIdSet = new Set(defaultWorshipTargetGroupIds);
-
-    return permissionScopeGroupIds.filter((scopeGroupId) =>
-      targetGroupIdSet.has(scopeGroupId),
-    );
-  }*/
 
   async getEnrollments(
     church: ChurchModel,
     worship: WorshipModel,
     dto: GetWorshipEnrollmentsDto,
-    permissionScopeGroupIds?: number[],
-    defaultTargetGroupIds?: number[],
+    permissionScopeIds: PermissionScopeIdsVo, // 요청자의 권한 범위
+    defaultTargetGroupIds: WorshipGroupIdsVo, // 예배 대상 그룹
     qr?: QueryRunner,
   ) {
-    // 조회 요청 groupId, 가드에서 검증 완료
-    /*
-    1. 요청에서 groupId 를 특정하는 경우
-       -> 가드에서 예배 범위, 사용자의 권한 체크
-       -> 그대로 보여줌
-     */
     const requestGroupIds = await this.getRequestGroupIds(
       church,
       defaultTargetGroupIds,
       dto.groupId,
     );
 
-    /*const defaultWorshipTargetGroup = await this.getDefaultGroupIds(
-      church,
-      worship,
-      qr,
-    );
+    // 조회 그룹과 요청자 권한 범위의 교집합
+    const groupIds = getIntersection(requestGroupIds, permissionScopeIds);
 
-    const groupIds = requestGroupIds
-      ? requestGroupIds
-      : this.intersection(defaultWorshipTargetGroup, permissionScopeGroupIds);*/
+    if (groupIds.groupIds.length === 0 && !permissionScopeIds.isAllGroups) {
+      // 현재 권한에서 조회할 수 있는 그룹이 없는 경우
+      return new WorshipEnrollmentPaginationResponseDto([]);
+    }
 
-    const groupIds = getIntersectionGroupIds(
-      requestGroupIds,
-      permissionScopeGroupIds,
-    );
-
-    const { data, totalCount } =
+    const data =
       await this.worshipEnrollmentDomainService.findEnrollmentsByQueryBuilder(
         worship,
         dto,
@@ -218,13 +141,7 @@ export class WorshipEnrollmentService {
       enrollment.worshipAttendances = attendanceMap.get(enrollment.id) ?? [];
     }
 
-    return new WorshipEnrollmentPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new WorshipEnrollmentPaginationResponseDto(data);
   }
 
   async refreshEnrollment(
@@ -243,7 +160,8 @@ export class WorshipEnrollmentService {
       qr,
     );
 
-    const allMembers = await this.membersDomainService.findAllMembers(
+    // MemberModel 의 ID 만
+    const allMembers = await this.membersDomainService.findAllMemberIds(
       church,
       qr,
     );

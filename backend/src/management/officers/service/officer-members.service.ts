@@ -1,10 +1,6 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { GetOfficerMembersDto } from '../dto/request/members/get-officer-members.dto';
 import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../../churches/churches-domain/interface/churches-domain.service.interface';
-import {
   IOFFICERS_DOMAIN_SERVICE,
   IOfficersDomainService,
 } from '../officer-domain/interface/officers-domain.service.interface';
@@ -34,12 +30,18 @@ import {
   convertHistoryStartDate,
 } from '../../../member-history/history-date.utils';
 import { TIME_ZONE } from '../../../common/const/time-zone.const';
+import { ChurchModel } from '../../../churches/entity/church.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
 
 @Injectable()
 export class OfficerMembersService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
     @Inject(IOFFICERS_DOMAIN_SERVICE)
     private readonly officersDomainService: IOfficersDomainService,
 
@@ -53,13 +55,11 @@ export class OfficerMembersService {
   ) {}
 
   async getOfficerMembers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     officerId: number,
     dto: GetOfficerMembersDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const officer = await this.officersDomainService.findOfficerModelById(
       church,
       officerId,
@@ -71,19 +71,26 @@ export class OfficerMembersService {
       dto,
     );
 
-    return new GetOfficerMembersResponseDto(data);
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredMember = this.memberFilterService.filterMemberDto(
+      requestManager,
+      data,
+      scope,
+    );
+
+    return new GetOfficerMembersResponseDto(filteredMember);
   }
 
   async addMembersToOfficer(
-    churchId: number,
+    church: ChurchModel,
     officerId: number,
     dto: AddMembersToOfficerDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
     const officer = await this.officersDomainService.findOfficerModelById(
       church,
       officerId,
@@ -153,16 +160,11 @@ export class OfficerMembersService {
   }
 
   async removeMembersFromOfficer(
-    churchId: number,
+    church: ChurchModel,
     officerId: number,
     dto: RemoveMembersFromOfficerDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const officer = await this.officersDomainService.findOfficerModelById(
       church,
       officerId,

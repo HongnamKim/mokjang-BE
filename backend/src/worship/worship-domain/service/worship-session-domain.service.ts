@@ -20,7 +20,6 @@ import { CreateWorshipSessionDto } from '../../dto/request/worship-session/creat
 import { WorshipSessionException } from '../../exception/worship-session.exception';
 import { GetWorshipSessionsDto } from '../../dto/request/worship-session/get-worship-sessions.dto';
 import { WorshipSessionOrderEnum } from '../../const/worship-session-order.enum';
-import { WorshipSessionDomainPaginationResultDto } from '../dto/worship-session-domain-pagination-result.dto';
 import { UpdateWorshipSessionDto } from '../../dto/request/worship-session/update-worship-session.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { ManagerException } from '../../../manager/exception/manager.exception';
@@ -33,6 +32,7 @@ import {
 } from '../../../members/const/member-find-options.const';
 import { session } from 'passport';
 import { AttendanceStatus } from '../../const/attendance-status.enum';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 @Injectable()
 export class WorshipSessionDomainService
@@ -74,7 +74,13 @@ export class WorshipSessionDomainService
       orderOptions.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: whereOptions,
+      order: orderOptions,
+      select: selectOptions,
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: whereOptions,
         order: orderOptions,
@@ -86,7 +92,7 @@ export class WorshipSessionDomainService
       }),
     ]);
 
-    return new WorshipSessionDomainPaginationResultDto(data, totalCount);
+    return new WorshipSessionDomainPaginationResultDto(data, totalCount);*/
   }
 
   private async assertValidNewSession(
@@ -342,7 +348,7 @@ export class WorshipSessionDomainService
 
   async findSessionCheckStatus(
     worship: WorshipModel,
-    intersectionGroupIds: number[] | undefined,
+    intersectionGroupIds: WorshipGroupIdsVo,
     from: Date,
     to: Date,
   ): Promise<any> {
@@ -362,10 +368,15 @@ export class WorshipSessionDomainService
       ])
       .setParameter('unknown', AttendanceStatus.UNKNOWN);
 
-    if (intersectionGroupIds && intersectionGroupIds.length > 0) {
+    if (
+      intersectionGroupIds.groupIds.length > 0 &&
+      !intersectionGroupIds.isAllGroups
+    ) {
       query.andWhere('member.groupId IN (:...groupIds)', {
-        groupIds: intersectionGroupIds,
+        groupIds: intersectionGroupIds.groupIds,
       });
+    } else if (!intersectionGroupIds.isAllGroups) {
+      query.andWhere('member.groupId IS NULL');
     }
 
     const results = await query

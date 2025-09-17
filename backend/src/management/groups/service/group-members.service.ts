@@ -41,6 +41,12 @@ import {
   IGROUP_DETAIL_HISTORY_DOMAIN_SERVICE,
   IGroupDetailHistoryDomainService,
 } from '../../../member-history/group-history/group-history-domain/interface/group-detail-history-domain.service.interface';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../../members/service/interface/member-filter.service.interface';
+import { RefreshMembersCountResponseDto } from '../dto/response/members/refresh-members-count-response.dto';
 
 @Injectable()
 export class GroupMembersService {
@@ -51,6 +57,8 @@ export class GroupMembersService {
     private readonly groupsDomainService: IGroupsDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
 
     @Inject(IGROUP_MEMBERS_DOMAIN_SERVICE)
     private readonly groupMembersDomainService: IGroupMembersDomainService,
@@ -61,13 +69,11 @@ export class GroupMembersService {
   ) {}
 
   async getGroupMembers(
-    churchId: number,
+    church: ChurchModel,
+    requestManager: ChurchUserModel,
     groupId: number,
     dto: GetGroupMembersDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const group = await this.groupsDomainService.findGroupModelById(
       church,
       groupId,
@@ -79,7 +85,18 @@ export class GroupMembersService {
       dto,
     );
 
-    return new GetGroupMembersResponseDto(groupMembers);
+    const scope = await this.memberFilterService.getScopeGroupIds(
+      church,
+      requestManager,
+    );
+
+    const filteredGroupMembers = this.memberFilterService.filterMemberDto(
+      requestManager,
+      groupMembers,
+      scope,
+    );
+
+    return new GetGroupMembersResponseDto(filteredGroupMembers);
   }
 
   private assertNotSameGroup(members: MemberModel[], newGroup: GroupModel) {
@@ -345,6 +362,6 @@ export class GroupMembersService {
 
     group.membersCount = membersCount;
 
-    return { data: group, timestamp: new Date() };
+    return new RefreshMembersCountResponseDto(group);
   }
 }

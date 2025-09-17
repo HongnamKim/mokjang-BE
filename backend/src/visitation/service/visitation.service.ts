@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import {
   IVISITATION_META_DOMAIN_SERVICE,
   IVisitationMetaDomainService,
@@ -39,7 +39,6 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { GetVisitationResponseDto } from '../dto/response/get-visitation-response.dto';
 import { PostVisitationResponseDto } from '../dto/response/post-visitation-response.dto';
 import { PatchVisitationResponseDto } from '../dto/response/patch-visitation-response.dto';
 import { DeleteVisitationResponseDto } from '../dto/response/delete-visitation-response.dto';
@@ -48,6 +47,12 @@ import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { VisitationNotificationService } from './visitation-notification.service';
 import { NotificationSourceVisitation } from '../../notification/notification-event.dto';
 import { NotificationDomain } from '../../notification/const/notification-domain.enum';
+import {
+  IMEMBER_FILTER_SERVICE,
+  IMemberFilterService,
+} from '../../members/service/interface/member-filter.service.interface';
+import { VisitationException } from '../const/exception/visitation.exception';
+import { ChurchUserRole } from '../../user/const/user-role.enum';
 
 @Injectable()
 export class VisitationService {
@@ -56,6 +61,8 @@ export class VisitationService {
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
+    @Inject(IMEMBER_FILTER_SERVICE)
+    private readonly memberFilterService: IMemberFilterService,
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
 
@@ -81,7 +88,7 @@ export class VisitationService {
     return new VisitationPaginationResultDto(visitations);
   }
 
-  async getVisitationById(
+  /*async getVisitationById(
     churchId: number,
     visitingMetaDataId: number,
     qr: QueryRunner,
@@ -97,6 +104,60 @@ export class VisitationService {
       );
 
     return new GetVisitationResponseDto(visitation);
+  }*/
+
+  private async validateVisitationMember(
+    church: ChurchModel,
+    creatorManager: ChurchUserModel,
+    inCharge: ChurchUserModel,
+    targetMembers: MemberModel[],
+    qr: QueryRunner,
+  ) {
+    if (
+      !creatorManager.permissionScopes.some((scope) => scope.isAllGroups) &&
+      creatorManager.role !== ChurchUserRole.OWNER
+    ) {
+      const creatorScope = await this.memberFilterService.getScopeGroupIds(
+        church,
+        creatorManager,
+        qr,
+      );
+
+      const creatorFiltered = this.memberFilterService.filterMembers(
+        creatorManager,
+        targetMembers,
+        creatorScope,
+      );
+
+      if (creatorFiltered.some((member) => member.isConcealed)) {
+        throw new ForbiddenException(
+          VisitationException.OUT_OF_SCOPE_MEMBER_INCLUDE,
+        );
+      }
+    }
+
+    if (
+      !inCharge.permissionScopes.some((scope) => scope.isAllGroups) &&
+      inCharge.role !== ChurchUserRole.OWNER
+    ) {
+      const inChargeScope = await this.memberFilterService.getScopeGroupIds(
+        church,
+        inCharge,
+        qr,
+      );
+
+      const inChargeFiltered = this.memberFilterService.filterMembers(
+        inCharge,
+        targetMembers,
+        inChargeScope,
+      );
+
+      if (inChargeFiltered.some((member) => member.isConcealed)) {
+        throw new ForbiddenException(
+          VisitationException.OUT_OF_IN_CHARGE_SCOPE_MEMBER_INCLUDE,
+        );
+      }
+    }
   }
 
   async createVisitation(
@@ -121,6 +182,15 @@ export class VisitationService {
     const members = await this.membersDomainService.findMembersById(
       church,
       memberIds,
+      qr,
+      { group: true },
+    );
+
+    await this.validateVisitationMember(
+      church,
+      creatorManager,
+      inCharge,
+      members,
       qr,
     );
 
@@ -216,18 +286,10 @@ export class VisitationService {
   async updateVisitationData(
     church: ChurchModel,
     requestManager: ChurchUserModel,
-    visitationMetaDataId: number,
+    targetMetaData: VisitationMetaModel,
     dto: UpdateVisitationDto,
     qr: QueryRunner,
   ) {
-    const targetMetaData =
-      await this.visitationMetaDomainService.findVisitationMetaModelById(
-        church,
-        visitationMetaDataId,
-        qr,
-        { members: true, reports: true },
-      );
-
     // 심방 진행자 변경 시
     const newInstructor =
       dto.inChargeId && dto.inChargeId !== targetMetaData.inChargeId
@@ -268,6 +330,31 @@ export class VisitationService {
           qr,
         );
 
+      if (newInstructor) {
+        await this.validateVisitationMember(
+          church,
+          requestManager,
+          newInstructor,
+          newVisitationMembers,
+          qr,
+        );
+      } else if (oldInCharge && oldInCharge) {
+        const oldInChargeChurchUser =
+          await this.managerDomainService.findManagerById(
+            church,
+            oldInCharge.id,
+            qr,
+          );
+
+        await this.validateVisitationMember(
+          church,
+          requestManager,
+          oldInChargeChurchUser,
+          newVisitationMembers,
+          qr,
+        );
+      }
+
       visitationType =
         newVisitationMembers.length > 1
           ? VisitationType.GROUP
@@ -285,6 +372,17 @@ export class VisitationService {
       await this.visitationMetaDomainService.updateVisitationMember(
         targetMetaData,
         newVisitationMembers,
+        qr,
+      );
+    } else if (newInstructor) {
+      // 대상 교인 변경 없이, 담당자만 변경
+      const targetMembers = targetMetaData.members;
+
+      await this.validateVisitationMember(
+        church,
+        requestManager,
+        newInstructor,
+        targetMembers,
         qr,
       );
     }
@@ -366,7 +464,8 @@ export class VisitationService {
     const updatedVisitation =
       await this.visitationMetaDomainService.findVisitationMetaById(
         church,
-        visitationMetaDataId,
+        targetMetaData.id,
+        //visitationMetaDataId,
         qr,
       );
 
@@ -376,17 +475,9 @@ export class VisitationService {
   async deleteVisitation(
     church: ChurchModel,
     requestManager: ChurchUserModel,
-    visitationMetaDataId: number,
+    metaData: VisitationMetaModel,
     qr: QueryRunner,
   ) {
-    const metaData =
-      await this.visitationMetaDomainService.findVisitationMetaModelById(
-        church,
-        visitationMetaDataId,
-        qr,
-        { reports: true },
-      );
-
     // 메타 데이터 삭제
     await this.visitationMetaDomainService.deleteVisitationMeta(metaData, qr);
 

@@ -10,6 +10,7 @@ import { GetWorshipAttendanceListDto } from '../../dto/request/worship-attendanc
 import { DomainCursorPaginationResultDto } from '../../../common/dto/domain-cursor-pagination-result.dto';
 import { MemberModel } from '../../../members/entity/member.entity';
 import { GetMemberWorshipAttendancesDto } from '../../../members/dto/request/worship/get-member-worship-attendances.dto';
+import { WorshipGroupIdsVo } from '../../vo/worship-group-ids.vo';
 
 export const IWORSHIP_ATTENDANCE_DOMAIN_SERVICE = Symbol(
   'IWORSHIP_ATTENDANCE_DOMAIN_SERVICE',
@@ -19,7 +20,7 @@ export interface IWorshipAttendanceDomainService {
   findAttendanceList(
     session: WorshipSessionModel,
     dto: GetWorshipAttendanceListDto,
-    groupIds: number[] | undefined,
+    groupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ): Promise<DomainCursorPaginationResultDto<WorshipAttendanceModel>>;
 
@@ -83,7 +84,7 @@ export interface IWorshipAttendanceDomainService {
 
   getAttendanceStatsBySession(
     worshipSession: WorshipSessionModel,
-    requestGroupIds: number[] | undefined,
+    requestGroupIds: WorshipGroupIdsVo,
     qr?: QueryRunner,
   ): Promise<{
     presentCount: number;
@@ -93,12 +94,12 @@ export interface IWorshipAttendanceDomainService {
 
   getOverallAttendanceStats(
     worship: WorshipModel,
-    requestGroupIds: number[] | undefined,
+    requestGroupIds: WorshipGroupIdsVo,
   ): Promise<{ overallRate: number; attendanceCheckRate: number }>;
 
   getAttendanceStatsByPeriod(
     worship: WorshipModel,
-    requestGroupIds: number[] | undefined,
+    requestGroupIds: WorshipGroupIdsVo,
     from: Date,
     to: Date | undefined,
   ): Promise<{ rate: number; attendanceCheckRate: number }>;
@@ -118,13 +119,13 @@ export interface IWorshipAttendanceDomainService {
 
   findUnknownAttendances(
     session: WorshipSessionModel,
-    groupIds: number[] | undefined,
+    groupIds: WorshipGroupIdsVo,
     qr: QueryRunner,
   ): Promise<WorshipAttendanceModel[]>;
 
   findAbsentAttendances(
     session: WorshipSessionModel,
-    groupIds: number[] | undefined,
+    groupIds: WorshipGroupIdsVo,
     qr: QueryRunner,
   ): Promise<WorshipAttendanceModel[]>;
 
