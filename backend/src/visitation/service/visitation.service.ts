@@ -53,6 +53,7 @@ import {
 } from '../../members/service/interface/member-filter.service.interface';
 import { VisitationException } from '../const/exception/visitation.exception';
 import { ChurchUserRole } from '../../user/const/user-role.enum';
+import { GetVisitationResponseDto } from '../dto/response/get-visitation-response.dto';
 
 @Injectable()
 export class VisitationService {
@@ -88,14 +89,11 @@ export class VisitationService {
     return new VisitationPaginationResultDto(visitations);
   }
 
-  /*async getVisitationById(
-    churchId: number,
+  async getVisitationById(
+    church: ChurchModel,
     visitingMetaDataId: number,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const visitation =
       await this.visitationMetaDomainService.findVisitationMetaById(
         church,
@@ -104,7 +102,7 @@ export class VisitationService {
       );
 
     return new GetVisitationResponseDto(visitation);
-  }*/
+  }
 
   private async validateVisitationMember(
     church: ChurchModel,
