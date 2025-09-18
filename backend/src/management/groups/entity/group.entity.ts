@@ -1,4 +1,12 @@
-import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { BaseModel } from '../../../common/entity/base.entity';
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
@@ -42,6 +50,10 @@ export class GroupModel extends BaseModel {
 
   @Column({ type: 'int', nullable: true })
   leaderMemberId: number | null;
+
+  @OneToOne(() => MemberModel, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'leaderMemberId' })
+  leaderMember: MemberModel | null;
 
   @OneToMany(() => MemberModel, (member) => member.group)
   members: MemberModel[];

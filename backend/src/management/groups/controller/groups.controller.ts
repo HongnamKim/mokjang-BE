@@ -102,7 +102,8 @@ export class GroupsController {
     @RequestChurch() church: ChurchModel,
     @Param('groupId', ParseIntPipe) groupId: number,
   ) {
-    return this.groupsService.getGroupByIdWithParents(church, groupId);
+    return this.groupsService.getGroupById(church, groupId);
+    //return this.groupsService.getGroupByIdWithParents(church, groupId);
   }
 
   @ApiDeleteGroup()

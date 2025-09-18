@@ -7,7 +7,7 @@ export class UpdateGroupLeaderDto {
     description: '리더로 지정할 교인 ID',
   })
   @IsNumber()
-  @Min(1)
+  @Min(0)
   newLeaderMemberId: number;
 
   @ApiProperty({

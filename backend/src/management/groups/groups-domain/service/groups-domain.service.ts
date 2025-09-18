@@ -36,6 +36,10 @@ import { UpdateGroupStructureDto } from '../../dto/request/update-group-structur
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GroupRole } from '../../const/group-role.enum';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
+  MemberSimpleSelect,
+  MemberSummarizedRelation,
+} from '../../../../members/const/member-find-options.const';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -181,6 +185,17 @@ export class GroupsDomainService implements IGroupsDomainService {
       where: {
         churchId: church.id,
         id: groupId,
+      },
+      relations: { leaderMember: MemberSummarizedRelation },
+      select: {
+        /*id: true,
+        createdAt: true,
+        updatedAt: true,
+        name: true,
+        parentGroupId: true,
+        childGroupIds: true,
+        membersCount: true,*/
+        leaderMember: MemberSimpleSelect,
       },
     });
 
