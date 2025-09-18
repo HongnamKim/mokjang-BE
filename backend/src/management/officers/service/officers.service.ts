@@ -52,19 +52,9 @@ export class OfficersService {
     dto: GetOfficersDto,
     qr?: QueryRunner,
   ) {
-    const { data, totalCount } = await this.officersDomainService.findOfficers(
-      church,
-      dto,
-      qr,
-    );
+    const data = await this.officersDomainService.findOfficers(church, dto, qr);
 
-    return new OfficerPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new OfficerPaginationResponseDto(data);
   }
 
   async createOfficer(

@@ -12,8 +12,5 @@ export interface IEducationHistoryDomainService {
     member: MemberModel,
     dto: GetEducationHistoryDto,
     qr?: QueryRunner,
-  ): Promise<{
-    educationHistories: EducationEnrollmentModel[];
-    totalCount: number;
-  }>;
+  ): Promise<EducationEnrollmentModel[]>;
 }

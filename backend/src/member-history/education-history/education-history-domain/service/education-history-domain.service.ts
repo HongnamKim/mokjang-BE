@@ -34,7 +34,22 @@ export class EducationHistoryDomainService
       status: dto.status,
     };
 
-    const [educationHistories, totalCount] = await Promise.all([
+    return educationEnrollmentsRepository.find({
+      where: findOptionsWhere,
+      relations: {
+        educationTerm: true,
+      },
+      order: {
+        educationTerm: {
+          endDate: dto.orderDirection,
+          startDate: dto.orderDirection,
+        },
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    /*const [educationHistories, totalCount] = await Promise.all([
       educationEnrollmentsRepository.find({
         where: findOptionsWhere,
         relations: {
@@ -54,6 +69,6 @@ export class EducationHistoryDomainService
       }),
     ]);
 
-    return { educationHistories, totalCount };
+    return { educationHistories, totalCount };*/
   }
 }

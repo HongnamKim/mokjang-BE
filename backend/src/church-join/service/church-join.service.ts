@@ -42,6 +42,7 @@ import { ChurchJoinException } from '../exception/church-join.exception';
 import { PostJoinRequestResponseDto } from '../dto/response/post-join-request-response.dto';
 import { MemberException } from '../../members/exception/member.exception';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { DeleteJoinRequestResponseDto } from '../dto/response/delete-join-request-response.dto';
 
 @Injectable()
 export class ChurchJoinService {
@@ -102,19 +103,19 @@ export class ChurchJoinService {
   }
 
   async getChurchJoinRequests(church: ChurchModel, dto: GetJoinRequestDto) {
-    const { data, totalCount } =
+    /*const { data, totalCount } =
+      await this.churchJoinRequestsDomainService.findChurchJoinRequests(
+        church,
+        dto,
+      );*/
+
+    const data =
       await this.churchJoinRequestsDomainService.findChurchJoinRequests(
         church,
         dto,
       );
 
-    return new JoinRequestPaginationResult(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new JoinRequestPaginationResult(data);
   }
 
   async approveChurchJoinRequest(
@@ -227,7 +228,7 @@ export class ChurchJoinService {
       qr,
     );
 
-    return `ChurchJoinRequest id: ${joinId} deleted`;
+    return new DeleteJoinRequestResponseDto(new Date(), joinRequest.id, true);
   }
 
   getTopRequestUsers() {

@@ -3,7 +3,6 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { TaskModel } from '../../entity/task.entity';
 import { CreateTaskDto } from '../../dto/request/create-task.dto';
 import { GetTasksDto } from '../../dto/request/get-tasks.dto';
-import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-result.dto';
 import { UpdateTaskDto } from '../../dto/request/update-task.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { MemberModel } from '../../../members/entity/member.entity';
@@ -17,7 +16,7 @@ export interface ITaskDomainService {
     church: ChurchModel,
     dto: GetTasksDto,
     qr?: QueryRunner,
-  ): Promise<TaskDomainPaginationResultDto>;
+  ): Promise<TaskModel[]>;
 
   findSubTasks(
     church: ChurchModel,

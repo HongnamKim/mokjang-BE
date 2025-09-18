@@ -19,7 +19,6 @@ import {
   Repository,
 } from 'typeorm';
 import { ChurchModel } from '../../../churches/entity/church.entity';
-import { TaskDomainPaginationResultDto } from '../../dto/task-domain-pagination-result.dto';
 import { TaskException } from '../../const/exception-message/task.exception';
 import { CreateTaskDto } from '../../dto/request/create-task.dto';
 import { ITaskDomainService } from '../interface/task-domain.service.interface';
@@ -91,7 +90,23 @@ export class TaskDomainService implements ITaskDomainService {
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return taskRepository.find({
+      where: {
+        churchId: church.id,
+        taskType: TaskType.parent,
+        title: dto.title && Like(`%${dto.title}%`),
+        startDate: this.parseTaskDate(dto),
+        status: dto.status,
+        inChargeId: dto.inChargeId,
+      },
+      relations: TasksFindOptionsRelation,
+      select: TasksFindOptionsSelect,
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       taskRepository.find({
         where: {
           churchId: church.id,
@@ -119,7 +134,7 @@ export class TaskDomainService implements ITaskDomainService {
       }),
     ]);
 
-    return new TaskDomainPaginationResultDto(data, totalCount);
+    return new TaskDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findSubTasks(

@@ -4,7 +4,6 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateMinistryGroupDto } from '../../dto/ministry-group/request/create-ministry-group.dto';
 import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/request/update-ministry-group-name.dto';
 import { GetMinistryGroupDto } from '../../dto/ministry-group/request/get-ministry-group.dto';
-import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
 import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/request/update-ministry-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
@@ -29,7 +28,7 @@ export interface IMinistryGroupsDomainService {
     parentMinistryGroup: MinistryGroupModel | null,
     dto: GetMinistryGroupDto,
     qr?: QueryRunner,
-  ): Promise<MinistryGroupDomainPaginationResponseDto>;
+  ): Promise<MinistryGroupModel[]>;
 
   findMinistryGroupModelById(
     church: ChurchModel,
