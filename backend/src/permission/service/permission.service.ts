@@ -18,21 +18,23 @@ import {
   IMANAGER_DOMAIN_SERVICE,
   IManagerDomainService,
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
-import { MemberPaginationResponseDto } from '../../members/dto/response/member-pagination-response.dto';
 import { GetManagersByPermissionTemplateDto } from '../dto/template/request/get-managers-by-permission-template.dto';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { PermissionNotificationService } from './permission-notification.service';
 import { PermissionException } from '../exception/permission.exception';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ManagerPaginationResponseDto } from '../../manager/dto/response/manager-pagination-response.dto';
 
 @Injectable()
 export class PermissionService {
   constructor(
     private readonly permissionNotificationService: PermissionNotificationService,
 
+    @Inject(CACHE_MANAGER)
+    private readonly cache: Cache,
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
-
     @Inject(IPERMISSION_DOMAIN_SERVICE)
     private readonly permissionDomainService: IPermissionDomainService,
   ) {}
@@ -48,16 +50,12 @@ export class PermissionService {
     church: ChurchModel,
     dto: GetPermissionTemplateDto,
   ) {
-    const { data, totalCount } =
-      await this.permissionDomainService.findPermissionTemplates(church, dto);
-
-    return new PermissionTemplatePaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
+    const data = await this.permissionDomainService.findPermissionTemplates(
+      church,
+      dto,
     );
+
+    return new PermissionTemplatePaginationResponseDto(data);
   }
 
   async postPermissionTemplates(
@@ -108,6 +106,12 @@ export class PermissionService {
         church,
         targetTemplate,
       );
+
+    const cacheKeys = notificationTargets.map(
+      (manager) => `manager-${manager.userId}`,
+    );
+
+    await this.cache.mdel(cacheKeys);
 
     this.permissionNotificationService.notifyPermissionTemplateUpdated(
       requestManager,
@@ -203,21 +207,15 @@ export class PermissionService {
         templateId,
       );
 
-    const { data, totalCount } =
+    const data =
       await this.managerDomainService.findManagersByPermissionTemplate(
         church,
         permissionTemplate,
         dto,
       );
 
-    const managerMember = data.map((churchUser) => churchUser.member);
+    //const managerMember = data.map((churchUser) => churchUser.member);
 
-    return new MemberPaginationResponseDto(
-      managerMember,
-      totalCount,
-      managerMember.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new ManagerPaginationResponseDto(data);
   }
 }

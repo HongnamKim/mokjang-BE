@@ -88,10 +88,6 @@ export class ChurchesService {
 
     const subscription =
       await this.subscriptionDomainService.findTrialSubscription(ownerUser, qr);
-    /*await this.subscriptionDomainService.findAbleToCreateChurchSubscription(
-        ownerUser,
-        qr,
-      );*/
 
     const newChurch = await this.churchesDomainService.createChurch(
       dto,
@@ -160,18 +156,15 @@ export class ChurchesService {
   }
 
   async updateChurchJoinCode(
-    churchId: number,
+    church: ChurchModel,
     newCode: string,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     await this.churchesDomainService.updateChurchJoinCode(church, newCode, qr);
 
-    return this.churchesDomainService.findChurchModelById(churchId, qr);
+    church.joinCode = newCode;
+
+    return new PatchChurchResponseDto(church);
   }
 
   // TODO 구독 상태에 따른 교회 삭제 후 처리 로직 필요
@@ -182,13 +175,6 @@ export class ChurchesService {
     user: UserModel,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      id,
-      qr,
-      { subscription: true },
-    );*/
-
-    //const subscription = church.subscription;
     const subscription =
       await this.subscriptionDomainService.findSubscriptionByChurch(church, qr);
 
@@ -204,10 +190,6 @@ export class ChurchesService {
       );
     }
 
-    /*const ownerUser = await this.userDomainService.findUserModelById(
-      church.ownerUserId,
-    );*/
-
     await this.userDomainService.updateUserRole(
       //ownerUser,
       user,
@@ -219,15 +201,10 @@ export class ChurchesService {
   }
 
   async transferOwner(
-    churchId: number,
+    church: ChurchModel,
     dto: TransferOwnerDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     if (!church.ownerUserId) {
       throw new ConflictException('교회 소유자 누락');
     }
@@ -298,15 +275,10 @@ export class ChurchesService {
       qr,
     );
 
-    return this.churchesDomainService.findChurchById(churchId, qr);
+    return this.churchesDomainService.findChurchById(church.id, qr);
   }
 
-  async refreshMemberCount(churchId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async refreshMemberCount(church: ChurchModel, qr?: QueryRunner) {
     const memberCount = await this.membersDomainService.countAllMembers(
       church,
       qr,

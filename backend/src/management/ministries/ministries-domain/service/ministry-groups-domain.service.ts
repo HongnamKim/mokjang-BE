@@ -28,7 +28,6 @@ import { CreateMinistryGroupDto } from '../../dto/ministry-group/request/create-
 import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/request/update-ministry-group-name.dto';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetMinistryGroupDto } from '../../dto/ministry-group/request/get-ministry-group.dto';
-import { MinistryGroupDomainPaginationResponseDto } from '../../dto/ministry-group/response/ministry-group-domain-pagination-response.dto';
 import { MinistryGroupOrderEnum } from '../../const/ministry-group-order.enum';
 import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/request/update-ministry-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
@@ -98,7 +97,19 @@ export class MinistryGroupsDomainService
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return ministryGroupsRepository.find({
+      where: {
+        churchId: church.id,
+        parentMinistryGroupId: parentMinistryGroup
+          ? parentMinistryGroup.id
+          : IsNull(),
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       ministryGroupsRepository.find({
         where: {
           churchId: church.id,
@@ -117,7 +128,7 @@ export class MinistryGroupsDomainService
       }),
     ]);
 
-    return new MinistryGroupDomainPaginationResponseDto(data, totalCount);
+    return new MinistryGroupDomainPaginationResponseDto(data, totalCount);*/
   }
 
   async findMinistryGroupModelById(

@@ -74,18 +74,9 @@ export class GroupsService {
   ) {}
 
   async getGroups(church: ChurchModel, dto: GetGroupDto) {
-    const { data, totalCount } = await this.groupsDomainService.findGroups(
-      church,
-      dto,
-    );
+    const data = await this.groupsDomainService.findGroups(church, dto);
 
-    return new GroupPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new GroupPaginationResponseDto(data);
   }
 
   async getGroupByIdWithParents(

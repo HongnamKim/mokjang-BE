@@ -23,7 +23,6 @@ import {
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { GetPermissionTemplateDto } from '../../dto/template/request/get-permission-template.dto';
 import { PermissionTemplateOrder } from '../../const/permission-template-order.enum';
-import { PermissionTemplateDomainPaginationResultDto } from '../dto/permission-template-domain-pagination-result.dto';
 import { CreatePermissionTemplateDto } from '../../dto/template/request/create-permission-template.dto';
 import { UpdatePermissionTemplateDto } from '../../dto/template/request/update-permission-template.dto';
 import { PermissionException } from '../../exception/permission.exception';
@@ -75,7 +74,15 @@ export class PermissionDomainService implements IPermissionDomainService {
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: {
+        churchId: church.id,
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: {
           churchId: church.id,
@@ -91,7 +98,7 @@ export class PermissionDomainService implements IPermissionDomainService {
       }),
     ]);
 
-    return new PermissionTemplateDomainPaginationResultDto(data, totalCount);
+    return new PermissionTemplateDomainPaginationResultDto(data, totalCount);*/
   }
 
   private async assertValidTemplateTitle(

@@ -158,14 +158,11 @@ export class ChurchesController {
   @UseInterceptors(TransactionInterceptor)
   patchChurchJoinCode(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateChurchJoinCodeDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.updateChurchJoinCode(
-      churchId,
-      dto.joinCode,
-      qr,
-    );
+    return this.churchesService.updateChurchJoinCode(church, dto.joinCode, qr);
   }
 
   @ApiOperation({
@@ -176,10 +173,11 @@ export class ChurchesController {
   @UseInterceptors(TransactionInterceptor)
   transferMainAdmin(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: TransferOwnerDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.transferOwner(churchId, dto, qr);
+    return this.churchesService.transferOwner(church, dto, qr);
   }
 
   @ApiOperation({
@@ -187,7 +185,10 @@ export class ChurchesController {
   })
   @ChurchWriteGuard()
   @Patch(':churchId/refresh-member-count')
-  refreshMemberCount(@Param('churchId', ParseIntPipe) churchId: number) {
-    return this.churchesService.refreshMemberCount(churchId);
+  refreshMemberCount(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+  ) {
+    return this.churchesService.refreshMemberCount(church);
   }
 }

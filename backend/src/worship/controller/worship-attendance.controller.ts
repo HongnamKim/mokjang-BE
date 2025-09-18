@@ -143,8 +143,6 @@ export class WorshipAttendanceController {
     @QueryRunner() qr: QR,
   ) {
     return this.worshipAttendanceService.refreshAttendance(
-      //churchId,
-      //worshipId,
       church,
       worshipId,
       sessionId,

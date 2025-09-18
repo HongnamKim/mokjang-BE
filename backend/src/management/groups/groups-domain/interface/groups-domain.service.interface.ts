@@ -4,7 +4,6 @@ import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { CreateGroupDto } from '../../dto/request/create-group.dto';
 import { UpdateGroupNameDto } from '../../dto/request/update-group-name.dto';
 import { GetGroupDto } from '../../dto/request/get-group.dto';
-import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 
@@ -29,10 +28,7 @@ export interface GroupModelWithParentGroups extends GroupModel {
 export const IGROUPS_DOMAIN_SERVICE = Symbol('IGROUPS_DOMAIN_SERVICE');
 
 export interface IGroupsDomainService {
-  findGroups(
-    church: ChurchModel,
-    dto: GetGroupDto,
-  ): Promise<GroupDomainPaginationResultDto>;
+  findGroups(church: ChurchModel, dto: GetGroupDto): Promise<GroupModel[]>;
 
   findGroupById(
     church: ChurchModel,

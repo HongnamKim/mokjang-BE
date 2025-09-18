@@ -3,7 +3,6 @@ import { DomainType } from '../../../const/domain-type.enum';
 import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { GetPermissionTemplateDto } from '../../../dto/template/request/get-permission-template.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
-import { PermissionTemplateDomainPaginationResultDto } from '../../dto/permission-template-domain-pagination-result.dto';
 import { CreatePermissionTemplateDto } from '../../../dto/template/request/create-permission-template.dto';
 import { PermissionTemplateModel } from '../../../entity/permission-template.entity';
 import { UpdatePermissionTemplateDto } from '../../../dto/template/request/update-permission-template.dto';
@@ -17,7 +16,7 @@ export interface IPermissionDomainService {
     church: ChurchModel,
     dto: GetPermissionTemplateDto,
     qr?: QueryRunner,
-  ): Promise<PermissionTemplateDomainPaginationResultDto>;
+  ): Promise<PermissionTemplateModel[]>;
 
   createPermissionTemplate(
     church: ChurchModel,
