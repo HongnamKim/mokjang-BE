@@ -65,7 +65,7 @@ export class UserDomainService implements IUserDomainService {
 
     const user = await repository
       .createQueryBuilder('user')
-      .innerJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
+      .leftJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
       .addSelect([
         'churchUser.id',
         'churchUser.createdAt',

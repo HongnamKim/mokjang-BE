@@ -79,6 +79,10 @@ export class GroupsService {
     return new GroupPaginationResponseDto(data);
   }
 
+  async getGroupById(church: ChurchModel, groupId: number, qr?: QueryRunner) {
+    return this.groupsDomainService.findGroupById(church, groupId, qr);
+  }
+
   async getGroupByIdWithParents(
     church: ChurchModel,
     groupId: number,
@@ -113,37 +117,40 @@ export class GroupsService {
       qr,
     );
 
-    const newLeaderMember = await this.membersDomainService.findMemberModelById(
-      church,
-      dto.newLeaderMemberId,
-      qr,
-    );
+    if (dto.newLeaderMemberId !== 0) {
+      const newLeaderMember =
+        await this.membersDomainService.findMemberModelById(
+          church,
+          dto.newLeaderMemberId,
+          qr,
+        );
 
-    // 그룹의 리더 설정 (group.leaderMemberId)
-    await this.groupsDomainService.updateGroupLeader(
-      group,
-      newLeaderMember,
-      qr,
-    );
-
-    // 교인의 groupRole 설정 (member.groupRole), 기존 리더가 있을 경우 GroupRole.MEMBER 로 변경
-    await this.membersDomainService.updateGroupRole(
-      newLeaderMember,
-      GroupRole.LEADER,
-      qr,
-    );
-    const newLeaderGroupHistory =
-      await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+      // 그룹의 리더 설정 (group.leaderMemberId)
+      await this.groupsDomainService.updateGroupLeader(
+        group,
         newLeaderMember,
         qr,
       );
-    await this.groupDetailHistoryDomainService.startGroupDetailHistory(
-      newLeaderMember,
-      newLeaderGroupHistory,
-      GroupRole.LEADER,
-      convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL),
-      qr,
-    );
+
+      // 교인의 groupRole 설정 (member.groupRole), 기존 리더가 있을 경우 GroupRole.MEMBER 로 변경
+      await this.membersDomainService.updateGroupRole(
+        newLeaderMember,
+        GroupRole.LEADER,
+        qr,
+      );
+      const newLeaderGroupHistory =
+        await this.groupHistoryDomainService.findCurrentGroupHistoryModel(
+          newLeaderMember,
+          qr,
+        );
+      await this.groupDetailHistoryDomainService.startGroupDetailHistory(
+        newLeaderMember,
+        newLeaderGroupHistory,
+        GroupRole.LEADER,
+        convertHistoryStartDate(dto.startDate, TIME_ZONE.SEOUL),
+        qr,
+      );
+    }
 
     const oldLeaderMember = group.leaderMemberId
       ? await this.membersDomainService.findMemberModelById(
@@ -192,9 +199,11 @@ export class GroupsService {
       );
     }
 
-    group.leaderMemberId = newLeaderMember.id;
+    if (dto.newLeaderMemberId === 0) {
+      await this.groupsDomainService.updateGroupLeader(group, null, qr);
+    }
 
-    return group;
+    return this.groupsDomainService.findGroupById(church, groupId, qr);
   }
 
   async updateGroupStructure(
