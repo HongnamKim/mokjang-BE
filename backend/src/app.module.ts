@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChurchModel } from './churches/entity/church.entity';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
@@ -85,12 +85,19 @@ import { NotificationModel } from './notification/entity/notification.entity';
 import { MobileVerificationModel } from './mobile-verification/entity/mobile-verification.entity';
 import { MobileVerificationModule } from './mobile-verification/mobile-verification.module';
 import { CacheModule } from '@nestjs/cache-manager';
-
-//import { EducationTermReportModel } from './report/education-report/entity/education-term-report.entity';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
     EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 1000,
+          limit: 10,
+        },
+      ],
+    }),
     CacheModule.register({
       isGlobal: true,
       ttl: 300_000,
@@ -271,6 +278,10 @@ import { CacheModule } from '@nestjs/cache-manager';
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     //DummyDataService,
   ],
