@@ -133,11 +133,29 @@ export class VisitationScopeGuard implements CanActivate {
 
     // 소유자
     if (requestManager.role === ChurchUserRole.OWNER) {
+      if (visitationId) {
+        // 대상 심방
+        req.targetVisitation =
+          await this.visitationDomainService.findVisitationMetaById(
+            church,
+            visitationId,
+          );
+      }
+
       return true;
     } else {
       // 전체 권한 범위
-      if (requestManager.permissionScopes.some((scope) => scope.isAllGroups))
+      if (requestManager.permissionScopes.some((scope) => scope.isAllGroups)) {
+        if (visitationId) {
+          // 대상 심방
+          req.targetVisitation =
+            await this.visitationDomainService.findVisitationMetaById(
+              church,
+              visitationId,
+            );
+        }
         return true;
+      }
     }
 
     // 요청자의 권한 범위 내 모든 그룹 ID

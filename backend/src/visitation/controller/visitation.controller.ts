@@ -83,9 +83,9 @@ export class VisitationController {
   getVisitingById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationMetaDataId: number,
-    @RequestVisitation() visitation: VisitationMetaModel,
+    @RequestVisitation() requestVisitation: VisitationMetaModel,
   ) {
-    return new GetVisitationResponseDto(visitation);
+    return new GetVisitationResponseDto(requestVisitation);
   }
 
   @ApiPatchVisitationMeta()
