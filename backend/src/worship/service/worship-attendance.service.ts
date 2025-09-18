@@ -188,7 +188,9 @@ export class WorshipAttendanceService {
       await this.worshipAttendanceDomainService.findAllAttendances(session, qr);
 
     const existWorshipAttendanceEnrollmentIds = new Set(
-      existWorshipAttendances.map((attendance) => attendance.id),
+      existWorshipAttendances.map(
+        (attendance) => attendance.worshipEnrollment.id,
+      ),
     );
 
     const notExistAttendanceEnrollments: WorshipEnrollmentModel[] = [];
