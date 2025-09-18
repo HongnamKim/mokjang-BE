@@ -57,9 +57,11 @@ export class ChurchManagerGuard implements CanActivate {
     const cachedManager = await this.cache.get<ChurchUserModel>(managerKey);
 
     if (cachedManager) {
+      console.log('cache');
       return cachedManager;
     }
 
+    console.log('db');
     const requestManager =
       await this.managerDomainService.findManagerForPermissionCheck(
         church,

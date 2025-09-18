@@ -29,12 +29,15 @@ import { ChurchUserRole } from '../../user/const/user-role.enum';
 import { PermissionScopeException } from '../../permission/exception/permission-scope.exception';
 import { ManagerNotificationService } from './manager-notification.service';
 import { ChurchUserException } from '../../church-user/exception/church-user.exception';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class ManagerService {
   constructor(
     private readonly managerNotificationService: ManagerNotificationService,
 
+    @Inject(CACHE_MANAGER)
+    private readonly cache: Cache,
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
     @Inject(IPERMISSION_DOMAIN_SERVICE)
@@ -46,18 +49,9 @@ export class ManagerService {
   ) {}
 
   async getManagers(church: ChurchModel, dto: GetManagersDto) {
-    const { data, totalCount } = await this.managerDomainService.findManagers(
-      church,
-      dto,
-    );
+    const data = await this.managerDomainService.findManagers(church, dto);
 
-    return new ManagerPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new ManagerPaginationResponseDto(data);
   }
 
   async togglePermissionActive(
@@ -99,6 +93,8 @@ export class ManagerService {
       targetManager,
       owner,
     );
+
+    await this.cache.del(`manager-${targetManager.userId}`);
 
     return new PatchManagerResponseDto(updatedManager);
   }
@@ -170,6 +166,8 @@ export class ManagerService {
       qr,
     );
 
+    await this.cache.del(`manager-${updatedManager.userId}`);
+
     return new PatchManagerResponseDto(updatedManager);
   }
 
@@ -210,6 +208,8 @@ export class ManagerService {
       churchUserId,
       qr,
     );
+
+    await this.cache.del(`manager-${updatedManager.userId}`);
 
     return new PatchManagerResponseDto(updatedManager);
   }
@@ -332,6 +332,8 @@ export class ManagerService {
         owner,
       );
 
+      await this.cache.del(`manager-${manager.userId}`);
+
       return this.managerDomainService.findManagerById(
         church,
         churchUserId,
@@ -351,6 +353,8 @@ export class ManagerService {
         manager,
         owner,
       );
+
+      await this.cache.del(`manager-${manager.userId}`);
 
       return this.managerDomainService.findManagerById(
         church,

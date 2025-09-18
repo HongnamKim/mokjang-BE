@@ -48,9 +48,10 @@ export class TaskController {
   @Get()
   getTasks(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetTasksDto,
   ) {
-    return this.taskService.getTasks(churchId, dto);
+    return this.taskService.getTasks(church, dto);
   }
 
   @ApiPostTask()
@@ -60,10 +61,11 @@ export class TaskController {
   postTask(
     @RequestManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateTaskDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.postTask(churchId, manager, dto, qr);
+    return this.taskService.postTask(church, manager, dto, qr);
   }
 
   @ApiRefreshTaskCount()
@@ -83,8 +85,9 @@ export class TaskController {
   async getTaskById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return this.taskService.getTaskById(churchId, taskId);
+    return this.taskService.getTaskById(church, taskId);
   }
 
   @ApiGetSubTasks()
@@ -93,8 +96,9 @@ export class TaskController {
   async getSubTasks(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return this.taskService.getSubTasks(churchId, taskId);
+    return this.taskService.getSubTasks(church, taskId);
   }
 
   @ApiPatchTask()
@@ -119,10 +123,11 @@ export class TaskController {
   deleteTask(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.taskService.deleteTask(requestManager, churchId, taskId, qr);
+    return this.taskService.deleteTask(requestManager, church, taskId, qr);
   }
 
   @ApiAddReportReceivers()
@@ -132,12 +137,13 @@ export class TaskController {
   addReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: AddTaskReportReceiverDto,
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.addTaskReportReceivers(
-      churchId,
+      church,
       taskId,
       requestManager,
       dto,
@@ -152,12 +158,13 @@ export class TaskController {
   deleteReportReceivers(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
+    @RequestChurch() church: ChurchModel,
     @RequestManager() requestManager: ChurchUserModel,
     @Body() dto: DeleteTaskReportReceiverDto,
     @QueryRunner() qr: QR,
   ) {
     return this.taskService.deleteTaskReportReceivers(
-      churchId,
+      church,
       taskId,
       requestManager,
       dto,

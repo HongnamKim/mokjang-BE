@@ -2,7 +2,6 @@ import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { GetManagersDto } from '../../../dto/request/get-managers.dto';
 import { FindOptionsRelations, QueryRunner, UpdateResult } from 'typeorm';
 import { PermissionTemplateModel } from '../../../../permission/entity/permission-template.entity';
-import { ManagerDomainPaginationResultDto } from '../../dto/manager-domain-pagination-result.dto';
 import { ChurchUserModel } from '../../../../church-user/entity/church-user.entity';
 import { GetManagersByPermissionTemplateDto } from '../../../../permission/dto/template/request/get-managers-by-permission-template.dto';
 
@@ -13,14 +12,14 @@ export interface IManagerDomainService {
     church: ChurchModel,
     dto: GetManagersDto,
     qr?: QueryRunner,
-  ): Promise<ManagerDomainPaginationResultDto>;
+  ): Promise<ChurchUserModel[]>;
 
   findManagersByPermissionTemplate(
     church: ChurchModel,
     permissionTemplate: PermissionTemplateModel,
     dto: GetManagersByPermissionTemplateDto,
     qr?: QueryRunner,
-  ): Promise<ManagerDomainPaginationResultDto>;
+  ): Promise<ChurchUserModel[]>;
 
   findManagerById(
     church: ChurchModel,

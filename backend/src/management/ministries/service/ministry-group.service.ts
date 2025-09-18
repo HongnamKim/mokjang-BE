@@ -91,13 +91,7 @@ export class MinistryGroupService {
       dto,
     );
 
-    return new MinistryGroupPaginationResultDto(
-      result.data,
-      result.totalCount,
-      result.data.length,
-      dto.page,
-      Math.ceil(result.totalCount / dto.take),
-    );
+    return new MinistryGroupPaginationResultDto(result);
   }
 
   async getMinistryGroupById(

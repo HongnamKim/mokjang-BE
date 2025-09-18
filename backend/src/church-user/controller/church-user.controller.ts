@@ -1,18 +1,15 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
-  GoneException,
   Param,
   ParseIntPipe,
   Patch,
   Query,
 } from '@nestjs/common';
 import { ChurchUserService } from '../service/church-user.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { GetChurchUsersDto } from '../dto/request/get-church-users.dto';
-import { UpdateChurchUserRoleDto } from '../dto/request/update-church-user-role.dto';
 import { ChurchUserReadGuard } from '../guard/church-user-read.guard';
 import { ChurchUserWriteGuard } from '../guard/church-user-write.guard';
 import { RequestChurch } from '../../permission/decorator/request-church.decorator';
@@ -21,53 +18,53 @@ import { LinkMemberDto } from '../dto/request/link-member.dto';
 import { UseTransaction } from '../../common/decorator/use-transaction.decorator';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+import {
+  ApiChangeMember,
+  ApiGetChurchUserById,
+  ApiGetChurchUsers,
+  ApiLeaveChurch,
+} from '../swagger/church-user.swagger';
 
 @ApiTags('Churches:Church-Users')
 @Controller('church-users')
 export class ChurchUserController {
   constructor(private readonly churchUserService: ChurchUserService) {}
 
-  @ApiOperation({
-    summary: '교회 가입 계정(교인) 조회',
-  })
+  @ApiGetChurchUsers()
   @Get()
   @ChurchUserReadGuard()
   getChurchUsers(
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Query() dto: GetChurchUsersDto,
   ) {
-    return this.churchUserService.getChurchUsers(churchId, dto);
+    return this.churchUserService.getChurchUsers(church, dto);
   }
 
-  @ApiOperation({
-    summary: '교회 가입 계정(교인) 단건 조회',
-  })
+  @ApiGetChurchUserById()
   @Get(':churchUserId')
   @ChurchUserReadGuard()
   getChurchUserById(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
+    @RequestChurch() church: ChurchModel,
   ) {
-    return this.churchUserService.getChurchUserById(churchId, churchUserId);
+    return this.churchUserService.getChurchUserById(church, churchUserId);
   }
 
-  @ApiOperation({
-    summary: '계정 - 교인 연결 수정',
-  })
+  @ApiChangeMember()
   @Patch(':churchUserId/change-member')
   @ChurchUserWriteGuard()
   changeMember(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('churchUserId', ParseIntPipe) churchUserId: number,
-    @Body() dto: LinkMemberDto,
     @RequestChurch() church: ChurchModel,
+    @Body() dto: LinkMemberDto,
   ) {
     return this.churchUserService.changeMemberLink(church, churchUserId, dto);
   }
 
-  @ApiOperation({
-    summary: '교회 계정 가입 취소',
-  })
+  @ApiLeaveChurch()
   @Patch(':churchUserId/leave-church')
   @UseTransaction()
   @ChurchUserWriteGuard()
@@ -80,7 +77,7 @@ export class ChurchUserController {
     return this.churchUserService.leaveChurchUser(church, churchUserId, qr);
   }
 
-  @ApiOperation({
+  /*@ApiOperation({
     deprecated: true,
     summary: '교회 가입 교인의 role 변경',
     description:
@@ -96,11 +93,9 @@ export class ChurchUserController {
     @Body() dto: UpdateChurchUserRoleDto,
   ) {
     throw new BadRequestException('현재 개발 범위 외의 기능');
+  }*/
 
-    //return this.churchUserService.patchChurchUserRole(churchId, userId, dto);
-  }
-
-  @ApiOperation({
+  /*@ApiOperation({
     deprecated: true,
     summary: '계정 - 교인 정보 연결',
   })
@@ -113,10 +108,9 @@ export class ChurchUserController {
     @RequestChurch() church: ChurchModel,
   ) {
     throw new GoneException('다른 엔드포인트로 대체 됨.');
-    //return this.churchUserService.changeMemberLink(church, churchUserId, dto);
-  }
+  }*/
 
-  @ApiOperation({
+  /*@ApiOperation({
     deprecated: true,
     summary: '계정 - 교인 정보 연결 해제',
   })
@@ -128,6 +122,5 @@ export class ChurchUserController {
     @RequestChurch() church: ChurchModel,
   ) {
     throw new GoneException('다른 엔드포인트로 대체 됨.');
-    //return this.churchUserService.unLinkMember(church, churchUserId);
-  }
+  }*/
 }

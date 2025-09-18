@@ -60,10 +60,11 @@ export class VisitationController {
   postVisitationReservation(
     @RequestManager() manager: ChurchUserModel,
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: CreateVisitationDto,
     @QueryRunner() qr: QR,
   ) {
-    return this.visitationService.createVisitation(manager, churchId, dto, qr);
+    return this.visitationService.createVisitation(manager, church, dto, qr);
   }
 
   @ApiRefreshVisitationCount()

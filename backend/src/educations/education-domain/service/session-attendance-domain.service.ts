@@ -284,23 +284,21 @@ export class SessionAttendanceDomainService
 
     const sessionAttendanceRepository = this.getSessionAttendanceRepository(qr);
 
-    const [currentSessionAttendances] = await Promise.all([
-      sessionAttendanceRepository.find({
-        where: {
-          educationSession: {
-            educationTermId: educationTerm.id,
-          },
+    const currentSessionAttendances = await sessionAttendanceRepository.find({
+      where: {
+        educationSession: {
+          educationTermId: educationTerm.id,
         },
-        order: {
-          educationEnrollmentId: 'asc',
-          educationSessionId: 'asc',
-        },
-        select: {
-          educationSessionId: true,
-          educationEnrollmentId: true,
-        },
-      }),
-    ]);
+      },
+      order: {
+        educationEnrollmentId: 'asc',
+        educationSessionId: 'asc',
+      },
+      select: {
+        educationSessionId: true,
+        educationEnrollmentId: true,
+      },
+    });
 
     const totalExpectedAttendances =
       educationTerm.educationEnrollments.length *

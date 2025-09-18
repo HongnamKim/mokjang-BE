@@ -12,16 +12,11 @@ import {
   IVisitationMetaDomainService,
 } from '../visitation-domain/interface/visitation-meta-domain.service.interface';
 import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitation-detail.dto';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @Injectable()
 export class VisitationDetailService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     /*@Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,*/
     @Inject(IVISITATION_META_DOMAIN_SERVICE)
@@ -45,13 +40,10 @@ export class VisitationDetailService {
   }
 
   async updateVisitationDetail(
-    churchId: number,
+    church: ChurchModel,
     visitationId: number,
     dto: UpdateVisitationDetailDto,
   ) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
     const metaData =
       await this.visitationMetaDomainService.findVisitationMetaModelById(
         church,

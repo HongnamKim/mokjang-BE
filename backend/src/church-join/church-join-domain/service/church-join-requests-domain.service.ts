@@ -21,7 +21,6 @@ import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
 import { GetJoinRequestDto } from '../../dto/request/get-join-request.dto';
 import { ChurchJoinException } from '../../exception/church-join.exception';
-import { ChurchJoinDomainPaginationResultDto } from '../dto/church-join-domain-pagination-result.dto';
 
 @Injectable()
 export class ChurchJoinRequestsDomainService
@@ -88,10 +87,32 @@ export class ChurchJoinRequestsDomainService
     church: ChurchModel,
     dto: GetJoinRequestDto,
     qr?: QueryRunner,
-  ): Promise<{ data: ChurchJoinModel[]; totalCount: number }> {
+  ): Promise<ChurchJoinModel[]> {
     const repository = this.getRepository(qr);
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: {
+        churchId: church.id,
+        createdAt: this.parseCreatedAt(dto),
+        status: dto.status && In(dto.status),
+      },
+      relations: {
+        user: true,
+      },
+      select: {
+        user: {
+          name: true,
+          mobilePhone: true,
+        },
+      },
+      order: {
+        [dto.order]: dto.orderDirection,
+      },
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: {
           churchId: church.id,
@@ -122,7 +143,7 @@ export class ChurchJoinRequestsDomainService
       }),
     ]);
 
-    return new ChurchJoinDomainPaginationResultDto(data, totalCount);
+    return new ChurchJoinDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findChurchJoinRequestById(

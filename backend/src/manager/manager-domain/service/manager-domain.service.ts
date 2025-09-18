@@ -18,7 +18,6 @@ import {
   ChurchUserManagers,
   ChurchUserRole,
 } from '../../../user/const/user-role.enum';
-import { ManagerDomainPaginationResultDto } from '../dto/manager-domain-pagination-result.dto';
 import { IManagerDomainService } from './interface/manager-domain.service.interface';
 import {
   BadRequestException,
@@ -55,7 +54,7 @@ export class ManagerDomainService implements IManagerDomainService {
     church: ChurchModel,
     dto: GetManagersDto,
     qr?: QueryRunner,
-  ): Promise<ManagerDomainPaginationResultDto> {
+  ): Promise<ChurchUserModel[]> {
     const repository = this.getRepository(qr);
 
     const orderOptions: FindOptionsOrder<ChurchUserModel> = {
@@ -75,7 +74,14 @@ export class ManagerDomainService implements IManagerDomainService {
       },
     };
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: whereOptions,
+      order: orderOptions,
+      relations: ManagersFindOptionsRelations,
+      select: ManagersFindOptionsSelect,
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: whereOptions,
         order: orderOptions,
@@ -87,7 +93,7 @@ export class ManagerDomainService implements IManagerDomainService {
       }),
     ]);
 
-    return new ManagerDomainPaginationResultDto(data, totalCount);
+    return new ManagerDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findManagersByPermissionTemplate(
@@ -95,7 +101,7 @@ export class ManagerDomainService implements IManagerDomainService {
     permissionTemplate: PermissionTemplateModel,
     dto: GetManagersByPermissionTemplateDto,
     qr?: QueryRunner,
-  ): Promise<ManagerDomainPaginationResultDto> {
+  ): Promise<ChurchUserModel[]> {
     const repository = this.getRepository(qr);
 
     const whereOptions: FindOptionsWhere<ChurchUserModel> = {
@@ -112,7 +118,24 @@ export class ManagerDomainService implements IManagerDomainService {
       orderOptions.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: whereOptions,
+      relations: {
+        ...ManagersFindOptionsRelations,
+        permissionTemplate: false,
+        permissionScopes: false,
+      },
+      select: {
+        ...ManagersFindOptionsSelect,
+        permissionTemplate: undefined,
+        permissionScopes: undefined,
+      },
+      take: dto.take,
+      order: orderOptions,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: whereOptions,
         relations: {
@@ -130,7 +153,7 @@ export class ManagerDomainService implements IManagerDomainService {
       }),
     ]);
 
-    return new ManagerDomainPaginationResultDto(data, totalCount);
+    return new ManagerDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findManagerModelById(
@@ -295,6 +318,7 @@ export class ManagerDomainService implements IManagerDomainService {
       },
       select: {
         id: true,
+        userId: true,
       },
     });
   }

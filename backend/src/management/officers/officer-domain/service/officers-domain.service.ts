@@ -23,7 +23,6 @@ import { OfficersException } from '../../exception/officers.exception';
 import { CreateOfficerDto } from '../../dto/request/create-officer.dto';
 import { UpdateOfficerNameDto } from '../../dto/request/update-officer-name.dto';
 import { GetOfficersDto } from '../../dto/request/get-officers.dto';
-import { OfficerDomainPaginationResultDto } from '../../dto/officer-domain-pagination-result.dto';
 import { OfficerOrderEnum } from '../../const/officer-order.enum';
 
 @Injectable()
@@ -64,7 +63,15 @@ export class OfficersDomainService implements IOfficersDomainService {
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return officersRepository.find({
+      where: {
+        churchId: church.id,
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+    /*const [data, totalCount] = await Promise.all([
       officersRepository.find({
         where: {
           churchId: church.id,
@@ -80,7 +87,7 @@ export class OfficersDomainService implements IOfficersDomainService {
       }),
     ]);
 
-    return new OfficerDomainPaginationResultDto(data, totalCount);
+    return new OfficerDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findOfficerById(
@@ -170,7 +177,6 @@ export class OfficersDomainService implements IOfficersDomainService {
     if (existOfficer) {
       throw new ConflictException(OfficersException.ALREADY_EXIST);
     }
-
 
     const [lastOrderOfficer] = await this.officersRepository.find({
       where: {
