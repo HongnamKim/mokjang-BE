@@ -3,8 +3,9 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
-import { QueryRunner } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { CreateChurchDto } from '../dto/request/create-church.dto';
 import { UpdateChurchDto } from '../dto/request/update-church.dto';
 import {
@@ -41,6 +42,17 @@ import {
 } from '../../manager/manager-domain/service/interface/manager-domain.service.interface';
 import { ChurchesNotificationService } from './churches-notification.service';
 import { PatchChurchResponseDto } from '../dto/response/patch-church-response.dto';
+import { DeleteChurchVerificationRequestDto } from '../dto/request/delete-church-verification-request.dto';
+import {
+  IMOBILE_VERIFICATION_DOMAIN_SERVICE,
+  IMobileVerificationDomainService,
+} from '../../mobile-verification/mobile-verification-domain/interface/mobile-verification-domain.service.interface';
+import { VerificationType } from '../../mobile-verification/const/verification-type.enum';
+import { MessageService } from '../../common/service/message.service';
+import { DeleteChurchVerificationConfirmDto } from '../dto/request/delete-church-verification-confirm.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
+import { DeleteChurchResponseDto } from '../dto/response/delete-church-response.dto';
 
 @Injectable()
 export class ChurchesService {
@@ -54,6 +66,11 @@ export class ChurchesService {
     @Inject(IMANAGER_DOMAIN_SERVICE)
     private readonly managerDomainService: IManagerDomainService,
 
+    private readonly dataSource: DataSource,
+    @Inject(IMOBILE_VERIFICATION_DOMAIN_SERVICE)
+    private readonly mobileVerificationDomainService: IMobileVerificationDomainService,
+    private readonly messageService: MessageService,
+
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
     @Inject(IMEMBERS_DOMAIN_SERVICE)
@@ -62,6 +79,8 @@ export class ChurchesService {
     @Inject(ISUBSCRIPTION_DOMAIN_SERVICE)
     private readonly subscriptionDomainService: ISubscriptionDomainService,
   ) {}
+
+  private readonly logger = new Logger(ChurchesService.name);
 
   findAllChurches() {
     return this.churchesDomainService.findAllChurches();
@@ -296,5 +315,119 @@ export class ChurchesService {
       await this.subscriptionDomainService.findSubscriptionByChurch(church);
 
     return new GetChurchSubscriptionDto(subscription);
+  }
+
+  async deleteChurchVerificationRequest(
+    owner: ChurchUserModel,
+    dto: DeleteChurchVerificationRequestDto,
+  ) {
+    const mobilePhone = owner.user.mobilePhone;
+
+    const verification =
+      await this.mobileVerificationDomainService.createMobileVerification(
+        owner.user,
+        VerificationType.DELETE_CHURCH,
+        mobilePhone,
+      );
+
+    if (dto.isTest) {
+      return verification.verificationCode;
+    }
+
+    return this.messageService.sendMessage(
+      mobilePhone,
+      `[에클리 인증번호] ${verification.verificationCode}`,
+    );
+  }
+
+  async deleteChurchVerificationConfirm(
+    church: ChurchModel,
+    owner: ChurchUserModel,
+    dto: DeleteChurchVerificationConfirmDto,
+  ) {
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
+
+    try {
+      await this.mobileVerificationDomainService.verifyMobileVerification(
+        owner.user,
+        VerificationType.DELETE_CHURCH,
+        dto.inputCode,
+        qr,
+      );
+
+      // 모든 가입정보 탈퇴처리
+      const churchUsers =
+        await this.churchUserDomainService.findAllChurchUserId(church, qr);
+
+      const userIds = churchUsers.map((churchUser) => churchUser.userId);
+
+      await this.churchUserDomainService.leaveAllChurchUsers(churchUsers, qr);
+      await this.userDomainService.bulkUpdateUserRole(userIds, qr);
+      const subscription = church.subscription;
+
+      await this.subscriptionDomainService.updateSubscriptionStatus(
+        subscription,
+        SubscriptionStatus.PENDING,
+        qr,
+      );
+
+      await this.churchesDomainService.deleteChurch(church, qr);
+
+      await qr.commitTransaction();
+      await qr.release();
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        await qr.commitTransaction();
+      } else {
+        await qr.rollbackTransaction();
+      }
+      await qr.release();
+      throw error;
+    }
+
+    return new DeleteChurchResponseDto(new Date(), church.id, true);
+  }
+
+  /*async deleteChurch(
+    church: ChurchModel,
+    owner: ChurchUserModel,
+    qr: QueryRunner,
+  ) {
+    await this.mobileVerificationDomainService.findVerifiedRequest(
+      owner.user,
+      VerificationType.DELETE_CHURCH,
+      qr,
+    );
+
+    // 모든 가입정보 탈퇴처리
+    const churchUsers = await this.churchUserDomainService.findAllChurchUserId(
+      church,
+      qr,
+    );
+
+    const userIds = churchUsers.map((churchUser) => churchUser.userId);
+
+    await this.churchUserDomainService.leaveAllChurchUsers(churchUsers, qr);
+    await this.userDomainService.bulkUpdateUserRole(userIds, qr);
+    const subscription = church.subscription;
+
+    await this.subscriptionDomainService.updateSubscriptionStatus(
+      subscription,
+      SubscriptionStatus.PENDING,
+      qr,
+    );
+
+    await this.churchesDomainService.deleteChurch(church, qr);
+  }*/
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM, {
+    timeZone: TIME_ZONE.SEOUL,
+  })
+  async cleanUpChurch() {
+    const result = await this.churchesDomainService.cleanUpChurch();
+
+    this.logger.log(`${result.affected} 개 교회 영구 삭제`);
   }
 }

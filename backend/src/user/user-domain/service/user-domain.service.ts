@@ -189,6 +189,22 @@ export class UserDomainService implements IUserDomainService {
     );
   }
 
+  bulkUpdateUserRole(
+    userIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const userRepository = this.getUserRepository(qr);
+
+    return userRepository.update(
+      {
+        id: In(userIds),
+      },
+      {
+        role: UserRole.NONE,
+      },
+    );
+  }
+
   async updateUserInfo(
     user: UserModel,
     dto: UpdateUserInfoDto,

@@ -28,6 +28,10 @@ import {
   IPAYMENT_METHOD_DOMAIN_SERVICE,
   IPaymentMethodDomainService,
 } from '../../payment-method/payment-method-domain/interface/payment-method-domain.service.interface';
+import {
+  ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE,
+  IChurchJoinRequestDomainService,
+} from '../../church-join/church-join-domain/interface/church-join-requests-domain.service.interface';
 
 @Injectable()
 export class SubscriptionService {
@@ -42,6 +46,9 @@ export class SubscriptionService {
     private readonly paymentMethodDomainService: IPaymentMethodDomainService,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
+
+    @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE)
+    private readonly churchJoinRequestDomainService: IChurchJoinRequestDomainService,
   ) {}
 
   async getCurrentSubscription(user: UserModel) {
@@ -55,8 +62,16 @@ export class SubscriptionService {
       );
     }
 
+    const isExistJoinRequest =
+      await this.churchJoinRequestDomainService.isExistJoinRequest(user, qr);
+
+    if (isExistJoinRequest) {
+      throw new ConflictException('대기중인 교회 가입 신청 이력이 있습니다.');
+    }
+
     if (user.hasUsedFreeTrial) {
-      throw new ForbiddenException('이미 무료체험 이력이 있습니다.');
+      throw new ConflictException('현재 진행중인 구독이 있습니다.');
+      //throw new ForbiddenException('이미 무료체험 이력이 있습니다.');
     }
 
     const trialSubscription =

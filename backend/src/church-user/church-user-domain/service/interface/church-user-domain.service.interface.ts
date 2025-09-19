@@ -88,4 +88,14 @@ export interface IChurchUserDomainService {
     church: ChurchModel,
     qr: QueryRunner,
   ): Promise<DeleteResult>;
+
+  findAllChurchUserId(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<ChurchUserModel[]>;
+
+  leaveAllChurchUsers(
+    churchUsers: ChurchUserModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

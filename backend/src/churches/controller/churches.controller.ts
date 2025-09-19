@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  GoneException,
   Param,
   ParseIntPipe,
   Patch,
@@ -15,8 +14,6 @@ import { ChurchesService } from '../service/churches.service';
 import { CreateChurchDto } from '../dto/request/create-church.dto';
 import { AccessTokenGuard } from '../../auth/guard/jwt.guard';
 import { ApiOperation } from '@nestjs/swagger';
-import { Token } from '../../auth/decorator/jwt.decorator';
-import { JwtAccessPayload } from '../../auth/type/jwt';
 import { UpdateChurchDto } from '../dto/request/update-church.dto';
 import {
   ApiDeleteChurch,
@@ -25,7 +22,6 @@ import {
   ApiPatchChurch,
   ApiPostChurch,
 } from '../const/swagger/church.swagger';
-import { AuthType } from '../../auth/const/enum/auth-type.enum';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
@@ -34,7 +30,6 @@ import { TransferOwnerDto } from '../dto/request/transfer-owner.dto';
 import { ChurchManagerGuard } from '../../permission/guard/church-manager.guard';
 import { ChurchReadGuard } from '../guard/church-read.guard';
 import { ChurchWriteGuard } from '../guard/church-write.guard';
-import { TrialChurchesService } from '../service/trial-churches.service';
 import { ChurchOwnerGuard } from '../../permission/guard/church-owner.guard';
 import { RequestChurch } from '../../permission/decorator/request-church.decorator';
 import { ChurchModel } from '../entity/church.entity';
@@ -43,12 +38,14 @@ import { User } from '../../user/decorator/user.decorator';
 import { UserModel } from '../../user/entity/user.entity';
 import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { RequestOwner } from '../../permission/decorator/request-owner.decorator';
+import { DeleteChurchVerificationRequestDto } from '../dto/request/delete-church-verification-request.dto';
+import { DeleteChurchVerificationConfirmDto } from '../dto/request/delete-church-verification-confirm.dto';
 
 @Controller('churches')
 export class ChurchesController {
   constructor(
     private readonly churchesService: ChurchesService,
-    private readonly trialChurchesService: TrialChurchesService,
+    //private readonly trialChurchesService: TrialChurchesService,
   ) {}
 
   // 전체 교회 조회
@@ -71,7 +68,7 @@ export class ChurchesController {
     return this.churchesService.createChurch(user, dto, qr);
   }
 
-  @ApiOperation({
+  /*@ApiOperation({
     deprecated: true,
     summary: '무료 체험 시작',
     description:
@@ -87,9 +84,9 @@ export class ChurchesController {
   ) {
     throw new GoneException();
     //return this.trialChurchesService.startTrialChurch(accessPayload.id, qr);
-  }
+  }*/
 
-  @ApiOperation({
+  /*@ApiOperation({
     summary: '테스트용',
   })
   @Delete('trial-end-test')
@@ -100,7 +97,7 @@ export class ChurchesController {
     @QueryRunner() qr: QR,
   ) {
     return this.trialChurchesService.endTrialChurch(accessPayload.id, qr);
-  }
+  }*/
 
   // 교회 단건 조회
   @ApiGetChurchById()
@@ -130,12 +127,13 @@ export class ChurchesController {
   @UseInterceptors(TransactionInterceptor)
   @Delete(':churchId')
   deleteChurch(
-    @User() user: UserModel,
-    @RequestChurch() church: ChurchModel,
     @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestOwner() owner: ChurchUserModel,
     @QueryRunner() qr: QR,
   ) {
-    return this.churchesService.deleteChurchById(church, user, qr);
+    //return this.churchesService.deleteChurch(church, owner, qr);
+    //return this.churchesService.deleteChurchById(church, user, qr);
   }
 
   @ApiOperation({
@@ -190,5 +188,33 @@ export class ChurchesController {
     @RequestChurch() church: ChurchModel,
   ) {
     return this.churchesService.refreshMemberCount(church);
+  }
+
+  @ApiOperation({ summary: '교회 삭제 신청' })
+  @Post(':churchId/delete/phone-verification/requests')
+  @ChurchWriteGuard()
+  deleteChurchVerificationRequests(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    //@RequestChurch() church: ChurchModel,
+    @RequestOwner() owner: ChurchUserModel,
+    @Body() dto: DeleteChurchVerificationRequestDto,
+  ) {
+    return this.churchesService.deleteChurchVerificationRequest(owner, dto);
+  }
+
+  @ApiOperation({ summary: '교회 삭제 확정' })
+  @Delete(':churchId/delete/phone-verification/confirm')
+  @ChurchWriteGuard()
+  async deleteChurchVerificationConfirm(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @RequestOwner() owner: ChurchUserModel,
+    @Body() dto: DeleteChurchVerificationConfirmDto,
+  ) {
+    return this.churchesService.deleteChurchVerificationConfirm(
+      church,
+      owner,
+      dto,
+    );
   }
 }

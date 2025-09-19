@@ -90,11 +90,6 @@ export class ChurchOwnerGuard implements CanActivate {
     }
 
     req.requestOwner = await this.getChurchOwner(church, token.id);
-    /*await this.managerDomainService.findManagerForPermissionCheck(
-        church,
-        token.id,
-        req.queryRunner,
-      );*/
 
     return true;
   }
