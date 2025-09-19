@@ -1,0 +1,5 @@
+/.idea/
+/.todo/
+.env.test
+.env.dev
+/backend/.env

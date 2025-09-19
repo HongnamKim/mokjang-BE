@@ -1,0 +1,155 @@
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+import {
+  ICHURCHES_DOMAIN_SERVICE,
+  IChurchesDomainService,
+} from '../../churches/churches-domain/interface/churches-domain.service.interface';
+import {
+  IWORSHIP_DOMAIN_SERVICE,
+  IWorshipDomainService,
+} from '../worship-domain/interface/worship-domain.service.interface';
+import {
+  IGROUPS_DOMAIN_SERVICE,
+  IGroupsDomainService,
+} from '../../management/groups/groups-domain/interface/groups-domain.service.interface';
+import { WorshipException } from '../exception/worship.exception';
+import { ChurchModel } from '../../churches/entity/church.entity';
+import { CustomRequest } from '../../common/custom-request';
+import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
+
+/**
+ * 필터링 요청한 그룹이 해당 예배의 대상 그룹인지 검사
+ */
+@Injectable()
+export class WorshipGroupFilterGuard implements CanActivate {
+  constructor(
+    @Inject(ICHURCHES_DOMAIN_SERVICE)
+    private readonly churchesDomainService: IChurchesDomainService,
+    @Inject(IWORSHIP_DOMAIN_SERVICE)
+    private readonly worshipDomainService: IWorshipDomainService,
+    @Inject(IGROUPS_DOMAIN_SERVICE)
+    private readonly groupsDomainService: IGroupsDomainService,
+  ) {}
+
+  private async getRequestChurch(req: CustomRequest) {
+    const churchId = parseInt(req.params.churchId);
+
+    if (req.church) {
+      return req.church;
+    } else {
+      const church =
+        await this.churchesDomainService.findChurchModelById(churchId);
+
+      req.church = church;
+
+      return church;
+    }
+  }
+
+  private async getRequestWorship(req: CustomRequest, church: ChurchModel) {
+    const worshipId = parseInt(req.params.worshipId);
+
+    if (req.worship) {
+      return req.worship;
+    } else {
+      const worship = await this.worshipDomainService.findWorshipModelById(
+        church,
+        worshipId,
+        undefined,
+        { worshipTargetGroups: true },
+      );
+
+      req.worship = worship;
+
+      return worship;
+    }
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const req: CustomRequest = context.switchToHttp().getRequest();
+
+    const church = await this.getRequestChurch(req);
+
+    const worship = await this.getRequestWorship(req, church);
+    req.worship = worship;
+
+    // 조회 요청 그룹 ID
+    let requestGroupId: number | undefined;
+
+    if (req.query.groupId) {
+      // 쿼리 파라미터
+      requestGroupId = +(req.query.groupId as string); // number | NaN
+
+      if (Number.isNaN(requestGroupId)) {
+        if (req.query.groupId !== 'null') {
+          throw new BadRequestException();
+        }
+      }
+    } else if (req.body.groupId !== undefined) {
+      const value = req.body.groupId;
+
+      if (value === null) {
+        // 요청 본문에 null 을 넣은 경우
+        requestGroupId = NaN;
+      } else {
+        // 요청 본문에 숫자 or "null" 을 넣은 경우
+        requestGroupId = +(req.body.groupId as string); // number | NaN
+
+        if (Number.isNaN(requestGroupId)) {
+          if (value !== 'null') {
+            throw new BadRequestException();
+          }
+        }
+      }
+    } else {
+      // 필터링 없을 때
+      requestGroupId = undefined;
+    }
+
+    const rootTargetGroupIds = worship.worshipTargetGroups.map(
+      (targetGroup) => targetGroup.groupId,
+    );
+
+    // 대상 그룹과 그 하위 그룹의 ID 들
+    const allowedGroupIds = (
+      await this.groupsDomainService.findGroupAndDescendantsByIds(
+        church,
+        rootTargetGroupIds,
+        undefined,
+        rootTargetGroupIds.length === 0,
+      )
+    ).map((group) => group.id);
+
+    // 예배 대상 그룹
+    req.worshipTargetGroupIds = allowedGroupIds;
+    req.worshipGroupIds = new WorshipGroupIdsVo(
+      allowedGroupIds,
+      rootTargetGroupIds.length === 0,
+    );
+
+    // 일부 대상 예배 조회 시 그룹없음을 필터링 요청했을 경우
+    if (Number.isNaN(requestGroupId)) {
+      if (rootTargetGroupIds.length !== 0) {
+        throw new ForbiddenException(WorshipException.INVALID_TARGET_GROUP);
+      }
+    }
+
+    // 필터링할 그룹이 없을 경우 통과
+    if (!requestGroupId) {
+      return true;
+    }
+
+    // 요청 그룹이 대상 그룹에 포함되지 않은 경우 ForbiddenException
+    if (!allowedGroupIds.includes(requestGroupId)) {
+      throw new ForbiddenException(WorshipException.INVALID_TARGET_GROUP);
+    }
+
+    return true;
+  }
+}

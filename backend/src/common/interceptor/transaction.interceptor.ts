@@ -2,11 +2,11 @@ import {
   CallHandler,
   ExecutionContext,
   Injectable,
-  InternalServerErrorException,
   NestInterceptor,
 } from '@nestjs/common';
 import { catchError, Observable, tap } from 'rxjs';
 import { DataSource } from 'typeorm';
+import { CustomRequest } from '../custom-request';
 
 @Injectable()
 export class TransactionInterceptor implements NestInterceptor {
@@ -21,7 +21,7 @@ export class TransactionInterceptor implements NestInterceptor {
 
     await queryRunner.startTransaction();
 
-    const req = context.switchToHttp().getRequest();
+    const req: CustomRequest = context.switchToHttp().getRequest();
 
     req.queryRunner = queryRunner;
 
@@ -30,7 +30,6 @@ export class TransactionInterceptor implements NestInterceptor {
         await queryRunner.rollbackTransaction();
         await queryRunner.release();
 
-        //throw new InternalServerErrorException(e.message);
         throw e;
       }),
       tap(async () => {

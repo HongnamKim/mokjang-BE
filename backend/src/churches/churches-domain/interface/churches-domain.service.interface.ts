@@ -1,0 +1,145 @@
+import { ChurchModel, ManagementCountType } from '../../entity/church.entity';
+import {
+  DeleteResult,
+  FindOptionsRelations,
+  QueryRunner,
+  UpdateResult,
+} from 'typeorm';
+import { CreateChurchDto } from '../../dto/request/create-church.dto';
+import { UpdateChurchDto } from '../../dto/request/update-church.dto';
+import { RequestLimitValidationType } from '../../../request-info/types/request-limit-validation-result';
+import { UserModel } from '../../../user/entity/user.entity';
+import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
+
+export const ICHURCHES_DOMAIN_SERVICE = Symbol('ICHURCHES_DOMAIN_SERVICE');
+
+export interface IChurchesDomainService {
+  findAllChurches(): Promise<ChurchModel[]>;
+
+  findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel>;
+
+  findChurchByJoinCode(joinCode: string): Promise<ChurchModel>;
+
+  findChurchModelByJoinCode(
+    joinCode: string,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel>;
+
+  findChurchModelById(
+    id: number,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel>;
+
+  findChurchModelByOwner(
+    ownerUser: UserModel,
+    qr?: QueryRunner,
+    relationOptions?: FindOptionsRelations<ChurchModel>,
+  ): Promise<ChurchModel>;
+
+  isExistChurch(id: number, qr?: QueryRunner): Promise<boolean>;
+
+  createChurch(
+    dto: CreateChurchDto,
+    ownerUser: UserModel,
+    subscription: SubscriptionModel,
+    qr?: QueryRunner,
+  ): Promise<ChurchModel>;
+
+  createTrialChurch(
+    user: UserModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel>;
+
+  updateChurch(church: ChurchModel, dto: UpdateChurchDto): Promise<ChurchModel>;
+
+  updateSubscription(
+    church: ChurchModel,
+    subscription: SubscriptionModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<UpdateResult>;
+
+  deleteChurchCascade(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<DeleteResult>;
+
+  updateRequestAttempts(
+    church: ChurchModel,
+    validationResultType:
+      | RequestLimitValidationType.INIT
+      | RequestLimitValidationType.INCREASE,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  updateChurchJoinCode(
+    church: ChurchModel,
+    newCode: string,
+    qr: QueryRunner | undefined,
+  ): Promise<UpdateResult>;
+
+  // -------교인 수 업데이트---------
+  incrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementMemberCount(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  dummyMemberCount(
+    church: ChurchModel,
+    count: number,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult>;
+  // -------교인 수 업데이트---------
+
+  transferOwner(
+    church: ChurchModel,
+    newOwnerChurchUser: ChurchUserModel,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  incrementManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  decrementManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  refreshManagementCount(
+    church: ChurchModel,
+    countType: ManagementCountType,
+    refreshCount: number,
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
+
+  findTrialChurchByUserId(
+    user: UserModel,
+    qr: QueryRunner,
+  ): Promise<ChurchModel>;
+
+  cleanupExpiredTrials(
+    expiredChurches: ChurchModel[],
+    qr: QueryRunner,
+  ): Promise<DeleteResult>;
+
+  findWorshipNotificationTargets(
+    targetChurchIds: number[],
+    qr?: QueryRunner,
+  ): Promise<ChurchModel[]>;
+
+  cleanUpChurch(): Promise<DeleteResult>;
+}
