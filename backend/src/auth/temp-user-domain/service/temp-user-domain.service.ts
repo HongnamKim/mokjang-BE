@@ -5,10 +5,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TempUserModel } from '../../entity/temp-user.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { DeleteResult, LessThan, QueryRunner, Repository } from 'typeorm';
 import { UpdateTempUserDto } from '../../../user/dto/update-temp-user.dto';
 import { ITempUserDomainService } from './interface/temp-user.service.interface';
 import { TempUserException } from '../../const/exception/auth.exception';
+import { subWeeks } from 'date-fns';
 
 @Injectable()
 export class TempUserDomainService implements ITempUserDomainService {
@@ -131,5 +132,15 @@ export class TempUserDomainService implements ITempUserDomainService {
     const tempUserRepository = this.getTempUserRepository(qr);
 
     return tempUserRepository.delete(tempUser.id);
+  }
+
+  cleanUp(): Promise<DeleteResult> {
+    const repository = this.getTempUserRepository();
+
+    const pivotDate = subWeeks(new Date(), 1);
+
+    return repository.delete({
+      createdAt: LessThan(pivotDate),
+    });
   }
 }
