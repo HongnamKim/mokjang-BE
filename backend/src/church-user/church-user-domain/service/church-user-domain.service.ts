@@ -12,6 +12,7 @@ import {
   DeleteResult,
   FindOptionsOrder,
   ILike,
+  In,
   IsNull,
   QueryRunner,
   Repository,
@@ -388,5 +389,39 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     const repository = this.getChurchUserRepository(qr);
 
     return repository.delete({ churchId: church.id });
+  }
+
+  findAllChurchUserId(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getChurchUserRepository(qr);
+
+    return repository.find({
+      where: {
+        church: { id: church.id },
+        leftAt: IsNull(),
+      },
+      select: {
+        id: true,
+        userId: true,
+      },
+    });
+  }
+
+  leaveAllChurchUsers(
+    churchUsers: ChurchUserModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchUserRepository(qr);
+
+    const ids = churchUsers.map((churchUser) => churchUser.id);
+
+    return repository.update(
+      { id: In(ids) },
+      {
+        leftAt: new Date(),
+      },
+    );
   }
 }

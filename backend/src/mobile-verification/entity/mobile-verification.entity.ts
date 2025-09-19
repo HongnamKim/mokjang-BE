@@ -5,6 +5,7 @@ import { VerificationType } from '../const/verification-type.enum';
 
 @Entity()
 @Index(['userId', 'createdAt'])
+@Index(['userId', 'verificationType', 'createdAt'])
 export class MobileVerificationModel extends BaseModel {
   @Index()
   @Column()

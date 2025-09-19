@@ -40,6 +40,8 @@ export interface IUserDomainService {
     qr?: QueryRunner,
   ): Promise<UpdateResult>;
 
+  bulkUpdateUserRole(userIds: number[], qr: QueryRunner): Promise<UpdateResult>;
+
   updateUserInfo(
     user: UserModel,
     dto: UpdateUserInfoDto,

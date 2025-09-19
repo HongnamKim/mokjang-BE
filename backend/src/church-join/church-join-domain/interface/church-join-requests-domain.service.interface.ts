@@ -59,4 +59,6 @@ export interface IChurchJoinRequestDomainService {
     user: UserModel,
     qr?: QueryRunner,
   ): Promise<ChurchJoinModel>;
+
+  isExistJoinRequest(user: UserModel, qr: QueryRunner): Promise<boolean>;
 }

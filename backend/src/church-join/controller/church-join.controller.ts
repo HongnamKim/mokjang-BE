@@ -18,7 +18,7 @@ import { JwtAccessPayload } from '../../auth/type/jwt';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm/query-runner/QueryRunner';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApproveJoinRequestDto } from '../dto/request/approve-join-request.dto';
 import { ChurchJoinService } from '../service/church-join.service';
 import { CreateJoinRequestDto } from '../dto/request/create-join-request.dto';
@@ -41,6 +41,16 @@ import { ChurchModel } from '../../churches/entity/church.entity';
 @Controller('churches')
 export class ChurchJoinController {
   constructor(private readonly churchJoinRequestService: ChurchJoinService) {}
+
+  @ApiOperation({ summary: '가입코드로 교회 검색' })
+  @Get('join/search')
+  @ApiQuery({ name: 'joinCode' })
+  @UseGuards(AccessTokenGuard)
+  getChurchByJoinCode(@Query('joinCode') joinCodeInput: string) {
+    const joinCode = joinCodeInput.toUpperCase();
+
+    return this.churchJoinRequestService.getChurchByJoinCode(joinCode);
+  }
 
   @ApiPostChurchJoinRequest()
   @Post('join')

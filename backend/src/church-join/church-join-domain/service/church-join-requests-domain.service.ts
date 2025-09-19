@@ -65,7 +65,7 @@ export class ChurchJoinRequestsDomainService
     const repository = this.getRepository(qr);
 
     return repository.save({
-      church,
+      churchId: church.id,
       user,
       status: ChurchJoinRequestStatusEnum.PENDING,
     });
@@ -283,5 +283,18 @@ export class ChurchJoinRequestsDomainService
     }
 
     return joinRequest;
+  }
+
+  async isExistJoinRequest(user: UserModel, qr: QueryRunner): Promise<boolean> {
+    const repository = this.getRepository(qr);
+
+    const joinRequest = await repository.findOne({
+      where: {
+        user: { id: user.id },
+        status: ChurchJoinRequestStatusEnum.PENDING,
+      },
+    });
+
+    return !!joinRequest;
   }
 }

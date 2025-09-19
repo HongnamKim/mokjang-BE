@@ -138,6 +138,33 @@ export class MobileVerificationDomainService
     }
   }
 
+  async findVerifiedRequest(
+    user: UserModel,
+    verificationType: VerificationType,
+    qr: QueryRunner,
+  ): Promise<MobileVerificationModel> {
+    const repository = this.getRepository(qr);
+
+    const verifiedRequest = await repository.findOne({
+      where: {
+        user: {
+          id: user.id,
+        },
+        verificationType,
+        isActive: true,
+        isVerified: true,
+      },
+    });
+
+    if (!verifiedRequest) {
+      throw new NotFoundException(
+        MobileVerificationException.NOT_FOUND_VERIFIED_REQUEST,
+      );
+    }
+
+    return verifiedRequest;
+  }
+
   async cleanUp() {
     const repository = this.getRepository();
 
