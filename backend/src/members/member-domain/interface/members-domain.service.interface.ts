@@ -110,6 +110,11 @@ export interface IMembersDomainService {
     qr: QueryRunner,
   ): Promise<MemberModel>;
 
+  createBulkMembers(
+    church: ChurchModel,
+    createBulkMemberDto: CreateMemberDto[],
+  ): any;
+
   updateMember(
     church: ChurchModel,
     member: MemberModel,

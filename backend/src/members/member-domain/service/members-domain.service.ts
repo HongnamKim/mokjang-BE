@@ -448,6 +448,24 @@ export class MembersDomainService implements IMembersDomainService {
     return !!member;
   }
 
+  async createBulkMembers(
+    church: ChurchModel,
+    createBulkMemberDto: CreateMemberDto[],
+  ): Promise<boolean> {
+    const repository = this.getMembersRepository();
+
+    const members = repository.create(
+      createBulkMemberDto.map((dto) => ({
+        ...dto,
+        churchId: church.id,
+      })),
+    );
+
+    await repository.save(members, { chunk: 100 });
+
+    return true;
+  }
+
   async createMember(
     church: ChurchModel,
     dto: CreateMemberDto,
