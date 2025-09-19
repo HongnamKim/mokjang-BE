@@ -71,6 +71,10 @@ import {
   ISearchMembersService,
 } from './interface/search-members.service.interface';
 import { MemberPaginationResponseDto } from '../dto/response/member-pagination-response.dto';
+import { CreateBulkMemberDto } from '../dto/request/create-bulk-member.dto';
+import { Gender } from '../const/enum/gender.enum';
+import { Marriage } from '../const/enum/marriage.enum';
+import { PostBulkMembersResponseDto } from '../dto/response/post-bulk-members-response.dto';
 
 @Injectable()
 export class MembersService {
@@ -136,6 +140,65 @@ export class MembersService {
     );
 
     return new GetMemberResponseDto(filteredMember);
+  }
+
+  async createBulkMember(church: ChurchModel, excelDto: CreateBulkMemberDto) {
+    const createBulkMemberDto: CreateMemberDto[] = excelDto.members.map(
+      (member) => ({
+        utcRegisteredAt: member.등록일자
+          ? fromZonedTime(member.등록일자, TIME_ZONE.SEOUL)
+          : getStartOfToday(TIME_ZONE.SEOUL),
+
+        name: member.이름,
+        mobilePhone: member.휴대전화번호,
+        utcBirth: member.생년월일
+          ? fromZonedTime(member.생년월일, TIME_ZONE.SEOUL)
+          : getStartOfToday(TIME_ZONE.SEOUL),
+
+        isLunar: member.음력,
+        isLeafMonth: member.윤달,
+        gender: member.성별
+          ? member.성별 === '남'
+            ? Gender.MALE
+            : Gender.FEMALE
+          : undefined,
+
+        address: member.주소,
+        detailAddress: member.상세주소,
+        occupation: member.직업,
+        school: member.학교,
+        marriage: member.결혼여부
+          ? member.결혼여부 === '기혼'
+            ? Marriage.MARRIED
+            : Marriage.SINGLE
+          : undefined,
+
+        vehicleNumber: member.차량번호 ? [member.차량번호] : undefined,
+      }),
+    );
+
+    const currentMemberCount =
+      await this.membersDomainService.countAllMembers(church);
+
+    if (
+      currentMemberCount + createBulkMemberDto.length >
+      church.subscription.maxMembers
+    ) {
+      throw new ConflictException(
+        `최대 등록 가능 교인 수(${church.subscription.maxMembers}명)를 초과했습니다. 현재 등록된 교인: ${church.memberCount}명, 등록 시도 교인: ${createBulkMemberDto.length}명`,
+      );
+    }
+
+    await this.membersDomainService.createBulkMembers(
+      church,
+      createBulkMemberDto,
+    );
+
+    return new PostBulkMembersResponseDto(
+      new Date(),
+      createBulkMemberDto.length,
+      true,
+    );
   }
 
   async createMember(

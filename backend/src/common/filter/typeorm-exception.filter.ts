@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import { CommonException } from '../const/exception/common.exception';
@@ -13,6 +14,8 @@ const ErrorType = {
 
 @Catch(QueryFailedError)
 export class TypeOrmExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(TypeOrmExceptionFilter.name);
+
   catch(exception: any, host: ArgumentsHost): any {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -40,6 +43,8 @@ export class TypeOrmExceptionFilter implements ExceptionFilter {
       errorType = ErrorType.BAD_REQUEST;
       message = CommonException.NOT_NULL(error.column);
     }
+
+    this.logger.error(exception);
 
     response.status(HttpStatus.BAD_REQUEST).json({
       message,

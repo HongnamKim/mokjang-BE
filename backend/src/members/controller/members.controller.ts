@@ -38,6 +38,7 @@ import { endOfToday, startOfToday, subYears } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { GetMemberWorshipAttendancesDto } from '../dto/request/worship/get-member-worship-attendances.dto';
+import { CreateBulkMemberDto } from '../dto/request/create-bulk-member.dto';
 
 @ApiTags('Churches:Members')
 @Controller('members')
@@ -65,6 +66,16 @@ export class MembersController {
     @QueryRunner() qr: QR,
   ) {
     return this.membersService.createMember(church, dto, qr);
+  }
+
+  @Post('bulk')
+  @MemberWriteGuard()
+  postBulkMembers(
+    @Param('churchId', ParseIntPipe) churchId: number,
+    @RequestChurch() church: ChurchModel,
+    @Body() dto: CreateBulkMemberDto,
+  ) {
+    return this.membersService.createBulkMember(church, dto);
   }
 
   @Get('v2')
