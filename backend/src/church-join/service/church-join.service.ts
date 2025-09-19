@@ -107,16 +107,17 @@ export class ChurchJoinService {
         qr,
       );
 
-    return new PostJoinRequestResponseDto(newRequest);
+    const createdRequest =
+      await this.churchJoinRequestsDomainService.findMyChurchJoinRequestById(
+        user,
+        newRequest.id,
+        qr,
+      );
+
+    return new PostJoinRequestResponseDto(createdRequest);
   }
 
   async getChurchJoinRequests(church: ChurchModel, dto: GetJoinRequestDto) {
-    /*const { data, totalCount } =
-      await this.churchJoinRequestsDomainService.findChurchJoinRequests(
-        church,
-        dto,
-      );*/
-
     const data =
       await this.churchJoinRequestsDomainService.findChurchJoinRequests(
         church,
