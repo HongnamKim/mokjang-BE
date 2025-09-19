@@ -3,10 +3,6 @@ import {
   ICHURCH_USER_DOMAIN_SERVICE,
   IChurchUserDomainService,
 } from '../church-user-domain/service/interface/church-user-domain.service.interface';
-import {
-  ICHURCHES_DOMAIN_SERVICE,
-  IChurchesDomainService,
-} from '../../churches/churches-domain/interface/churches-domain.service.interface';
 import { QueryRunner } from 'typeorm';
 import { GetChurchUsersDto } from '../dto/request/get-church-users.dto';
 import {
@@ -28,8 +24,6 @@ import { UserRole } from '../../user/const/user-role.enum';
 @Injectable()
 export class ChurchUserService {
   constructor(
-    @Inject(ICHURCHES_DOMAIN_SERVICE)
-    private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IUSER_DOMAIN_SERVICE)
     private readonly userDomainService: IUserDomainService,
 
@@ -39,38 +33,20 @@ export class ChurchUserService {
     private readonly churchUserDomainService: IChurchUserDomainService,
   ) {}
 
-  async getChurchUsers(
-    churchId: number,
-    dto: GetChurchUsersDto,
-    qr?: QueryRunner,
-  ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
+  async getChurchUsers(church: ChurchModel, dto: GetChurchUsersDto) {
+    const data = await this.churchUserDomainService.findChurchUsers(
+      church,
+      dto,
     );
 
-    const { data, totalCount } =
-      await this.churchUserDomainService.findChurchUsers(church, dto);
-
-    return new ChurchUserPaginationResponseDto(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new ChurchUserPaginationResponseDto(data);
   }
 
   async getChurchUserById(
-    churchId: number,
+    church: ChurchModel,
     churchUserId: number,
     qr?: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const churchUser = await this.churchUserDomainService.findChurchUserById(
       church,
       churchUserId,

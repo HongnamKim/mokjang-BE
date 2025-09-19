@@ -55,29 +55,13 @@ export class TaskService {
     private readonly taskReportDomainService: ITaskReportDomainService,
   ) {}
 
-  async getTasks(churchId: number, dto: GetTasksDto, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async getTasks(church: ChurchModel, dto: GetTasksDto, qr?: QueryRunner) {
     const result = await this.taskDomainService.findTasks(church, dto, qr);
 
-    return new TaskPaginationResultDto(
-      result.data,
-      result.totalCount,
-      result.data.length,
-      dto.page,
-      Math.ceil(result.totalCount / dto.take),
-    );
+    return new TaskPaginationResultDto(result);
   }
 
-  async getSubTasks(churchId: number, taskId: number, qr?: QueryRunner) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
+  async getSubTasks(church: ChurchModel, taskId: number, qr?: QueryRunner) {
     const parentTask = await this.taskDomainService.findParentTaskModelById(
       church,
       taskId,
@@ -94,16 +78,11 @@ export class TaskService {
   }
 
   async postTask(
-    churchId: number,
+    church: ChurchModel,
     creatorManager: ChurchUserModel,
     dto: CreateTaskDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const inCharge = dto.inChargeId
       ? await this.managerDomainService.findManagerByMemberId(
           church,
@@ -154,10 +133,7 @@ export class TaskService {
     return new PostTaskResponseDto(newTask, new Date());
   }
 
-  async getTaskById(churchId: number, taskId: number) {
-    const church =
-      await this.churchesDomainService.findChurchModelById(churchId);
-
+  async getTaskById(church: ChurchModel, taskId: number) {
     const task = await this.taskDomainService.findTaskById(church, taskId);
 
     return new GetTaskResponseDto(task, new Date());
@@ -285,15 +261,10 @@ export class TaskService {
 
   async deleteTask(
     requestManager: ChurchUserModel,
-    churchId: number,
+    church: ChurchModel,
     taskId: number,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const targetTask = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
@@ -337,17 +308,12 @@ export class TaskService {
   }
 
   async addTaskReportReceivers(
-    churchId: number,
+    church: ChurchModel,
     taskId: number,
     requestManager: ChurchUserModel,
     dto: AddTaskReportReceiverDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const task = await this.taskDomainService.findTaskModelById(
       church,
       taskId,
@@ -400,17 +366,12 @@ export class TaskService {
   }
 
   async deleteTaskReportReceivers(
-    churchId: number,
+    church: ChurchModel,
     taskId: number,
     requestManager: ChurchUserModel,
     dto: DeleteTaskReportReceiverDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const task = await this.taskDomainService.findTaskModelById(
       church,
       taskId,

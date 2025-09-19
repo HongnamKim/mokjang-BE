@@ -22,5 +22,11 @@ export interface IMobileVerificationDomainService {
     qr?: QueryRunner,
   ): Promise<string>;
 
+  findVerifiedRequest(
+    user: UserModel,
+    verificationType: VerificationType,
+    qr: QueryRunner,
+  ): Promise<MobileVerificationModel>;
+
   cleanUp(): Promise<DeleteResult>;
 }

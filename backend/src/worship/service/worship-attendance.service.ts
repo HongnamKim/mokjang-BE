@@ -164,12 +164,6 @@ export class WorshipAttendanceService {
     sessionId: number,
     qr: QueryRunner,
   ) {
-    /*const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-    */
-
     const worship = await this.worshipDomainService.findWorshipModelById(
       church,
       worshipId,
@@ -194,7 +188,9 @@ export class WorshipAttendanceService {
       await this.worshipAttendanceDomainService.findAllAttendances(session, qr);
 
     const existWorshipAttendanceEnrollmentIds = new Set(
-      existWorshipAttendances.map((attendance) => attendance.id),
+      existWorshipAttendances.map(
+        (attendance) => attendance.worshipEnrollment.id,
+      ),
     );
 
     const notExistAttendanceEnrollments: WorshipEnrollmentModel[] = [];

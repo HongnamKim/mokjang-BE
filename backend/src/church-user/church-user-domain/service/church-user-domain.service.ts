@@ -12,6 +12,7 @@ import {
   DeleteResult,
   FindOptionsOrder,
   ILike,
+  In,
   IsNull,
   QueryRunner,
   Repository,
@@ -26,7 +27,6 @@ import {
   MemberSummarizedRelation,
   MemberSummarizedSelect,
 } from '../../../members/const/member-find-options.const';
-import { ChurchUserDomainPaginationResultDto } from '../dto/church-user-domain-pagination-result.dto';
 import { GetChurchUsersDto } from '../../dto/request/get-church-users.dto';
 import { ChurchUserOrder } from '../../const/church-user-order.enum';
 import { ChurchUserException } from '../../exception/church-user.exception';
@@ -189,7 +189,31 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return repository.find({
+      where: {
+        churchId: church.id,
+        leftAt: IsNull(),
+        role: dto.role ? dto.role : undefined,
+        member: {
+          name: dto.name && ILike(`%${dto.name}%`),
+        },
+      },
+      order,
+      relations: {
+        member: MemberSummarizedRelation,
+        user: true,
+      },
+      select: {
+        member: MemberSummarizedSelect,
+        user: {
+          id: true,
+          name: true,
+          mobilePhone: true,
+        },
+      },
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       repository.find({
         where: {
           churchId: church.id,
@@ -225,7 +249,7 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
       }),
     ]);
 
-    return new ChurchUserDomainPaginationResultDto(data, totalCount);
+    return new ChurchUserDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findChurchUserByUser(
@@ -365,5 +389,39 @@ export class ChurchUserDomainService implements IChurchUserDomainService {
     const repository = this.getChurchUserRepository(qr);
 
     return repository.delete({ churchId: church.id });
+  }
+
+  findAllChurchUserId(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<ChurchUserModel[]> {
+    const repository = this.getChurchUserRepository(qr);
+
+    return repository.find({
+      where: {
+        church: { id: church.id },
+        leftAt: IsNull(),
+      },
+      select: {
+        id: true,
+        userId: true,
+      },
+    });
+  }
+
+  leaveAllChurchUsers(
+    churchUsers: ChurchUserModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const repository = this.getChurchUserRepository(qr);
+
+    const ids = churchUsers.map((churchUser) => churchUser.id);
+
+    return repository.update(
+      { id: In(ids) },
+      {
+        leftAt: new Date(),
+      },
+    );
   }
 }

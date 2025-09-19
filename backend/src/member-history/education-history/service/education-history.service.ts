@@ -45,24 +45,20 @@ export class EducationHistoryService {
       qr,
     );
 
-    const { educationHistories, totalCount } =
+    const educationHistories =
       await this.educationHistoryDomainService.paginateEducationHistory(
         member,
         dto,
         qr,
       );
 
-    const totalPage = Math.ceil(totalCount / dto.take);
+    //const totalPage = Math.ceil(totalCount / dto.take);
 
     const educationStatusCount =
       this.getEducationStatusCount(educationHistories);
 
     return new EducationHistoryPaginationResultDto(
       educationHistories,
-      totalCount,
-      educationHistories.length,
-      dto.page,
-      totalPage,
       educationStatusCount.completedMembersCount,
       educationStatusCount.incompleteMembersCount,
     );

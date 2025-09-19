@@ -32,11 +32,14 @@ import { GroupException } from '../../const/exception/group.exception';
 import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetGroupDto } from '../../dto/request/get-group.dto';
 import { GroupOrderEnum } from '../../const/group-order.enum';
-import { GroupDomainPaginationResultDto } from '../dto/group-domain-pagination-result.dto';
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { GroupRole } from '../../const/group-role.enum';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
+  MemberSimpleSelect,
+  MemberSummarizedRelation,
+} from '../../../../members/const/member-find-options.const';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -83,7 +86,7 @@ export class GroupsDomainService implements IGroupsDomainService {
   async findGroups(
     church: ChurchModel,
     dto: GetGroupDto,
-  ): Promise<{ data: GroupModel[]; totalCount: number }> {
+  ): Promise<GroupModel[]> {
     const groupsRepository = this.getGroupsRepository();
 
     const order: FindOptionsOrder<GroupModel> = {
@@ -94,7 +97,17 @@ export class GroupsDomainService implements IGroupsDomainService {
       order.createdAt = 'asc';
     }
 
-    const [data, totalCount] = await Promise.all([
+    return groupsRepository.find({
+      where: {
+        churchId: church.id,
+        parentGroupId: dto.parentGroupId === 0 ? IsNull() : dto.parentGroupId,
+      },
+      order,
+      take: dto.take,
+      skip: dto.take * (dto.page - 1),
+    });
+
+    /*const [data, totalCount] = await Promise.all([
       groupsRepository.find({
         where: {
           churchId: church.id,
@@ -112,7 +125,7 @@ export class GroupsDomainService implements IGroupsDomainService {
       }),
     ]);
 
-    return new GroupDomainPaginationResultDto(data, totalCount);
+    return new GroupDomainPaginationResultDto(data, totalCount);*/
   }
 
   async findGroupModelById(
@@ -172,6 +185,17 @@ export class GroupsDomainService implements IGroupsDomainService {
       where: {
         churchId: church.id,
         id: groupId,
+      },
+      relations: { leaderMember: MemberSummarizedRelation },
+      select: {
+        /*id: true,
+        createdAt: true,
+        updatedAt: true,
+        name: true,
+        parentGroupId: true,
+        childGroupIds: true,
+        membersCount: true,*/
+        leaderMember: MemberSimpleSelect,
       },
     });
 

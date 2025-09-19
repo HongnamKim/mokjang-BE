@@ -4,6 +4,8 @@ import { UpdateVisitationDetailDto } from '../dto/internal/detail/update-visitat
 import { ApiTags } from '@nestjs/swagger';
 import { VisitationDetailService } from '../service/visitation-detail.service';
 import { VisitationWriteGuard } from '../guard/visitation-write.guard';
+import { RequestChurch } from '../../permission/decorator/request-church.decorator';
+import { ChurchModel } from '../../churches/entity/church.entity';
 
 @ApiTags('Visitations:Details')
 @Controller('visitations/:visitationId/details')
@@ -18,10 +20,11 @@ export class VisitationDetailController {
   patchVisitationDetail(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('visitationId', ParseIntPipe) visitationId: number,
+    @RequestChurch() church: ChurchModel,
     @Body() dto: UpdateVisitationDetailDto,
   ) {
     return this.visitationDetailService.updateVisitationDetail(
-      churchId,
+      church,
       visitationId,
       dto,
     );

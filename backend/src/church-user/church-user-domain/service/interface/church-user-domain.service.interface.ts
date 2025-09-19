@@ -5,7 +5,6 @@ import { GetChurchUsersDto } from '../../../dto/request/get-church-users.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
 import { ChurchUserRole } from '../../../../user/const/user-role.enum';
 import { ChurchUserModel } from '../../../entity/church-user.entity';
-import { ChurchUserDomainPaginationResultDto } from '../../dto/church-user-domain-pagination-result.dto';
 
 export const ICHURCH_USER_DOMAIN_SERVICE = Symbol(
   'ICHURCH_USER_DOMAIN_SERVICE',
@@ -43,7 +42,7 @@ export interface IChurchUserDomainService {
     church: ChurchModel,
     dto: GetChurchUsersDto,
     qr?: QueryRunner,
-  ): Promise<ChurchUserDomainPaginationResultDto>;
+  ): Promise<ChurchUserModel[]>;
 
   findChurchUserById(
     church: ChurchModel,
@@ -89,4 +88,14 @@ export interface IChurchUserDomainService {
     church: ChurchModel,
     qr: QueryRunner,
   ): Promise<DeleteResult>;
+
+  findAllChurchUserId(
+    church: ChurchModel,
+    qr: QueryRunner,
+  ): Promise<ChurchUserModel[]>;
+
+  leaveAllChurchUsers(
+    churchUsers: ChurchUserModel[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult>;
 }

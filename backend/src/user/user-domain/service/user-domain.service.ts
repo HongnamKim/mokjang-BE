@@ -65,7 +65,7 @@ export class UserDomainService implements IUserDomainService {
 
     const user = await repository
       .createQueryBuilder('user')
-      .innerJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
+      .leftJoin('user.churchUser', 'churchUser', 'churchUser.leftAt IS NULL')
       .addSelect([
         'churchUser.id',
         'churchUser.createdAt',
@@ -185,6 +185,22 @@ export class UserDomainService implements IUserDomainService {
       },
       {
         ...dto,
+      },
+    );
+  }
+
+  bulkUpdateUserRole(
+    userIds: number[],
+    qr: QueryRunner,
+  ): Promise<UpdateResult> {
+    const userRepository = this.getUserRepository(qr);
+
+    return userRepository.update(
+      {
+        id: In(userIds),
+      },
+      {
+        role: UserRole.NONE,
       },
     );
   }

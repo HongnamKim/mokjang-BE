@@ -1,14 +1,8 @@
-import { BaseOffsetPaginationResponseDto } from '../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 
-export class ManagerPaginationResponseDto extends BaseOffsetPaginationResponseDto<ChurchUserModel> {
+export class ManagerPaginationResponseDto {
   constructor(
-    data: ChurchUserModel[],
-    totalCount: number,
-    count: number,
-    page: number,
-    totalPage: number,
-  ) {
-    super(data, totalCount, count, page, totalPage);
-  }
+    public readonly data: ChurchUserModel[],
+    public readonly timestamp: Date = new Date(),
+  ) {}
 }

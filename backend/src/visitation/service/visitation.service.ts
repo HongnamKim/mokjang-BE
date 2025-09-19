@@ -160,15 +160,10 @@ export class VisitationService {
 
   async createVisitation(
     creatorManager: ChurchUserModel,
-    churchId: number,
+    church: ChurchModel,
     dto: CreateVisitationDto,
     qr: QueryRunner,
   ) {
-    const church = await this.churchesDomainService.findChurchModelById(
-      churchId,
-      qr,
-    );
-
     const inCharge = await this.managerDomainService.findManagerByMemberId(
       church,
       dto.inChargeId,

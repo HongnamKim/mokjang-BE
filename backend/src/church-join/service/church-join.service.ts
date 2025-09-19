@@ -42,6 +42,8 @@ import { ChurchJoinException } from '../exception/church-join.exception';
 import { PostJoinRequestResponseDto } from '../dto/response/post-join-request-response.dto';
 import { MemberException } from '../../members/exception/member.exception';
 import { ChurchModel } from '../../churches/entity/church.entity';
+import { DeleteJoinRequestResponseDto } from '../dto/response/delete-join-request-response.dto';
+import { GetChurchResponseDto } from '../../churches/dto/response/get-church-response.dto';
 
 @Injectable()
 export class ChurchJoinService {
@@ -60,6 +62,13 @@ export class ChurchJoinService {
     @Inject(IMEMBERS_DOMAIN_SERVICE)
     private readonly membersDomainService: IMembersDomainService,
   ) {}
+
+  async getChurchByJoinCode(joinCode: string) {
+    const church =
+      await this.churchesDomainService.findChurchByJoinCode(joinCode);
+
+    return new GetChurchResponseDto(church);
+  }
 
   async postChurchJoinRequest(
     accessPayload: JwtAccessPayload,
@@ -98,23 +107,24 @@ export class ChurchJoinService {
         qr,
       );
 
-    return new PostJoinRequestResponseDto(newRequest);
+    const createdRequest =
+      await this.churchJoinRequestsDomainService.findMyChurchJoinRequestById(
+        user,
+        newRequest.id,
+        qr,
+      );
+
+    return new PostJoinRequestResponseDto(createdRequest);
   }
 
   async getChurchJoinRequests(church: ChurchModel, dto: GetJoinRequestDto) {
-    const { data, totalCount } =
+    const data =
       await this.churchJoinRequestsDomainService.findChurchJoinRequests(
         church,
         dto,
       );
 
-    return new JoinRequestPaginationResult(
-      data,
-      totalCount,
-      data.length,
-      dto.page,
-      Math.ceil(totalCount / dto.take),
-    );
+    return new JoinRequestPaginationResult(data);
   }
 
   async approveChurchJoinRequest(
@@ -129,6 +139,12 @@ export class ChurchJoinService {
         joinId,
         qr,
       );
+
+    if (joinRequest.user.role !== UserRole.NONE) {
+      throw new ConflictException(
+        ChurchJoinException.ALREADY_JOINED_OTHER_CHURCH,
+      );
+    }
 
     if (joinRequest.status !== ChurchJoinRequestStatusEnum.PENDING) {
       // 취소된 가입 신청일 경우
@@ -227,7 +243,7 @@ export class ChurchJoinService {
       qr,
     );
 
-    return `ChurchJoinRequest id: ${joinId} deleted`;
+    return new DeleteJoinRequestResponseDto(new Date(), joinRequest.id, true);
   }
 
   getTopRequestUsers() {

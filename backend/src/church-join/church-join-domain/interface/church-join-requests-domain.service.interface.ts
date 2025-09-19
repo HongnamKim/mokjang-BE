@@ -4,7 +4,6 @@ import { QueryRunner, UpdateResult } from 'typeorm';
 import { ChurchJoinModel } from '../../entity/church-join.entity';
 import { ChurchJoinRequestStatusEnum } from '../../const/church-join-request-status.enum';
 import { GetJoinRequestDto } from '../../dto/request/get-join-request.dto';
-import { ChurchJoinDomainPaginationResultDto } from '../dto/church-join-domain-pagination-result.dto';
 
 export const ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE = Symbol(
   'ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE',
@@ -26,7 +25,7 @@ export interface IChurchJoinRequestDomainService {
     church: ChurchModel,
     dto: GetJoinRequestDto,
     qr?: QueryRunner,
-  ): Promise<ChurchJoinDomainPaginationResultDto>;
+  ): Promise<ChurchJoinModel[]>;
 
   findChurchJoinRequestById(
     church: ChurchModel,
@@ -60,4 +59,6 @@ export interface IChurchJoinRequestDomainService {
     user: UserModel,
     qr?: QueryRunner,
   ): Promise<ChurchJoinModel>;
+
+  isExistJoinRequest(user: UserModel, qr: QueryRunner): Promise<boolean>;
 }

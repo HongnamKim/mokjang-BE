@@ -118,6 +118,7 @@ export class ReportDomainService implements IReportDomainService {
             report.educationTerm.id,
             report.educationTerm.educationId,
             report.educationTerm.educationName,
+            report.educationTerm.term,
           ),
         );
       } else if (

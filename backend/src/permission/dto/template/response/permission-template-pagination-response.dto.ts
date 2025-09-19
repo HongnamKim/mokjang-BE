@@ -1,14 +1,8 @@
-import { BaseOffsetPaginationResponseDto } from '../../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { PermissionTemplateModel } from '../../../entity/permission-template.entity';
 
-export class PermissionTemplatePaginationResponseDto extends BaseOffsetPaginationResponseDto<PermissionTemplateModel> {
+export class PermissionTemplatePaginationResponseDto {
   constructor(
-    data: PermissionTemplateModel[],
-    totalCount: number,
-    count: number,
-    page: number,
-    totalPage: number,
-  ) {
-    super(data, totalCount, count, page, totalPage);
-  }
+    public readonly data: PermissionTemplateModel[],
+    public readonly timestamp: Date = new Date(),
+  ) {}
 }

@@ -1,14 +1,8 @@
-import { BaseOffsetPaginationResponseDto } from '../../../../../common/dto/reponse/base-offset-pagination-response.dto';
 import { MinistryGroupModel } from '../../../entity/ministry-group.entity';
 
-export class MinistryGroupPaginationResultDto extends BaseOffsetPaginationResponseDto<MinistryGroupModel> {
+export class MinistryGroupPaginationResultDto {
   constructor(
-    data: MinistryGroupModel[],
-    totalCount: number,
-    count: number,
-    page: number,
-    totalPage: number,
-  ) {
-    super(data, totalCount, count, page, totalPage);
-  }
+    public readonly data: MinistryGroupModel[],
+    public readonly timestamp: Date = new Date(),
+  ) {}
 }
