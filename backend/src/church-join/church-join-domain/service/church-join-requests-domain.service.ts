@@ -65,7 +65,7 @@ export class ChurchJoinRequestsDomainService
     const repository = this.getRepository(qr);
 
     return repository.save({
-      churchId: church.id,
+      church,
       user,
       status: ChurchJoinRequestStatusEnum.PENDING,
     });
