@@ -12,6 +12,8 @@ import { OfficerHistoryDomainModule } from '../member-history/officer-history/of
 import { GroupHistoryDomainModule } from '../member-history/group-history/group-history-domain/group-history-domain.module';
 import { TrialChurchesService } from './service/trial-churches.service';
 import { ChurchesNotificationService } from './service/churches-notification.service';
+import { MobileVerificationDomainModule } from '../mobile-verification/mobile-verification-domain/mobile-verification-domain.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -25,6 +27,9 @@ import { ChurchesNotificationService } from './service/churches-notification.ser
     DummyDataDomainModule,
     OfficerHistoryDomainModule,
     GroupHistoryDomainModule,
+
+    CommonModule,
+    MobileVerificationDomainModule,
   ],
   controllers: [ChurchesController],
   providers: [

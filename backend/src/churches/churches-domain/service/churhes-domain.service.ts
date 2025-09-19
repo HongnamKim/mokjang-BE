@@ -10,6 +10,7 @@ import {
   DeleteResult,
   FindOptionsRelations,
   In,
+  LessThan,
   QueryFailedError,
   QueryRunner,
   Repository,
@@ -24,6 +25,7 @@ import { UserModel } from '../../../user/entity/user.entity';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
 import { SubscriptionModel } from '../../../subscription/entity/subscription.entity';
 import { SubscriptionStatus } from '../../../subscription/const/subscription-status.enum';
+import { subMonths } from 'date-fns';
 
 @Injectable()
 export class ChurchesDomainService implements IChurchesDomainService {
@@ -114,8 +116,10 @@ export class ChurchesDomainService implements IChurchesDomainService {
     return code;
   }
 
-  // TODO 교회 삭제 시 소유자 relation 해제
-  async deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string> {
+  async deleteChurch(
+    church: ChurchModel,
+    qr?: QueryRunner,
+  ): Promise<UpdateResult> {
     const churchRepository = this.getChurchRepository(qr);
 
     const result = await churchRepository.update(
@@ -132,7 +136,7 @@ export class ChurchesDomainService implements IChurchesDomainService {
       throw new InternalServerErrorException(ChurchException.DELETE_ERROR);
     }
 
-    return `churchId: ${church.id} deleted`;
+    return result;
   }
 
   deleteChurchCascade(
@@ -163,6 +167,32 @@ export class ChurchesDomainService implements IChurchesDomainService {
           isFreeTrial: true,
           trialEndsAt: true,
         },
+      },
+    });
+
+    if (!church) {
+      throw new NotFoundException(ChurchException.NOT_FOUND);
+    }
+
+    return church;
+  }
+
+  async findChurchByJoinCode(joinCode: string): Promise<ChurchModel> {
+    const repository = this.getChurchRepository();
+
+    const church = await repository.findOne({
+      where: {
+        joinCode,
+      },
+      select: {
+        id: true,
+        name: true,
+        pastor: true,
+        phone: true,
+        denomination: true,
+        address: true,
+        detailAddress: true,
+        memberCount: true,
       },
     });
 
@@ -578,6 +608,16 @@ export class ChurchesDomainService implements IChurchesDomainService {
       select: {
         id: true,
       },
+    });
+  }
+
+  cleanUpChurch(): Promise<DeleteResult> {
+    const repository = this.getChurchRepository();
+
+    const pivotDate = subMonths(new Date(), 3);
+
+    return repository.delete({
+      deletedAt: LessThan(pivotDate),
     });
   }
 }

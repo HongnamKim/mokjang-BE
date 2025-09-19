@@ -6,4 +6,5 @@ export const MobileVerificationException = {
   ALREADY_VERIFIED: '인증 완료된 번호입니다.',
   EXPIRED_CODE: '유효 시간을 초과했습니다.',
   WRONG_CODE: '인증 번호가 일치하지 않습니다.',
+  NOT_FOUND_VERIFIED_REQUEST: '인증 완료된 요청을 찾을 수 없습니다.',
 };

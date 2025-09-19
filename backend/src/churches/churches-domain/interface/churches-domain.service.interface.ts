@@ -19,6 +19,8 @@ export interface IChurchesDomainService {
 
   findChurchById(id: number, qr?: QueryRunner): Promise<ChurchModel>;
 
+  findChurchByJoinCode(joinCode: string): Promise<ChurchModel>;
+
   findChurchModelByJoinCode(
     joinCode: string,
     qr?: QueryRunner,
@@ -60,7 +62,7 @@ export interface IChurchesDomainService {
     qr: QueryRunner,
   ): Promise<UpdateResult>;
 
-  deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<string>;
+  deleteChurch(church: ChurchModel, qr?: QueryRunner): Promise<UpdateResult>;
 
   deleteChurchCascade(
     church: ChurchModel,
@@ -74,10 +76,6 @@ export interface IChurchesDomainService {
       | RequestLimitValidationType.INCREASE,
     qr: QueryRunner,
   ): Promise<UpdateResult>;
-
-  //getChurchManagerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
-
-  //getChurchOwnerIds(churchId: number, qr?: QueryRunner): Promise<number[]>;
 
   updateChurchJoinCode(
     church: ChurchModel,
@@ -142,4 +140,6 @@ export interface IChurchesDomainService {
     targetChurchIds: number[],
     qr?: QueryRunner,
   ): Promise<ChurchModel[]>;
+
+  cleanUpChurch(): Promise<DeleteResult>;
 }
