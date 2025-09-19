@@ -50,4 +50,6 @@ export interface ITempUserDomainService {
     tempUser: TempUserModel,
     qr?: QueryRunner,
   ): Promise<DeleteResult>;
+
+  cleanUp(): Promise<DeleteResult>;
 }
