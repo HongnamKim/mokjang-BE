@@ -38,13 +38,13 @@ export class MemberFilterService implements IMemberFilterService {
       return { ...member, isConcealed: false };
     }
 
-    if (!member.groupId) {
+    if (!member.group.id) {
       return { ...this.concealInfo(member), isConcealed: true };
     }
 
     const possibleGroupIds = new Set(scopeGroupIds);
 
-    if (possibleGroupIds.has(member.groupId)) {
+    if (possibleGroupIds.has(member.group.id)) {
       return { ...member, isConcealed: false };
     } else {
       return { ...this.concealInfo(member), isConcealed: true };

@@ -1,8 +1,15 @@
 import { BaseOffsetPaginationRequestDto } from '../../../common/dto/request/base-offset-pagination-request.dto';
 import { ManagerOrder } from '../../const/manager-order.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { IsOptionalNotNull } from '../../../common/decorator/validator/is-optional-not.null.validator';
+import { QueryBoolean } from '../../../common/decorator/transformer/query-boolean.decorator';
 
 export class GetManagersDto extends BaseOffsetPaginationRequestDto<ManagerOrder> {
   @ApiProperty({
@@ -23,4 +30,13 @@ export class GetManagersDto extends BaseOffsetPaginationRequestDto<ManagerOrder>
   @IsString()
   @IsNotEmpty()
   name?: string;
+
+  @ApiProperty({
+    description: '활성 여부',
+    required: false,
+  })
+  @IsOptional()
+  @QueryBoolean()
+  @IsBoolean()
+  isPermissionActive?: boolean;
 }

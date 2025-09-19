@@ -352,6 +352,8 @@ export class MembersService {
       requestManager,
     );
 
+    console.log(possibleGroupIds);
+
     const filteredMembers = this.memberFilterService.filterMembers(
       requestManager,
       result.items,
