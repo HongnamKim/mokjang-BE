@@ -13,9 +13,10 @@ async function bootstrap() {
 
   // CORS 설정
   app.enableCors({
-    origin: true,
+    origin: ['https://ekkly.life', 'https://app.ekkly.life'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // class-validator, transformer 설정
