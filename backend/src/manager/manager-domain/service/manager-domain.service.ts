@@ -72,6 +72,7 @@ export class ManagerDomainService implements IManagerDomainService {
       member: {
         name: dto.name && ILike(`%${dto.name}%`),
       },
+      isPermissionActive: dto.isPermissionActive,
     };
 
     return repository.find({
