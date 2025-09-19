@@ -38,7 +38,7 @@ export class MemberFilterService implements IMemberFilterService {
       return { ...member, isConcealed: false };
     }
 
-    if (!member.group.id) {
+    if (!member.group) {
       return { ...this.concealInfo(member), isConcealed: true };
     }
 
