@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { TempUserModel } from '../entity/temp-user.entity';
 import { QueryRunner } from 'typeorm';
 import { UserModel } from '../../user/entity/user.entity';
@@ -33,6 +38,8 @@ import {
   ITempUserDomainService,
 } from '../temp-user-domain/service/interface/temp-user.service.interface';
 import { DateUtils } from '../../common/utils/date-utils.util';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { TIME_ZONE } from '../../common/const/time-zone.const';
 
 @Injectable()
 export class AuthService {
@@ -46,6 +53,8 @@ export class AuthService {
     @Inject(ITEMP_USER_DOMAIN_SERVICE)
     private readonly tempUserDomainService: ITempUserDomainService,
   ) {}
+
+  private readonly logger = new Logger(AuthService.name);
 
   async loginUser(oauthDto: OauthDto, qr: QueryRunner) {
     if (!oauthDto.provider || !oauthDto.providerId) {
@@ -260,5 +269,14 @@ export class AuthService {
     await this.tempUserDomainService.deleteTempUser(tempUser, qr);
 
     return this.handleRegisteredUser(newUser);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_4AM, { timeZone: TIME_ZONE.SEOUL })
+  async cleanUpTempUsers() {
+    const result = await this.tempUserDomainService.cleanUp();
+
+    this.logger.log(`${result.affected}개의 TempUser 삭제`);
+
+    return;
   }
 }

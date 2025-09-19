@@ -448,6 +448,24 @@ export class MembersDomainService implements IMembersDomainService {
     return !!member;
   }
 
+  async createBulkMembers(
+    church: ChurchModel,
+    createBulkMemberDto: CreateMemberDto[],
+  ): Promise<boolean> {
+    const repository = this.getMembersRepository();
+
+    const members = repository.create(
+      createBulkMemberDto.map((dto) => ({
+        ...dto,
+        churchId: church.id,
+      })),
+    );
+
+    await repository.save(members, { chunk: 100 });
+
+    return true;
+  }
+
   async createMember(
     church: ChurchModel,
     dto: CreateMemberDto,
@@ -652,6 +670,7 @@ export class MembersDomainService implements IMembersDomainService {
   async getMemberListWithPagination(
     church: ChurchModel,
     dto: GetMemberListDto,
+    groupIds: number[] | null | undefined,
   ) {
     const repository = this.getMembersRepository();
 
@@ -716,7 +735,7 @@ export class MembersDomainService implements IMembersDomainService {
         query.addSelect(sortColumn);
     }
 
-    this.applyFilters(query, dto);
+    this.applyFilters(query, dto, groupIds);
     this.applySearch(query, dto.search);
 
     // 정렬 적용 (1순위: 사용자 지정(기본값-등록일자), 2순위: ID)
@@ -802,6 +821,7 @@ export class MembersDomainService implements IMembersDomainService {
   private applyFilters(
     query: SelectQueryBuilder<MemberModel>,
     filter: GetMemberListDto,
+    groupIds: number[] | null | undefined,
   ) {
     // 1. 직분 필터 (OR 조건, NULL 처리)
     if (filter.officerIds && filter.officerIds.length > 0) {
@@ -825,7 +845,17 @@ export class MembersDomainService implements IMembersDomainService {
     }
 
     // 2. 그룹 필터
-    if (filter.groupIds && filter.groupIds.length > 0) {
+    //query.andWhere('(member.groupId = :groupIds)', { groupIds: 3 });
+    if (groupIds === null) {
+      query.andWhere('(member.groupId IS NULL)');
+    } else if (groupIds === undefined) {
+    } else {
+      console.log('dd');
+      query.andWhere('member.groupId IN (:...groupIds)', {
+        groupIds,
+      });
+    }
+    /*if (filter.groupIds && filter.groupIds.length > 0) {
       const hasNull = filter.groupIds.includes('null');
       const realIds = filter.groupIds.filter((id) => id !== 'null') as number[];
 
@@ -841,7 +871,7 @@ export class MembersDomainService implements IMembersDomainService {
           groupIds: realIds,
         });
       }
-    }
+    }*/
 
     // 3. 결혼 상태 필터 (OR 조건, NULL 처리)
     if (filter.marriageStatuses && filter.marriageStatuses.length > 0) {

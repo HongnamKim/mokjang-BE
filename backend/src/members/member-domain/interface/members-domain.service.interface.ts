@@ -36,6 +36,7 @@ export interface IMembersDomainService {
   getMemberListWithPagination(
     church: ChurchModel,
     dto: GetMemberListDto,
+    groupIds: number[] | null | undefined,
   ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
   findSimpleMemberList(
@@ -109,6 +110,11 @@ export interface IMembersDomainService {
     dto: CreateMemberDto,
     qr: QueryRunner,
   ): Promise<MemberModel>;
+
+  createBulkMembers(
+    church: ChurchModel,
+    createBulkMemberDto: CreateMemberDto[],
+  ): any;
 
   updateMember(
     church: ChurchModel,
