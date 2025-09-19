@@ -342,17 +342,26 @@ export class MembersService {
     requestManager: ChurchUserModel,
     dto: GetMemberListDto,
   ) {
+    const targetGroupIds = dto.groupId
+      ? (
+          await this.groupsDomainService.findGroupAndDescendantsByIds(church, [
+            dto.groupId,
+          ])
+        ).map((group) => group.id)
+      : Number.isNaN(dto.groupId)
+        ? null
+        : undefined;
+
     const result = await this.membersDomainService.getMemberListWithPagination(
       church,
       dto,
+      targetGroupIds,
     );
 
     const possibleGroupIds = await this.getScopeGroupIds(
       church,
       requestManager,
     );
-
-    console.log(possibleGroupIds);
 
     const filteredMembers = this.memberFilterService.filterMembers(
       requestManager,
