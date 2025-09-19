@@ -59,6 +59,14 @@ export class GetMemberListDto {
   displayColumns: MemberDisplayColumn[] = [];
 
   @ApiPropertyOptional({
+    description: '그룹 ID 목록 ("null" = 그룹 없는 교인 조회)',
+    type: 'string',
+  })
+  @IsOptional()
+  @Transform(({ value }) => +value)
+  groupId?: number;
+
+  /*@ApiPropertyOptional({
     description: '그룹 ID 목록 ("null" 포함 시 그룹 없는 교인 조회)',
     type: [String],
     example: ['1', '2', 'null'],
@@ -71,7 +79,7 @@ export class GetMemberListDto {
   @IsOptional()
   @IsArray()
   @ArrayUnique()
-  groupIds?: (number | 'null')[];
+  groupIds?: (number | 'null')[];*/
 
   @ApiPropertyOptional({
     description: '직분 ID 목록 ("null" 포함 시 직분 없는 교인 조회)',

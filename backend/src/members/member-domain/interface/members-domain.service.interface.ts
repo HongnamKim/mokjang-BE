@@ -36,6 +36,7 @@ export interface IMembersDomainService {
   getMemberListWithPagination(
     church: ChurchModel,
     dto: GetMemberListDto,
+    groupIds: number[] | null | undefined,
   ): Promise<DomainCursorPaginationResultDto<MemberModel>>;
 
   findSimpleMemberList(
