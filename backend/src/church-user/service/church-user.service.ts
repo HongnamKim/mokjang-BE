@@ -121,17 +121,21 @@ export class ChurchUserService {
         churchUserId,
         qr,
       );
-    const user = await this.userDomainService.findUserById(
-      targetChurchUser.userId,
-      qr,
-    );
+
+    try {
+      const user = await this.userDomainService.findUserById(
+        targetChurchUser.userId,
+        qr,
+      );
+
+      await this.userDomainService.updateUserRole(
+        user,
+        { role: UserRole.NONE },
+        qr,
+      );
+    } catch (error) {}
 
     await this.churchUserDomainService.leaveChurch(targetChurchUser, qr);
-    await this.userDomainService.updateUserRole(
-      user,
-      { role: UserRole.NONE },
-      qr,
-    );
 
     return {
       success: true,
