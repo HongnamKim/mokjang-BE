@@ -190,6 +190,10 @@ export class UserService {
   }
 
   async deleteUser(user: UserModel, qr: QueryRunner) {
+    if (user.churchUser[0]) {
+      await this.churchUserDomainService.leaveChurch(user.churchUser[0], qr);
+    }
+
     await this.userDomainService.deleteUser(user, qr);
 
     return {
