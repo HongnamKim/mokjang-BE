@@ -313,6 +313,8 @@ export class MembersDomainService implements IMembersDomainService {
       .addSelect(['officer_history.id', 'officer_history.startDate'])
       .leftJoin('officer_history.officer', 'officer_history_officer')
       .addSelect(['officer_history_officer.id', 'officer_history_officer.name'])
+      .leftJoin('member.group', 'group')
+      .addSelect(['group.id', 'group.name'])
       .leftJoin(
         'member.groupHistory',
         'group_history',
