@@ -1,4 +1,5 @@
 // --------------------Worship Constraints----------------------
+export const MAX_WORSHIP_COUNT = 50;
 export const MAX_WORSHIP_TITLE = 50;
 export const MAX_WORSHIP_DESCRIPTION = 500;
 // -------------------------------------------------------------

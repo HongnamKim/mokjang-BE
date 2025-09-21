@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { QueryRunner } from 'typeorm';
 import { CreateOfficerDto } from '../dto/request/create-officer.dto';
 import { UpdateOfficerNameDto } from '../dto/request/update-officer-name.dto';
@@ -32,6 +32,8 @@ import {
   IMemberFilterService,
 } from '../../../members/service/interface/member-filter.service.interface';
 import { RefreshOfficerCountResponseDto } from '../dto/response/refresh-officer-count-response.dto';
+import { MAX_OFFICER_COUNT } from '../../management.constraints';
+import { OfficersException } from '../exception/officers.exception';
 
 @Injectable()
 export class OfficersService {
@@ -62,6 +64,15 @@ export class OfficersService {
     dto: CreateOfficerDto,
     qr: QueryRunner,
   ) {
+    const officerCount = await this.officersDomainService.countAllOfficers(
+      church,
+      qr,
+    );
+
+    if (officerCount > MAX_OFFICER_COUNT) {
+      throw new ConflictException(OfficersException.EXCEED_MAX_OFFICER_COUNT);
+    }
+
     const officer = await this.officersDomainService.createOfficer(
       church,
       dto,

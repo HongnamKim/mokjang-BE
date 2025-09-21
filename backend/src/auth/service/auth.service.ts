@@ -23,7 +23,7 @@ import { JwtTemporalPayload } from '../type/jwt';
 import { TestEnvironment } from '../const/enum/test-environment.enum';
 import {
   BetaVerificationMessage,
-  VerificationMessage,
+  SignInVerificationMessage,
 } from '../const/verification-message.const';
 import { CreateUserDto } from '../../user/dto/create-user.dto';
 import { UpdateTempUserDto } from '../../user/dto/update-temp-user.dto';
@@ -163,7 +163,7 @@ export class AuthService {
     const message =
       dto.isTest === TestEnvironment.BetaTest
         ? BetaVerificationMessage(code, dto.name, dto.mobilePhone)
-        : VerificationMessage(code);
+        : SignInVerificationMessage(code);
 
     if (dto.isTest === TestEnvironment.Production) {
       return this.messagesService.sendMessage(dto.mobilePhone, message);
@@ -177,7 +177,7 @@ export class AuthService {
         // 사용자에게 전송
         this.messagesService.sendMessage(
           dto.mobilePhone,
-          VerificationMessage(code),
+          SignInVerificationMessage(code),
         ),
       ]);
     } else {
