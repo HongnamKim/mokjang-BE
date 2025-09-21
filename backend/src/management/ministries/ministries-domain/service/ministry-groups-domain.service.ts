@@ -26,11 +26,11 @@ import { ChurchModel } from '../../../../churches/entity/church.entity';
 import { MinistryGroupException } from '../../exception/ministry-group.exception';
 import { CreateMinistryGroupDto } from '../../dto/ministry-group/request/create-ministry-group.dto';
 import { UpdateMinistryGroupNameDto } from '../../dto/ministry-group/request/update-ministry-group-name.dto';
-import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetMinistryGroupDto } from '../../dto/ministry-group/request/get-ministry-group.dto';
 import { MinistryGroupOrderEnum } from '../../const/ministry-group-order.enum';
 import { UpdateMinistryGroupStructureDto } from '../../dto/ministry-group/request/update-ministry-group-structure.dto';
 import { MemberModel } from '../../../../members/entity/member.entity';
+import { MAX_MINISTRY_GROUP_DEPTH } from '../../../management.constraints';
 
 @Injectable()
 export class MinistryGroupsDomainService
@@ -581,7 +581,7 @@ export class MinistryGroupsDomainService
     // 부모 그룹 depth + 자식 그룹 depth + 자신
     const newDepth = newParentsDepth + maxChildMinistryGroupDepth + 1;
 
-    if (newDepth > GroupDepthConstraint.MAX_DEPTH) {
+    if (newDepth > MAX_MINISTRY_GROUP_DEPTH) {
       throw new BadRequestException(MinistryGroupException.LIMIT_DEPTH_REACHED);
     }
   }

@@ -53,6 +53,7 @@ import { DeleteChurchVerificationConfirmDto } from '../dto/request/delete-church
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
 import { DeleteChurchResponseDto } from '../dto/response/delete-church-response.dto';
+import { DeleteChurchVerificationMessage } from '../../auth/const/verification-message.const';
 
 @Injectable()
 export class ChurchesService {
@@ -336,7 +337,7 @@ export class ChurchesService {
 
     return this.messageService.sendMessage(
       mobilePhone,
-      `[에클리 인증번호] ${verification.verificationCode}`,
+      DeleteChurchVerificationMessage(verification.verificationCode), //`[에클리] 인증번호: ${verification.verificationCode}`,
     );
   }
 
