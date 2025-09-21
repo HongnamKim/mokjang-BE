@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { GetHandlerGuard } from './common/guard/get-handler.guard';
 import { TypeOrmExceptionFilter } from './common/filter/typeorm-exception.filter';
 import * as cookieParser from 'cookie-parser';
 import { XssSanitizerPipe } from './common/pipe/xss-sanitizer.pipe';
@@ -43,7 +42,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new TypeOrmExceptionFilter());
 
-  app.useGlobalGuards(new GetHandlerGuard());
+  //app.useGlobalGuards(new GetHandlerGuard());
 
   // swagger 설정
   const config = new DocumentBuilder()
