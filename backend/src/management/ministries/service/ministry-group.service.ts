@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { MinistryGroupModel } from '../entity/ministry-group.entity';
 import { QueryRunner } from 'typeorm';
 import { CreateMinistryGroupDto } from '../dto/ministry-group/request/create-ministry-group.dto';
@@ -53,6 +58,8 @@ import {
 import { RefreshMinistryGroupCountResponseDto } from '../dto/ministry-group/response/refresh-ministry-group-count-response.dto';
 import { PatchMinistryGroupLeaderResponseDto } from '../dto/ministry-group/response/patch-ministry-group-leader-response.dto';
 import { GetUnassignedMemberResponseDto } from '../dto/ministry-group/response/get-unassigned-member-response.dto';
+import { MAX_MINISTRY_GROUP_COUNT } from '../../management.constraints';
+import { MinistryGroupException } from '../exception/ministry-group.exception';
 
 @Injectable()
 export class MinistryGroupService {
@@ -111,6 +118,15 @@ export class MinistryGroupService {
     dto: CreateMinistryGroupDto,
     qr: QueryRunner,
   ) {
+    const ministryGroupCount =
+      await this.ministryGroupsDomainService.countAllMinistryGroups(church, qr);
+
+    if (ministryGroupCount > MAX_MINISTRY_GROUP_COUNT) {
+      throw new ConflictException(
+        MinistryGroupException.EXCEED_MAX_MINISTRY_GROUP_COUNT,
+      );
+    }
+
     const parentMinistryGroup = dto.parentMinistryGroupId
       ? await this.ministryGroupsDomainService.findMinistryGroupModelById(
           church,

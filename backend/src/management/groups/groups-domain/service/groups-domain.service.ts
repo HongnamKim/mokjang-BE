@@ -29,7 +29,6 @@ import { GroupModel } from '../../entity/group.entity';
 import { UpdateGroupNameDto } from '../../dto/request/update-group-name.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupException } from '../../const/exception/group.exception';
-import { GroupDepthConstraint } from '../../../const/group-depth.constraint';
 import { GetGroupDto } from '../../dto/request/get-group.dto';
 import { GroupOrderEnum } from '../../const/group-order.enum';
 import { UpdateGroupStructureDto } from '../../dto/request/update-group-structure.dto';
@@ -40,6 +39,7 @@ import {
   MemberSimpleSelect,
   MemberSummarizedRelation,
 } from '../../../../members/const/member-find-options.const';
+import { MAX_GROUP_DEPTH } from '../../../management.constraints';
 
 @Injectable()
 export class GroupsDomainService implements IGroupsDomainService {
@@ -875,7 +875,7 @@ export class GroupsDomainService implements IGroupsDomainService {
     // 새 상위 그룹의 depth 와 타겟 그룹의 depth 의 합이 5 를 넘는지 확인
     const newDepth = newParentDepth + maxChildGroupDepth + 1;
 
-    if (newDepth > GroupDepthConstraint.MAX_DEPTH) {
+    if (newDepth > MAX_GROUP_DEPTH) {
       throw new BadRequestException(GroupException.LIMIT_DEPTH_REACHED);
     }
   }

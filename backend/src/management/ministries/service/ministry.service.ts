@@ -24,6 +24,8 @@ import {
 } from '../../../churches/entity/church.entity';
 import { GetMinistryResponseDto } from '../dto/ministry/response/get-ministry-response.dto';
 import { RefreshMinistryCountResponseDto } from '../dto/ministry/response/refresh-ministry-count-response.dto';
+import { MAX_MINISTRY_COUNT } from '../../management.constraints';
+import { MinistryException } from '../exception/ministry.exception';
 
 @Injectable()
 export class MinistryService {
@@ -89,10 +91,8 @@ export class MinistryService {
         qr,
       );
 
-    if (ministryGroup.ministriesCount >= 30) {
-      throw new ConflictException(
-        '사역그룹 내 사역은 최대 30개까지 생성 가능합니다.',
-      );
+    if (ministryGroup.ministriesCount >= MAX_MINISTRY_COUNT) {
+      throw new ConflictException(MinistryException.EXCEED_MAX_MINISTRY_COUNT);
     }
 
     const ministry = await this.ministriesDomainService.createMinistry(
