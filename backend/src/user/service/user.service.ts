@@ -25,6 +25,7 @@ import {
 import { VerificationType } from '../../mobile-verification/const/verification-type.enum';
 import { MessageService } from '../../common/service/message.service';
 import { VerifyUserMobilePhoneDto } from '../dto/request/verify-user-mobile-phone.dto';
+import { UpdatePhoneVerificationMessage } from '../../auth/const/verification-message.const';
 
 @Injectable()
 export class UserService {
@@ -92,7 +93,7 @@ export class UserService {
 
     return this.messageService.sendMessage(
       dto.mobilePhone,
-      verification.verificationCode,
+      UpdatePhoneVerificationMessage(verification.verificationCode), //`[에클리] 인증번호: ${verification.verificationCode}`,
     );
   }
 

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import {
   ICHURCHES_DOMAIN_SERVICE,
   IChurchesDomainService,
@@ -55,6 +55,8 @@ import {
 } from '../../member-history/history-date.utils';
 import { WorshipGroupIdsVo } from '../vo/worship-group-ids.vo';
 import { PermissionScopeIdsVo } from '../../permission/vo/permission-scope-ids.vo';
+import { MAX_WORSHIP_COUNT } from '../constraints/worship.constraints';
+import { WorshipException } from '../exception/worship.exception';
 
 @Injectable()
 export class WorshipService {
@@ -103,6 +105,15 @@ export class WorshipService {
     dto: CreateWorshipDto,
     qr: QueryRunner,
   ) {
+    const worshipCount = await this.worshipDomainService.countAllWorships(
+      church,
+      qr,
+    );
+
+    if (worshipCount > MAX_WORSHIP_COUNT) {
+      throw new ConflictException(WorshipException.EXCEED_MAX_WORSHIP_COUNT);
+    }
+
     const newWorship = await this.worshipDomainService.createWorship(
       church,
       dto,

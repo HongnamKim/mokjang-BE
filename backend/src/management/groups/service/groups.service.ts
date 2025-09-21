@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { GroupModel } from '../entity/group.entity';
 import { QueryRunner } from 'typeorm';
 import { CreateGroupDto } from '../dto/request/create-group.dto';
@@ -52,10 +57,15 @@ import {
   IMemberFilterService,
 } from '../../../members/service/interface/member-filter.service.interface';
 import { RefreshGroupCountResponseDto } from '../dto/response/refresh-group-count-response.dto';
+import { MAX_GROUP_COUNT } from '../../management.constraints';
+import { GroupException } from '../const/exception/group.exception';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class GroupsService {
   constructor(
+    @Inject(CACHE_MANAGER)
+    private readonly cache: Cache,
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(IMEMBER_FILTER_SERVICE)
@@ -96,13 +106,31 @@ export class GroupsService {
   }
 
   async createGroup(church: ChurchModel, dto: CreateGroupDto, qr: QueryRunner) {
+    const groupsCount = await this.groupsDomainService.countAllGroups(
+      church,
+      qr,
+    );
+
+    if (groupsCount > MAX_GROUP_COUNT) {
+      throw new ConflictException(GroupException.EXCEED_MAX_GROUP_COUNT);
+    }
+
     await this.churchesDomainService.incrementManagementCount(
       church,
       ManagementCountType.GROUP,
       qr,
     );
 
-    return this.groupsDomainService.createGroup(church, dto, qr);
+    const newGroup = await this.groupsDomainService.createGroup(
+      church,
+      dto,
+      qr,
+    );
+
+    const allGroupKey = `allGroups-${church.id}`;
+    await this.cache.del(allGroupKey);
+
+    return newGroup;
   }
 
   async updateGroupLeader(
@@ -246,6 +274,9 @@ export class GroupsService {
       newParentGroup,
     );
 
+    const allGroupKey = `allGroups-${church.id}`;
+    await this.cache.del(allGroupKey);
+
     return this.groupsDomainService.findGroupById(church, targetGroup.id, qr);
   }
 
@@ -297,6 +328,9 @@ export class GroupsService {
       ManagementCountType.GROUP,
       qr,
     );
+
+    const allGroupKey = `allGroups-${church.id}`;
+    await this.cache.del(allGroupKey);
 
     return new GroupDeleteResponseDto(new Date(), groupId, group.name, true);
   }

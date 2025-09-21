@@ -1,3 +1,5 @@
+import { MAX_MINISTRY_COUNT } from '../../management.constraints';
+
 export const MinistryException = {
   NOT_FOUND: '해당 사역을 찾을 수 없습니다.',
   ALREADY_EXIST: '해당 사역 그룹에 이미 존재하는 사역 이름입니다.',
@@ -5,4 +7,5 @@ export const MinistryException = {
   EMPTY_MEMBER_COUNT:
     '해당 사역을 수행하는 교인 수에 오류가 있습니다.\n사역 관리 화면에서 교인 수를 새로고침 해주세요.',
   ALREADY_ASSIGNED_MINISTRY: '이미 부여된 사역입니다.',
+  EXCEED_MAX_MINISTRY_COUNT: `사역은 그룹 당 최대 ${MAX_MINISTRY_COUNT}개까지 생성 가능합니다.`,
 };
