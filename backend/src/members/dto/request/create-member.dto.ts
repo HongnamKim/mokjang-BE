@@ -225,6 +225,14 @@ export class CreateMemberDto {
   marriage?: Marriage;
 
   @ApiProperty({
+    description: '결혼 상세',
+    required: false,
+  })
+  @IsString()
+  @MaxLength(30)
+  detailMarriage?: string;
+
+  @ApiProperty({
     name: 'vehicleNumber',
     description: '차량번호',
     example: ['1234', '141부5432'],
