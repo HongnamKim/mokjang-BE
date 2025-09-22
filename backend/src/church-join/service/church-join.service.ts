@@ -44,10 +44,13 @@ import { MemberException } from '../../members/exception/member.exception';
 import { ChurchModel } from '../../churches/entity/church.entity';
 import { DeleteJoinRequestResponseDto } from '../dto/response/delete-join-request-response.dto';
 import { GetChurchResponseDto } from '../../churches/dto/response/get-church-response.dto';
+import { MessageService } from '../../common/service/message.service';
 
 @Injectable()
 export class ChurchJoinService {
   constructor(
+    private readonly messageService: MessageService,
+
     @Inject(ICHURCHES_DOMAIN_SERVICE)
     private readonly churchesDomainService: IChurchesDomainService,
     @Inject(ICHURCH_JOIN_REQUESTS_DOMAIN_SERVICE)
@@ -184,6 +187,11 @@ export class ChurchJoinService {
       joinRequest.user,
       { role: UserRole.MANAGER },
       qr,
+    );
+
+    await this.messageService.sendWelcomeMessage(
+      joinRequest.user.mobilePhone,
+      joinRequest.user.name,
     );
 
     return this.churchJoinRequestsDomainService.findChurchJoinRequestById(

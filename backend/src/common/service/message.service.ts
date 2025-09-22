@@ -16,6 +16,28 @@ export class MessageService {
     ENV_VARIABLE_KEY.FROM_NUMBER,
   );
 
+  async sendWelcomeMessage(mobilePhone: string, name: string) {
+    try {
+      await this.smsClient.send({
+        to: mobilePhone,
+        from: this.from,
+        kakaoOptions: {
+          pfId: 'KA01PF2509220632218102E6940wtpBH',
+          templateId: 'KA01TP221025083117992xkz17KyvNbr',
+          variables: {
+            '#{홍길동}': name,
+          },
+        },
+      });
+
+      return { timestamp: new Date(), success: true };
+    } catch (error) {
+      /*throw new BadGatewayException(
+        '인증번호 전송 실패. 잠시후 다시 시도해주세요.',
+      );*/
+    }
+  }
+
   async sendMessage(mobilePhone: string, text: string) {
     try {
       await this.smsClient.send({
