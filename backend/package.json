@@ -40,6 +40,7 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.5",
+    "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "korean-lunar-calendar": "^0.3.6",
     "ms": "^2.1.3",
