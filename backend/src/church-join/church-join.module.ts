@@ -8,9 +8,11 @@ import { ChurchJoinDomainModule } from './church-join-domain/church-join-domain.
 import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
 
 import { ManagerDomainModule } from '../manager/manager-domain/manager-domain.module';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
+    CommonModule,
     UserDomainModule,
     ChurchesDomainModule,
     ChurchJoinDomainModule,

@@ -22,6 +22,7 @@ import { RequestChurch } from '../../../permission/decorator/request-church.deco
 import { ChurchModel } from '../../../churches/entity/church.entity';
 import { RequestManager } from '../../../permission/decorator/request-manager.decorator';
 import { ChurchUserModel } from '../../../church-user/entity/church-user.entity';
+import { EducationWriteGuard } from '../../guard/education-write.guard';
 
 @ApiTags('Educations:Attendance')
 @Controller(
@@ -57,6 +58,7 @@ export class SessionAttendanceController {
   @ApiOperation({ summary: '일괄 출석' })
   @Patch('all-attended')
   @UseInterceptors(TransactionInterceptor)
+  @EducationWriteGuard()
   patchAllAttended(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
@@ -77,6 +79,7 @@ export class SessionAttendanceController {
   @ApiOperation({ summary: '출석 여부 개별 수정' })
   @Patch(':attendanceId/attendance')
   @UseInterceptors(TransactionInterceptor)
+  @EducationWriteGuard()
   patchAttendancePresent(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
@@ -100,6 +103,7 @@ export class SessionAttendanceController {
 
   @ApiOperation({ summary: '출석 특이사항 수정' })
   @Patch(':attendanceId/note')
+  @EducationWriteGuard()
   patchAttendanceNote(
     @Param('churchId', ParseIntPipe) churchId: number,
     @Param('educationId', ParseIntPipe) educationId: number,
