@@ -228,6 +228,7 @@ export class CreateMemberDto {
     description: '결혼 상세',
     required: false,
   })
+  @IsOptionalNotNull()
   @IsString()
   @MaxLength(30)
   detailMarriage?: string;
