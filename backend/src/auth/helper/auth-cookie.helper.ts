@@ -22,6 +22,8 @@ export class AuthCookieHelper {
       | { accessToken: string },
     res: Response,
   ) {
+    console.log(this.NODE_ENV);
+
     if (this.ACCESS_TOKEN in loginResult && this.REFRESH_TOKEN in loginResult) {
       res.cookie(
         this.configService.getOrThrow(ENV_VARIABLE_KEY.ACCESS_TOKEN_KEY),
