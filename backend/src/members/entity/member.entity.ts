@@ -116,7 +116,7 @@ export class MemberModel extends BaseModel {
   marriage: Marriage;
 
   @Column({ nullable: true, comment: '세부 결혼 정보' })
-  marriageDetail: string;
+  detailMarriage: string;
 
   @Index()
   @Column('text', { array: true, default: [], comment: '차량 번호 4자리' })
