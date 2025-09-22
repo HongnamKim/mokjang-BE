@@ -1,11 +1,8 @@
-export const SignInVerificationMessage = (code: string) =>
-  `[에클리] 회원 가입 인증번호: ${code}`;
+export const SignInVerificationMessage = (code: string) => code; //`[에클리] 회원 가입 인증번호: ${code}\n문제 발생 시 01099096581 로 연락주세요.`;
 
-export const DeleteChurchVerificationMessage = (code: string) =>
-  `[에클리] 교회 삭제 인증번호: ${code}`;
+export const DeleteChurchVerificationMessage = (code: string) => code; //`[에클리] 교회 삭제 인증번호: ${code}\n문제 발생 시 01099096581 로 연락주세요.`;
 
-export const UpdatePhoneVerificationMessage = (code: string) =>
-  `[에클리] 인증번호: ${code}`;
+export const UpdatePhoneVerificationMessage = (code: string) => code; //`[에클리] 인증번호: ${code}\n문제 발생 시 01099096581 로 연락주세요.`;
 
 export const BetaVerificationMessage = (
   code: string,
