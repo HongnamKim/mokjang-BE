@@ -26,7 +26,7 @@ export class MessageService {
           templateId: 'KA01TP221025083117992xkz17KyvNbr',
           variables: {
             '#{홍길동}': name,
-            '#{url}': '',
+            '#{url}': 'https://ekkly.life',
           },
         },
       });
