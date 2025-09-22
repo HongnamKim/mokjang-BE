@@ -51,15 +51,17 @@ export class AuthCookieHelper {
     }
   }
 
-  private createRedirectURL() {
+  private createRedirectURL(isHome: boolean) {
     const protocol = this.configService.getOrThrow(ENV_VARIABLE_KEY.PROTOCOL);
     const clientHost = this.configService.getOrThrow(
       ENV_VARIABLE_KEY.CLIENT_HOST,
     );
     const clientPort = this.configService.get(ENV_VARIABLE_KEY.CLIENT_PORT);
-    const redirectURI = this.configService.getOrThrow(
+    /*const redirectURI = this.configService.getOrThrow(
       ENV_VARIABLE_KEY.LOGIN_URI,
-    );
+    );*/
+
+    const redirectURI = isHome ? '' : '/register';
 
     return clientPort
       ? `${protocol}://${clientHost}:${clientPort}${redirectURI}`
@@ -73,7 +75,14 @@ export class AuthCookieHelper {
     res: Response,
     isTest: boolean = false,
   ) {
-    const redirectURL = this.createRedirectURL();
+    let redirectURL: string;
+    if (this.ACCESS_TOKEN in loginResult) {
+      redirectURL = this.createRedirectURL(true);
+    } else {
+      redirectURL = this.createRedirectURL(false);
+    }
+
+    //const redirectURL = this.createRedirectURL();
 
     this.setTokenCookie(loginResult, res);
 
