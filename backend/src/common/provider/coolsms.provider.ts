@@ -1,7 +1,7 @@
 import { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import coolsms from 'coolsms-node-sdk';
 import { ENV_VARIABLE_KEY } from '../const/env.const';
+import { SolapiMessageService } from 'solapi';
 
 export const COOLSMS_CLIENT = Symbol('COOLSMS_CLIENT');
 
@@ -16,6 +16,8 @@ export const CoolSMSProvider: Provider = {
       ENV_VARIABLE_KEY.SMS_API_SECRET,
     );
 
-    return new coolsms(SMS_API_KEY, SMS_API_SECRET);
+    return new SolapiMessageService(SMS_API_KEY, SMS_API_SECRET);
+
+    //return new coolsms(SMS_API_KEY, SMS_API_SECRET);
   },
 };
