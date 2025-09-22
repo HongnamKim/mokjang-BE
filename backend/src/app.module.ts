@@ -229,7 +229,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
           // 교회 일정표/이벤트
           ChurchEventModel,
         ],
-        synchronize: true,
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
