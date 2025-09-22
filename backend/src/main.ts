@@ -77,13 +77,13 @@ async function bootstrap() {
 
   // swagger 설정
   const config = new DocumentBuilder()
-    .setTitle('프로젝트 제목')
-    .setDescription('프로젝트 설명')
-    .setVersion('0.1')
+    .setTitle('ekkly')
+    .setDescription('ekkly 스웨거 문서')
+    .setVersion('1.0.0')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('rhjPSm53yBnIM33h', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
