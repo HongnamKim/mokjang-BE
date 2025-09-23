@@ -34,8 +34,6 @@ export class MessageService {
 
       return { timestamp: new Date(), success: true };
     } catch (error) {
-      console.log(error);
-      throw error;
       /*throw new BadGatewayException(
         '인증번호 전송 실패. 잠시후 다시 시도해주세요.',
       );*/
