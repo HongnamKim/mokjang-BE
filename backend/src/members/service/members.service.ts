@@ -383,15 +383,19 @@ export class MembersService {
   ) {
     console.log(requestManager);
 
-    const permissionScopeIds = requestManager.permissionScopes.map(
-      (scope) => scope.group.id,
-    );
+    const permissionScopeIds = requestManager.permissionScopes
+      .filter((scope) => scope.group)
+      .map((scope) => scope.group.id);
+
+    console.log(permissionScopeIds);
 
     const possibleGroups =
       await this.groupsDomainService.findGroupAndDescendantsByIds(
         church,
         permissionScopeIds,
       );
+
+    console.log(possibleGroups);
 
     return possibleGroups.map((group) => group.id);
   }

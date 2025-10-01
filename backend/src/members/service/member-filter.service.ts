@@ -136,9 +136,9 @@ export class MemberFilterService implements IMemberFilterService {
     requestManager: ChurchUserModel,
     qr?: QueryRunner,
   ): Promise<number[]> {
-    const permissionScopeIds = requestManager.permissionScopes.map(
-      (scope) => scope.group.id,
-    );
+    const permissionScopeIds = requestManager.permissionScopes
+      .filter((scope) => scope.group)
+      .map((scope) => scope.group.id);
 
     const possibleGroups =
       await this.groupsDomainService.findGroupAndDescendantsByIds(
