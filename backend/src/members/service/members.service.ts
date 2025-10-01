@@ -381,6 +381,8 @@ export class MembersService {
     church: ChurchModel,
     requestManager: ChurchUserModel,
   ) {
+    console.log(requestManager);
+
     const permissionScopeIds = requestManager.permissionScopes.map(
       (scope) => scope.group.id,
     );
