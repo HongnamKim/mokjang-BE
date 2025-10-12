@@ -143,8 +143,9 @@ export class MembersService {
   }
 
   async createBulkMember(church: ChurchModel, excelDto: CreateBulkMemberDto) {
-    const createBulkMemberDto: CreateMemberDto[] = excelDto.members.map(
-      (member) => ({
+    const createBulkMemberDto: CreateMemberDto[] = excelDto.members
+      .filter((member) => member.이름 && member.휴대전화번호)
+      .map((member) => ({
         utcRegisteredAt: member.등록일자
           ? fromZonedTime(member.등록일자, TIME_ZONE.SEOUL)
           : getStartOfToday(TIME_ZONE.SEOUL),
@@ -174,8 +175,7 @@ export class MembersService {
           : undefined,
 
         vehicleNumber: member.차량번호 ? [member.차량번호] : undefined,
-      }),
-    );
+      }));
 
     const currentMemberCount =
       await this.membersDomainService.countAllMembers(church);

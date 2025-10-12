@@ -107,6 +107,6 @@ export class CreateBulkMemberDto {
   })
   @ValidateNested({ each: true })
   @Type(() => BulkMemberDto)
-  @ArrayMaxSize(500)
+  @ArrayMaxSize(1000)
   members: BulkMemberDto[];
 }
