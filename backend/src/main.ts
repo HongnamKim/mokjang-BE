@@ -6,10 +6,13 @@ import { TypeOrmExceptionFilter } from './common/filter/typeorm-exception.filter
 import * as cookieParser from 'cookie-parser';
 import { XssSanitizerPipe } from './common/pipe/xss-sanitizer.pipe';
 import helmet from 'helmet';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser.default());
+  app.use(bodyParser.json({ limit: '20mb' }));
+  app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
   app.use(
     helmet({
       // 1. 콘덴츠 스니핑 방지
