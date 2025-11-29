@@ -17,12 +17,20 @@ import { OauthDto } from '../dto/oauth.dto';
 import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { QueryRunner } from '../../common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { RefreshTokenGuard, TemporalTokenGuard } from '../guard/jwt.guard';
+import {
+  AccessTokenGuard,
+  RefreshTokenGuard,
+  TemporalTokenGuard,
+} from '../guard/jwt.guard';
 import { Token } from '../decorator/jwt.decorator';
 import { RequestVerificationCodeDto } from '../dto/request-verification-code.dto';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
 import { RegisterUserDto } from '../../user/dto/request/register-user.dto';
-import { JwtRefreshPayload, JwtTemporalPayload } from '../type/jwt';
+import {
+  JwtAccessPayload,
+  JwtRefreshPayload,
+  JwtTemporalPayload,
+} from '../type/jwt';
 import { TokenService } from '../service/token.service';
 import {
   OAuthLogin,
@@ -30,6 +38,7 @@ import {
   OAuthUser,
 } from '../decorator/oauth.decorator';
 import {
+  ApiLogout,
   ApiMobileLoginAuth,
   ApiRequestVerificationCode,
   ApiRotateToken,
@@ -48,6 +57,7 @@ import { MobileLoginDto } from '../dto/mobile-login.dto';
 import { AuthException } from '../const/exception/auth.exception';
 import { LoginOptionEnum } from '../const/enum/login-option.enum';
 import { SsoEnum } from '../const/enum/sso.enum';
+import { LogoutDto } from '../dto/logout.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -226,8 +236,15 @@ export class AuthController {
     return 'refresh access_token success';
   }
 
+  @ApiLogout()
   @Post('logout')
-  logOut(@Res({ passthrough: true }) res: Response) {
+  @UseGuards(AccessTokenGuard)
+  async logOut(
+    @Res({ passthrough: true }) res: Response,
+    @Token(AuthType.ACCESS) accessToken: JwtAccessPayload,
+    @Body() dto: LogoutDto,
+  ) {
+    await this.authService.logoutUser(accessToken.id, dto.deviceId);
     this.clearCookie(res);
 
     return 'logout success';

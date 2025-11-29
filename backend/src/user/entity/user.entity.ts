@@ -8,6 +8,7 @@ import { ChurchUserModel } from '../../church-user/entity/church-user.entity';
 import { SubscriptionModel } from '../../subscription/entity/subscription.entity';
 import { PaymentMethodModel } from '../../payment-method/entity/payment-method.entity';
 import { OrderModel } from '../../order/entity/order.entity';
+import { DeviceModel } from '../../notification/entity/device.entity';
 
 @Entity()
 export class UserModel extends BaseModel {
@@ -31,6 +32,9 @@ export class UserModel extends BaseModel {
 
   @Column({ default: false })
   privacyPolicyAgreed: boolean;
+
+  @OneToMany(() => DeviceModel, (deviceModel) => deviceModel.user)
+  devices: DeviceModel[];
 
   @OneToOne(() => ChurchModel)
   ownedChurch: ChurchModel;

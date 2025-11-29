@@ -44,15 +44,16 @@ async function bootstrap() {
   // CORS 설정
   app.enableCors({
     //origin: ['https://www.ekkly.life', 'https://www.app.ekkly.life'],
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-
-      if (/^https:\/\/([a-z0-9-]+\.)?ekkly\.life$/.test(origin)) {
-        callback(null, true); // ekkly.life 및 모든 서브도메인 허용
-      } else {
-        callback(new Error('Not allowed by CORS'), false);
-      }
-    },
+    // origin: (origin, callback) => {
+    //   if (!origin) return callback(null, true);
+    //
+    //   if (/^https:\/\/([a-z0-9-]+\.)?ekkly\.life$/.test(origin)) {
+    //     callback(null, true); // ekkly.life 및 모든 서브도메인 허용
+    //   } else {
+    //     callback(new Error('Not allowed by CORS'), false);
+    //   }
+    // },
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -83,7 +84,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('rhjPSm53yBnIM33h', app, document);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
