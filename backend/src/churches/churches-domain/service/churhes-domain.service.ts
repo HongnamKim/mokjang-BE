@@ -41,7 +41,14 @@ export class ChurchesDomainService implements IChurchesDomainService {
   async findAllChurches(): Promise<ChurchModel[]> {
     const churchRepository = this.getChurchRepository();
 
-    return churchRepository.find({ relations: { subscription: true } });
+    return churchRepository.find({
+      relations: { subscription: true },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+      take: 5,
+    });
   }
 
   async createChurch(

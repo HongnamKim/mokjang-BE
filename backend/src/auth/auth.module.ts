@@ -9,6 +9,7 @@ import { AuthCookieHelper } from './helper/auth-cookie.helper';
 import { CommonModule } from '../common/common.module';
 import { UserDomainModule } from '../user/user-domain/user-domain.module';
 import { TempUserDomainModule } from './temp-user-domain/temp-user-domain.module';
+import { NotificationDomainModule } from '../notification/notification-domain/notification-domain.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TempUserDomainModule } from './temp-user-domain/temp-user-domain.module
     CommonModule,
     UserDomainModule,
     TempUserDomainModule,
+    NotificationDomainModule,
   ],
   controllers: [AuthController],
   providers: [

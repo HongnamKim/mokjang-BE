@@ -6,6 +6,8 @@ import { ChurchesDomainModule } from '../churches/churches-domain/churches-domai
 import { ChurchUserDomainModule } from '../church-user/church-user-domain/church-user-domain.module';
 import { NotificationDomainModule } from './notification-domain/notification-domain.module';
 import { NotificationService } from './service/notification.service';
+import { DeviceController } from './controller/device.controller';
+import { DeviceService } from './service/device.service';
 
 @Module({
   imports: [
@@ -17,7 +19,7 @@ import { NotificationService } from './service/notification.service';
     ChurchUserDomainModule,
     NotificationDomainModule,
   ],
-  controllers: [NotificationController],
-  providers: [NotificationService],
+  controllers: [DeviceController, NotificationController],
+  providers: [DeviceService, NotificationService],
 })
 export class NotificationModule {}

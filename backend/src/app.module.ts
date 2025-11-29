@@ -86,6 +86,7 @@ import { MobileVerificationModel } from './mobile-verification/entity/mobile-ver
 import { MobileVerificationModule } from './mobile-verification/mobile-verification.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { DeviceModel } from './notification/entity/device.entity';
 
 @Module({
   imports: [
@@ -124,7 +125,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
         HOST: Joi.string().required(),
         PORT: Joi.number().required(),
         CLIENT_HOST: Joi.string().required(),
-        CLIENT_PORT: Joi.number().required(),
+        //CLIENT_PORT: Joi.number().required(),
         // 메시지 API
         SMS_API_KEY: Joi.string().required(),
         SMS_API_SECRET: Joi.string().required(),
@@ -171,6 +172,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
+          DeviceModel,
           // 번호 인증 관련 엔티티
           MobileVerificationModel,
           // 알림 엔티티
@@ -229,7 +231,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
           // 교회 일정표/이벤트
           ChurchEventModel,
         ],
-        synchronize: true,
+        synchronize: true, //false,
       }),
       inject: [ConfigService],
     }),
