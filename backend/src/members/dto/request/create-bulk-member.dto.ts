@@ -22,7 +22,7 @@ export class BulkMemberDto {
     default: new Date().toISOString().slice(0, 10),
   })
   @IsDateString({ strict: true })
-  @IsYYYYMMDD('등록일쟈')
+  @IsYYYYMMDD('등록일자')
   @IsOptional()
   등록일자?: string; //"2025-09-22",
 
