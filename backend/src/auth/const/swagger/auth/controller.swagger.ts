@@ -93,3 +93,14 @@ export const ApiRotateToken = () =>
         '<h2>AccessToken 을 재발급 받습니다.</h2>' + '<p>RefreshToken 필요</p>',
     }),
   );
+
+export const ApiLogout = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '로그아웃',
+      description:
+        '<h2>로그아웃</h2>' +
+        '<p>푸시 알림을 설정한 모바일 기기에서 로그아웃 할 경우 deviceId 를 보내야합니다.</p>' +
+        '<p>웹 환경 or 푸시 알림을 설정하지 않은 경우 생략 가능</p>',
+    }),
+  );

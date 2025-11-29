@@ -19,7 +19,7 @@ export const TOKEN_COOKIE_OPTIONS = (
     secure: NODE_ENV === 'production',
     sameSite: NODE_ENV === 'development' ? undefined : 'none', //undefined,
     maxAge: isClearCookie ? undefined : maxAge,
-    domain: '.ekkly.life',
+    domain: NODE_ENV === 'production' ? '.ekkly.life' : undefined,
     path: '/',
   };
 };

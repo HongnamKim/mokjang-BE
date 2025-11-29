@@ -86,6 +86,7 @@ import { MobileVerificationModel } from './mobile-verification/entity/mobile-ver
 import { MobileVerificationModule } from './mobile-verification/mobile-verification.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { DeviceModel } from './notification/entity/device.entity';
 
 @Module({
   imports: [
@@ -157,8 +158,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: configService.get<string>('DB_TYPE') as 'postgres',
-        url: configService.get<string>('DB_HOST') as string,
-        //host: configService.get<string>('DB_HOST'),
+        //url: configService.get<string>('DB_HOST') as string,
+        host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
@@ -171,6 +172,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
           // 유저 관련 엔티티
           TempUserModel,
           UserModel,
+          DeviceModel,
           // 번호 인증 관련 엔티티
           MobileVerificationModel,
           // 알림 엔티티
@@ -229,7 +231,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
           // 교회 일정표/이벤트
           ChurchEventModel,
         ],
-        synchronize: false,
+        synchronize: true, //false,
       }),
       inject: [ConfigService],
     }),

@@ -139,6 +139,10 @@ export class NotificationService {
     suppressErrors: true,
   })
   async handleTaskInChargeAdded(event: NotificationEventDto) {
+    const userIds = event.notificationReceivers.map(
+      (churchUser) => churchUser.userId,
+    );
+
     await this.notificationDomainService.createNotifications(event);
   }
 

@@ -40,6 +40,10 @@ import {
 import { DateUtils } from '../../common/utils/date-utils.util';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { TIME_ZONE } from '../../common/const/time-zone.const';
+import {
+  IDEVICE_DOMAIN_SERVICE,
+  IDeviceDomainService,
+} from '../../notification/notification-domain/interface/device-domain.service.interface';
 
 @Injectable()
 export class AuthService {
@@ -52,6 +56,8 @@ export class AuthService {
     private readonly userDomainService: IUserDomainService,
     @Inject(ITEMP_USER_DOMAIN_SERVICE)
     private readonly tempUserDomainService: ITempUserDomainService,
+    @Inject(IDEVICE_DOMAIN_SERVICE)
+    private readonly deviceDomainService: IDeviceDomainService,
   ) {}
 
   private readonly logger = new Logger(AuthService.name);
@@ -70,6 +76,14 @@ export class AuthService {
     return user
       ? this.handleRegisteredUser(user)
       : this.handleNewUser(oauthDto, qr);
+  }
+
+  async logoutUser(userId: number, deviceId?: string) {
+    const user = await this.userDomainService.findUserById(userId);
+
+    if (deviceId) {
+      this.deviceDomainService.deleteDeviceToken(user, deviceId);
+    }
   }
 
   private handleRegisteredUser(user: UserModel) {

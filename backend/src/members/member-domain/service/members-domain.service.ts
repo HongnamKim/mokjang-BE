@@ -852,7 +852,7 @@ export class MembersDomainService implements IMembersDomainService {
       query.andWhere('(member.groupId IS NULL)');
     } else if (groupIds === undefined) {
     } else {
-      console.log('dd');
+      //console.log('dd');
       query.andWhere('member.groupId IN (:...groupIds)', {
         groupIds,
       });
